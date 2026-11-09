@@ -1303,7 +1303,54 @@ layer that those papers build on.
 
 ## 9 Gaussian Discriminant Analysis
 
-### 9.1 The model and the decision rule
+### 9.1 Back to the spam filter: same Bayes rule, new class model
+
+Lecture 7 classified e-mail with $Y = 1$ for spam and $Y = 0$ for non-spam,
+binary word indicators $X_i = 1$ if and only if word $i$ appears, and
+Bernoulli Naive Bayes,
+$p(x \mid y) = \prod_i p_{i|y}^{x_i}(1 - p_{i|y})^{1 - x_i}$. The decision rule
+$\hat y(x) = \arg\max_y \pi_y\, p(x \mid y)$ does not depend on that choice of
+class model. This section keeps $Y$ and the rule and changes only the class
+model: continuous features, for illustration $x_1$ = log word count and
+$x_2$ = links per 100 words, with one Gaussian per class. That is a modeling
+choice, not a fact about e-mail. Binary indicators are not Gaussian and are not
+modeled as Gaussian here.
+
+A full $\Sigma_y$ lets the features be correlated within a class. A diagonal
+$\Sigma_y$ makes the coordinates conditionally independent given the class:
+that is Gaussian Naive Bayes, the continuous counterpart of Lecture 7's model,
+not the same model. The deck's scatter figure uses *synthetic* data, 50
+non-spam and 30 spam points drawn from fixed Gaussians by a seeded generator,
+with each class's $\hat\mu_y, \hat\Sigma_y$ fitted by Theorem 4 and
+$\hat\pi_y = 50/80, 30/80$.
+
+### 9.2 Mahalanobis distance: distance measured in standard deviations
+
+**Definition.** For $\Sigma \succ 0$,
+
+$$ d_\Sigma(x, \mu) = \sqrt{(x - \mu)^{\mathsf T}\Sigma^{-1}(x - \mu)}
+   = \big\| \Sigma^{-1/2}(x - \mu) \big\|, $$
+
+where $\Sigma^{-1/2} = Q\Lambda^{-1/2}Q^{\mathsf T}$, from the spectral
+decomposition $\Sigma = Q\Lambda Q^{\mathsf T}$, is the symmetric inverse
+square root. The two forms agree because
+$\|\Sigma^{-1/2}v\|^2 = v^{\mathsf T}\Sigma^{-1/2}\Sigma^{-1/2}v = v^{\mathsf T}\Sigma^{-1}v$.
+
+*Whitening.* If $X \sim \mathcal N(\mu, \Sigma)$, then
+$Z = \Sigma^{-1/2}(X - \mu)$ has
+$\operatorname{Cov}(Z) = \Sigma^{-1/2}\Sigma\Sigma^{-1/2} = I$: the map removes
+both scale and correlation. So $d_\Sigma$ is Euclidean distance after
+whitening, and the exponent of the Definition 1 density is exactly
+$-\tfrac12 d_\Sigma(x, \mu)^2$, the squared distance.
+
+*Example.* Take $\mu = 0$ and $\Sigma = \operatorname{diag}(4, 1)$. The points
+$A = (2, 0)$ and $B = (0, 2)$ are both at Euclidean distance $2$, but
+$d_\Sigma(A, 0) = \sqrt{2^2/4} = 1$ and $d_\Sigma(B, 0) = \sqrt{2^2/1} = 2$:
+the wide direction, with variance $4$, tolerates the bigger step. The level
+sets $x_1^2/4 + x_2^2 = r^2$ are ellipses with semi-axes $2r$ and $r$, and
+whitening, $z = (x_1/2, x_2)$, turns them into circles of radius $r$.
+
+### 9.3 The model and the decision rule
 
 Labels $Y \in \{0, 1, \dots\}$ carry priors $\pi_y = \mathbb P(Y = y)$, and the
 class-conditional features are
@@ -1316,11 +1363,15 @@ $$ \hat y(x) = \arg\max_y \; \pi_y \, f(x \mid \mu_y, \Sigma_y)
    - \tfrac12 (x - \mu_y)^{\mathsf T} \Sigma_y^{-1} (x - \mu_y) \Big], $$
 
 taking logarithms, which is monotone, and dropping the shared term
-$-\tfrac n2 \log 2\pi$. By Lecture 7's Bayes-optimality theorem, if the model
+$-\tfrac n2 \log 2\pi$. All logarithms are natural. In the notation of Section
+9.2 the score is
+$\log\pi_y - \tfrac12\log\det\Sigma_y - \tfrac12 d_{\Sigma_y}(x, \mu_y)^2$; with
+equal priors and equal determinants the rule picks the nearest mean in
+Mahalanobis distance. By Lecture 7's Bayes-optimality theorem, if the model
 is correct then this rule minimizes the probability of error among *all*
 classifiers.
 
-### 9.2 The boundary: quadratic in general, linear for a shared covariance
+### 9.4 The boundary: quadratic in general, linear for a shared covariance
 
 *Derivation, two classes.* The boundary is the set where the two bracketed
 scores tie. Their difference is
@@ -1333,7 +1384,9 @@ $$ \tfrac12 (x-\mu_1)^{\mathsf T}\Sigma_1^{-1}(x-\mu_1)
 whose quadratic part in $x$ is
 $\tfrac12 x^{\mathsf T}(\Sigma_1^{-1} - \Sigma_0^{-1})x$: a genuine quadric
 surface whenever $\Sigma_0 \neq \Sigma_1$. Geometrically the boundary is then a
-curve that bends around the class with the tighter covariance.
+curve that bends around the class with the tighter covariance. The deck's
+synthetic spam figure shows this case: its dashed curve is the exact tie set of
+the two fitted scores.
 
 If $\Sigma_0 = \Sigma_1 = \Sigma$, the quadratic terms cancel. Expanding
 $(x-\mu)^{\mathsf T}\Sigma^{-1}(x-\mu)
@@ -1348,7 +1401,7 @@ a hyperplane with normal vector $w = \Sigma^{-1}(\mu_0 - \mu_1)$. That is
 linear discriminant analysis [4, Ch. 4.2] and, one sigmoid away, the
 functional form of logistic regression. **End of proof.**
 
-### 9.3 The likelihood, assembled
+### 9.5 The likelihood, assembled
 
 Estimation decouples across classes, since each sample's log-likelihood
 involves only its own class's parameters. So fix one class, with samples
@@ -1361,7 +1414,7 @@ $$ \ell(\mu, \Sigma) = -\frac{Nn}{2}\log 2\pi \; - \; \frac N2 \log\det\Sigma
 
 which is Lecture 7's recipe, the logarithm of a product of densities.
 
-### 9.4 Maximizing over the mean
+### 9.6 Maximizing over the mean
 
 **Lemma 9.1 (gradient of a quadratic form).** For symmetric $M$,
 $\nabla_\mu\, (x - \mu)^{\mathsf T} M (x - \mu) = -2M(x - \mu)$.
@@ -1385,13 +1438,25 @@ concave quadratic in $\mu$, with Hessian $-N\Sigma^{-1} \prec 0$. The answer is
 the sample mean: the same as Lecture 7's one-dimensional Gaussian
 maximum-likelihood estimate, now in vector form. **End of proof.**
 
-### 9.5 Reparameterizing in the precision, and the trace trick
+### 9.7 Reparameterizing in the precision, and the trace trick
 
 Maximizing over $\Sigma$ directly puts the variable inside an inverse *and* a
 determinant. The move is to optimize over the precision $\Phi = \Sigma^{-1}$
 instead, a bijection of the positive definite matrices under which
 $\log\det\Sigma = -\log\det\Phi$, and to flatten the quadratic forms with the
 **trace trick**.
+
+*Why the trace.* The goal is the matrix analogue of Lecture 7's variance
+estimate $\widehat{\sigma^2} = \frac1N\sum_i (x_i - \hat\mu)^2$; the natural
+guess replaces the squared deviation by an outer product. After plugging in
+$\hat\mu$, the data term that depends on $\Phi$ is
+$\sum_i v_i^{\mathsf T}\Phi v_i$ with residuals $v_i = x^{(i)} - \hat\mu$. In
+one dimension the parameter factors out, $\sum_i \phi v_i^2 = \phi\sum_i v_i^2$.
+With matrices, $\Phi$ is stuck between $v_i^{\mathsf T}$ and $v_i$. The trace
+trick rewrites each term as $\operatorname{tr}(\Phi v_i v_i^{\mathsf T})$, and
+linearity of the trace collects the sum into $\operatorname{tr}(\Phi S)$: all
+the data in one matrix $S$, the matrix parameter $\Phi$ exposed, ready for
+Lemma 9.3.
 
 **Lemma 9.2.** $v^{\mathsf T} \Phi v = \operatorname{tr}(v v^{\mathsf T} \Phi)$
 for any vector $v$ and any square $\Phi$.
@@ -1401,7 +1466,8 @@ $\operatorname{tr}(AB) = \operatorname{tr}(BA)$, since both equal
 $\sum_{i,j} A_{ij}B_{ji}$. Taking $A = v^{\mathsf T}$ and $B = \Phi v$ gives
 $\operatorname{tr}(v^{\mathsf T} \cdot \Phi v)
 = \operatorname{tr}(\Phi v \cdot v^{\mathsf T}) = \operatorname{tr}(v v^{\mathsf T} \Phi)$.
-**End of proof.**
+**End of proof.** The middle form, $\operatorname{tr}(\Phi v v^{\mathsf T})$, is
+the one the deck uses; the two are equal by the same cyclic rule.
 
 Summing over samples at $\mu = \hat\mu$, and introducing the *scatter matrix*
 $S = \sum_{i=1}^N (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^{\mathsf T}$, which is
@@ -1410,7 +1476,10 @@ all the data the likelihood ever sees about $\Sigma$,
 $$ \ell(\hat\mu, \Phi) = \text{const} + \frac N2 \log\det\Phi
    - \frac12 \operatorname{tr}(S\,\Phi). $$
 
-### 9.6 The two matrix-calculus identities
+$S$ is a sum, the scatter matrix. The covariance estimate will be $S/N$
+(Section 9.9), not $S$ itself.
+
+### 9.8 The two matrix-calculus identities
 
 **Lemma 9.3.** $\nabla_X \operatorname{tr}(AX) = A^{\mathsf T}$, where
 $(\nabla_X f)_{ij} = \partial f / \partial X_{ij}$ and the entries of $X$ are
@@ -1441,7 +1510,7 @@ symmetric entries as constrained changes the off-diagonal derivatives by a
 factor of $2$, does not change the stationary point, because the unconstrained
 critical point found next is already symmetric.
 
-### 9.7 Solving for the covariance, and Theorem 4
+### 9.9 Solving for the covariance, and Theorem 4
 
 *Derivation.* By Lemmas 9.3 and 9.4,
 
@@ -1465,8 +1534,10 @@ boundary and at infinity, so the maximum is attained. **End of proof.**
 **Theorem 4 (Gaussian maximum likelihood).** For independent and identically
 distributed $\mathcal N(\mu, \Sigma)$ samples, the maximum-likelihood
 estimates are $\hat\mu = \tfrac1N\sum_i x^{(i)}$ and
-$\hat\Sigma = \tfrac1N\sum_i (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^{\mathsf T}$.
-In discriminant analysis they are applied per class, together with
+$\hat\Sigma = \tfrac1N\sum_i (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^{\mathsf T}$,
+provided the centered scatter $S$ is nonsingular (typically $N > n$ with
+full-rank data). The divisor is $N$, not $N - 1$; for $n = 1$ this is Lecture
+7's variance estimate with the same $1/N$. In discriminant analysis they are applied per class, together with
 $\hat\pi_y = N_y / N$, the count estimate, which is Lecture 7's
 Bernoulli and multinomial maximum-likelihood estimate.
 
@@ -1491,10 +1562,28 @@ $N \to \infty$, so the estimator is asymptotically unbiased, and the dimension
 $n$ plays no role in the factor.
 
 *Pipeline check.* Fit $(\hat\pi_y, \hat\mu_y, \hat\Sigma_y)$ per class by
-Theorem 4, then classify by the rule of Section 9.1. In one dimension with two
+Theorem 4, then classify by the rule of Section 9.3. In one dimension with two
 classes and a shared variance this collapses exactly to Lecture 7's
-two-Gaussian height classifier, with the Section 9.2 boundary reducing to the
+two-Gaussian height classifier, with the Section 9.4 boundary reducing to the
 midpoint threshold shifted by the prior derived there.
+
+### 9.10 Closing: when closed form runs out
+
+An *antiderivative* of $h$ is a function $H$ with $H' = h$. For $h(x) = 2x$,
+$H(x) = x^2$ works, and $\int_a^b 2x\,dx = H(b) - H(a) = b^2 - a^2$. Every
+continuous $h$ has one, $H(x) = \int_0^x h(t)\,dt$, but often there is no
+closed-form formula for it: $e^{-t^2/2}$ has no elementary antiderivative,
+which is why the standard normal distribution function is tabulated.
+
+The Gaussian models of this lecture gave closed-form answers. More general
+models do not: many expectations
+$\mathbb E[g(X)] = \int g(x) f_X(x)\,dx$ lack a convenient closed form, and in
+high dimensions the integral is over $\mathbb R^n$, not one scalar
+antiderivative. The Monte Carlo idea is to sample instead: draw
+$X^{(1)}, \dots, X^{(N)}$ independent and identically distributed from $f_X$
+and use $\frac1N\sum_{i=1}^N g(X^{(i)})$. For finite $N$ this is an
+*estimate*, not an equality. It is unbiased, and by the law of large numbers
+it converges to $\mathbb E[g(X)]$ when $\mathbb E|g(X)| < \infty$.
 
 ## 10 References
 
@@ -1529,5 +1618,5 @@ midpoint threshold shifted by the prior derived there.
    maximum-likelihood recipe, Bayes optimality and bias.
 7. S. Boyd, L. Vandenberghe, *Convex Optimization*, Cambridge University
    Press, 2004. Section 3.1.5 for the concavity of $\log\det$ on the positive
-   definite cone, the fact that makes the critical point of Section 9.7 the
+   definite cone, the fact that makes the critical point of Section 9.9 the
    global maximizer. https://web.stanford.edu/~boyd/cvxbook/

@@ -53,7 +53,8 @@ conditional expectation, the orthogonality principle and the minimum
 mean-squared-error theorem, the maximum-likelihood recipe, the Bayes
 optimality of the maximum-a-posteriori rule, and the notion of bias. Two
 facts are imported from linear algebra without proof: the spectral theorem for
-symmetric matrices, and the multivariate change-of-variables formula. Exactly
+symmetric matrices, and the volume fact that an invertible linear map $D$
+scales volume by $|\det D|$ (Section 6.4; no general Jacobian theorem). Exactly
 one probabilistic black box is imported, stated with a citation in Section
 4.3: multivariate MGF uniqueness.
 

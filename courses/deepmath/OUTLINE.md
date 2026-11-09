@@ -442,7 +442,7 @@ forward process + Gaussian reverse-step form, no variational objective); ends on
 bridge to prob09 (integrals stop closing → Monte Carlo).
 
 Companion: `prob08-gaussian/prob08-gaussian-note.html` — detailed definitions, expanded proofs, lemmas, references.
-Accessible edition: `prob08-gaussian/prob08-gaussian-note.md` — screen-reader Markdown edition of that note (1986 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Accessible edition: `prob08-gaussian/prob08-gaussian-note.md` — screen-reader Markdown edition of that note (1987 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|

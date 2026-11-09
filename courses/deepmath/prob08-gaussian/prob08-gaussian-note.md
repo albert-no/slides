@@ -264,32 +264,33 @@ that the second factor is the $X_2$ marginal, so $X_2 \sim \mathcal N(0,1)$:
 this is the two-dimensional case of the statement that marginals of a Gaussian
 are Gaussian. Restoring means and scales gives the theorem. **End of proof.**
 
-**Worked slice.** In the running example, condition on $X_2 = 1$. The mean is
-$\rho x_2 = 0.6 \cdot 1 = 0.6$ and the variance is
+**Worked slice.** In the running example, condition on $X_2 = -1$. The mean is
+$\rho x_2 = 0.6 \cdot (-1) = -0.6$ and the variance is
 $1 - \rho^2 = 1 - 0.36 = 0.64$, so
-$X_1 \mid X_2 = 1 \sim \mathcal N(0.6,\, 0.64)$, a normal with standard
+$X_1 \mid X_2 = -1 \sim \mathcal N(-0.6,\, 0.64)$, a normal with standard
 deviation $0.8$. Geometrically: the vertical plane standing over the line
-$x_2 = 1$ in the floor cuts the density surface, and the resulting
+$x_2 = -1$ in the floor cuts the density surface, and the resulting
 cross-section, once normalized, is a normal bump whose peak sits at
-$x_1 = 0.6$, shifted right of the origin and narrower than the marginal. The
+$x_1 = -0.6$, shifted left of the origin and narrower than the marginal. The
 slides split this into two steps.
 
-*Cut.* The plane meets the surface along the curve $x_1 \mapsto f(x_1, 1)$.
-In the 3D figure (a fine mesh) the half of the surface on the viewer's side
-of the plane is drawn translucent, so the shaded cross-section and the red
-slice curve are visible. The raw slice is not yet a density: its area is
+*Cut.* The plane meets the surface along the curve $x_1 \mapsto f(x_1, -1)$.
+In the 3D figure (a fine mesh) the plane stands in front of the peak, so the
+shaded cross-section and the red slice curve are in full view; the part of the
+surface on the viewer's side of the plane is a low tail. The raw slice is not
+yet a density: its area is
 
-$$ \int f(x_1, 1)\, dx_1 = f_{X_2}(1) = \varphi(1)
+$$ \int f(x_1, -1)\, dx_1 = f_{X_2}(-1) = \varphi(-1)
    = \tfrac{1}{\sqrt{2\pi}} e^{-1/2} \approx 0.24197, $$
 
-and its peak height is $f(0.6, 1) = \varphi(1)/(0.8\sqrt{2\pi}) \approx 0.1207$.
+and its peak height is $f(-0.6, -1) = \varphi(-1)/(0.8\sqrt{2\pi}) \approx 0.1207$.
 
 *Normalize.* Dividing by that area gives the conditional density
-$f_{X_1 \mid X_2 = 1}(x_1) = f(x_1, 1)/\varphi(1)$, which has area $1$ and is
-exactly the $\mathcal N(0.6, 0.64)$ density, with peak
+$f_{X_1 \mid X_2 = -1}(x_1) = f(x_1, -1)/\varphi(-1)$, which has area $1$ and is
+exactly the $\mathcal N(-0.6, 0.64)$ density, with peak
 $1/(0.8\sqrt{2\pi}) \approx 0.4987$. The 1D figure plots both curves on one
 axis: the raw slice, shaded, with area $0.242$, and the conditional as a
-dashed curve with area $1$, both centred at $x_1 = 0.6$. Dividing by a
+dashed curve with area $1$, both centred at $x_1 = -0.6$. Dividing by a
 constant changes the height, never the shape or the centre.
 
 *Source note.* The deeper reason the completed square works falls out of the

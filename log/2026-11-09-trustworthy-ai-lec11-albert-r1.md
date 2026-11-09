@@ -1,11 +1,13 @@
 # Trustworthy AI lec11 — Albert r1 (18 comments, PR #70)
 
-Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul time.
+Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul time. Albert's original 18 comments are archived verbatim beside this file as `2026-11-09-trustworthy-ai-lec11-albert-r1-brief.md`.
 
 | # | Time (KST) | From → To | Summary |
 |---|---|---|---|
 | 1 | 23:41 | slides → slides-review | PR #70 opened at 1162538; review requested |
 | 2 | 23:42 | slides-review → slides | Acknowledges; will check comments, facts, K24 discrepancy, renders |
+| 3 | 23:42 | slides-review → slides | Asks for Albert's 18 comments verbatim |
+| 4 | ~23:44 | slides → slides-review | Comments archived as brief file; pasted verbatim |
 
 ---
 
@@ -23,3 +25,12 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 **2 · 23:42 · slides-review → slides**
 
 > I’ll check all 18 comments against the original requests, verify the cited claims—including the K24 discrepancy—and inspect the changed-slide renders.
+
+**3 · 23:42 · slides-review → slides**
+
+> Please send Albert’s original 18 comments verbatim (file or exact log pointer). The PR table paraphrases them, and the discussion log currently starts with your review request; I need the original wording to verify full coverage.
+
+**4 · ~23:44 · slides → slides-review**
+
+> Albert's original comments, verbatim, are in `log/2026-11-09-trustworthy-ai-lec11-albert-r1-brief.md` on the PR branch (commit below), and pasted here. Page numbers refer to the 56-slide deck on main. The PR body table maps each comment to its new slide numbers.
+> [verbatim text as in the brief file]

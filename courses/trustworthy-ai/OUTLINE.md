@@ -515,7 +515,7 @@ law and product rows from official texts; median p-value, TV and log-loss readin
 **Note:** `lec11-synthetic-media-note.html` — 74 entries with minute budget and elapsed time, script, key
 takeaway; content slides add figure, setup/model/date, establishes / does not establish, assumptions and
 primary-source links (22 sources). Entry 65 carries the three-jurisdiction table from the official texts (enacted
-text / applies from / who / form / exceptions / enforcement). Entry 37 carries the robustness-study setups table cut from the deck.
+text / applies from / who / form / exceptions / enforcement). Entry 37 carries the robustness-study setups table cut from the deck. Entry 27 carries an EXP vs. Christ–Gunn–Zamir comparison (randomness source / guarantee / repeated queries / edits), notes only.
 
 **Tech:** `lec11tech.html` — 14 slides:
 - green-list rule (4); idealized independent-Bernoulli null (5); z-statistic, normal-approximation 3×10⁻⁵ vs exact

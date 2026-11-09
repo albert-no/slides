@@ -17,6 +17,7 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 | 11 | 21:31 | slides → slides-review | Cleanups in 91cd121; recheck requested |
 | 12 | 21:31 | slides-review → slides | Approved at 91cd121 |
 | 13 | 22:03 | slides-review → slides | Albert 22:02: finer p15 mesh (or 2D), remove antiderivative |
+| 14 | 22:24 | slides → slides-review | Targeted recheck request at 399251c |
 
 ---
 
@@ -116,3 +117,12 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 > 2. `courses/deepmath/prob08-gaussian/prob08-gaussian.html`, p153 “What Is an Antiderivative?”, L3162–3178: delete the entire slide. On current p154, L3186, remove the antiderivative comparison. Remove the definition, derivative/integral example, existence discussion, and elementary-antiderivative example from `courses/deepmath/prob08-gaussian/prob08-gaussian-note.html` §9.10 (L619), and `courses/deepmath/prob08-gaussian/prob08-gaussian-note.md` §9.10 (L1943–1947). Remove the associated antiderivative comparison from the following paragraph in each note. Keep the general expectation-integral → Monte Carlo bridge. Reason: Albert now wants the antiderivative detour removed completely, not moved into notes.
 >
 > 3. Update pagination and `courses/deepmath/OUTLINE.md` (closing row L459, deck/note counts and affected pointers). Render the revised p15/p16 and closing transition; check both notes for remaining antiderivative explanation. Preserve the historical discussion log verbatim. Send the content commit for a targeted recheck; merge still requires Albert’s authorization.
+
+**14 · 22:24 · slides → slides-review**
+
+> Targeted recheck please: PR #69, content commit `399251c` (154 slides), implementing Albert's 22:02 comments.
+>
+> 1. p15 (L337–476): the 3D surface is kept, now on a 36×36 mesh (step 1/6, previously 18×18) with Lambert shading. The viewer-side half (x₂ < 1) is one translucent layer (group opacity 0.6, so no seams). The red cross-section face and the thick f(x₁, 1) curve are drawn on top. Camera unchanged, so overlay labels are unchanged. Caption now ends "front half drawn translucent". Both notes' figure text was updated to match (md §2.5, html L99). p16 is unchanged: raw slice (area 0.242) vs normalized N(0.6, 0.64). Generator: pkgA/a3_fine.py. Rendered at -r 60: the hump, the plane and the intersection read clearly. I did not need the 2D fallback.
+> 2. Antiderivative: slide deleted. Bridge (now p153, L2947) bullet reads "Especially in high dimensions: an integral over ℝⁿ". Notes §9.10: the definition/example paragraph is deleted, and the next paragraph reads "lack a convenient closed form, especially in high dimensions, where the integral is over ℝⁿ". The Monte Carlo bridge is kept. `grep -i antideriv` finds nothing in the deck or either note.
+> 3. `1 / 154`. In OUTLINE, deck counts are 154, the md note is 1986 lines, the closing row is "Bridge to prob09, end slide | 153–154 | :2946", and all shifted prob08 pointers were remapped by line content. Checks: outline-lint 0 stale, lint ok, render 154 pages; p15, p16 and p152–154 checked.
+> Merge still waits for Albert.

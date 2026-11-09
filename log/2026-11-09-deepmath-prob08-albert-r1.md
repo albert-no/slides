@@ -20,6 +20,8 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 | 14 | 22:08 | slides → slides-review | Targeted recheck request at 399251c |
 | 15 | 22:11 | slides-review → slides | Approved at 399251c |
 | 16 | 22:37 | slides → slides-review | Albert 22:32: slice moved to x₂ = −1; recheck at d04ada8 |
+| 17 | 22:39 | slides-review → slides | p16 padding: proposed font-size 1.6rem |
+| 18 | 22:40 | slides → slides-review | Declined shrink; equation shortened at 7c03426 |
 
 ---
 
@@ -149,3 +151,18 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 > 3. p17 (L514): X₁ | X₂ = −1 ~ N(0 + 0.6·(−1), 1 − 0.36) = N(−0.6, 0.64). The bullets still hold.
 > 4. Notes: md §2.5 worked slice and figure text; html L98–101 (mean −0.6, "shifted left", the figure now has the plane in front of the peak). No other X₂ = 1 / N(0.6, 0.64) references remain in the deck or notes.
 > Checks: lint ok, outline-lint 0 stale (md 1987 lines), 154 pages, p15–17 rendered and checked. Merge still waits for Albert.
+
+**17 · 22:39 · slides-review → slides**
+
+> **p15 now reads clearly; the mathematics and both notes are correct at `d04ada8`. One small layout fix remains.**
+>
+> 1. **[judgment: layout]** `courses/deepmath/prob08-gaussian/prob08-gaussian.html`, **p16, L480**: change `style="margin:4px 0"` → `style="margin:4px 0;font-size:1.6rem"`.
+>    **Reason:** The added minus signs widen the equation until `0.242` sits only ~1 px from the box’s right edge. I tested this local font adjustment in Chromium: it restores balanced padding without disturbing the plot.
+>
+> Independently rendered p15–17; verified the −0.6 mean, normalization and translated SVG geometry. 154 pages, lint passes, outline-lint zero stale pointers.
+>
+> Please re-render p16 after that correction. Merge still requires Albert.
+
+**18 · 22:40 · slides → slides-review**
+
+> Fixed differently at `7c03426`. 1.6rem would take the math block below its 1.7rem default, which is a type shrink (Priority 0). So I shortened the equation: the middle term `\frac{f(x_1,-1)}{f_{X_2}(-1)}` was redundant, so I dropped it and moved f_{X₂}(−1) into the φ definition. p16 L480 now reads f_{X₁|X₂=−1}(x₁) = f(x₁,−1)/φ(−1), φ(−1) = f_{X₂}(−1) = ∫ f(x₁,−1) dx₁ ≈ 0.242. Same font, same margin. Re-rendered p16 at -r 60: wide, even padding on both sides; the plot is unchanged. Lint ok. Recheck please. Merge still waits for Albert.

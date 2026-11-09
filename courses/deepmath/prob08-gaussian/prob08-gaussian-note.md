@@ -53,7 +53,8 @@ conditional expectation, the orthogonality principle and the minimum
 mean-squared-error theorem, the maximum-likelihood recipe, the Bayes
 optimality of the maximum-a-posteriori rule, and the notion of bias. Two
 facts are imported from linear algebra without proof: the spectral theorem for
-symmetric matrices, and the multivariate change-of-variables formula. Exactly
+symmetric matrices, and the volume fact that an invertible linear map $D$
+scales volume by $|\det D|$ (Section 6.4; no general Jacobian theorem). Exactly
 one probabilistic black box is imported, stated with a citation in Section
 4.3: multivariate MGF uniqueness.
 
@@ -75,7 +76,7 @@ stationary prior, from its exact algebra.
 1. Why Gaussians?
 2. Warm-up: two dimensions
 3. Positive semidefinite matrices
-4. Three definitions
+4. Multivariate normal: three equivalent definitions
 5. Vector means and covariances
 6. The properties theorem
 7. The Gaussian channel
@@ -169,6 +170,16 @@ are eigenvectors, with eigenvalues $1 + \rho$ and $1 - \rho$. Here
 $\lambda_1 = 1.6$ along $\tfrac{1}{\sqrt2}(1,1)^{\mathsf T}$ and
 $\lambda_2 = 0.4$ along $\tfrac{1}{\sqrt2}(1,-1)^{\mathsf T}$.
 
+*Figure (eigenpairs).* The slide "Eigenvectors Orient; Eigenvalues Set
+Spread" draws the two contours $x^{\mathsf T}\Sigma^{-1}x = 1$ and $= 4$ of the
+running example, with both unit eigenvectors $z_i = (1,\pm1)/\sqrt2$ drawn
+as arrows and labelled $\Sigma z_i = \lambda_i z_i$. The variance of $X$ along
+$z_i$ is $z_i^{\mathsf T}\Sigma z_i = \lambda_i$, so the semi-axes of the inner
+contour are $\sqrt{1.6} \approx 1.26$ and $\sqrt{0.4} \approx 0.63$. The two
+contours are level sets of the quadratic form, not 68% or 95% probability
+regions: in two dimensions $\Pr(X^{\mathsf T}\Sigma^{-1}X \le c) = 1 - e^{-c/2}$,
+about $0.39$ at $c = 1$ and $0.86$ at $c = 4$.
+
 ### 2.3 Geometry: why the level sets are ellipses
 
 A level set $\{x : x^{\mathsf T} \Sigma^{-1} x = c\}$ is best read in the
@@ -253,14 +264,34 @@ that the second factor is the $X_2$ marginal, so $X_2 \sim \mathcal N(0,1)$:
 this is the two-dimensional case of the statement that marginals of a Gaussian
 are Gaussian. Restoring means and scales gives the theorem. **End of proof.**
 
-**Worked slice.** In the running example, condition on $X_2 = 1$. The mean is
-$\rho x_2 = 0.6 \cdot 1 = 0.6$ and the variance is
+**Worked slice.** In the running example, condition on $X_2 = -1$. The mean is
+$\rho x_2 = 0.6 \cdot (-1) = -0.6$ and the variance is
 $1 - \rho^2 = 1 - 0.36 = 0.64$, so
-$X_1 \mid X_2 = 1 \sim \mathcal N(0.6,\, 0.64)$, a normal with standard
-deviation $0.8$. Geometrically: the horizontal line at height $x_2 = 1$ cuts
-the density surface, and the resulting cross-section is a normal bump whose
-peak sits at $x_1 = 0.6$, shifted right of the origin and slightly narrower
-than the marginal.
+$X_1 \mid X_2 = -1 \sim \mathcal N(-0.6,\, 0.64)$, a normal with standard
+deviation $0.8$. Geometrically: the vertical plane standing over the line
+$x_2 = -1$ in the floor cuts the density surface, and the resulting
+cross-section, once normalized, is a normal bump whose peak sits at
+$x_1 = -0.6$, shifted left of the origin and narrower than the marginal. The
+slides split this into two steps.
+
+*Cut.* The plane meets the surface along the curve $x_1 \mapsto f(x_1, -1)$.
+In the 3D figure (a fine mesh) the plane stands in front of the peak, so the
+shaded cross-section and the red slice curve are in full view; the part of the
+surface on the viewer's side of the plane is a low tail. The raw slice is not
+yet a density: its area is
+
+$$ \int f(x_1, -1)\, dx_1 = f_{X_2}(-1) = \varphi(-1)
+   = \tfrac{1}{\sqrt{2\pi}} e^{-1/2} \approx 0.24197, $$
+
+and its peak height is $f(-0.6, -1) = \varphi(-1)/(0.8\sqrt{2\pi}) \approx 0.1207$.
+
+*Normalize.* Dividing by that area gives the conditional density
+$f_{X_1 \mid X_2 = -1}(x_1) = f(x_1, -1)/\varphi(-1)$, which has area $1$ and is
+exactly the $\mathcal N(-0.6, 0.64)$ density, with peak
+$1/(0.8\sqrt{2\pi}) \approx 0.4987$. The 1D figure plots both curves on one
+axis: the raw slice, shaded, with area $0.242$, and the conditional as a
+dashed curve with area $1$, both centred at $x_1 = -0.6$. Dividing by a
+constant changes the height, never the shape or the centre.
 
 *Source note.* The deeper reason the completed square works falls out of the
 general machinery, and Section 6.9 re-derives Theorem 1 as the
@@ -285,6 +316,19 @@ an orthonormal eigenbasis $z_1, \dots, z_n$, so that
 $A = Q\Lambda Q^{\mathsf T} = \sum_{i=1}^n \lambda_i z_i z_i^{\mathsf T}$ with
 $Q^{\mathsf T} Q = I$.
 
+*Matrix form.* Put the eigenvectors in the columns of
+$Q = [z_1 \cdots z_n]$ and the eigenvalues on the diagonal of
+$\Lambda = \operatorname{diag}(\lambda_1, \dots, \lambda_n)$. Then the $n$
+equations $Az_i = \lambda_i z_i$ are, column by column, the single equation
+$AQ = Q\Lambda$. Since $Q^{\mathsf T} Q = I$, the square matrix $Q$ is
+invertible with $Q^{-1} = Q^{\mathsf T}$, so multiplying on the right by
+$Q^{\mathsf T}$ gives $A = Q\Lambda Q^{\mathsf T}$. Read right to left, $Ax$
+first takes coordinates in the eigenbasis ($Q^{\mathsf T}x$), scales the
+$i$-th coordinate by $\lambda_i$, and maps back ($Q$). Writing
+$Q\Lambda = [\lambda_1 z_1 \cdots \lambda_n z_n]$ and multiplying this by the
+rows $z_i^{\mathsf T}$ of $Q^{\mathsf T}$, column times row, gives
+$Q\Lambda Q^{\mathsf T} = \sum_i \lambda_i z_i z_i^{\mathsf T}$.
+
 **Lemma 3.1.** $A \succeq 0$ if and only if all $\lambda_i \geq 0$; and
 $A \succ 0$ if and only if all $\lambda_i > 0$.
 
@@ -299,6 +343,15 @@ $$ x^{\mathsf T} A x = \sum_i \lambda_i (z_i^{\mathsf T} x)^2 = \sum_i \lambda_i
 which is a nonnegative combination when every $\lambda_i \geq 0$, and is
 strictly positive for $x \neq 0$ when every $\lambda_i > 0$, since then some
 $c_i \neq 0$. **End of proof.**
+
+*Bowl versus trough.* One vector is enough to refute positive definiteness,
+while proving it needs every $x \neq 0$. The slide contrasts the workbench
+matrix $A$ of Section 3.2 with $B$, the matrix with all four entries equal to
+$1$. Take $x = (1,-1)^{\mathsf T}$: $x^{\mathsf T}Ax = 2 > 0$, but $Bx = 0$.
+Along the line $tx$ the two forms are $q_A(tx) = 2t^2$, which climbs, and
+$q_B(tx) = 0$, which stays flat. So $B$ is positive semidefinite (eigenvalues
+$2$ and $0$) but singular: its graph is a trough, and a nonzero null direction
+lets you move without climbing. $A$'s graph is a bowl.
 
 ### 3.2 The workbench matrix
 
@@ -399,7 +452,18 @@ is constantly equal to $1$, interpreting $V^{-1}$ on the complement, and the
 integral diverges. So a singular $V$ admits no density on $\mathbb{R}^n$,
 which is why Definition 1 must require $V \succ 0$. **End of proof.**
 
-## 4 Three Definitions
+*Why finiteness is not just "the tails die".* An integrand that tends to $0$
+at infinity can still have infinite integral, so decay alone proves nothing.
+The usable statement is a Gaussian bound. Let $A \succ 0$ with smallest
+eigenvalue $\lambda_{\min} > 0$. Expanding $x = \sum_i c_i z_i$ in the
+eigenbasis, $x^{\mathsf T}Ax = \sum_i \lambda_i c_i^2 \ge \lambda_{\min}
+\sum_i c_i^2 = \lambda_{\min}\|x\|^2$, using $\|x\|^2 = \sum_i c_i^2$ by
+orthonormality. Hence $e^{-x^{\mathsf T}Ax} \le e^{-\lambda_{\min}\|x\|^2}$,
+and the right side integrates to $(\pi/\lambda_{\min})^{n/2} < \infty$. With
+$A = \tfrac12 V^{-1}$ this is the slide's argument for the density; the exact
+value of the integral is the computation above.
+
+## 4 Multivariate Normal: Three Equivalent Definitions
 
 ### 4.1 The three definitions, in full
 
@@ -426,7 +490,9 @@ where constants count as degenerate normals $\mathcal N(c, 0)$.
 
 The quantifier in Definition 3 is "for all $a$", and the convention on
 constants is not cosmetic: it is what lets $a = 0$, and more generally any $a$
-annihilating a degenerate direction, pass the test. Note also that
+annihilating a degenerate direction, pass the test. The slides state this
+rule on the Definition 3 card: $\mathcal N(c, 0)$ is normal, so $a = 0$, for
+which $a^{\mathsf T}X = 0$, passes. Note also that
 Definition 3 makes no moment assumption at all; finiteness of every moment is
 a *consequence*, established in Section 4.4.
 
@@ -467,11 +533,20 @@ parameters $\mu = \mathbb E[X]$ and
 $V = \operatorname{Cov}(X) = DD^{\mathsf T}$; and each is equivalent to
 Definition 1 precisely when the covariance is invertible.
 
+For the construction the intrinsic nondegeneracy condition is
+$V = DD^{\mathsf T} \succ 0$, that is, $D$ has full row rank $n$ (so
+$m \ge n$). Square invertible $D$ is the special case $m = n$ used in the
+simple proof of part 4; a rectangular $D$ of full row rank also gives a
+nondegenerate law, since $DW + \mu$ has MGF
+$\exp\big(s^{\mathsf T}\mu + \tfrac12 s^{\mathsf T} DD^{\mathsf T} s\big)$, which
+depends on $D$ only through $DD^{\mathsf T}$.
+
 Two of the four implications are the ones the lecture proves: Definition 2
-implies Definition 1 when $D$ is invertible, proved as part 4 of Theorem 2 in
-Section 6.4; and Definition 2 implies Definition 3, which is part 3 followed
-by part 1, in Section 6.3. The two reverse implications are stated in the
-source but not proved in class. They are proved next.
+implies Definition 1 when $D$ is square and invertible, proved as part 4 of
+Theorem 2; and Definition 2 implies Definition 3, proved as part 1 of
+Theorem 2 (both in Section 6). The two reverse implications are true but
+not proved on the slides; the slide draws them as dashed arrows labelled
+"true, not proved here". They are proved next.
 
 One tool is imported. *Multivariate MGF uniqueness*: if
 $M_X(s) = \mathbb E[e^{s^{\mathsf T} X}]$ and $M_Y(s)$ are finite and equal
@@ -528,7 +603,9 @@ $X$ and $Y$ have the same distribution. **End of proof.**
 This closes the loop: Definition 1 implies Definition 2 implies Definition 3
 implies Definition 2, and Definition 2 implies Definition 1 whenever the
 covariance is invertible. Honest accounting: the only unproved ingredient in
-this whole set of notes is MGF uniqueness, flagged above.
+this equivalence argument is multivariate MGF uniqueness, flagged above; the
+notes elsewhere also import the volume fact of Section 6.4 and the MGF
+continuity theorem used in Section 8.4.
 
 *Source note.* In two places the LaTeX source `probability25.tex` refers to
 "the density in Definition 2"; in the source's own numbering the density
@@ -620,24 +697,36 @@ symbol $\rho$ in the density really is the correlation.
 
 ## 6 The Properties Theorem
 
-Throughout this section $X = DW + \mu$ is a Definition-2 Gaussian with
-$W \sim \mathcal N(0, I_m)$, and $d_i^{\mathsf T}$ denotes the $i$-th row of
-$D$.
+**Standing assumption.** Throughout this section $X$ is a Definition-2
+Gaussian,
 
-**Theorem 2.** With $V = DD^{\mathsf T}$:
+$$ X = DW + \mu, \qquad W \in \mathbb{R}^m,\; D \in \mathbb{R}^{n \times m},\; \mu \in \mathbb{R}^n, $$
 
-1. Each $X_i$ is normal; more generally $a^{\mathsf T} X$ is normal for every
-   $a$.
-2. $\mathbb E[X] = \mu$ and $\operatorname{Cov}(X) = DD^{\mathsf T}$.
-3. $AX + b$ is again multivariate normal, with mean $A\mu + b$ and covariance
-   $A\,DD^{\mathsf T} A^{\mathsf T}$.
-4. If $D$ is square and invertible, $X$ has the Definition-1 density with
-   $V = DD^{\mathsf T}$.
-5. $M_X(s) = \exp(s^{\mathsf T}\mu + \tfrac12 s^{\mathsf T} V s)$, and the
-   pair $(\mu, V)$ determines the distribution.
-6. If $X$ is jointly Gaussian, its components are independent if and only if
-   they are uncorrelated, that is, if and only if $V$ is diagonal; there is a
-   blockwise version for subvectors.
+where $W_1, \dots, W_m$ are independent standard normals. We write
+$V := DD^{\mathsf T}$ (part 2 shows it is the covariance), $d_{ij}$ for the
+entries of $D$ and $d_i^{\mathsf T}$ for its $i$-th row. $D$ is not assumed
+square or invertible unless a part says so. Each part is stated and then
+proved before the next.
+
+**Theorem 2.** Under the standing assumption:
+
+1. For every $a \in \mathbb{R}^n$,
+   $a^{\mathsf T} X \sim \mathcal N\big(a^{\mathsf T}\mu,\; \|D^{\mathsf T} a\|^2\big)$;
+   in particular $X_i \sim \mathcal N\big(\mu_i,\; \sum_{j=1}^m d_{ij}^2\big)$.
+2. $\mathbb E[X] = \mu$ and $\operatorname{Cov}(X, X) = DD^{\mathsf T} = V$.
+3. For any $C \in \mathbb{R}^{k \times n}$ and $d \in \mathbb{R}^k$,
+   $Y = CX + d$ satisfies Definition 2, with $\mathbb E[Y] = C\mu + d$ and
+   $\operatorname{Cov}(Y, Y) = CVC^{\mathsf T}$.
+4. If $D$ is square ($m = n$) and invertible, then $V = DD^{\mathsf T} \succ 0$
+   and
+   $f_X(x) = \frac{1}{(2\pi)^{n/2} |V|^{1/2}} \exp\big( -\tfrac12 (x-\mu)^{\mathsf T} V^{-1} (x-\mu) \big)$.
+5. For every $s \in \mathbb{R}^n$,
+   $M_X(s) = \mathbb E\big[e^{s^{\mathsf T} X}\big] = \exp\big(s^{\mathsf T}\mu + \tfrac12 s^{\mathsf T} V s\big)$.
+   Hence $(\mu, V)$ alone determines the distribution of $X$.
+6. (a) Coordinates: $X_1, \dots, X_n$ are independent if and only if $V$ is
+   diagonal. (b) Blocks: for a split $X = (X_A, X_B)$,
+   $X_A \perp X_B$ if and only if $\operatorname{Cov}(X_A, X_B) = 0$; the
+   coordinates inside a block need not be independent.
 7. If $(X, Y)$ are jointly Gaussian with $V_{YY} \succ 0$, then
    $\mathbb E[X \mid Y] = \mu_X + V_{XY} V_{YY}^{-1} (Y - \mu_Y)$, the
    residual is independent of $Y$, and
@@ -653,78 +742,169 @@ independence, and
 $e^{m_1 t + v_1 t^2/2} \cdot e^{m_2 t + v_2 t^2/2} = e^{(m_1+m_2)t + (v_1+v_2)t^2/2}$
 is again a normal MGF; conclude by scalar MGF uniqueness. By induction the
 same holds for any finite independent sum, with degenerate summands allowed.
+(The slides write the second variable as $T$ to keep $V$ free for the
+covariance matrix.)
 
-*Proof of part 1.* Write
+*Proof of part 1.* Coordinatewise, Definition 2 reads
+$X_i = \mu_i + \sum_{j=1}^m d_{ij} W_j$, and in general
 
-$$ a^{\mathsf T} X = a^{\mathsf T} D W + a^{\mathsf T}\mu
-   = \sum_{k=1}^m (a^{\mathsf T} D)_k\, W_k + a^{\mathsf T}\mu . $$
+$$ a^{\mathsf T} X = a^{\mathsf T}\mu + a^{\mathsf T} D W
+   = a^{\mathsf T}\mu + (D^{\mathsf T} a)^{\mathsf T} W
+   = a^{\mathsf T}\mu + \sum_{k=1}^m (D^{\mathsf T} a)_k\, W_k . $$
 
-This is a finite sum of independent normals
-$(a^{\mathsf T} D)_k W_k \sim \mathcal N(0, (a^{\mathsf T} D)_k^2)$ plus a
-constant, hence normal, and specifically
+This is a constant plus a finite sum of independent normals
+$(D^{\mathsf T} a)_k W_k \sim \mathcal N(0, (D^{\mathsf T} a)_k^2)$, hence
 $a^{\mathsf T} X \sim \mathcal N(a^{\mathsf T}\mu,\; \|D^{\mathsf T} a\|^2)$.
-Taking $a = e_i$ gives $X_i \sim \mathcal N(\mu_i, \|d_i\|^2)$. **End of
-proof.**
+Taking $a = e_i$ gives $D^{\mathsf T} e_i = d_i$ and
+$X_i \sim \mathcal N(\mu_i, \sum_j d_{ij}^2)$. **End of proof.**
 
-This is the implication from Definition 2 to Definition 3.
+Is part 1 trivial under Definition 2? Essentially yes: once $X$ is written as
+an affine function of independent normals, the only fact used is the
+independent-sum rule above. That is the point of choosing Definition 2 as the
+working definition. Since every projection is normal, this is the implication
+from Definition 2 to Definition 3.
 
 ### 6.2 Part 2: the parameters
 
-$\mathbb E[X] = D\,\mathbb E[W] + \mu = \mu$; and by Lemma 5.1 with
-$\operatorname{Cov}(W) = I_m$, which holds because the $W_k$ are independent
-with unit variance,
-$\operatorname{Cov}(X) = D\, I_m\, D^{\mathsf T} = DD^{\mathsf T}$.
+*Tool.* $\mathbb E[WW^{\mathsf T}] = I_m$: the $(i,j)$ entry is
+$\mathbb E[W_iW_j]$, which is $\operatorname{Var}(W_i) = 1$ for $i = j$ and
+$\mathbb E[W_i]\,\mathbb E[W_j] = 0$ for $i \neq j$ by independence.
+
+*Proof of part 2.* By linearity, $\mathbb E[X] = D\,\mathbb E[W] + \mu = \mu$.
+Hence $X - \mu = DW$, and pulling the constant matrices out of the entrywise
+expectations,
+
+$$ \operatorname{Cov}(X, X) = \mathbb E[(X-\mu)(X-\mu)^{\mathsf T}]
+   = \mathbb E[DWW^{\mathsf T}D^{\mathsf T}] = D\,\mathbb E[WW^{\mathsf T}]\,D^{\mathsf T}
+   = DD^{\mathsf T}. $$
+
+**End of proof.** (Equivalently, Lemma 5.1 with $\operatorname{Cov}(W) = I_m$.)
 
 Together with Lemma 3.3 this shows that every positive semidefinite matrix
 arises as a Gaussian covariance: given $V \succeq 0$, take $D = V^{1/2}$.
 
 ### 6.3 Part 3: affine closure, and marginals
 
-$AX + b = A(DW + \mu) + b = (AD)W + (A\mu + b)$ is again of Definition-2 form,
-with matrix $AD$. That one-line proof is the reason Definition 2 is the
-workhorse: the other two definitions make this closure invisible. The
-parameters follow from part 2 and Lemma 5.1: mean $A\mu + b$, covariance
-$(AD)(AD)^{\mathsf T} = A\,V A^{\mathsf T}$.
+*Proof of part 3.*
+$Y = CX + d = C(DW + \mu) + d = (CD)W + (C\mu + d)$ is again of Definition-2
+form, with matrix $CD$ and shift $C\mu + d$. Part 2 applied to this
+representation gives mean $C\mu + d$ and covariance
+$(CD)(CD)^{\mathsf T} = CDD^{\mathsf T}C^{\mathsf T} = CVC^{\mathsf T}$.
+**End of proof.**
+
+That one-line proof is the reason Definition 2 is the workhorse: the other
+two definitions make this closure invisible.
 
 *Corollary (marginals).* Any subvector $(X_{i_1}, \dots, X_{i_k})$ equals
-$A X$ for the selector matrix $A$ whose rows are
+$CX$ for the selector matrix $C$ whose rows are
 $e_{i_1}^{\mathsf T}, \dots, e_{i_k}^{\mathsf T}$, hence is Gaussian, with
-mean and covariance the corresponding sub-blocks of $\mu$ and $V$.
-Marginalizing a Gaussian is *deleting rows and columns*; no integral is ever
-computed.
+mean and covariance the corresponding sub-blocks of $\mu$ and $V$. Example
+used on the slides: $n = 5$, keep coordinates $1, 4, 5$,
 
-### 6.4 Part 4: the density, by change of variables
+$$ C = \begin{bmatrix} 1 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 & 1 \end{bmatrix},
+   \qquad CX = \begin{bmatrix} X_1 \\ X_4 \\ X_5 \end{bmatrix},
+   \qquad C\mu = \begin{bmatrix} \mu_1 \\ \mu_4 \\ \mu_5 \end{bmatrix}. $$
 
-**Recalled tool (multivariate change of variables, stated).** If $Y = g(Z)$
-with $g$ an invertible differentiable map, then
-$f_Y(y) = f_Z(g^{-1}(y))\, |\det J_{g^{-1}}(y)|$. For the affine map
-$g(w) = Dw + \mu$ one has $g^{-1}(x) = D^{-1}(x - \mu)$, with the constant
-Jacobian determinant $\det D^{-1} = 1/\det D$.
+Since $(CVC^{\mathsf T})_{kl} = V_{i_k i_l}$, the marginal covariance is the
+$3 \times 3$ block of $V$ in rows and columns $1, 4, 5$. Marginalizing a
+Gaussian is *deleting rows and columns*; no integral is ever computed.
 
-*Proof of part 4.* With $f_W(w) = (2\pi)^{-n/2} e^{-\|w\|^2/2}$ and
-$w = D^{-1}(x-\mu)$,
+### 6.4 Part 4: the density, from the volume factor
+
+**Why $|\det D|$ appears: volume.** Start in one dimension with $X = 2W$.
+The map doubles every length, so the interval $[0.5, 1]$ for $W$ becomes
+$[1, 2]$ for $X$; it is the same event, with the same probability
+$\Phi(1) - \Phi(0.5) \approx 0.1499$. Twice the width with the same
+probability forces half the height: $f_X(x) = \tfrac12 f_W(x/2)$.
+
+In two dimensions take
+$D = \begin{bmatrix} 2 & 1 \\ 0 & 1 \end{bmatrix}
+   = \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}\begin{bmatrix} 2 & 0 \\ 0 & 1 \end{bmatrix}$,
+a stretch followed by a shear. The unit square becomes a $2 \times 1$
+rectangle (area $2$) and then the parallelogram with edges $De_1 = (2,0)$ and
+$De_2 = (1,1)$, still area $2 = |\det D|$: stretching changes area, while
+shearing tilts without changing it. In $n$ dimensions we take the following
+as the one imported fact: *a linear map $D$ multiplies every volume by
+$|\det D|$*. The absolute value covers reflections, for which $\det D < 0$.
+This fact is stated, not proved, here.
+
+**Mass conservation.** A tiny region of volume $\Delta v$ around $w$ is
+mapped onto a region of volume $|\det D|\,\Delta v$ around $x = Dw + \mu$.
+Both are the same event, so
+
+$$ f_W(w)\,\Delta v \approx f_X(x)\,|\det D|\,\Delta v
+   \quad\Longrightarrow\quad
+   f_X(x) = \frac{f_W\big(D^{-1}(x - \mu)\big)}{|\det D|}. $$
+
+Made precise, this is the linear case of the change-of-variables formula; the
+volume fact above is the only ingredient beyond the definition of a density.
+No general (nonlinear) Jacobian theorem is needed.
+
+*Proof of part 4.* Independence of the coordinates gives the product density
+$f_W(w) = \prod_{j=1}^n e^{-w_j^2/2}/\sqrt{2\pi} = (2\pi)^{-n/2} e^{-\|w\|^2/2}$.
+The density rule with $w = D^{-1}(x-\mu)$ gives
 
 $$ f_X(x) = \frac{1}{(2\pi)^{n/2} |\det D|}
    \exp\Big( -\tfrac12 \big\|D^{-1}(x - \mu)\big\|^2 \Big), $$
 
-and the exponent rearranges into the $V^{-1}$ quadratic form, with
-$V = DD^{\mathsf T}$:
+and the exponent rearranges into the $V^{-1}$ quadratic form:
 
 $$ \|D^{-1}(x-\mu)\|^2 = (x-\mu)^{\mathsf T} (D^{-1})^{\mathsf T} D^{-1} (x-\mu)
-   = (x-\mu)^{\mathsf T} (DD^{\mathsf T})^{-1} (x-\mu), $$
+   = (x-\mu)^{\mathsf T} (DD^{\mathsf T})^{-1} (x-\mu)
+   = (x-\mu)^{\mathsf T} V^{-1} (x-\mu), $$
 
 since $(D^{-1})^{\mathsf T} D^{-1} = (D^{\mathsf T})^{-1}D^{-1} = (DD^{\mathsf T})^{-1}$.
 Finally
 $|\det D| = (\det D \cdot \det D^{\mathsf T})^{1/2} = (\det V)^{1/2}$, which
 gives exactly the Definition-1 density. **End of proof.**
 
-This is the implication from Definition 2 to Definition 1. Note that
-$V = DD^{\mathsf T} \succ 0$ automatically when $D$ is invertible, since
-$\|D^{\mathsf T} a\|^2 = 0$ then forces $a = 0$.
+This is the implication from Definition 2 to Definition 1 for square
+invertible $D$. Note that $V = DD^{\mathsf T} \succ 0$ automatically when $D$
+is invertible, since $a^{\mathsf T} V a = \|D^{\mathsf T} a\|^2 = 0$ then
+forces $a = 0$. When $V$ is singular there is no density at all, but
+Definitions 2 and 3 still apply.
+
+**Optional: a proof without the volume fact.** A Jacobian-free route exists;
+it is longer, which is why the slides use the volume picture. It uses only
+the independence of the $W_j$, scalar MGFs, multivariate MGF uniqueness (the
+fact imported in Section 4.3) to identify the joint law of $QW$, and the
+one-dimensional substitution rule; it does not use parts 5 or 6.
+
+*Step 1 (triangularize).* Gram-Schmidt on the rows of $D$ (the QR
+decomposition of $D^{\mathsf T}$) writes $D = LQ$ with $Q$ orthogonal and $L$
+lower triangular. $L$ is invertible because $D$ is, so every
+$l_{kk} \neq 0$, and $|\det L| = |\det D|$, $LL^{\mathsf T} = DQ^{\mathsf T}QD^{\mathsf T} = V$.
+
+*Step 2 (rotate the noise).* Let $Z = QW$. For every $s$, by independence of
+the $W_j$,
+$\mathbb E[e^{s^{\mathsf T} Z}] = \mathbb E[e^{(Q^{\mathsf T}s)^{\mathsf T} W}]
+ = \prod_j e^{(Q^{\mathsf T}s)_j^2/2} = e^{\|Q^{\mathsf T}s\|^2/2} = e^{\|s\|^2/2}$,
+which is the MGF of $W$. By multivariate MGF uniqueness (Section 4.3), $Z$ has
+the same distribution as $W$: independent standard-normal coordinates. So
+$X = LZ + \mu$.
+
+*Step 3 (peel off one coordinate at a time).* Since $L$ is lower triangular,
+$x_k = l_{kk} z_k + \sum_{j<k} l_{kj} z_j + \mu_k$, so $x_k$ depends on
+$z_k$ affinely once $z_1, \dots, z_{k-1}$ (equivalently
+$x_1, \dots, x_{k-1}$) are fixed. For any box $A$, write
+$\mathbb P(X \in A) = \int \cdots \int \mathbf 1_A(Lz + \mu) \prod_k \varphi(z_k)\, dz_n \cdots dz_1$
+and substitute $z_1 \to x_1$, then $z_2 \to x_2$ with $x_1$ fixed, and so on.
+Each step is a one-dimensional affine substitution contributing a factor
+$1/|l_{kk}|$, which gives
+
+$$ f_X(x) = \prod_{k=1}^n \frac{\varphi(z_k)}{|l_{kk}|}
+   = \frac{1}{(2\pi)^{n/2}\, |\det L|} \exp\big( -\tfrac12 \|z\|^2 \big),
+   \qquad z = L^{-1}(x - \mu). $$
+
+*Step 4.* With $|\det L| = |\det D| = |V|^{1/2}$ and
+$\|L^{-1}(x-\mu)\|^2 = (x-\mu)^{\mathsf T}(LL^{\mathsf T})^{-1}(x-\mu) = (x-\mu)^{\mathsf T}V^{-1}(x-\mu)$,
+this is the Definition-1 density again. **End of proof.**
 
 ### 6.5 Part 5: the moment generating function
 
-*Proof.* By part 1, $s^{\mathsf T} X \sim \mathcal N(s^{\mathsf T}\mu,\, s^{\mathsf T} V s)$.
+*Proof.* Part 1 with $a = s$ gives
+$s^{\mathsf T} X \sim \mathcal N(s^{\mathsf T}\mu,\, \|D^{\mathsf T}s\|^2)$, and
+$\|D^{\mathsf T}s\|^2 = s^{\mathsf T}DD^{\mathsf T}s = s^{\mathsf T} V s$.
 Evaluate its scalar MGF, from Lecture 5, at $t = 1$:
 
 $$ M_X(s) = \mathbb E\big[e^{s^{\mathsf T} X}\big] = M_{s^{\mathsf T} X}(1)
@@ -734,7 +914,8 @@ $$ M_X(s) = \mathbb E\big[e^{s^{\mathsf T} X}\big] = M_{s^{\mathsf T} X}(1)
 finite for every $s$. Since this MGF depends on $(\mu, V)$ only, MGF
 uniqueness, the single imported black box of Section 4.3, gives the following:
 two multivariate Gaussians with the same mean and covariance are identically
-distributed, regardless of which $D$ built them. **End of proof.**
+distributed, regardless of which $D$ built them. No density is needed, so
+singular $V$ is included. **End of proof.**
 
 For example $D$ and $DR$ give the same distribution for any orthogonal $R$,
 because $DR(DR)^{\mathsf T} = DD^{\mathsf T}$. The construction is
@@ -742,26 +923,49 @@ many-to-one; the distribution is not.
 
 ### 6.6 Part 6: independence and zero covariance, both directions
 
-*Proof.* Forward direction, needing no Gaussianity: independent $X_i$ and
+*Proof, easy direction.* This needs no Gaussianity: independent $X_i$ and
 $X_j$ with finite second moments satisfy
 $\mathbb E[X_iX_j] = \mathbb E[X_i]\mathbb E[X_j]$ by Lecture 4, so
-$\operatorname{Cov}(X_i, X_j) = 0$.
+$\operatorname{Cov}(X_i, X_j) = 0$. For blocks, apply this to each entry of
+$\operatorname{Cov}(X_A, X_B)$.
 
-Reverse direction, the Gaussian miracle. Suppose $X \sim \mathcal N(\mu, V)$
-with $V = \operatorname{diag}(v_1, \dots, v_n)$. Build an
+*Proof of (a), the converse, by matching.* Suppose
+$V = \operatorname{diag}(V_{11}, \dots, V_{nn})$. Build an
 independent-by-construction comparison vector: set
-$Y_i = \mu_i + \sqrt{v_i}\, W_i$ with $W \sim \mathcal N(0, I_n)$, that is,
-$Y = \operatorname{diag}(\sqrt{v_i})\, W + \mu$, a Definition-2 Gaussian whose
-components are independent because the $W_i$ are. Its mean is $\mu$ and its
-covariance is
-$\operatorname{diag}(\sqrt{v_i})\, I \operatorname{diag}(\sqrt{v_i}) = V$. By
+$Y_i = \mu_i + \sqrt{V_{ii}}\, W_i$ with $W \sim \mathcal N(0, I_n)$, that is,
+$Y = \operatorname{diag}(\sqrt{V_{ii}})\, W + \mu$. This is a Definition-2
+Gaussian whose components are independent because the $W_i$ are. Its mean is
+$\mu$ and its covariance is
+$\operatorname{diag}(\sqrt{V_{ii}})\, I \operatorname{diag}(\sqrt{V_{ii}}) = V$. By
 part 5, $X$ and $Y$ have the same distribution; and independence is a property
 of the joint distribution, so the components of $X$ are independent. **End of
 proof.**
 
-*Blockwise version,* used in Sections 6.9 and 7: if $(X, Y)$ are jointly
-Gaussian with $\operatorname{Cov}(X, Y) = 0$, the same matching argument with
-a block-diagonal $V$ shows the subvectors $X$ and $Y$ are independent.
+*Proof of (b), same trick.* Split the rows of $D$ as $D_A$, $D_B$ to match
+$X = (X_A, X_B)$, so $V_{AA} = D_AD_A^{\mathsf T}$ and
+$V_{BB} = D_BD_B^{\mathsf T}$, and assume
+$\operatorname{Cov}(X_A, X_B) = 0$. Let $W', W''$ be independent copies of
+$W$ and set
+
+$$ Y = \begin{bmatrix} Y_A \\ Y_B \end{bmatrix}
+     = \begin{bmatrix} D_A & 0 \\ 0 & D_B \end{bmatrix}
+       \begin{bmatrix} W' \\ W'' \end{bmatrix} + \mu . $$
+
+This is Definition 2 with the $2m$-dimensional noise $(W', W'')$, so by
+part 2 its mean is $\mu$ and its covariance is
+$\begin{bmatrix} V_{AA} & 0 \\ 0 & V_{BB} \end{bmatrix} = V$. By part 5,
+$X$ and $Y$ have the same distribution. $Y_A = D_AW' + \mu_A$ and
+$Y_B = D_BW'' + \mu_B$ are functions of independent vectors, so
+$Y_A \perp Y_B$, hence $X_A \perp X_B$. No density was used, so singular
+blocks are allowed. **End of proof.** The coordinates inside $X_A$ remain
+dependent whenever $V_{AA}$ is not diagonal. This block form is the one used
+in Sections 6.9 and 7.
+
+*Optional check through the density.* When $V$ is diagonal and invertible,
+the Definition-1 exponent splits as
+$-\sum_i (x_i - \mu_i)^2 / (2V_{ii})$ and $|V| = \prod_i V_{ii}$, so
+$f_X(x) = \prod_i f_{X_i}(x_i)$, a product density. This confirms (a)
+directly but needs a density; the matching proof does not.
 
 **Counterexample: joint Gaussianity cannot be dropped.** Let
 $X \sim \mathcal N(0,1)$ and let $S$ be an independent random sign with
@@ -788,83 +992,136 @@ independent.
 
 ### 6.7 Part 7, step 1: the orthogonality characterization
 
-**Lemma 6.1.** $\mathbb E[X \mid Y]$ is the unique, up to almost-sure
-equality, function $h(Y)$ with finite second moment satisfying
-$\mathbb E[(X - h(Y))\, g(Y)] = 0$ for every bounded measurable $g$;
-entrywise for vectors.
+**Setting.** Stack $X \in \mathbb R^{n_X}$ on $Y \in \mathbb R^{n_Y}$, jointly
+Gaussian by Definition 2, with block means $\mu_X, \mu_Y$ and covariance
+blocks $V_{XX}, V_{XY}, V_{YX}, V_{YY}$. Only $V_{YY} \succ 0$ is assumed: the
+full $V$ may be singular, and so may the conditional covariance $S$. Write
+$m(y) = \mu_X + V_{XY}V_{YY}^{-1}(y - \mu_Y)$ and
+$S = V_{XX} - V_{XY}V_{YY}^{-1}V_{YX}$. Part 7 states: (a)
+$\mathbb E[X \mid Y] = m(Y)$; (b) the residual $R = X - m(Y)$ is independent
+of $Y$; (c) $\operatorname{Cov}(R) = S$; hence
+$X \mid Y = y \sim \mathcal N(m(y), S)$.
 
-*Proof.* That $h = \mathbb E[X|Y]$ passes the test is Lecture 7's
-orthogonality principle, by the tower property:
+The lecture proves (a) directly in Section 6.8, and then a second time through
+the following characterization, which holds for any pair of random vectors and
+explains *what* $\mathbb E[X|Y]$ is.
+
+**Lemma 6.1.** Let $\mathbb E[|X|^2] < \infty$. Then $\mathbb E[X \mid Y]$ is
+the unique, up to almost-sure equality, square-integrable function $h(Y)$
+satisfying $\mathbb E[(X - h(Y))\, g(Y)] = 0$ for every square-integrable
+$g$; entrywise for vectors.
+
+*Proof.* That $h = \mathbb E[X|Y]$ passes the test uses only the tower
+property and pulling out what is known given $Y$:
 
 $$ \mathbb E[(X - \mathbb E[X|Y])g(Y)]
-   = \mathbb E\big[ g(Y)\, \mathbb E[X - \mathbb E[X|Y] \mid Y] \big] = 0 . $$
+   = \mathbb E\big[ \mathbb E[(X - \mathbb E[X|Y])g(Y) \mid Y] \big]
+   = \mathbb E\big[ g(Y)\, \mathbb E[X - \mathbb E[X|Y] \mid Y] \big] = 0 , $$
 
-Conversely, if $h$ passes the test, set $d(Y) = \mathbb E[X|Y] - h(Y)$;
-subtracting the two orthogonality statements gives
-$\mathbb E[d(Y) g(Y)] = 0$ for all $g$, and choosing $g = d$, truncated if
-unbounded and then letting the truncation grow, yields
-$\mathbb E[d(Y)^2] = 0$, so $h(Y) = \mathbb E[X|Y]$ almost surely. **End of
-proof.**
+the same step that kills the cross term in Lecture 7's minimum
+mean-squared-error theorem. (The product $(X - \mathbb E[X|Y])g(Y)$ is
+integrable by Cauchy–Schwarz, since both factors are square-integrable.)
+Conversely, if $h$ passes the test, subtract the two orthogonality statements:
+$\mathbb E[(h(Y) - \mathbb E[X|Y])\, g(Y)] = 0$ for every square-integrable
+$g$. The choice $g = h - \mathbb E[X|Y]$ is itself a square-integrable
+function of $Y$, so it is allowed, and it gives
+$\mathbb E[(h(Y) - \mathbb E[X|Y])^2] = 0$, hence
+$h(Y) = \mathbb E[X|Y]$ almost surely. **End of proof.**
+
+*The projection reading.* Give the square-integrable random variables the
+inner product $\langle U, V \rangle = \mathbb E[UV]$. The square-integrable
+functions of $Y$ form a closed subspace, and Lemma 6.1 says that
+$\mathbb E[X|Y]$ is the point of that subspace whose residual is orthogonal to
+the whole subspace: the orthogonal projection of $X$. Pythagoras then gives,
+for any other square-integrable $h(Y)$,
+$\mathbb E[(X - h(Y))^2] = \mathbb E[(X - \mathbb E[X|Y])^2]
++ \mathbb E[(\mathbb E[X|Y] - h(Y))^2]$, which is the minimum
+mean-squared-error property once more.
+
+*Guard: which subspace matters.* Projecting onto the much smaller span of
+$1, Y_1, \dots, Y_{n_Y}$ requires the residual to be orthogonal only to $1$
+and to each $Y_j$; that gives the best *affine* predictor, not
+$\mathbb E[X|Y]$. Orthogonality to $Y$ alone is not enough. Counterexample:
+$Y \sim \mathcal N(0,1)$ and $X = Y^2$. Then
+$\operatorname{Cov}(X, Y) = \mathbb E[Y^3] = 0$, so the best affine predictor
+is the constant $\mathbb E[X] = 1$, yet $\mathbb E[X|Y] = Y^2$. For jointly
+Gaussian pairs the two projections coincide because, by part 7(a),
+$\mathbb E[X|Y]$ is affine. After centering, the affine formula is linear.
 
 ### 6.8 Part 7, step 2: guess linear, verify orthogonality
 
-*Proof.* Centre everything: replace $X$ and $Y$ by $X - \mu_X$ and
+*Proof of (a).* Centre everything: replace $X$ and $Y$ by $X - \mu_X$ and
 $Y - \mu_Y$, restoring the means at the end. Guess $\hat X = A Y$ with
-$A = V_{XY} V_{YY}^{-1}$, and let $\tilde X = X - \hat X$ be the residual.
+$A = V_{XY} V_{YY}^{-1}$, which exists because $V_{YY} \succ 0$, and let
+$R = X - \hat X$ be the residual. The guess is linear in the centred $Y$ and
+so affine in the original one.
 
 *The residual is uncorrelated with $Y$:*
 
-$$ \operatorname{Cov}(\tilde X, Y) = \operatorname{Cov}(X, Y) - A \operatorname{Cov}(Y, Y)
+$$ \operatorname{Cov}(R, Y) = \operatorname{Cov}(X, Y) - A \operatorname{Cov}(Y, Y)
    = V_{XY} - V_{XY} V_{YY}^{-1} V_{YY} = 0, $$
 
 using linearity of the covariance in its first slot, Lemma 5.1.
 
-*Uncorrelated upgrades to independent:* the stacked vector
-$(\tilde X, Y)$ is an affine image of the jointly Gaussian $(X, Y)$, namely
-the image under the block matrix whose first block row is $(I, -A)$ and whose
-second block row is $(0, I)$. Hence it is jointly Gaussian by part 3, so part
-6 in its blockwise form makes $\tilde X$ independent of $Y$.
+*Uncorrelated upgrades to independent:* the stacked vector $(R, Y)$ is the
+image of the jointly Gaussian $(X, Y)$ under the block matrix whose first
+block row is $(I, -A)$ and whose second block row is $(0, I)$. Hence it is
+jointly Gaussian by part 3. Part 6 in its block form, which says that
+jointly Gaussian blocks with zero cross-covariance are independent, makes $R$
+independent of $Y$ as a whole vector. The coordinates of $R$ need not be
+independent of one another.
 
-*Orthogonality test:* for any $g$,
-$\mathbb E[\tilde X\, g(Y)] = \mathbb E[\tilde X]\, \mathbb E[g(Y)] = 0$,
-since $\mathbb E[\tilde X] = 0$. By Lemma 6.1, $\hat X = \mathbb E[X \mid Y]$.
-Restoring the means,
+*Reading off the conditional mean:*
 
-$$ \mathbb E[X \mid Y] = \mu_X + V_{XY} V_{YY}^{-1} (Y - \mu_Y). $$
+$$ \mathbb E[X \mid Y] = \mathbb E[\hat X + R \mid Y]
+   = \hat X + \mathbb E[R \mid Y] = \hat X + \mathbb E[R] = \hat X, $$
 
+because $\hat X$ is a function of $Y$, $R$ is independent of $Y$, and
+$\mathbb E[R] = 0$ for centred variables. Restoring the means,
+$\mathbb E[X \mid Y] = \mu_X + V_{XY} V_{YY}^{-1} (Y - \mu_Y) = m(Y)$.
 **End of proof.**
+
+*Second route.* Independence also gives
+$\mathbb E[R\, g(Y)] = \mathbb E[R]\, \mathbb E[g(Y)] = 0$ for every
+square-integrable $g$, so $\hat X$ passes the test of Lemma 6.1 and equals
+$\mathbb E[X|Y]$ by its uniqueness half.
 
 *Why the guess is legitimate:* nothing is assumed, because the verification is
 unconditional. The Gaussian structure is used exactly once, at the step
 "uncorrelated implies independent". For non-Gaussian $(X,Y)$ the same
-$\hat X$ is still the best *linear* estimator, Lecture 7's linear minimum
-mean-squared-error estimator, but it need not equal $\mathbb E[X|Y]$.
+$\hat X$, with means restored, is still the best *affine* estimator, but it
+need not equal $\mathbb E[X|Y]$, as the guard in Section 6.7 shows.
 
 ### 6.9 Part 7, step 3: the full conditional distribution
 
-*Proof.* Decompose $X = \hat X + \tilde X$ with $\tilde X$ independent of $Y$.
-Conditioning on $Y = y$ freezes $\hat X$ at the constant
-$\mu_X + V_{XY}V_{YY}^{-1}(y - \mu_Y)$ and, by independence, leaves the
-distribution of $\tilde X$ untouched. Now $\tilde X$ is Gaussian, being an
-affine image, by part 3, with mean $0$ and covariance
+*Proof of (b), (c) and the conditional law.* By (a), the residual is
+$R = X - \mathbb E[X|Y] = X - m(Y)$, the same $R$ as in Section 6.8 once the
+means are restored; it is independent of $Y$, which is (b). Conditioning on
+$Y = y$ freezes $m(Y)$ at the constant $m(y)$ and, by independence, leaves the
+distribution of $R$ untouched. Now $R$ is Gaussian, being an affine image, by
+part 3, with mean $0$ and covariance
 
-$$ \operatorname{Cov}(\tilde X) = \operatorname{Cov}(X - AY, \; X - AY)
+$$ \operatorname{Cov}(R) = \operatorname{Cov}(X - AY, \; X - AY)
    = V_{XX} - A V_{YX} - V_{XY} A^{\mathsf T} + A V_{YY} A^{\mathsf T}, $$
 
 and with $A = V_{XY}V_{YY}^{-1}$ the last two terms cancel, since
 $A V_{YY} A^{\mathsf T} = V_{XY} V_{YY}^{-1} V_{YX} = V_{XY} A^{\mathsf T}$,
 leaving
 
-$$ \operatorname{Cov}(\tilde X) = V_{XX} - V_{XY} V_{YY}^{-1} V_{YX} . $$
+$$ \operatorname{Cov}(R) = V_{XX} - V_{XY} V_{YY}^{-1} V_{YX} = S , $$
 
-Hence
+which is (c). Hence
 
-$$ X \mid Y = y \;\sim\; \mathcal N\big( \mu_X + V_{XY}V_{YY}^{-1}(y - \mu_Y),\;\;
+$$ X \mid Y = y \;\sim\; \mathcal N\big( m(y),\, S \big)
+   = \mathcal N\big( \mu_X + V_{XY}V_{YY}^{-1}(y - \mu_Y),\;\;
    V_{XX} - V_{XY}V_{YY}^{-1}V_{YX} \big) . $$
 
-Gaussian in, Gaussian out; the conditional covariance is free of $y$, so all
-slices are congruent; and the covariance is *reduced* by the positive
-semidefinite matrix $V_{XY}V_{YY}^{-1}V_{YX}$. **End of proof.**
+Gaussian in, Gaussian out; the conditional mean is affine in $y$; the
+conditional covariance is free of $y$, so all slices are congruent; and the
+covariance is *reduced* by the positive semidefinite matrix
+$V_{XY}V_{YY}^{-1}V_{YX}$. Nothing here needed $S$ to be invertible: if $S$ is
+singular, the conditional law is a degenerate Gaussian in the sense of
+Definition 2. **End of proof.**
 
 **Theorem 1 recovered.** Take scalar blocks $X = X_1$ and $Y = X_2$: the mean
 is $\mu_1 + \tfrac{\sigma_{12}}{\sigma_{22}}(x_2 - \mu_2)$ and the variance is
@@ -872,6 +1129,24 @@ $\sigma_{11} - \tfrac{\sigma_{12}\sigma_{21}}{\sigma_{22}}$, exactly Section
 2.4, now with the deeper reason on display: slicing is projection onto the
 residual. Running-example recheck: $0 + \tfrac{0.6}{1}(1 - 0) = 0.6$ and
 $1 - \tfrac{0.36}{1} = 0.64$, matching Section 2.5.
+
+**Theorem 2 at a glance.** With $X = DW + \mu$, $W \in \mathbb R^m$ i.i.d.
+$\mathcal N(0,1)$, $D \in \mathbb R^{n \times m}$ and $V = DD^{\mathsf T}$:
+(1) $a^{\mathsf T}X \sim \mathcal N(a^{\mathsf T}\mu, \|D^{\mathsf T}a\|^2)$
+for every $a$, in particular $X_i \sim \mathcal N(\mu_i, \sum_j d_{ij}^2)$;
+(2) $\mathbb E X = \mu$ and $\operatorname{Cov} X = V$;
+(3) $CX + d \sim \mathcal N(C\mu + d, CVC^{\mathsf T})$ for every
+$C \in \mathbb R^{k \times n}$ and $d \in \mathbb R^k$;
+(4) if $D$ is square and invertible, $X$ has the Definition-1 density with
+$\det V$ in the normalizer;
+(5) $M_X(s) = \exp(s^{\mathsf T}\mu + \tfrac12 s^{\mathsf T}Vs)$, so
+$(\mu, V)$ determines the law;
+(6) the coordinates are independent if and only if $V$ is diagonal, and
+blocks are independent if and only if their cross-covariance is zero, joint
+Gaussianity being essential;
+(7) with $V_{YY} \succ 0$, $X \mid Y = y \sim \mathcal N(m(y), S)$,
+$\mathbb E[X|Y] = m(Y)$, and $R = X - m(Y)$ is independent of $Y$ with
+covariance $S$.
 
 ### 6.10 New tools: completing the square in matrix form, and the density route
 
@@ -980,7 +1255,8 @@ $$ \sigma_x^2 - \frac{(\sigma_x^2)^2}{\sigma_x^2 + \sigma_z^2}
 By Lecture 7's minimum mean-squared-error theorem, the posterior mean
 $\hat X = \tfrac{\sigma_x^2}{\sigma_x^2+\sigma_z^2} Y$ is the
 minimum-mean-squared-error estimate: the closed form Lecture 7 promised.
-**End of proof.**
+It is linear in $y$ here only because both means are zero; with nonzero means
+part 7 makes it affine. **End of proof.**
 
 *Shrinkage reading.* The slope $\tfrac{\sigma_x^2}{\sigma_x^2 + \sigma_z^2}$
 always lies strictly between $0$ and $1$, so the estimate pulls the
@@ -992,8 +1268,10 @@ total variance.
 $$ \frac{1}{\operatorname{Var}(X \mid Y)} = \frac{\sigma_x^2 + \sigma_z^2}{\sigma_x^2\sigma_z^2}
    = \frac{1}{\sigma_x^2} + \frac{1}{\sigma_z^2} . $$
 
-Precisions add: prior information plus channel information. In particular the
-posterior variance is below $\min(\sigma_x^2, \sigma_z^2)$, so observing
+Precisions add: prior information plus channel information. Equivalently, the
+posterior variance is one half of the harmonic mean of $\sigma_x^2$ and
+$\sigma_z^2$. In particular the posterior variance is below
+$\min(\sigma_x^2, \sigma_z^2)$, so observing
 through even terrible noise strictly helps.
 
 ### 7.3 Worked numbers and extremes
@@ -1014,30 +1292,36 @@ Three extremes:
 
 ### 7.4 Two sampling orderings, and why the second matters
 
+Write $k = \tfrac{\sigma_x^2}{\sigma_x^2+\sigma_z^2}$ and
+$s^2 = \tfrac{\sigma_x^2\sigma_z^2}{\sigma_x^2+\sigma_z^2}$, the posterior
+slope and variance of Section 7.2.
+
 **Claim.** The following two procedures produce the same joint distribution of
 $(X, Y)$.
 
-- *Forward.* Sample $X \sim \mathcal N(0, \sigma_x^2)$, then set $Y = X + Z$
-  with fresh $Z \sim \mathcal N(0, \sigma_z^2)$.
+- *Forward.* Sample $X \sim \mathcal N(0, \sigma_x^2)$, then fresh
+  $Z \sim \mathcal N(0, \sigma_z^2)$ independent of $X$, and set $Y = X + Z$.
 - *Observation first.* Sample $Y \sim \mathcal N(0, \sigma_x^2 + \sigma_z^2)$,
-  then sample
-  $X \sim \mathcal N\big(\tfrac{\sigma_x^2}{\sigma_x^2+\sigma_z^2}Y,\;
-  \tfrac{\sigma_x^2\sigma_z^2}{\sigma_x^2+\sigma_z^2}\big)$.
+  then fresh $W \sim \mathcal N(0, 1)$ independent of $Y$, and set
+  $X = kY + sW$.
 
 *Proof.* Both procedures produce a jointly Gaussian pair: the first by Section
-7.1; the second because $(Y, X) = (Y,\; aY + \tilde Z)$ with
-$a = \tfrac{\sigma_x^2}{\sigma_x^2+\sigma_z^2}$ and $\tilde Z$ independent of
-$Y$, an affine image of independent Gaussians. So by part 5 of Theorem 2 it
-suffices to match means and covariances. All means are zero, since
-$\mathbb E[X] = a\,\mathbb E[Y] = 0$. For the second procedure,
+7.1; the second because $(Y, X) = (Y,\; kY + sW)$ is an affine image of the
+independent Gaussian pair $(Y, W)$. So by part 5 of Theorem 2 it suffices to
+match means and covariances. All means are zero, since
+$\mathbb E[X] = k\,\mathbb E[Y] = 0$. For the second procedure,
 $\operatorname{Var}(Y) = \sigma_x^2 + \sigma_z^2$;
-$\operatorname{Cov}(X, Y) = a \operatorname{Var}(Y) = \sigma_x^2$; and
+$\operatorname{Cov}(X, Y) = k \operatorname{Var}(Y) = \sigma_x^2$; and
 
-$$ \operatorname{Var}(X) = a^2 \operatorname{Var}(Y) + \operatorname{Var}(\tilde Z)
+$$ \operatorname{Var}(X) = k^2 \operatorname{Var}(Y) + s^2
    = \frac{\sigma_x^4}{\sigma_x^2 + \sigma_z^2} + \frac{\sigma_x^2\sigma_z^2}{\sigma_x^2+\sigma_z^2}
    = \sigma_x^2 . $$
 
 Same $(\mu, V)$, same distribution. **End of proof.**
+
+Drawing $W$ fresh and independent of $Y$ is legitimate precisely because of
+part 7(b): in the forward model the residual $X - kY$ is independent of $Y$,
+with variance $s^2$.
 
 The forward ordering is how nature, or a diffusion forward pass, generates
 data. The observation-first ordering is how a *generator* must run: it holds
@@ -1045,6 +1329,17 @@ $y$ and needs a coherent sample of the cleaner variable. Section 8.8 uses
 exactly this reversal, one diffusion step at a time.
 
 ## 8 Gaussian Diffusion
+
+As we briefly discussed in prob07, a diffusion model learns to reverse a
+fixed Gaussian noising process: each backward step is modeled as a Gaussian
+whose mean is fit by least squares. This section derives the probability
+facts behind that construction. Three objects must be kept apart throughout:
+the forward conditional $q(x_n \mid x_0)$ and the reverse posterior
+$q(x_{n-1} \mid x_n, x_0)$ for $n \ge 2$ are *exactly* Gaussian (Sections 8.5
+and 8.7); the true reverse marginal $q(x_{n-1} \mid x_n)$ is in general *not*
+Gaussian, since it mixes the posterior over the unknown $x_0$; and the model
+$p_\theta(x_{n-1} \mid x_n)$ is Gaussian *by choice*. Section 8.10 connects
+these to prob07's least-squares target.
 
 ### 8.1 The forward recursion and its kernel
 
@@ -1123,9 +1418,18 @@ neighborhood of $0$; and MGF convergence on a neighborhood of $0$ implies
 convergence in distribution, by the continuity theorem cited alongside MGF
 uniqueness in Lecture 5 and in [1]. **End of proof.**
 
-The striking part is that the limit is the same for *every* starting
-distribution. The forward process is a data destroyer by design, and its
-destination is exactly the fixed point of Section 8.2.
+The striking part is that the limit does not depend on the starting
+distribution. The MGF hypothesis is a convenience of this proof, not of the
+result: unrolling the recursion as in Section 8.5 gives
+$X_n \overset{d}{=} a_n X_0 + \sqrt{1 - a_n^2}\, Z$ with
+$a_n = (1-\beta)^{n/2} \to 0$ and $Z \sim \mathcal N(0,1)$ independent of
+$X_0$. Since $X_0$ is finite, $a_n X_0 \to 0$ in probability, and Slutsky's
+theorem gives $X_n \to \mathcal N(0,1)$ in distribution for *every* $X_0$,
+with no moment assumption. The forward process is a data destroyer by design,
+and its destination is exactly the fixed point of Section 8.2. At any finite
+$n$ the law of $X_n$ is only close to $\mathcal N(0,1)$, never equal to it
+unless $X_0 \sim \mathcal N(0,1)$: the late chain is noise-dominated, not
+pure noise.
 
 ### 8.5 The closed form for $X_n$ given $X_0$, two ways
 
@@ -1234,27 +1538,50 @@ $$ \tilde\mu_n = \frac{\beta(1-\bar\alpha_{n-1})}{1-\bar\alpha_n}
 
 - At $n = 1$: $\bar\alpha_0 = 1$ gives $\tilde\beta_1 = 0$ and
   $\tilde\mu_1 = x_0$. Conditioning on both endpoints of a one-step chain pins
-  $X_0$ exactly.
+  $X_0$ exactly. The "posterior" is then a point mass, which is why the
+  slide states the Gaussian claim for $n \ge 2$, where $\tilde\beta_n > 0$.
+- Numerically, at $\beta = 0.02$ and $n = 100$:
+  $\tilde\mu_{100} \approx 0.987\,x_n + 0.008\,x_0$ and
+  $\tilde\beta_{100} \approx 0.0199$ (computed in double precision; the
+  completing-the-square result and the part-7 route agree).
 - The coefficients of $x_n$ and of $x_0$ in $\tilde\mu_n$ sum to
   $\tfrac{\sqrt\alpha(1-\bar\alpha_{n-1}) + \sqrt{\bar\alpha_{n-1}}\beta}{1-\bar\alpha_n}$,
   which tends to $1$ as $\alpha \to 1$: a convex-combination flavour.
 - $\tilde\beta_n < \beta$: the reverse step, once told $x_0$, is *less* noisy
   than the forward kernel.
 
-This exact posterior is what diffusion training actually regresses against;
-its mean, reparameterized through the noise, is the target of the
-$\epsilon_\theta$ network in [2]. At generation time $x_0$ is unknown, and the
-network's prediction stands in for it. The lecture deliberately stops at the
-approximation of Section 8.8, and this subsection is the missing rigorous step
-between the two.
+*Second route, by part 7.* Given $X_0 = x_0$, the pair $(X_{n-1}, X_n)$ is
+jointly Gaussian with $\operatorname{Var}(X_{n-1}) = 1 - \bar\alpha_{n-1}$,
+$\operatorname{Var}(X_n) = 1 - \bar\alpha_n$ and covariance
+$\sqrt\alpha\,(1 - \bar\alpha_{n-1})$. Part 7 of Theorem 2 gives variance
+$(1-\bar\alpha_{n-1}) - \alpha(1-\bar\alpha_{n-1})^2/(1-\bar\alpha_n)
+= (1-\bar\alpha_{n-1})\beta/(1-\bar\alpha_n) = \tilde\beta_n$, and mean
+$\sqrt{\bar\alpha_{n-1}}x_0 + \tfrac{\sqrt\alpha(1-\bar\alpha_{n-1})}{1-\bar\alpha_n}
+(x_n - \sqrt{\bar\alpha_n}x_0) = \tilde\mu_n$. This is the route the deck
+shows.
 
-### 8.8 The lecture's approximation: one reverse step via the channel
+This exact posterior is what diffusion training regresses against; its mean,
+reparameterized through the noise, is the target of the $\epsilon_\theta$
+network in [2]. At generation time $x_0$ is unknown, so the true reverse step
+$q(x_{n-1} \mid x_n)$ is the mixture of these Gaussians over the conditional
+law of $X_0$ given $X_n = x_n$, which is in general not Gaussian. The model
+$p_\theta$ is a Gaussian by choice.
 
-**Claim (stationary regime).** If $X_{n-1} \sim \mathcal N(0,1)$, which holds
-late in the chain and is justified by Theorem 3 and the fixed point of Section
-8.2, then *exactly*
+### 8.8 A stationary Gaussian benchmark
+
+**Claim (stationary benchmark).** *If* $X_{n-1} \sim \mathcal N(0,1)$
+exactly, then exactly
 
 $$ X_{n-1} \mid X_n = x_n \;\sim\; \mathcal N\big( \sqrt{1-\beta}\; x_n, \;\; \beta \big). $$
+
+The hypothesis holds exactly when the data are already standard normal,
+$X_0 \sim \mathcal N(0,1)$, by the fixed point of Section 8.2; then it holds
+at every step. For real data it never holds exactly at any finite $n$.
+Theorem 3 says the law of $X_{n-1}$ approaches $\mathcal N(0,1)$ as $n$
+grows, so the benchmark describes the noise-dominated end of the chain, but
+convergence of the marginal gives no pointwise error bound on the reverse
+kernel at finite $n$. This is a benchmark, not a derivation of the reverse
+step.
 
 *Proof.* The pair $(X_{n-1}, X_n)$ is jointly Gaussian with
 $\operatorname{Var}(X_{n-1}) = 1$,
@@ -1264,36 +1591,81 @@ By part 7 of Theorem 2 the mean is
 $\tfrac{\sqrt{1-\beta}}{1} x_n = \sqrt{1-\beta}\, x_n$ and the variance is
 $1 - \tfrac{(\sqrt{1-\beta})^2}{1} = 1 - (1-\beta) = \beta$. **End of proof.**
 
-*Where the approximation actually sits.* The lecture's headline result
-$\mathcal N(\sqrt{1-\beta}\,x_n,\, \beta)$ is exactly right, and so is its
-variance step: $1 - (1-\beta) = \beta$, with no small-$\beta$ approximation
-anywhere in the algebra. The tempting wrong route reads off the Section-7
-posterior variance of the *scaled signal* $\sqrt{1-\beta}\,X_{n-1}$ (a channel
-with $\sigma_x^2 = 1-\beta$ and $\sigma_z^2 = \beta$ gives
-$\tfrac{(1-\beta)\beta}{1}$) and stops there; that is the variance of the
-scaled variable, and dividing by the square of the scale, $1-\beta$, returns
-$\beta$ for $X_{n-1}$ itself. The one genuine approximation is the one the
-slide labels: the use of the stationary $\mathcal N(0,1)$ for $X_{n-1}$, which
-is only asymptotically true early in the chain. Consistency check against Section 8.7: averaging the exact
-posterior over the conditional distribution of $x_0$ given $x_n$ at
-stationarity indeed returns $\mathcal N(\sqrt{\alpha}\,x_n, \beta)$, which
-matches.
+*Where the assumption sits.* Under its hypothesis the algebra is exact:
+$1 - (1-\beta) = \beta$, with no small-$\beta$ approximation. The tempting
+wrong route reads off the Section-7 posterior variance of the *scaled signal*
+$\sqrt{1-\beta}\,X_{n-1}$ (a channel with $\sigma_x^2 = 1-\beta$ and
+$\sigma_z^2 = \beta$ gives $\tfrac{(1-\beta)\beta}{1}$) and stops there;
+that is the variance of the scaled variable, and dividing by the square of
+the scale, $1-\beta$, returns $\beta$ for $X_{n-1}$ itself. The single
+modelling step is the hypothesis $X_{n-1} \sim \mathcal N(0,1)$. A Monte
+Carlo check with $X_{n-1} \sim \mathcal N(0,1)$, $\beta = 0.02$ and $x_n$
+near $1$ gave conditional mean $\approx 0.988$ against
+$\sqrt{0.98} \approx 0.990$ and conditional variance $\approx 0.0205$
+against $0.02$ (a windowed estimate around $x_n = 1$, so agreement is only
+to about two digits).
+
+*Consistency with Section 8.7.* Take $X_0 \sim \mathcal N(0,1)$, so that
+every $X_k \sim \mathcal N(0,1)$. Averaging the exact posterior
+$\mathcal N(\tilde\mu_n(x_n, X_0), \tilde\beta_n)$ over the conditional
+law of $X_0$ given $X_n = x_n$ then returns $\mathcal N(\sqrt\alpha\,x_n, \beta)$,
+as it must, since both describe the same jointly Gaussian pair. For
+non-Gaussian data the same average is a non-Gaussian mixture.
 
 ### 8.9 Vectors, and the generation skeleton
 
-Everything above is coordinatewise independent, so it lifts to $\mathbb{R}^d$
-verbatim: $X_n = \sqrt{1-\beta}\,X_{n-1} + \sqrt{\beta}\,Z_n$ with
+Conditional on a fixed $X_0$, everything above is coordinatewise
+independent, so it lifts to $\mathbb{R}^d$ verbatim: $X_n = \sqrt{1-\beta}\,X_{n-1} + \sqrt{\beta}\,Z_n$ with
 $Z_n \sim \mathcal N(0, I_d)$, closed form
 $X_n \mid X_0 = x_0 \sim \mathcal N(\sqrt{\bar\alpha_n}\, x_0,\; (1 - \bar\alpha_n) I_d)$,
-and limit $\mathcal N(0, I_d)$. All covariances stay multiples of $I_d$, since
-the recursion never mixes coordinates.
+and limit $\mathcal N(0, I_d)$. Given $X_0 = x_0$, all conditional
+covariances stay multiples of $I_d$, since the recursion never mixes
+coordinates. With random $X_0$ of covariance $\Sigma_0$ the marginal
+covariance is $(1-\beta)^n \Sigma_0 + (1 - (1-\beta)^n) I_d$: same
+eigenvectors as $\Sigma_0$, eigenvalues pulled toward $1$, so off-diagonal
+covariances decay by $(1-\beta)^n$; diagonal covariance alone does not imply
+independent coordinates for non-Gaussian data.
 
-The sampler is Algorithm 2 of [2]: draw $x_T \sim \mathcal N(0, I_d)$; for
-$n = T, T-1, \dots, 1$ sample
+The deck's sampler is a *simplified Gaussian reverse sampler*: draw
+$x_T \sim \mathcal N(0, I_d)$, which is close to the law of $X_T$ for large
+$T$ by Theorem 3; for $n = T, T-1, \dots, 1$ sample
 $x_{n-1} \sim \mathcal N(\mu_\theta(x_n, n),\, \beta I_d)$; return $x_0$. Every
 line is a Gaussian sample, and all the learning is hidden in the mean function
-$\mu_\theta$, the network's stand-in for the exact $\tilde\mu_n$ of Section
-8.7, whose dependence on $x_0$ is what must be learned.
+$\mu_\theta$; the output is close to the data law only if $\mu_\theta$ is
+accurate. It has the shape of Algorithm 2 of [2] but is not that algorithm
+verbatim: [2] uses a step-dependent schedule $\beta_t$, parameterizes the
+mean through a noise predictor $\epsilon_\theta$, uses
+$\sigma_t^2 = \beta_t$ or $\sigma_t^2 = \tilde\beta_t$ (reporting similar
+results for the two), sets $z = 0$ at the final step, and ends with a
+discrete decoder for image data.
+
+### 8.10 The connection to prob07's least-squares target
+
+prob07 fit the backward mean by least squares. Over *unrestricted*
+functions, the squared-error-optimal predictor of $X_{n-1}$ from $X_n$ is the
+conditional mean
+
+$$ \mu^*(x_n, n) = \mathbb E[X_{n-1} \mid X_n = x_n]. $$
+
+By the tower rule, conditioning first on $(X_n, X_0)$ and then on $X_n$, and
+using Section 8.7,
+
+$$ \mu^*(x_n, n) = \mathbb E\big[ \tilde\mu_n(x_n, X_0) \mid X_n = x_n \big]
+   = c_n\, x_n + d_n\, \mathbb E[X_0 \mid X_n = x_n], $$
+
+with $c_n = \sqrt\alpha\,(1-\bar\alpha_{n-1})/(1-\bar\alpha_n)$ and
+$d_n = \sqrt{\bar\alpha_{n-1}}\,\beta/(1-\bar\alpha_n)$, because
+$\tilde\mu_n$ is linear in $x_0$. This needs only an integrable $X_0$ and
+the Markov property, valid for every $n \ge 1$. The coefficients are exact
+Gaussian facts; the remaining unknown, $\mathbb E[X_0 \mid X_n = x_n]$,
+depends on the data distribution, and that is what the network learns. A
+trained network approximates $\mu^*$; it does not compute it. (prob07
+indexed steps by $t$; here they are indexed by $n$.)
+
+*Check.* For two-point data $X_0 = \pm 1$ with equal probability,
+$\beta = 0.02$, $n = 2$ and $x_n = 0.7$, the formula gives
+$\mu^* \approx 0.8500$, and a Monte Carlo estimate of
+$\mathbb E[X_1 \mid X_2 \approx 0.7]$ gave $\approx 0.851$.
 
 *Scope.* What this lecture does not cover, namely the variational training
 objective, its decomposition into Kullback-Leibler terms, score matching, and
@@ -1303,7 +1675,54 @@ layer that those papers build on.
 
 ## 9 Gaussian Discriminant Analysis
 
-### 9.1 The model and the decision rule
+### 9.1 Back to the spam filter: same Bayes rule, new class model
+
+Lecture 7 classified e-mail with $Y = 1$ for spam and $Y = 0$ for non-spam,
+binary word indicators $X_i = 1$ if and only if word $i$ appears, and
+Bernoulli Naive Bayes,
+$p(x \mid y) = \prod_i p_{i|y}^{x_i}(1 - p_{i|y})^{1 - x_i}$. The decision rule
+$\hat y(x) = \arg\max_y \pi_y\, p(x \mid y)$ does not depend on that choice of
+class model. This section keeps $Y$ and the rule and changes only the class
+model: continuous features, for illustration $x_1$ = log word count and
+$x_2$ = links per 100 words, with one Gaussian per class. That is a modeling
+choice, not a fact about e-mail. Binary indicators are not Gaussian and are not
+modeled as Gaussian here.
+
+A full $\Sigma_y$ lets the features be correlated within a class. A diagonal
+$\Sigma_y$ makes the coordinates conditionally independent given the class:
+that is Gaussian Naive Bayes, the continuous counterpart of Lecture 7's model,
+not the same model. The deck's scatter figure uses *synthetic* data, 50
+non-spam and 30 spam points drawn from fixed Gaussians by a seeded generator,
+with each class's $\hat\mu_y, \hat\Sigma_y$ fitted by Theorem 4 and
+$\hat\pi_y = 50/80, 30/80$.
+
+### 9.2 Mahalanobis distance: distance measured in standard deviations
+
+**Definition.** For $\Sigma \succ 0$,
+
+$$ d_\Sigma(x, \mu) = \sqrt{(x - \mu)^{\mathsf T}\Sigma^{-1}(x - \mu)}
+   = \big\| \Sigma^{-1/2}(x - \mu) \big\|, $$
+
+where $\Sigma^{-1/2} = Q\Lambda^{-1/2}Q^{\mathsf T}$, from the spectral
+decomposition $\Sigma = Q\Lambda Q^{\mathsf T}$, is the symmetric inverse
+square root. The two forms agree because
+$\|\Sigma^{-1/2}v\|^2 = v^{\mathsf T}\Sigma^{-1/2}\Sigma^{-1/2}v = v^{\mathsf T}\Sigma^{-1}v$.
+
+*Whitening.* If $X \sim \mathcal N(\mu, \Sigma)$, then
+$Z = \Sigma^{-1/2}(X - \mu)$ has
+$\operatorname{Cov}(Z) = \Sigma^{-1/2}\Sigma\Sigma^{-1/2} = I$: the map removes
+both scale and correlation. So $d_\Sigma$ is Euclidean distance after
+whitening, and the exponent of the Definition 1 density is exactly
+$-\tfrac12 d_\Sigma(x, \mu)^2$, the squared distance.
+
+*Example.* Take $\mu = 0$ and $\Sigma = \operatorname{diag}(4, 1)$. The points
+$A = (2, 0)$ and $B = (0, 2)$ are both at Euclidean distance $2$, but
+$d_\Sigma(A, 0) = \sqrt{2^2/4} = 1$ and $d_\Sigma(B, 0) = \sqrt{2^2/1} = 2$:
+the wide direction, with variance $4$, tolerates the bigger step. The level
+sets $x_1^2/4 + x_2^2 = r^2$ are ellipses with semi-axes $2r$ and $r$, and
+whitening, $z = (x_1/2, x_2)$, turns them into circles of radius $r$.
+
+### 9.3 The model and the decision rule
 
 Labels $Y \in \{0, 1, \dots\}$ carry priors $\pi_y = \mathbb P(Y = y)$, and the
 class-conditional features are
@@ -1316,11 +1735,15 @@ $$ \hat y(x) = \arg\max_y \; \pi_y \, f(x \mid \mu_y, \Sigma_y)
    - \tfrac12 (x - \mu_y)^{\mathsf T} \Sigma_y^{-1} (x - \mu_y) \Big], $$
 
 taking logarithms, which is monotone, and dropping the shared term
-$-\tfrac n2 \log 2\pi$. By Lecture 7's Bayes-optimality theorem, if the model
+$-\tfrac n2 \log 2\pi$. All logarithms are natural. In the notation of Section
+9.2 the score is
+$\log\pi_y - \tfrac12\log\det\Sigma_y - \tfrac12 d_{\Sigma_y}(x, \mu_y)^2$; with
+equal priors and equal determinants the rule picks the nearest mean in
+Mahalanobis distance. By Lecture 7's Bayes-optimality theorem, if the model
 is correct then this rule minimizes the probability of error among *all*
 classifiers.
 
-### 9.2 The boundary: quadratic in general, linear for a shared covariance
+### 9.4 The boundary: quadratic in general, linear for a shared covariance
 
 *Derivation, two classes.* The boundary is the set where the two bracketed
 scores tie. Their difference is
@@ -1333,7 +1756,9 @@ $$ \tfrac12 (x-\mu_1)^{\mathsf T}\Sigma_1^{-1}(x-\mu_1)
 whose quadratic part in $x$ is
 $\tfrac12 x^{\mathsf T}(\Sigma_1^{-1} - \Sigma_0^{-1})x$: a genuine quadric
 surface whenever $\Sigma_0 \neq \Sigma_1$. Geometrically the boundary is then a
-curve that bends around the class with the tighter covariance.
+curve that bends around the class with the tighter covariance. The deck's
+synthetic spam figure shows this case: its dashed curve is the exact tie set of
+the two fitted scores.
 
 If $\Sigma_0 = \Sigma_1 = \Sigma$, the quadratic terms cancel. Expanding
 $(x-\mu)^{\mathsf T}\Sigma^{-1}(x-\mu)
@@ -1348,7 +1773,7 @@ a hyperplane with normal vector $w = \Sigma^{-1}(\mu_0 - \mu_1)$. That is
 linear discriminant analysis [4, Ch. 4.2] and, one sigmoid away, the
 functional form of logistic regression. **End of proof.**
 
-### 9.3 The likelihood, assembled
+### 9.5 The likelihood, assembled
 
 Estimation decouples across classes, since each sample's log-likelihood
 involves only its own class's parameters. So fix one class, with samples
@@ -1361,7 +1786,7 @@ $$ \ell(\mu, \Sigma) = -\frac{Nn}{2}\log 2\pi \; - \; \frac N2 \log\det\Sigma
 
 which is Lecture 7's recipe, the logarithm of a product of densities.
 
-### 9.4 Maximizing over the mean
+### 9.6 Maximizing over the mean
 
 **Lemma 9.1 (gradient of a quadratic form).** For symmetric $M$,
 $\nabla_\mu\, (x - \mu)^{\mathsf T} M (x - \mu) = -2M(x - \mu)$.
@@ -1385,13 +1810,25 @@ concave quadratic in $\mu$, with Hessian $-N\Sigma^{-1} \prec 0$. The answer is
 the sample mean: the same as Lecture 7's one-dimensional Gaussian
 maximum-likelihood estimate, now in vector form. **End of proof.**
 
-### 9.5 Reparameterizing in the precision, and the trace trick
+### 9.7 Reparameterizing in the precision, and the trace trick
 
 Maximizing over $\Sigma$ directly puts the variable inside an inverse *and* a
 determinant. The move is to optimize over the precision $\Phi = \Sigma^{-1}$
 instead, a bijection of the positive definite matrices under which
 $\log\det\Sigma = -\log\det\Phi$, and to flatten the quadratic forms with the
 **trace trick**.
+
+*Why the trace.* The goal is the matrix analogue of Lecture 7's variance
+estimate $\widehat{\sigma^2} = \frac1N\sum_i (x_i - \hat\mu)^2$; the natural
+guess replaces the squared deviation by an outer product. After plugging in
+$\hat\mu$, the data term that depends on $\Phi$ is
+$\sum_i v_i^{\mathsf T}\Phi v_i$ with residuals $v_i = x^{(i)} - \hat\mu$. In
+one dimension the parameter factors out, $\sum_i \phi v_i^2 = \phi\sum_i v_i^2$.
+With matrices, $\Phi$ is stuck between $v_i^{\mathsf T}$ and $v_i$. The trace
+trick rewrites each term as $\operatorname{tr}(\Phi v_i v_i^{\mathsf T})$, and
+linearity of the trace collects the sum into $\operatorname{tr}(\Phi S)$: all
+the data in one matrix $S$, the matrix parameter $\Phi$ exposed, ready for
+Lemma 9.3.
 
 **Lemma 9.2.** $v^{\mathsf T} \Phi v = \operatorname{tr}(v v^{\mathsf T} \Phi)$
 for any vector $v$ and any square $\Phi$.
@@ -1401,7 +1838,8 @@ $\operatorname{tr}(AB) = \operatorname{tr}(BA)$, since both equal
 $\sum_{i,j} A_{ij}B_{ji}$. Taking $A = v^{\mathsf T}$ and $B = \Phi v$ gives
 $\operatorname{tr}(v^{\mathsf T} \cdot \Phi v)
 = \operatorname{tr}(\Phi v \cdot v^{\mathsf T}) = \operatorname{tr}(v v^{\mathsf T} \Phi)$.
-**End of proof.**
+**End of proof.** The middle form, $\operatorname{tr}(\Phi v v^{\mathsf T})$, is
+the one the deck uses; the two are equal by the same cyclic rule.
 
 Summing over samples at $\mu = \hat\mu$, and introducing the *scatter matrix*
 $S = \sum_{i=1}^N (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^{\mathsf T}$, which is
@@ -1410,7 +1848,10 @@ all the data the likelihood ever sees about $\Sigma$,
 $$ \ell(\hat\mu, \Phi) = \text{const} + \frac N2 \log\det\Phi
    - \frac12 \operatorname{tr}(S\,\Phi). $$
 
-### 9.6 The two matrix-calculus identities
+$S$ is a sum, the scatter matrix. The covariance estimate will be $S/N$
+(Section 9.9), not $S$ itself.
+
+### 9.8 The two matrix-calculus identities
 
 **Lemma 9.3.** $\nabla_X \operatorname{tr}(AX) = A^{\mathsf T}$, where
 $(\nabla_X f)_{ij} = \partial f / \partial X_{ij}$ and the entries of $X$ are
@@ -1441,7 +1882,7 @@ symmetric entries as constrained changes the off-diagonal derivatives by a
 factor of $2$, does not change the stationary point, because the unconstrained
 critical point found next is already symmetric.
 
-### 9.7 Solving for the covariance, and Theorem 4
+### 9.9 Solving for the covariance, and Theorem 4
 
 *Derivation.* By Lemmas 9.3 and 9.4,
 
@@ -1465,8 +1906,10 @@ boundary and at infinity, so the maximum is attained. **End of proof.**
 **Theorem 4 (Gaussian maximum likelihood).** For independent and identically
 distributed $\mathcal N(\mu, \Sigma)$ samples, the maximum-likelihood
 estimates are $\hat\mu = \tfrac1N\sum_i x^{(i)}$ and
-$\hat\Sigma = \tfrac1N\sum_i (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^{\mathsf T}$.
-In discriminant analysis they are applied per class, together with
+$\hat\Sigma = \tfrac1N\sum_i (x^{(i)} - \hat\mu)(x^{(i)} - \hat\mu)^{\mathsf T}$,
+provided the centered scatter $S$ is nonsingular (typically $N > n$ with
+full-rank data). The divisor is $N$, not $N - 1$; for $n = 1$ this is Lecture
+7's variance estimate with the same $1/N$. In discriminant analysis they are applied per class, together with
 $\hat\pi_y = N_y / N$, the count estimate, which is Lecture 7's
 Bernoulli and multinomial maximum-likelihood estimate.
 
@@ -1491,10 +1934,21 @@ $N \to \infty$, so the estimator is asymptotically unbiased, and the dimension
 $n$ plays no role in the factor.
 
 *Pipeline check.* Fit $(\hat\pi_y, \hat\mu_y, \hat\Sigma_y)$ per class by
-Theorem 4, then classify by the rule of Section 9.1. In one dimension with two
+Theorem 4, then classify by the rule of Section 9.3. In one dimension with two
 classes and a shared variance this collapses exactly to Lecture 7's
-two-Gaussian height classifier, with the Section 9.2 boundary reducing to the
+two-Gaussian height classifier, with the Section 9.4 boundary reducing to the
 midpoint threshold shifted by the prior derived there.
+
+### 9.10 Closing: when closed form runs out
+
+The Gaussian models of this lecture gave closed-form answers. More general
+models do not: many expectations
+$\mathbb E[g(X)] = \int g(x) f_X(x)\,dx$ lack a convenient closed form,
+especially in high dimensions, where the integral is over $\mathbb R^n$. The Monte Carlo idea is to sample instead: draw
+$X^{(1)}, \dots, X^{(N)}$ independent and identically distributed from $f_X$
+and use $\frac1N\sum_{i=1}^N g(X^{(i)})$. For finite $N$ this is an
+*estimate*, not an equality. It is unbiased, and by the law of large numbers
+it converges to $\mathbb E[g(X)]$ when $\mathbb E|g(X)| < \infty$.
 
 ## 10 References
 
@@ -1507,7 +1961,7 @@ midpoint threshold shifted by the prior derived there.
 2. J. Ho, A. Jain, P. Abbeel, "Denoising Diffusion Probabilistic Models,"
    NeurIPS 2020. Source of the $\bar\alpha$ notation of Section 8.6, the exact
    reverse posterior of Section 8.7, its equations (6) and (7), and the sampler
-   of Section 8.9, its Algorithm 2. arXiv:2006.11239
+   of Section 8.9, compared against its Algorithm 2. arXiv:2006.11239
    https://arxiv.org/abs/2006.11239
 3. J. Sohl-Dickstein, E. Weiss, N. Maheswaranathan, S. Ganguli, "Deep
    Unsupervised Learning using Nonequilibrium Thermodynamics," ICML 2015. The
@@ -1529,5 +1983,5 @@ midpoint threshold shifted by the prior derived there.
    maximum-likelihood recipe, Bayes optimality and bias.
 7. S. Boyd, L. Vandenberghe, *Convex Optimization*, Cambridge University
    Press, 2004. Section 3.1.5 for the concavity of $\log\det$ on the positive
-   definite cone, the fact that makes the critical point of Section 9.7 the
+   definite cone, the fact that makes the critical point of Section 9.9 the
    global maximizer. https://web.stanford.edu/~boyd/cvxbook/

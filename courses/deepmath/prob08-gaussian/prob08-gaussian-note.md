@@ -788,83 +788,136 @@ independent.
 
 ### 6.7 Part 7, step 1: the orthogonality characterization
 
-**Lemma 6.1.** $\mathbb E[X \mid Y]$ is the unique, up to almost-sure
-equality, function $h(Y)$ with finite second moment satisfying
-$\mathbb E[(X - h(Y))\, g(Y)] = 0$ for every bounded measurable $g$;
-entrywise for vectors.
+**Setting.** Stack $X \in \mathbb R^{n_X}$ on $Y \in \mathbb R^{n_Y}$, jointly
+Gaussian by Definition 2, with block means $\mu_X, \mu_Y$ and covariance
+blocks $V_{XX}, V_{XY}, V_{YX}, V_{YY}$. Only $V_{YY} \succ 0$ is assumed: the
+full $V$ may be singular, and so may the conditional covariance $S$. Write
+$m(y) = \mu_X + V_{XY}V_{YY}^{-1}(y - \mu_Y)$ and
+$S = V_{XX} - V_{XY}V_{YY}^{-1}V_{YX}$. Part 7 states: (a)
+$\mathbb E[X \mid Y] = m(Y)$; (b) the residual $R = X - m(Y)$ is independent
+of $Y$; (c) $\operatorname{Cov}(R) = S$; hence
+$X \mid Y = y \sim \mathcal N(m(y), S)$.
 
-*Proof.* That $h = \mathbb E[X|Y]$ passes the test is Lecture 7's
-orthogonality principle, by the tower property:
+The lecture proves (a) directly in Section 6.8, and then a second time through
+the following characterization, which holds for any pair of random vectors and
+explains *what* $\mathbb E[X|Y]$ is.
+
+**Lemma 6.1.** Let $\mathbb E[|X|^2] < \infty$. Then $\mathbb E[X \mid Y]$ is
+the unique, up to almost-sure equality, square-integrable function $h(Y)$
+satisfying $\mathbb E[(X - h(Y))\, g(Y)] = 0$ for every square-integrable
+$g$; entrywise for vectors.
+
+*Proof.* That $h = \mathbb E[X|Y]$ passes the test uses only the tower
+property and pulling out what is known given $Y$:
 
 $$ \mathbb E[(X - \mathbb E[X|Y])g(Y)]
-   = \mathbb E\big[ g(Y)\, \mathbb E[X - \mathbb E[X|Y] \mid Y] \big] = 0 . $$
+   = \mathbb E\big[ \mathbb E[(X - \mathbb E[X|Y])g(Y) \mid Y] \big]
+   = \mathbb E\big[ g(Y)\, \mathbb E[X - \mathbb E[X|Y] \mid Y] \big] = 0 , $$
 
-Conversely, if $h$ passes the test, set $d(Y) = \mathbb E[X|Y] - h(Y)$;
-subtracting the two orthogonality statements gives
-$\mathbb E[d(Y) g(Y)] = 0$ for all $g$, and choosing $g = d$, truncated if
-unbounded and then letting the truncation grow, yields
-$\mathbb E[d(Y)^2] = 0$, so $h(Y) = \mathbb E[X|Y]$ almost surely. **End of
-proof.**
+the same step that kills the cross term in Lecture 7's minimum
+mean-squared-error theorem. (The product $(X - \mathbb E[X|Y])g(Y)$ is
+integrable by Cauchy–Schwarz, since both factors are square-integrable.)
+Conversely, if $h$ passes the test, subtract the two orthogonality statements:
+$\mathbb E[(h(Y) - \mathbb E[X|Y])\, g(Y)] = 0$ for every square-integrable
+$g$. The choice $g = h - \mathbb E[X|Y]$ is itself a square-integrable
+function of $Y$, so it is allowed, and it gives
+$\mathbb E[(h(Y) - \mathbb E[X|Y])^2] = 0$, hence
+$h(Y) = \mathbb E[X|Y]$ almost surely. **End of proof.**
+
+*The projection reading.* Give the square-integrable random variables the
+inner product $\langle U, V \rangle = \mathbb E[UV]$. The square-integrable
+functions of $Y$ form a closed subspace, and Lemma 6.1 says that
+$\mathbb E[X|Y]$ is the point of that subspace whose residual is orthogonal to
+the whole subspace: the orthogonal projection of $X$. Pythagoras then gives,
+for any other square-integrable $h(Y)$,
+$\mathbb E[(X - h(Y))^2] = \mathbb E[(X - \mathbb E[X|Y])^2]
++ \mathbb E[(\mathbb E[X|Y] - h(Y))^2]$, which is the minimum
+mean-squared-error property once more.
+
+*Guard: which subspace matters.* Projecting onto the much smaller span of
+$1, Y_1, \dots, Y_{n_Y}$ requires the residual to be orthogonal only to $1$
+and to each $Y_j$; that gives the best *affine* predictor, not
+$\mathbb E[X|Y]$. Orthogonality to $Y$ alone is not enough. Counterexample:
+$Y \sim \mathcal N(0,1)$ and $X = Y^2$. Then
+$\operatorname{Cov}(X, Y) = \mathbb E[Y^3] = 0$, so the best affine predictor
+is the constant $\mathbb E[X] = 1$, yet $\mathbb E[X|Y] = Y^2$. For jointly
+Gaussian pairs the two projections coincide because, by part 7(a),
+$\mathbb E[X|Y]$ is affine; it is linear only when the means are zero.
 
 ### 6.8 Part 7, step 2: guess linear, verify orthogonality
 
-*Proof.* Centre everything: replace $X$ and $Y$ by $X - \mu_X$ and
+*Proof of (a).* Centre everything: replace $X$ and $Y$ by $X - \mu_X$ and
 $Y - \mu_Y$, restoring the means at the end. Guess $\hat X = A Y$ with
-$A = V_{XY} V_{YY}^{-1}$, and let $\tilde X = X - \hat X$ be the residual.
+$A = V_{XY} V_{YY}^{-1}$, which exists because $V_{YY} \succ 0$, and let
+$R = X - \hat X$ be the residual. The guess is linear in the centred $Y$ and
+so affine in the original one.
 
 *The residual is uncorrelated with $Y$:*
 
-$$ \operatorname{Cov}(\tilde X, Y) = \operatorname{Cov}(X, Y) - A \operatorname{Cov}(Y, Y)
+$$ \operatorname{Cov}(R, Y) = \operatorname{Cov}(X, Y) - A \operatorname{Cov}(Y, Y)
    = V_{XY} - V_{XY} V_{YY}^{-1} V_{YY} = 0, $$
 
 using linearity of the covariance in its first slot, Lemma 5.1.
 
-*Uncorrelated upgrades to independent:* the stacked vector
-$(\tilde X, Y)$ is an affine image of the jointly Gaussian $(X, Y)$, namely
-the image under the block matrix whose first block row is $(I, -A)$ and whose
-second block row is $(0, I)$. Hence it is jointly Gaussian by part 3, so part
-6 in its blockwise form makes $\tilde X$ independent of $Y$.
+*Uncorrelated upgrades to independent:* the stacked vector $(R, Y)$ is the
+image of the jointly Gaussian $(X, Y)$ under the block matrix whose first
+block row is $(I, -A)$ and whose second block row is $(0, I)$. Hence it is
+jointly Gaussian by part 3. Part 6 in its block form, which says that
+jointly Gaussian blocks with zero cross-covariance are independent, makes $R$
+independent of $Y$ as a whole vector. The coordinates of $R$ need not be
+independent of one another.
 
-*Orthogonality test:* for any $g$,
-$\mathbb E[\tilde X\, g(Y)] = \mathbb E[\tilde X]\, \mathbb E[g(Y)] = 0$,
-since $\mathbb E[\tilde X] = 0$. By Lemma 6.1, $\hat X = \mathbb E[X \mid Y]$.
-Restoring the means,
+*Reading off the conditional mean:*
 
-$$ \mathbb E[X \mid Y] = \mu_X + V_{XY} V_{YY}^{-1} (Y - \mu_Y). $$
+$$ \mathbb E[X \mid Y] = \mathbb E[\hat X + R \mid Y]
+   = \hat X + \mathbb E[R \mid Y] = \hat X + \mathbb E[R] = \hat X, $$
 
+because $\hat X$ is a function of $Y$, $R$ is independent of $Y$, and
+$\mathbb E[R] = 0$ for centred variables. Restoring the means,
+$\mathbb E[X \mid Y] = \mu_X + V_{XY} V_{YY}^{-1} (Y - \mu_Y) = m(Y)$.
 **End of proof.**
+
+*Second route.* Independence also gives
+$\mathbb E[R\, g(Y)] = \mathbb E[R]\, \mathbb E[g(Y)] = 0$ for every
+square-integrable $g$, so $\hat X$ passes the test of Lemma 6.1 and equals
+$\mathbb E[X|Y]$ by its uniqueness half.
 
 *Why the guess is legitimate:* nothing is assumed, because the verification is
 unconditional. The Gaussian structure is used exactly once, at the step
 "uncorrelated implies independent". For non-Gaussian $(X,Y)$ the same
-$\hat X$ is still the best *linear* estimator, Lecture 7's linear minimum
-mean-squared-error estimator, but it need not equal $\mathbb E[X|Y]$.
+$\hat X$, with means restored, is still the best *affine* estimator, but it
+need not equal $\mathbb E[X|Y]$, as the guard in Section 6.7 shows.
 
 ### 6.9 Part 7, step 3: the full conditional distribution
 
-*Proof.* Decompose $X = \hat X + \tilde X$ with $\tilde X$ independent of $Y$.
-Conditioning on $Y = y$ freezes $\hat X$ at the constant
-$\mu_X + V_{XY}V_{YY}^{-1}(y - \mu_Y)$ and, by independence, leaves the
-distribution of $\tilde X$ untouched. Now $\tilde X$ is Gaussian, being an
-affine image, by part 3, with mean $0$ and covariance
+*Proof of (b), (c) and the conditional law.* By (a), the residual is
+$R = X - \mathbb E[X|Y] = X - m(Y)$, the same $R$ as in Section 6.8 once the
+means are restored; it is independent of $Y$, which is (b). Conditioning on
+$Y = y$ freezes $m(Y)$ at the constant $m(y)$ and, by independence, leaves the
+distribution of $R$ untouched. Now $R$ is Gaussian, being an affine image, by
+part 3, with mean $0$ and covariance
 
-$$ \operatorname{Cov}(\tilde X) = \operatorname{Cov}(X - AY, \; X - AY)
+$$ \operatorname{Cov}(R) = \operatorname{Cov}(X - AY, \; X - AY)
    = V_{XX} - A V_{YX} - V_{XY} A^{\mathsf T} + A V_{YY} A^{\mathsf T}, $$
 
 and with $A = V_{XY}V_{YY}^{-1}$ the last two terms cancel, since
 $A V_{YY} A^{\mathsf T} = V_{XY} V_{YY}^{-1} V_{YX} = V_{XY} A^{\mathsf T}$,
 leaving
 
-$$ \operatorname{Cov}(\tilde X) = V_{XX} - V_{XY} V_{YY}^{-1} V_{YX} . $$
+$$ \operatorname{Cov}(R) = V_{XX} - V_{XY} V_{YY}^{-1} V_{YX} = S , $$
 
-Hence
+which is (c). Hence
 
-$$ X \mid Y = y \;\sim\; \mathcal N\big( \mu_X + V_{XY}V_{YY}^{-1}(y - \mu_Y),\;\;
+$$ X \mid Y = y \;\sim\; \mathcal N\big( m(y),\, S \big)
+   = \mathcal N\big( \mu_X + V_{XY}V_{YY}^{-1}(y - \mu_Y),\;\;
    V_{XX} - V_{XY}V_{YY}^{-1}V_{YX} \big) . $$
 
-Gaussian in, Gaussian out; the conditional covariance is free of $y$, so all
-slices are congruent; and the covariance is *reduced* by the positive
-semidefinite matrix $V_{XY}V_{YY}^{-1}V_{YX}$. **End of proof.**
+Gaussian in, Gaussian out; the conditional mean is affine in $y$; the
+conditional covariance is free of $y$, so all slices are congruent; and the
+covariance is *reduced* by the positive semidefinite matrix
+$V_{XY}V_{YY}^{-1}V_{YX}$. Nothing here needed $S$ to be invertible: if $S$ is
+singular, the conditional law is a degenerate Gaussian in the sense of
+Definition 2. **End of proof.**
 
 **Theorem 1 recovered.** Take scalar blocks $X = X_1$ and $Y = X_2$: the mean
 is $\mu_1 + \tfrac{\sigma_{12}}{\sigma_{22}}(x_2 - \mu_2)$ and the variance is
@@ -872,6 +925,24 @@ $\sigma_{11} - \tfrac{\sigma_{12}\sigma_{21}}{\sigma_{22}}$, exactly Section
 2.4, now with the deeper reason on display: slicing is projection onto the
 residual. Running-example recheck: $0 + \tfrac{0.6}{1}(1 - 0) = 0.6$ and
 $1 - \tfrac{0.36}{1} = 0.64$, matching Section 2.5.
+
+**Theorem 2 at a glance.** With $X = DW + \mu$, $W \in \mathbb R^m$ i.i.d.
+$\mathcal N(0,1)$, $D \in \mathbb R^{n \times m}$ and $V = DD^{\mathsf T}$:
+(1) $a^{\mathsf T}X \sim \mathcal N(a^{\mathsf T}\mu, \|D^{\mathsf T}a\|^2)$
+for every $a$, in particular $X_i \sim \mathcal N(\mu_i, \sum_j d_{ij}^2)$;
+(2) $\mathbb E X = \mu$ and $\operatorname{Cov} X = V$;
+(3) $CX + d \sim \mathcal N(C\mu + d, CVC^{\mathsf T})$ for every
+$C \in \mathbb R^{k \times n}$ and $d \in \mathbb R^k$;
+(4) if $D$ is square and invertible, $X$ has the Definition-1 density with
+$\det V$ in the normalizer;
+(5) $M_X(s) = \exp(s^{\mathsf T}\mu + \tfrac12 s^{\mathsf T}Vs)$, so
+$(\mu, V)$ determines the law;
+(6) the coordinates are independent if and only if $V$ is diagonal, and
+blocks are independent if and only if their cross-covariance is zero, joint
+Gaussianity being essential;
+(7) with $V_{YY} \succ 0$, $X \mid Y = y \sim \mathcal N(m(y), S)$,
+$\mathbb E[X|Y] = m(Y)$, and $R = X - m(Y)$ is independent of $Y$ with
+covariance $S$.
 
 ### 6.10 New tools: completing the square in matrix form, and the density route
 
@@ -980,7 +1051,8 @@ $$ \sigma_x^2 - \frac{(\sigma_x^2)^2}{\sigma_x^2 + \sigma_z^2}
 By Lecture 7's minimum mean-squared-error theorem, the posterior mean
 $\hat X = \tfrac{\sigma_x^2}{\sigma_x^2+\sigma_z^2} Y$ is the
 minimum-mean-squared-error estimate: the closed form Lecture 7 promised.
-**End of proof.**
+It is linear in $y$ here only because both means are zero; with nonzero means
+part 7 makes it affine. **End of proof.**
 
 *Shrinkage reading.* The slope $\tfrac{\sigma_x^2}{\sigma_x^2 + \sigma_z^2}$
 always lies strictly between $0$ and $1$, so the estimate pulls the
@@ -992,8 +1064,10 @@ total variance.
 $$ \frac{1}{\operatorname{Var}(X \mid Y)} = \frac{\sigma_x^2 + \sigma_z^2}{\sigma_x^2\sigma_z^2}
    = \frac{1}{\sigma_x^2} + \frac{1}{\sigma_z^2} . $$
 
-Precisions add: prior information plus channel information. In particular the
-posterior variance is below $\min(\sigma_x^2, \sigma_z^2)$, so observing
+Precisions add: prior information plus channel information. Equivalently, the
+posterior variance is one half of the harmonic mean of $\sigma_x^2$ and
+$\sigma_z^2$. In particular the posterior variance is below
+$\min(\sigma_x^2, \sigma_z^2)$, so observing
 through even terrible noise strictly helps.
 
 ### 7.3 Worked numbers and extremes
@@ -1014,30 +1088,36 @@ Three extremes:
 
 ### 7.4 Two sampling orderings, and why the second matters
 
+Write $k = \tfrac{\sigma_x^2}{\sigma_x^2+\sigma_z^2}$ and
+$s^2 = \tfrac{\sigma_x^2\sigma_z^2}{\sigma_x^2+\sigma_z^2}$, the posterior
+slope and variance of Section 7.2.
+
 **Claim.** The following two procedures produce the same joint distribution of
 $(X, Y)$.
 
-- *Forward.* Sample $X \sim \mathcal N(0, \sigma_x^2)$, then set $Y = X + Z$
-  with fresh $Z \sim \mathcal N(0, \sigma_z^2)$.
+- *Forward.* Sample $X \sim \mathcal N(0, \sigma_x^2)$, then fresh
+  $Z \sim \mathcal N(0, \sigma_z^2)$ independent of $X$, and set $Y = X + Z$.
 - *Observation first.* Sample $Y \sim \mathcal N(0, \sigma_x^2 + \sigma_z^2)$,
-  then sample
-  $X \sim \mathcal N\big(\tfrac{\sigma_x^2}{\sigma_x^2+\sigma_z^2}Y,\;
-  \tfrac{\sigma_x^2\sigma_z^2}{\sigma_x^2+\sigma_z^2}\big)$.
+  then fresh $W \sim \mathcal N(0, 1)$ independent of $Y$, and set
+  $X = kY + sW$.
 
 *Proof.* Both procedures produce a jointly Gaussian pair: the first by Section
-7.1; the second because $(Y, X) = (Y,\; aY + \tilde Z)$ with
-$a = \tfrac{\sigma_x^2}{\sigma_x^2+\sigma_z^2}$ and $\tilde Z$ independent of
-$Y$, an affine image of independent Gaussians. So by part 5 of Theorem 2 it
-suffices to match means and covariances. All means are zero, since
-$\mathbb E[X] = a\,\mathbb E[Y] = 0$. For the second procedure,
+7.1; the second because $(Y, X) = (Y,\; kY + sW)$ is an affine image of the
+independent Gaussian pair $(Y, W)$. So by part 5 of Theorem 2 it suffices to
+match means and covariances. All means are zero, since
+$\mathbb E[X] = k\,\mathbb E[Y] = 0$. For the second procedure,
 $\operatorname{Var}(Y) = \sigma_x^2 + \sigma_z^2$;
-$\operatorname{Cov}(X, Y) = a \operatorname{Var}(Y) = \sigma_x^2$; and
+$\operatorname{Cov}(X, Y) = k \operatorname{Var}(Y) = \sigma_x^2$; and
 
-$$ \operatorname{Var}(X) = a^2 \operatorname{Var}(Y) + \operatorname{Var}(\tilde Z)
+$$ \operatorname{Var}(X) = k^2 \operatorname{Var}(Y) + s^2
    = \frac{\sigma_x^4}{\sigma_x^2 + \sigma_z^2} + \frac{\sigma_x^2\sigma_z^2}{\sigma_x^2+\sigma_z^2}
    = \sigma_x^2 . $$
 
 Same $(\mu, V)$, same distribution. **End of proof.**
+
+Drawing $W$ fresh and independent of $Y$ is legitimate precisely because of
+part 7(b): in the forward model the residual $X - kY$ is independent of $Y$,
+with variance $s^2$.
 
 The forward ordering is how nature, or a diffusion forward pass, generates
 data. The observation-first ordering is how a *generator* must run: it holds

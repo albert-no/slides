@@ -620,24 +620,36 @@ symbol $\rho$ in the density really is the correlation.
 
 ## 6 The Properties Theorem
 
-Throughout this section $X = DW + \mu$ is a Definition-2 Gaussian with
-$W \sim \mathcal N(0, I_m)$, and $d_i^{\mathsf T}$ denotes the $i$-th row of
-$D$.
+**Standing assumption.** Throughout this section $X$ is a Definition-2
+Gaussian,
 
-**Theorem 2.** With $V = DD^{\mathsf T}$:
+$$ X = DW + \mu, \qquad W \in \mathbb{R}^m,\; D \in \mathbb{R}^{n \times m},\; \mu \in \mathbb{R}^n, $$
 
-1. Each $X_i$ is normal; more generally $a^{\mathsf T} X$ is normal for every
-   $a$.
-2. $\mathbb E[X] = \mu$ and $\operatorname{Cov}(X) = DD^{\mathsf T}$.
-3. $AX + b$ is again multivariate normal, with mean $A\mu + b$ and covariance
-   $A\,DD^{\mathsf T} A^{\mathsf T}$.
-4. If $D$ is square and invertible, $X$ has the Definition-1 density with
-   $V = DD^{\mathsf T}$.
-5. $M_X(s) = \exp(s^{\mathsf T}\mu + \tfrac12 s^{\mathsf T} V s)$, and the
-   pair $(\mu, V)$ determines the distribution.
-6. If $X$ is jointly Gaussian, its components are independent if and only if
-   they are uncorrelated, that is, if and only if $V$ is diagonal; there is a
-   blockwise version for subvectors.
+where $W_1, \dots, W_m$ are independent standard normals. We write
+$V := DD^{\mathsf T}$ (part 2 shows it is the covariance), $d_{ij}$ for the
+entries of $D$ and $d_i^{\mathsf T}$ for its $i$-th row. $D$ is not assumed
+square or invertible unless a part says so. Each part is stated and then
+proved before the next.
+
+**Theorem 2.** Under the standing assumption:
+
+1. For every $a \in \mathbb{R}^n$,
+   $a^{\mathsf T} X \sim \mathcal N\big(a^{\mathsf T}\mu,\; \|D^{\mathsf T} a\|^2\big)$;
+   in particular $X_i \sim \mathcal N\big(\mu_i,\; \sum_{j=1}^m d_{ij}^2\big)$.
+2. $\mathbb E[X] = \mu$ and $\operatorname{Cov}(X, X) = DD^{\mathsf T} = V$.
+3. For any $C \in \mathbb{R}^{k \times n}$ and $d \in \mathbb{R}^k$,
+   $Y = CX + d$ satisfies Definition 2, with $\mathbb E[Y] = C\mu + d$ and
+   $\operatorname{Cov}(Y, Y) = CVC^{\mathsf T}$.
+4. If $D$ is square ($m = n$) and invertible, then $V = DD^{\mathsf T} \succ 0$
+   and
+   $f_X(x) = \frac{1}{(2\pi)^{n/2} |V|^{1/2}} \exp\big( -\tfrac12 (x-\mu)^{\mathsf T} V^{-1} (x-\mu) \big)$.
+5. For every $s \in \mathbb{R}^n$,
+   $M_X(s) = \mathbb E\big[e^{s^{\mathsf T} X}\big] = \exp\big(s^{\mathsf T}\mu + \tfrac12 s^{\mathsf T} V s\big)$.
+   Hence $(\mu, V)$ alone determines the distribution of $X$.
+6. (a) Coordinates: $X_1, \dots, X_n$ are independent if and only if $V$ is
+   diagonal. (b) Blocks: for a split $X = (X_A, X_B)$,
+   $X_A \perp X_B$ if and only if $\operatorname{Cov}(X_A, X_B) = 0$; the
+   coordinates inside a block need not be independent.
 7. If $(X, Y)$ are jointly Gaussian with $V_{YY} \succ 0$, then
    $\mathbb E[X \mid Y] = \mu_X + V_{XY} V_{YY}^{-1} (Y - \mu_Y)$, the
    residual is independent of $Y$, and
@@ -653,78 +665,167 @@ independence, and
 $e^{m_1 t + v_1 t^2/2} \cdot e^{m_2 t + v_2 t^2/2} = e^{(m_1+m_2)t + (v_1+v_2)t^2/2}$
 is again a normal MGF; conclude by scalar MGF uniqueness. By induction the
 same holds for any finite independent sum, with degenerate summands allowed.
+(The slides write the second variable as $T$ to keep $V$ free for the
+covariance matrix.)
 
-*Proof of part 1.* Write
+*Proof of part 1.* Coordinatewise, Definition 2 reads
+$X_i = \mu_i + \sum_{j=1}^m d_{ij} W_j$, and in general
 
-$$ a^{\mathsf T} X = a^{\mathsf T} D W + a^{\mathsf T}\mu
-   = \sum_{k=1}^m (a^{\mathsf T} D)_k\, W_k + a^{\mathsf T}\mu . $$
+$$ a^{\mathsf T} X = a^{\mathsf T}\mu + a^{\mathsf T} D W
+   = a^{\mathsf T}\mu + (D^{\mathsf T} a)^{\mathsf T} W
+   = a^{\mathsf T}\mu + \sum_{k=1}^m (D^{\mathsf T} a)_k\, W_k . $$
 
-This is a finite sum of independent normals
-$(a^{\mathsf T} D)_k W_k \sim \mathcal N(0, (a^{\mathsf T} D)_k^2)$ plus a
-constant, hence normal, and specifically
+This is a constant plus a finite sum of independent normals
+$(D^{\mathsf T} a)_k W_k \sim \mathcal N(0, (D^{\mathsf T} a)_k^2)$, hence
 $a^{\mathsf T} X \sim \mathcal N(a^{\mathsf T}\mu,\; \|D^{\mathsf T} a\|^2)$.
-Taking $a = e_i$ gives $X_i \sim \mathcal N(\mu_i, \|d_i\|^2)$. **End of
-proof.**
+Taking $a = e_i$ gives $D^{\mathsf T} e_i = d_i$ and
+$X_i \sim \mathcal N(\mu_i, \sum_j d_{ij}^2)$. **End of proof.**
 
-This is the implication from Definition 2 to Definition 3.
+Is part 1 trivial under Definition 2? Essentially yes: once $X$ is written as
+an affine function of independent normals, the only fact used is the
+independent-sum rule above. That is the point of choosing Definition 2 as the
+working definition. Since every projection is normal, this is the implication
+from Definition 2 to Definition 3.
 
 ### 6.2 Part 2: the parameters
 
-$\mathbb E[X] = D\,\mathbb E[W] + \mu = \mu$; and by Lemma 5.1 with
-$\operatorname{Cov}(W) = I_m$, which holds because the $W_k$ are independent
-with unit variance,
-$\operatorname{Cov}(X) = D\, I_m\, D^{\mathsf T} = DD^{\mathsf T}$.
+*Tool.* $\mathbb E[WW^{\mathsf T}] = I_m$: the $(i,j)$ entry is
+$\mathbb E[W_iW_j]$, which is $\operatorname{Var}(W_i) = 1$ for $i = j$ and
+$\mathbb E[W_i]\,\mathbb E[W_j] = 0$ for $i \neq j$ by independence.
+
+*Proof of part 2.* By linearity, $\mathbb E[X] = D\,\mathbb E[W] + \mu = \mu$.
+Hence $X - \mu = DW$, and pulling the constant matrices out of the entrywise
+expectations,
+
+$$ \operatorname{Cov}(X, X) = \mathbb E[(X-\mu)(X-\mu)^{\mathsf T}]
+   = \mathbb E[DWW^{\mathsf T}D^{\mathsf T}] = D\,\mathbb E[WW^{\mathsf T}]\,D^{\mathsf T}
+   = DD^{\mathsf T}. $$
+
+**End of proof.** (Equivalently, Lemma 5.1 with $\operatorname{Cov}(W) = I_m$.)
 
 Together with Lemma 3.3 this shows that every positive semidefinite matrix
 arises as a Gaussian covariance: given $V \succeq 0$, take $D = V^{1/2}$.
 
 ### 6.3 Part 3: affine closure, and marginals
 
-$AX + b = A(DW + \mu) + b = (AD)W + (A\mu + b)$ is again of Definition-2 form,
-with matrix $AD$. That one-line proof is the reason Definition 2 is the
-workhorse: the other two definitions make this closure invisible. The
-parameters follow from part 2 and Lemma 5.1: mean $A\mu + b$, covariance
-$(AD)(AD)^{\mathsf T} = A\,V A^{\mathsf T}$.
+*Proof of part 3.*
+$Y = CX + d = C(DW + \mu) + d = (CD)W + (C\mu + d)$ is again of Definition-2
+form, with matrix $CD$ and shift $C\mu + d$. Part 2 applied to this
+representation gives mean $C\mu + d$ and covariance
+$(CD)(CD)^{\mathsf T} = CDD^{\mathsf T}C^{\mathsf T} = CVC^{\mathsf T}$.
+**End of proof.**
+
+That one-line proof is the reason Definition 2 is the workhorse: the other
+two definitions make this closure invisible.
 
 *Corollary (marginals).* Any subvector $(X_{i_1}, \dots, X_{i_k})$ equals
-$A X$ for the selector matrix $A$ whose rows are
+$CX$ for the selector matrix $C$ whose rows are
 $e_{i_1}^{\mathsf T}, \dots, e_{i_k}^{\mathsf T}$, hence is Gaussian, with
-mean and covariance the corresponding sub-blocks of $\mu$ and $V$.
-Marginalizing a Gaussian is *deleting rows and columns*; no integral is ever
-computed.
+mean and covariance the corresponding sub-blocks of $\mu$ and $V$. Example
+used on the slides: $n = 5$, keep coordinates $1, 4, 5$,
 
-### 6.4 Part 4: the density, by change of variables
+$$ C = \begin{bmatrix} 1 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 & 1 \end{bmatrix},
+   \qquad CX = \begin{bmatrix} X_1 \\ X_4 \\ X_5 \end{bmatrix},
+   \qquad C\mu = \begin{bmatrix} \mu_1 \\ \mu_4 \\ \mu_5 \end{bmatrix}. $$
 
-**Recalled tool (multivariate change of variables, stated).** If $Y = g(Z)$
-with $g$ an invertible differentiable map, then
-$f_Y(y) = f_Z(g^{-1}(y))\, |\det J_{g^{-1}}(y)|$. For the affine map
-$g(w) = Dw + \mu$ one has $g^{-1}(x) = D^{-1}(x - \mu)$, with the constant
-Jacobian determinant $\det D^{-1} = 1/\det D$.
+Since $(CVC^{\mathsf T})_{kl} = V_{i_k i_l}$, the marginal covariance is the
+$3 \times 3$ block of $V$ in rows and columns $1, 4, 5$. Marginalizing a
+Gaussian is *deleting rows and columns*; no integral is ever computed.
 
-*Proof of part 4.* With $f_W(w) = (2\pi)^{-n/2} e^{-\|w\|^2/2}$ and
-$w = D^{-1}(x-\mu)$,
+### 6.4 Part 4: the density, from the volume factor
+
+**Why $|\det D|$ appears: volume.** Start in one dimension with $X = 2W$.
+The map doubles every length, so the interval $[0.5, 1]$ for $W$ becomes
+$[1, 2]$ for $X$; it is the same event, with the same probability
+$\Phi(1) - \Phi(0.5) \approx 0.1499$. Twice the width with the same
+probability forces half the height: $f_X(x) = \tfrac12 f_W(x/2)$.
+
+In two dimensions take
+$D = \begin{bmatrix} 2 & 1 \\ 0 & 1 \end{bmatrix}
+   = \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}\begin{bmatrix} 2 & 0 \\ 0 & 1 \end{bmatrix}$,
+a stretch followed by a shear. The unit square becomes a $2 \times 1$
+rectangle (area $2$) and then the parallelogram with edges $De_1 = (2,0)$ and
+$De_2 = (1,1)$, still area $2 = |\det D|$: stretching changes area, while
+shearing tilts without changing it. In $n$ dimensions we take the following
+as the one imported fact: *a linear map $D$ multiplies every volume by
+$|\det D|$*. The absolute value covers reflections, for which $\det D < 0$.
+This fact is stated, not proved, here.
+
+**Mass conservation.** A tiny region of volume $\Delta v$ around $w$ is
+mapped onto a region of volume $|\det D|\,\Delta v$ around $x = Dw + \mu$.
+Both are the same event, so
+
+$$ f_W(w)\,\Delta v \approx f_X(x)\,|\det D|\,\Delta v
+   \quad\Longrightarrow\quad
+   f_X(x) = \frac{f_W\big(D^{-1}(x - \mu)\big)}{|\det D|}. $$
+
+Made precise, this is the linear case of the change-of-variables formula; the
+volume fact above is the only ingredient beyond the definition of a density.
+No general (nonlinear) Jacobian theorem is needed.
+
+*Proof of part 4.* Independence of the coordinates gives the product density
+$f_W(w) = \prod_{j=1}^n e^{-w_j^2/2}/\sqrt{2\pi} = (2\pi)^{-n/2} e^{-\|w\|^2/2}$.
+The density rule with $w = D^{-1}(x-\mu)$ gives
 
 $$ f_X(x) = \frac{1}{(2\pi)^{n/2} |\det D|}
    \exp\Big( -\tfrac12 \big\|D^{-1}(x - \mu)\big\|^2 \Big), $$
 
-and the exponent rearranges into the $V^{-1}$ quadratic form, with
-$V = DD^{\mathsf T}$:
+and the exponent rearranges into the $V^{-1}$ quadratic form:
 
 $$ \|D^{-1}(x-\mu)\|^2 = (x-\mu)^{\mathsf T} (D^{-1})^{\mathsf T} D^{-1} (x-\mu)
-   = (x-\mu)^{\mathsf T} (DD^{\mathsf T})^{-1} (x-\mu), $$
+   = (x-\mu)^{\mathsf T} (DD^{\mathsf T})^{-1} (x-\mu)
+   = (x-\mu)^{\mathsf T} V^{-1} (x-\mu), $$
 
 since $(D^{-1})^{\mathsf T} D^{-1} = (D^{\mathsf T})^{-1}D^{-1} = (DD^{\mathsf T})^{-1}$.
 Finally
 $|\det D| = (\det D \cdot \det D^{\mathsf T})^{1/2} = (\det V)^{1/2}$, which
 gives exactly the Definition-1 density. **End of proof.**
 
-This is the implication from Definition 2 to Definition 1. Note that
-$V = DD^{\mathsf T} \succ 0$ automatically when $D$ is invertible, since
-$\|D^{\mathsf T} a\|^2 = 0$ then forces $a = 0$.
+This is the implication from Definition 2 to Definition 1 for square
+invertible $D$. Note that $V = DD^{\mathsf T} \succ 0$ automatically when $D$
+is invertible, since $a^{\mathsf T} V a = \|D^{\mathsf T} a\|^2 = 0$ then
+forces $a = 0$. When $V$ is singular there is no density at all, but
+Definitions 2 and 3 still apply.
+
+**Optional: a proof without the volume fact.** A Jacobian-free route exists;
+it is longer, which is why the slides use the volume picture. It uses only
+the independence of the $W_j$, scalar MGFs with their uniqueness theorem, and
+the one-dimensional substitution rule; it does not use parts 5 or 6.
+
+*Step 1 (triangularize).* Gram-Schmidt on the rows of $D$ (the QR
+decomposition of $D^{\mathsf T}$) writes $D = LQ$ with $Q$ orthogonal and $L$
+lower triangular. $L$ is invertible because $D$ is, so every
+$l_{kk} \neq 0$, and $|\det L| = |\det D|$, $LL^{\mathsf T} = DQ^{\mathsf T}QD^{\mathsf T} = V$.
+
+*Step 2 (rotate the noise).* Let $Z = QW$. For every $s$, by independence of
+the $W_j$,
+$\mathbb E[e^{s^{\mathsf T} Z}] = \mathbb E[e^{(Q^{\mathsf T}s)^{\mathsf T} W}]
+ = \prod_j e^{(Q^{\mathsf T}s)_j^2/2} = e^{\|Q^{\mathsf T}s\|^2/2} = e^{\|s\|^2/2}$,
+which is the MGF of $W$. By MGF uniqueness, $Z$ has the same distribution as
+$W$: independent standard-normal coordinates. So $X = LZ + \mu$.
+
+*Step 3 (peel off one coordinate at a time).* Since $L$ is lower triangular,
+$x_k = l_{kk} z_k + \sum_{j<k} l_{kj} z_j + \mu_k$, so $x_k$ depends on
+$z_k$ affinely once $z_1, \dots, z_{k-1}$ (equivalently
+$x_1, \dots, x_{k-1}$) are fixed. For any box $A$, write
+$\mathbb P(X \in A) = \int \cdots \int \mathbf 1_A(Lz + \mu) \prod_k \varphi(z_k)\, dz_n \cdots dz_1$
+and substitute $z_1 \to x_1$, then $z_2 \to x_2$ with $x_1$ fixed, and so on.
+Each step is a one-dimensional affine substitution contributing a factor
+$1/|l_{kk}|$, which gives
+
+$$ f_X(x) = \prod_{k=1}^n \frac{\varphi(z_k)}{|l_{kk}|}
+   = \frac{1}{(2\pi)^{n/2}\, |\det L|} \exp\big( -\tfrac12 \|z\|^2 \big),
+   \qquad z = L^{-1}(x - \mu). $$
+
+*Step 4.* With $|\det L| = |\det D| = |V|^{1/2}$ and
+$\|L^{-1}(x-\mu)\|^2 = (x-\mu)^{\mathsf T}(LL^{\mathsf T})^{-1}(x-\mu) = (x-\mu)^{\mathsf T}V^{-1}(x-\mu)$,
+this is the Definition-1 density again. **End of proof.**
 
 ### 6.5 Part 5: the moment generating function
 
-*Proof.* By part 1, $s^{\mathsf T} X \sim \mathcal N(s^{\mathsf T}\mu,\, s^{\mathsf T} V s)$.
+*Proof.* Part 1 with $a = s$ gives
+$s^{\mathsf T} X \sim \mathcal N(s^{\mathsf T}\mu,\, \|D^{\mathsf T}s\|^2)$, and
+$\|D^{\mathsf T}s\|^2 = s^{\mathsf T}DD^{\mathsf T}s = s^{\mathsf T} V s$.
 Evaluate its scalar MGF, from Lecture 5, at $t = 1$:
 
 $$ M_X(s) = \mathbb E\big[e^{s^{\mathsf T} X}\big] = M_{s^{\mathsf T} X}(1)
@@ -734,7 +835,8 @@ $$ M_X(s) = \mathbb E\big[e^{s^{\mathsf T} X}\big] = M_{s^{\mathsf T} X}(1)
 finite for every $s$. Since this MGF depends on $(\mu, V)$ only, MGF
 uniqueness, the single imported black box of Section 4.3, gives the following:
 two multivariate Gaussians with the same mean and covariance are identically
-distributed, regardless of which $D$ built them. **End of proof.**
+distributed, regardless of which $D$ built them. No density is needed, so
+singular $V$ is included. **End of proof.**
 
 For example $D$ and $DR$ give the same distribution for any orthogonal $R$,
 because $DR(DR)^{\mathsf T} = DD^{\mathsf T}$. The construction is
@@ -742,26 +844,49 @@ many-to-one; the distribution is not.
 
 ### 6.6 Part 6: independence and zero covariance, both directions
 
-*Proof.* Forward direction, needing no Gaussianity: independent $X_i$ and
+*Proof, easy direction.* This needs no Gaussianity: independent $X_i$ and
 $X_j$ with finite second moments satisfy
 $\mathbb E[X_iX_j] = \mathbb E[X_i]\mathbb E[X_j]$ by Lecture 4, so
-$\operatorname{Cov}(X_i, X_j) = 0$.
+$\operatorname{Cov}(X_i, X_j) = 0$. For blocks, apply this to each entry of
+$\operatorname{Cov}(X_A, X_B)$.
 
-Reverse direction, the Gaussian miracle. Suppose $X \sim \mathcal N(\mu, V)$
-with $V = \operatorname{diag}(v_1, \dots, v_n)$. Build an
+*Proof of (a), the converse, by matching.* Suppose
+$V = \operatorname{diag}(V_{11}, \dots, V_{nn})$. Build an
 independent-by-construction comparison vector: set
-$Y_i = \mu_i + \sqrt{v_i}\, W_i$ with $W \sim \mathcal N(0, I_n)$, that is,
-$Y = \operatorname{diag}(\sqrt{v_i})\, W + \mu$, a Definition-2 Gaussian whose
-components are independent because the $W_i$ are. Its mean is $\mu$ and its
-covariance is
-$\operatorname{diag}(\sqrt{v_i})\, I \operatorname{diag}(\sqrt{v_i}) = V$. By
+$Y_i = \mu_i + \sqrt{V_{ii}}\, W_i$ with $W \sim \mathcal N(0, I_n)$, that is,
+$Y = \operatorname{diag}(\sqrt{V_{ii}})\, W + \mu$. This is a Definition-2
+Gaussian whose components are independent because the $W_i$ are. Its mean is
+$\mu$ and its covariance is
+$\operatorname{diag}(\sqrt{V_{ii}})\, I \operatorname{diag}(\sqrt{V_{ii}}) = V$. By
 part 5, $X$ and $Y$ have the same distribution; and independence is a property
 of the joint distribution, so the components of $X$ are independent. **End of
 proof.**
 
-*Blockwise version,* used in Sections 6.9 and 7: if $(X, Y)$ are jointly
-Gaussian with $\operatorname{Cov}(X, Y) = 0$, the same matching argument with
-a block-diagonal $V$ shows the subvectors $X$ and $Y$ are independent.
+*Proof of (b), same trick.* Split the rows of $D$ as $D_A$, $D_B$ to match
+$X = (X_A, X_B)$, so $V_{AA} = D_AD_A^{\mathsf T}$ and
+$V_{BB} = D_BD_B^{\mathsf T}$, and assume
+$\operatorname{Cov}(X_A, X_B) = 0$. Let $W', W''$ be independent copies of
+$W$ and set
+
+$$ Y = \begin{bmatrix} Y_A \\ Y_B \end{bmatrix}
+     = \begin{bmatrix} D_A & 0 \\ 0 & D_B \end{bmatrix}
+       \begin{bmatrix} W' \\ W'' \end{bmatrix} + \mu . $$
+
+This is Definition 2 with the $2m$-dimensional noise $(W', W'')$, so by
+part 2 its mean is $\mu$ and its covariance is
+$\begin{bmatrix} V_{AA} & 0 \\ 0 & V_{BB} \end{bmatrix} = V$. By part 5,
+$X$ and $Y$ have the same distribution. $Y_A = D_AW' + \mu_A$ and
+$Y_B = D_BW'' + \mu_B$ are functions of independent vectors, so
+$Y_A \perp Y_B$, hence $X_A \perp X_B$. No density was used, so singular
+blocks are allowed. **End of proof.** The coordinates inside $X_A$ remain
+dependent whenever $V_{AA}$ is not diagonal. This block form is the one used
+in Sections 6.9 and 7.
+
+*Optional check through the density.* When $V$ is diagonal and invertible,
+the Definition-1 exponent splits as
+$-\sum_i (x_i - \mu_i)^2 / (2V_{ii})$ and $|V| = \prod_i V_{ii}$, so
+$f_X(x) = \prod_i f_{X_i}(x_i)$, a product density. This confirms (a)
+directly but needs a density; the matching proof does not.
 
 **Counterexample: joint Gaussianity cannot be dropped.** Let
 $X \sim \mathcal N(0,1)$ and let $S$ be an independent random sign with

@@ -17,7 +17,7 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 | 11 | 21:31 | slides → slides-review | Cleanups in 91cd121; recheck requested |
 | 12 | 21:31 | slides-review → slides | Approved at 91cd121 |
 | 13 | 22:03 | slides-review → slides | Albert 22:02: finer p15 mesh (or 2D), remove antiderivative |
-| 14 | 22:24 | slides → slides-review | Targeted recheck request at 399251c |
+| 14 | 22:08 | slides → slides-review | Targeted recheck request at 399251c |
 
 ---
 
@@ -118,7 +118,7 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 >
 > 3. Update pagination and `courses/deepmath/OUTLINE.md` (closing row L459, deck/note counts and affected pointers). Render the revised p15/p16 and closing transition; check both notes for remaining antiderivative explanation. Preserve the historical discussion log verbatim. Send the content commit for a targeted recheck; merge still requires Albert’s authorization.
 
-**14 · 22:24 · slides → slides-review**
+**14 · 22:08 · slides → slides-review**
 
 > Targeted recheck please: PR #69, content commit `399251c` (154 slides), implementing Albert's 22:02 comments.
 >

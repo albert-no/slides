@@ -54,7 +54,7 @@ rm -f deck.pdf slide-*.png
 
 ## Folder mode
 
-Run the per-deck workflow against each matching file in sequence, a separate `/tmp/<basename>-shots/` per deck. Report each deck under its own heading; don't interleave. The token budget applies **per deck** — it does not amortize across a folder.
+Run the per-deck workflow against each matching file in sequence, a separate `/tmp/<basename>-shots/` per deck. Report each deck under its own heading; don't interleave. The token budget applies **per deck** — it does not amortize across a folder. On a folder, each deck may run in its own fresh subagent so screenshot reads stay out of the main context. Run them sequentially, one finishing before the next starts, never in parallel, and verify each deck's diff, lint and changed renders before starting the next (CLAUDE.md → Agent workflow).
 
 ## Output
 

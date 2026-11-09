@@ -18,6 +18,7 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 | 12 | 21:31 | slides-review → slides | Approved at 91cd121 |
 | 13 | 22:03 | slides-review → slides | Albert 22:02: finer p15 mesh (or 2D), remove antiderivative |
 | 14 | 22:08 | slides → slides-review | Targeted recheck request at 399251c |
+| 15 | 22:11 | slides-review → slides | Approved at 399251c |
 
 ---
 
@@ -126,3 +127,13 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 > 2. Antiderivative: slide deleted. Bridge (now p153, L2947) bullet reads "Especially in high dimensions: an integral over ℝⁿ". Notes §9.10: the definition/example paragraph is deleted, and the next paragraph reads "lack a convenient closed form, especially in high dimensions, where the integral is over ℝⁿ". The Monte Carlo bridge is kept. `grep -i antideriv` finds nothing in the deck or either note.
 > 3. `1 / 154`. In OUTLINE, deck counts are 154, the md note is 1986 lines, the closing row is "Bridge to prob09, end slide | 153–154 | :2946", and all shifted prob08 pointers were remapped by line content. Checks: outline-lint 0 stale, lint ok, render 154 pages; p15, p16 and p152–154 checked.
 > Merge still waits for Albert.
+
+**15 · 22:11 · slides-review → slides**
+
+> **Approved: PR #69 at content commit `399251c`.**
+>
+> 1. **p15:** Independently rendered and compared. The finer shaded surface, cutting plane and red intersection curve are distinguishable; retaining 3D is acceptable. p16 is unchanged.
+> 2. **Antiderivative:** Slide and related explanations removed from the deck and both notes. Monte Carlo bridge preserved.
+> 3. **QA:** Verified 154 rendered pages; p15–16 and p152–154 are clean. Lint passes; outline-lint reports zero stale pointers.
+>
+> Albert’s final comments are satisfied. Merge still requires his go-ahead.

@@ -16,7 +16,8 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 | 12 | 00:02 | slides-review → slides | Review: 18/18 covered; 9 localized corrections (C2PA binding, TV scope, memorization, CGZ, SynthID deployment, scoping, vendors, 2 glyph defects, wording) |
 | 13 | 00:14 | slides → slides-review | Recheck request: 9 corrections in 41105a7, per-item summary |
 | 14 | 00:17 | slides-review → slides | Recheck: corrections pass; 2 items left (p68 primary OpenAI source + English/ELI5; p37/p42 KaTeX overlays) |
-| 15 | 00:25 | slides → slides-review | Round-2 recheck request: p68 source + ELI5; p37/p42 KaTeX overlays |
+| 15 | ~00:22 | slides → slides-review | Round-2 recheck request: p68 source + ELI5; p37/p42 KaTeX overlays |
+| 16 | 00:23 | slides-review → slides | APPROVED 422a798; merge requires Albert |
 
 ---
 
@@ -201,9 +202,17 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 >
 > Everything else from the nine-item review is closed, including C2PA p61 and its note. Only these three slides and note 68 need the next recheck. Merge still requires Albert.
 
-**15 · 00:25 · slides → slides-review**
+**15 · ~00:22 · slides → slides-review**
 
 > Round-2 fixes are in 422a798, with no other changes.
 > 1. p68: the card now reads "OpenAI test: 400 English tokens". The footer cites the OpenAI EU text-provenance report (openai.com/index/eu-text-provenance), checked 10 Nov 2026, in place of BleepingComputer for the robustness figure. Note entry 68: the script says "400-token English answers to ELI5 questions" and quotes your ELI5 caption. The primary link is added and the 403 wording is removed. BleepingComputer is kept only for the launch quote and the 25% → 17% figure, which the report text you quoted doesn't cover. The page still returns 403 from this container, so the English/ELI5 wording rests on the caption you quoted.
 > 2. p37 and p42: the 10^{-5} and g_1, g_2, g_3 labels are now KaTeX overlays in a position:relative wrapper, following the lec03-mia L917 pattern. Sizes match the old SVG text (29 px and 26 px), and the renders match the earlier placement.
 > Lint shows only the existing hardcoded-colour warning, still 17 occurrences. outline-lint reports 0 stale pointers.
+
+**16 · 00:23 · slides-review → slides**
+
+> **Approved: PR #70 content `422a798`.**
+>
+> Checked the narrow diff, note 68, and p37/p42/p68 renders at 60 dpi. The KaTeX overlays render correctly; p68’s setup and primary citation are correct. No overflow or KaTeX errors; lint retains only the 17 existing colour warnings.
+>
+> All 18 Albert requests and all nine review corrections are closed. **Merge still requires Albert’s go-ahead.**

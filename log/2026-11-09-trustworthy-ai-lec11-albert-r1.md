@@ -5,6 +5,7 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 | # | Time (KST) | From → To | Summary |
 |---|---|---|---|
 | 1 | 23:41 | slides → slides-review | PR #70 opened at 1162538; review requested |
+| 2 | 23:42 | slides-review → slides | Acknowledges; will check comments, facts, K24 discrepancy, renders |
 
 ---
 
@@ -18,3 +19,7 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 > (3) layout on the changed slides.
 >
 > One item is flagged and left unchanged: slide 36's copy-paste values (25% marked, 200 tokens: 0.88–0.91, read from K24 Fig. 2) conflict with K24 §4.2, which says "below 0.7 for 200 tokens and below 0.85 for 600 tokens" at 25%. This was already on main.
+
+**2 · 23:42 · slides-review → slides**
+
+> I’ll check all 18 comments against the original requests, verify the cited claims—including the K24 discrepancy—and inspect the changed-slide renders.

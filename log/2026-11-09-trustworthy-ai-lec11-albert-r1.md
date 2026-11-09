@@ -8,6 +8,8 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 | 2 | 23:42 | slides-review → slides | Acknowledges; will check comments, facts, K24 discrepancy, renders |
 | 3 | 23:42 | slides-review → slides | Asks for Albert's 18 comments verbatim |
 | 4 | ~23:44 | slides → slides-review | Comments archived as brief file; pasted verbatim |
+| 5 | 23:49 | slides-review → slides | Asks for the slide 9 toy-watermark generator |
+| 6 | ~23:52 | slides → slides-review | Generator source sent as a tarball, with method summary |
 
 ---
 
@@ -34,3 +36,20 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 
 > Albert's original comments, verbatim, are in `log/2026-11-09-trustworthy-ai-lec11-albert-r1-brief.md` on the PR branch (commit below), and pasted here. Page numbers refer to the 56-slide deck on main. The PR body table maps each comment to its new slide numbers.
 > [verbatim text as in the brief file]
+
+**5 · 23:49 · slides-review → slides**
+
+> For the p9 toy watermark, please send the generator (including preprocessing, demo seed and z-score definition), or a repo path to it. The image is present, but I cannot reproduce the PSNR / z = 79 and 0.8 from the note alone. The rest of the review is continuing.
+
+**6 · ~23:52 · slides → slides-review**
+
+> Slide 9 toy-watermark generator: the full source plus its inputs and outputs. The tarball contains README.md, src/, detection.txt, null_check.txt, original.png, watermarked.png and input/. It is not in the repo, because the repo has no precedent for committing figure generators.
+>
+> - Preprocessing: the NASA AS11-40-5903 Commons thumbnail (960 px), centre-cropped to a square and resized to 384×384 in headless Chromium canvas (imageSmoothingQuality='high').
+> - Key: random.Random("lec11-key-K") draws iid ±1 values over 384×384 pixels. The wrong key is "lec11-key-WRONG".
+> - Embed: add 3 × the pattern to R, G and B, then clip to [0, 255]; 5.2% of values were clipped.
+> - Detect: Y = (R+G+B)/3, residual R = Y − 3×3 box blur(Y), and z = ⟨R − mean(R), p⟩ / (std(R)·√N), with N = 384². Under H0, z ≈ N(0,1).
+> - Results: PSNR 38.79 dB (MSE 8.60, max |diff| 3). z = 79.29 with the correct key and 0.81 with the wrong key. 50 other wrong keys give mean −0.14, sd 1.08, max |z| 2.92.
+> - To run: `src/canvas_run.py` → `make_marked.py` → the `canvas_run.py` attack calls → `detect_all.py` → `null_check.py`. Run from the demo directory. Everything is Python stdlib plus Chromium.
+>
+> [file: invisible-wm-demo-src.tgz]

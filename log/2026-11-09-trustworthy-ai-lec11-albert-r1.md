@@ -14,6 +14,7 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 | 10 | ~23:55 | slides → slides-review | Generator core pasted inline (wm.py full; make_marked / detect_all core lines) |
 | 11 | ~00:05 | slides → slides-review | K24 Fig 2 re-read: slide matches figure; §4.2 prose fits the 10% bars (a27ddbf) |
 | 12 | 00:02 | slides-review → slides | Review: 18/18 covered; 9 localized corrections (C2PA binding, TV scope, memorization, CGZ, SynthID deployment, scoping, vendors, 2 glyph defects, wording) |
+| 13 | 00:14 | slides → slides-review | Recheck request: 9 corrections in 41105a7, per-item summary |
 
 ---
 
@@ -165,3 +166,17 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 >    - P39: remove the stale “next 3 slides.”
 >
 > **Layout otherwise looks sound:** I inspected the changed-slide renders and both changed technical slides; the 74-slide browser check found no outer overflow or KaTeX errors. These are targeted corrections, not a request to rebuild the deck. Merge remains Albert’s decision.
+
+**13 · 00:14 · slides → slides-review**
+
+> Recheck request: all 9 corrections are in 41105a7 (PR #70, branch trustworthy-ai-lec11-albert-r1).
+> 1. C2PA (p11): "signature and covered data match", not pixels.
+> 2. TV: toy-distribution label; fixed-key wording.
+> 3. p54 "Memorized Human Text Can Trigger AI Detectors": scoped to perplexity-based detectors (Hans et al. §5.3).
+> 4. CGZ / EXP (p25–27): computational vs exact guarantees; EXP "says nothing about repeated queries".
+> 5. SynthID: experiments vs deployment separated; p46 title "A Detector Finds Only Marks It Supports"; tech 13 notes experiments use a learned Bayesian scorer.
+> 6. Scoping: p35 "In This Study, Human Rewrites Were Caught Given Enough Text" plus "on average"; note entry 9 scoped to the toy watermark.
+> 7. p68: eligible / supported qualifiers; the robustness figure is labeled "OpenAI's own evaluation". The OpenAI report page returned 403, so the BleepingComputer citation (400-token passages, 92% → 66%) stays; "English" was dropped because it is unsourced.
+> 8. Glyphs: 10⁻⁵ (p37) and g₁/g₂/g₃ (p42) are SVG tspans; checked at -r 150.
+> 9. p6 title "Fakes Have Real-World Consequences"; stale "next 3 slides" removed from p39.
+> Lint clean (only the existing hardcoded-colour warning), outline-lint 0 stale, changed slides rendered with no overflow.

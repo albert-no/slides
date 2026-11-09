@@ -75,7 +75,7 @@ stationary prior, from its exact algebra.
 1. Why Gaussians?
 2. Warm-up: two dimensions
 3. Positive semidefinite matrices
-4. Three definitions
+4. Multivariate normal: three equivalent definitions
 5. Vector means and covariances
 6. The properties theorem
 7. The Gaussian channel
@@ -169,6 +169,16 @@ are eigenvectors, with eigenvalues $1 + \rho$ and $1 - \rho$. Here
 $\lambda_1 = 1.6$ along $\tfrac{1}{\sqrt2}(1,1)^{\mathsf T}$ and
 $\lambda_2 = 0.4$ along $\tfrac{1}{\sqrt2}(1,-1)^{\mathsf T}$.
 
+*Figure (eigenpairs).* The slide "Eigenvectors Orient; Eigenvalues Set
+Spread" draws the two contours $x^{\mathsf T}\Sigma^{-1}x = 1$ and $= 4$ of the
+running example, with both unit eigenvectors $z_i = (1,\pm1)/\sqrt2$ drawn
+as arrows and labelled $\Sigma z_i = \lambda_i z_i$. The variance of $X$ along
+$z_i$ is $z_i^{\mathsf T}\Sigma z_i = \lambda_i$, so the semi-axes of the inner
+contour are $\sqrt{1.6} \approx 1.26$ and $\sqrt{0.4} \approx 0.63$. The two
+contours are level sets of the quadratic form, not 68% or 95% probability
+regions: in two dimensions $\Pr(X^{\mathsf T}\Sigma^{-1}X \le c) = 1 - e^{-c/2}$,
+about $0.39$ at $c = 1$ and $0.86$ at $c = 4$.
+
 ### 2.3 Geometry: why the level sets are ellipses
 
 A level set $\{x : x^{\mathsf T} \Sigma^{-1} x = c\}$ is best read in the
@@ -257,10 +267,29 @@ are Gaussian. Restoring means and scales gives the theorem. **End of proof.**
 $\rho x_2 = 0.6 \cdot 1 = 0.6$ and the variance is
 $1 - \rho^2 = 1 - 0.36 = 0.64$, so
 $X_1 \mid X_2 = 1 \sim \mathcal N(0.6,\, 0.64)$, a normal with standard
-deviation $0.8$. Geometrically: the horizontal line at height $x_2 = 1$ cuts
-the density surface, and the resulting cross-section is a normal bump whose
-peak sits at $x_1 = 0.6$, shifted right of the origin and slightly narrower
-than the marginal.
+deviation $0.8$. Geometrically: the vertical plane standing over the line
+$x_2 = 1$ in the floor cuts the density surface, and the resulting
+cross-section, once normalized, is a normal bump whose peak sits at
+$x_1 = 0.6$, shifted right of the origin and narrower than the marginal. The
+slides split this into two steps.
+
+*Cut.* The plane meets the surface along the curve $x_1 \mapsto f(x_1, 1)$.
+In the 3D figure the half of the surface on the viewer's side of the plane is
+drawn as a wireframe, so the shaded cross-section and the red slice curve are
+visible. The raw slice is not yet a density: its area is
+
+$$ \int f(x_1, 1)\, dx_1 = f_{X_2}(1) = \varphi(1)
+   = \tfrac{1}{\sqrt{2\pi}} e^{-1/2} \approx 0.24197, $$
+
+and its peak height is $f(0.6, 1) = \varphi(1)/(0.8\sqrt{2\pi}) \approx 0.1207$.
+
+*Normalize.* Dividing by that area gives the conditional density
+$f_{X_1 \mid X_2 = 1}(x_1) = f(x_1, 1)/\varphi(1)$, which has area $1$ and is
+exactly the $\mathcal N(0.6, 0.64)$ density, with peak
+$1/(0.8\sqrt{2\pi}) \approx 0.4987$. The 1D figure plots both curves on one
+axis: the raw slice, shaded, with area $0.242$, and the conditional as a
+dashed curve with area $1$, both centred at $x_1 = 0.6$. Dividing by a
+constant changes the height, never the shape or the centre.
 
 *Source note.* The deeper reason the completed square works falls out of the
 general machinery, and Section 6.9 re-derives Theorem 1 as the
@@ -285,6 +314,19 @@ an orthonormal eigenbasis $z_1, \dots, z_n$, so that
 $A = Q\Lambda Q^{\mathsf T} = \sum_{i=1}^n \lambda_i z_i z_i^{\mathsf T}$ with
 $Q^{\mathsf T} Q = I$.
 
+*Matrix form.* Put the eigenvectors in the columns of
+$Q = [z_1 \cdots z_n]$ and the eigenvalues on the diagonal of
+$\Lambda = \operatorname{diag}(\lambda_1, \dots, \lambda_n)$. Then the $n$
+equations $Az_i = \lambda_i z_i$ are, column by column, the single equation
+$AQ = Q\Lambda$. Since $Q^{\mathsf T} Q = I$, the square matrix $Q$ is
+invertible with $Q^{-1} = Q^{\mathsf T}$, so multiplying on the right by
+$Q^{\mathsf T}$ gives $A = Q\Lambda Q^{\mathsf T}$. Read right to left, $Ax$
+first takes coordinates in the eigenbasis ($Q^{\mathsf T}x$), scales the
+$i$-th coordinate by $\lambda_i$, and maps back ($Q$). Writing
+$Q\Lambda = [\lambda_1 z_1 \cdots \lambda_n z_n]$ and multiplying this by the
+rows $z_i^{\mathsf T}$ of $Q^{\mathsf T}$, column times row, gives
+$Q\Lambda Q^{\mathsf T} = \sum_i \lambda_i z_i z_i^{\mathsf T}$.
+
 **Lemma 3.1.** $A \succeq 0$ if and only if all $\lambda_i \geq 0$; and
 $A \succ 0$ if and only if all $\lambda_i > 0$.
 
@@ -299,6 +341,15 @@ $$ x^{\mathsf T} A x = \sum_i \lambda_i (z_i^{\mathsf T} x)^2 = \sum_i \lambda_i
 which is a nonnegative combination when every $\lambda_i \geq 0$, and is
 strictly positive for $x \neq 0$ when every $\lambda_i > 0$, since then some
 $c_i \neq 0$. **End of proof.**
+
+*Bowl versus trough.* One vector is enough to refute positive definiteness,
+while proving it needs every $x \neq 0$. The slide contrasts the workbench
+matrix $A$ of Section 3.2 with $B$, the matrix with all four entries equal to
+$1$. Take $x = (1,-1)^{\mathsf T}$: $x^{\mathsf T}Ax = 2 > 0$, but $Bx = 0$.
+Along the line $tx$ the two forms are $q_A(tx) = 2t^2$, which climbs, and
+$q_B(tx) = 0$, which stays flat. So $B$ is positive semidefinite (eigenvalues
+$2$ and $0$) but singular: its graph is a trough, and a nonzero null direction
+lets you move without climbing. $A$'s graph is a bowl.
 
 ### 3.2 The workbench matrix
 
@@ -399,7 +450,18 @@ is constantly equal to $1$, interpreting $V^{-1}$ on the complement, and the
 integral diverges. So a singular $V$ admits no density on $\mathbb{R}^n$,
 which is why Definition 1 must require $V \succ 0$. **End of proof.**
 
-## 4 Three Definitions
+*Why finiteness is not just "the tails die".* An integrand that tends to $0$
+at infinity can still have infinite integral, so decay alone proves nothing.
+The usable statement is a Gaussian bound. Let $A \succ 0$ with smallest
+eigenvalue $\lambda_{\min} > 0$. Expanding $x = \sum_i c_i z_i$ in the
+eigenbasis, $x^{\mathsf T}Ax = \sum_i \lambda_i c_i^2 \ge \lambda_{\min}
+\sum_i c_i^2 = \lambda_{\min}\|x\|^2$, using $\|x\|^2 = \sum_i c_i^2$ by
+orthonormality. Hence $e^{-x^{\mathsf T}Ax} \le e^{-\lambda_{\min}\|x\|^2}$,
+and the right side integrates to $(\pi/\lambda_{\min})^{n/2} < \infty$. With
+$A = \tfrac12 V^{-1}$ this is the slide's argument for the density; the exact
+value of the integral is the computation above.
+
+## 4 Multivariate Normal: Three Equivalent Definitions
 
 ### 4.1 The three definitions, in full
 
@@ -426,7 +488,9 @@ where constants count as degenerate normals $\mathcal N(c, 0)$.
 
 The quantifier in Definition 3 is "for all $a$", and the convention on
 constants is not cosmetic: it is what lets $a = 0$, and more generally any $a$
-annihilating a degenerate direction, pass the test. Note also that
+annihilating a degenerate direction, pass the test. The slides state this
+rule on the Definition 3 card: $\mathcal N(c, 0)$ is normal, so $a = 0$, for
+which $a^{\mathsf T}X = 0$, passes. Note also that
 Definition 3 makes no moment assumption at all; finiteness of every moment is
 a *consequence*, established in Section 4.4.
 
@@ -467,11 +531,20 @@ parameters $\mu = \mathbb E[X]$ and
 $V = \operatorname{Cov}(X) = DD^{\mathsf T}$; and each is equivalent to
 Definition 1 precisely when the covariance is invertible.
 
+For the construction the intrinsic nondegeneracy condition is
+$V = DD^{\mathsf T} \succ 0$, that is, $D$ has full row rank $n$ (so
+$m \ge n$). Square invertible $D$ is the special case $m = n$ used in the
+simple proof of part 4; a rectangular $D$ of full row rank also gives a
+nondegenerate law, since $DW + \mu$ has MGF
+$\exp\big(s^{\mathsf T}\mu + \tfrac12 s^{\mathsf T} DD^{\mathsf T} s\big)$, which
+depends on $D$ only through $DD^{\mathsf T}$.
+
 Two of the four implications are the ones the lecture proves: Definition 2
-implies Definition 1 when $D$ is invertible, proved as part 4 of Theorem 2 in
-Section 6.4; and Definition 2 implies Definition 3, which is part 3 followed
-by part 1, in Section 6.3. The two reverse implications are stated in the
-source but not proved in class. They are proved next.
+implies Definition 1 when $D$ is square and invertible, proved as part 4 of
+Theorem 2; and Definition 2 implies Definition 3, proved as part 1 of
+Theorem 2 (both in Section 6). The two reverse implications are true but
+not proved on the slides; the slide draws them as dashed arrows labelled
+"true, not proved here". They are proved next.
 
 One tool is imported. *Multivariate MGF uniqueness*: if
 $M_X(s) = \mathbb E[e^{s^{\mathsf T} X}]$ and $M_Y(s)$ are finite and equal

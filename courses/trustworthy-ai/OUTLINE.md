@@ -456,13 +456,13 @@ compared only with setups: Kuditipudi random swaps (m = 35, median p-value), Kri
 recursive paraphrase, TV defined then the impossibility bound, K24 human rewrites (~800 tokens at 10⁻⁵) and copy-paste dilution; TV bound vs empirical
 robustness as differently scoped claims. SynthID in detail: family (image / audio / video / text), pipeline (Fig 1),
 tournament (Fig 2), mean g-score, Fig 3a, limits. Production: Tree-Ring image
-table, vendor detectors read only their own mark, three meanings of "standard". Keyless detection: overlapping
+table, a detector finds only the marks it supports, three meanings of "standard". Keyless detection: overlapping
 scores, labelled base-rate illustration (FPR ≠ P(human | flagged)), Liang 2023, the US Constitution flagged as AI
-(GPTZero; Binoculars 0.76; memorized text = low perplexity), the withdrawn OpenAI
+(GPTZero; Binoculars 0.76; memorized human text can trigger perplexity-based detectors), the withdrawn OpenAI
 classifier (explicitly historical), DFDC private test. Provenance: C2PA manifest, signed edit chain,
 supported / on by default / preserved, soft bindings; labelling law (China 1 Sep 2025, Korea 22 Jan 2026,
 EU Art. 50 2 Aug 2026; Art. 50(2) transition to 2 Dec 2026); EU Code of Practice text marking (≥ 200 tokens) and
-the OpenAI (EU-only) and Anthropic (worldwide) text watermarks. Excludes model-weight watermarks and copyright. Math in `lec11tech.html`.
+the OpenAI (eligible EU ChatGPT / Codex output) and Anthropic (supported Claude models, worldwide) text watermarks. Excludes model-weight watermarks and copyright. Math in `lec11tech.html`.
 Rigorous treatment: `courses/privacy/lectures/06-watermark/`.
 
 ### Sections (74 slides, 90 min: problem 14 · watermarking 20 · robustness + production 25 · detection 13 · provenance + policy 12 · synthesis 6)
@@ -470,12 +470,12 @@ Rigorous treatment: `courses/privacy/lectures/06-watermark/`.
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:36`, `:48` | |
-| **01 — The Provenance Problem** | 3–13 | `:81` | generated media looks real (pope + Sora) `:89` · faces study (bar chart) `:101` · real harms (3 cards) `:112` · Arup case (SVG) `:121` · visible Gemini sparkle `:131` · invisible mark demo `:144` · embed / guess / sign `:154` · origin is not truth (table) `:162` · three questions `:170` · scope: outputs not models `:183` |
+| **01 — The Provenance Problem** | 3–13 | `:81` | generated media looks real (pope + Sora) `:89` · faces study (bar chart) `:101` · real-world consequences (3 cards) `:112` · Arup case (SVG) `:121` · visible Gemini sparkle `:131` · invisible mark demo `:144` · embed / guess / sign `:154` · origin is not truth (table) `:162` · three questions `:170` · scope: outputs not models `:183` |
 | **02 — Text Watermarking** | 14–27 | `:203` | token-by-token (SVG) `:211` · keyed split `:220` · boost δ `:230` · KGW Fig 1 `:239` · chance rate γ `:255` · threshold `:263` · KGW Fig 3a `:274` · repeats: mechanism `:291` · repeats: K24 Fig 7 right `:302` · KGW Fig 2 left `:318` · distortion-free / undetectable `:336` · Kuditipudi EXP (Fig 1) `:356` · Christ–Gunn–Zamir `:367` |
-| **03 — Robustness and Production** | 28–47 | `:379` | attack ladder (SVG) `:387` · Kuditipudi Fig 4b `:396` · DIPPER (Krishna Table 1 redrawn) `:413` · Sadasivan Fig 3a legend (bars redrawn) `:424` · TV defined `:435` · TV bound curve `:445` · K24 Fig 4 right `:455` · K24 Fig 2 copy-paste (redrawn) `:473` · compare with setups (takeaway; table in note) `:483` · impossible vs robust `:493` · SynthID family `:510` · SynthID Fig 1 `:521` · SynthID Fig 2 tournament `:531` · mean g-score `:541` · SynthID Fig 3a `:552` · SynthID limits `:568` · Tree-Ring Table 2 subset `:578` · vendor detector `:594` · three "standards" `:604` |
-| **04 — Detecting Without a Watermark** | 48–58 | `:618` | overlapping scores `:626` · base-rate tree (labelled illustration) `:635` · FPR vs P(human\|flag) `:644` · Liang Fig 1a `:668` · US Constitution flagged `:684` · perplexity axis `:694` · OpenAI classifier `:705` · DFDC split `:726` · DFDC Table 2 redrawn (log loss) `:735` · lead not verdict `:746` |
-| **05 — Provenance and Policy** | 59–68 | `:760` | detection vs provenance `:768` · C2PA manifest (SVG) `:787` · signed chain `:797` · supported / default / preserved (vendor's words) `:807` · soft binding `:822` · law timeline `:832` · two kinds of label `:841` · EU text rule (Code of Practice) `:855` · ChatGPT and Claude text marks `:865` |
-| **06 — Synthesis** | 69–74 | `:876` | embed / guess / sign table `:884` · three cases `:898` · checklist (7 questions) `:911` · takeaways `:927` · closer `:940` |
+| **03 — Robustness and Production** | 28–47 | `:379` | attack ladder (SVG) `:387` · Kuditipudi Fig 4b `:396` · DIPPER (Krishna Table 1 redrawn) `:413` · Sadasivan Fig 3a legend (bars redrawn) `:424` · TV defined `:435` · TV bound curve `:446` · K24 Fig 4 right `:456` · K24 Fig 2 copy-paste (redrawn) `:474` · compare with setups (takeaway; table in note) `:484` · impossible vs robust `:494` · SynthID family `:511` · SynthID Fig 1 `:522` · SynthID Fig 2 tournament `:532` · mean g-score `:542` · SynthID Fig 3a `:553` · SynthID limits `:569` · Tree-Ring Table 2 subset `:579` · detector finds only supported marks `:595` · three "standards" `:605` |
+| **04 — Detecting Without a Watermark** | 48–58 | `:619` | overlapping scores `:627` · base-rate tree (labelled illustration) `:636` · FPR vs P(human\|flag) `:645` · Liang Fig 1a `:669` · US Constitution flagged `:685` · memorized human text (perplexity axis) `:695` · OpenAI classifier `:706` · DFDC split `:727` · DFDC Table 2 redrawn (log loss) `:736` · lead not verdict `:747` |
+| **05 — Provenance and Policy** | 59–68 | `:761` | detection vs provenance `:769` · C2PA manifest (SVG) `:788` · signed chain `:798` · supported / default / preserved (vendor's words) `:808` · soft binding `:823` · law timeline `:833` · two kinds of label `:842` · EU text rule (Code of Practice) `:856` · ChatGPT and Claude text marks `:866` |
+| **06 — Synthesis** | 69–74 | `:877` | embed / guess / sign table `:885` · three cases `:899` · checklist (7 questions) `:912` · takeaways `:928` · closer `:941` |
 
 **Key citations (checked against saved PDFs / pages, 2026-10-10):** Kirchenbauer et al. ICML 2023 (arXiv
 2301.10226; Alg 2, §3, Figs 1, 2, 3a); Kirchenbauer et al. ICLR 2024 (arXiv 2306.04634; Figs 2, 4 right, 7 right, App A.3);
@@ -495,8 +495,8 @@ page, Samsung Newsroom US (7 Feb 2025), Google Keyword blog (10 Sep 2025).
 **Figures (16 cited image files in `figs/`):** `pope-puffer-midjourney.jpg` `:94` · `sora-tokyo.jpg` `:95` (shared with lec01) ·
 `sm-gemini-sparkle.png` `:136` · `sm-gemini-sparkle-corner.png` `:137` · `sm-invisible-wm-demo.png` `:148` (own demo, Apollo 11 photo) ·
 `sm-kgw-fig1.png` `:244` · `sm-kgw-fig3a.png` `:279` · `sm-k24-fig7r.png` `:307` · `sm-kgw-fig2l.png` `:323` ·
-`sm-kud-fig1.png` `:360` · `sm-kud-fig4b.png` `:402` · `sm-k24-fig4r.png` `:461` · `sm-synthid-fig1.png` `:525` ·
-`sm-synthid-fig2.png` `:535` · `sm-synthid-fig3a.png` `:557` · `liang-toefl.png` `:674`.
+`sm-kud-fig1.png` `:360` · `sm-kud-fig4b.png` `:402` · `sm-k24-fig4r.png` `:462` · `sm-synthid-fig1.png` `:526` ·
+`sm-synthid-fig2.png` `:536` · `sm-synthid-fig3a.png` `:558` · `liang-toefl.png` `:675`.
 Redrawn (inline SVG/HTML, disclosed in cites): Krishna Table 1 (KGW rows), Sadasivan Fig 3a legend values (bars),
 K24 Fig 2 copy-paste values read from the figure (range bars), Tree-Ring Table 2 (subset), DFDC Table 2.
 Illustrative (labelled): next-word bars, green strips, z-curves, base-rate tree, g-score grids, perplexity axis.

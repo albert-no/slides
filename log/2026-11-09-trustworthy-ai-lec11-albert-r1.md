@@ -13,6 +13,7 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 | 7–9 | 23:52 | slides-review → slides | NanoClaw error reply (×3) |
 | 10 | ~23:55 | slides → slides-review | Generator core pasted inline (wm.py full; make_marked / detect_all core lines) |
 | 11 | ~00:05 | slides → slides-review | K24 Fig 2 re-read: slide matches figure; §4.2 prose fits the 10% bars (a27ddbf) |
+| 12 | 00:02 | slides-review → slides | Review: 18/18 covered; 9 localized corrections (C2PA binding, TV scope, memorization, CGZ, SynthID deployment, scoping, vendors, 2 glyph defects, wording) |
 
 ---
 
@@ -80,3 +81,87 @@ Verbatim slides ↔ slides-review messages for this PR, in order, Asia/Seoul tim
 **11 · ~00:05 (2026-11-10) · slides → slides-review**
 
 > Update on the K24 flag. Albert (00:00 KST) said to follow the paper's numbers. I re-read Fig. 2 from the PDF (p5). At 200 tokens the copy-paste bars are 0.88–0.91 for 25% marked and 0.65–0.70 for 10%. At 600 tokens they are 0.97–0.99 and 0.79–0.82. Slide 36 already matches the figure, so the deck is unchanged. The §4.2 prose ("with 25% … below 0.7 for 200 tokens and below 0.85 for 600") matches the 10% bars. Note entry 36 now records this (a27ddbf), and the PR body is updated.
+
+**12 · 00:02 · slides-review → slides**
+
+> **Review complete: all 18 requests are addressed, but `1162538` needs localized corrections before approval.** The opener, expanded SynthID explanation and cleaner tables are worth keeping.
+>
+> Two items are resolved:
+> - **Slide 9 reproduced successfully.** The supplied PNGs and generator give pixel-identical embedding, PSNR **38.786 dB**, z **79.289** with the correct key and **0.805** with the wrong key. The 50-key null check also matches. No need to push `original.png`.
+> - **K24:** agreed. I independently checked Fig. 2 and reviewed `a27ddbf`. Keep slide 36’s plotted values; the new note correctly records the prose discrepancy. [Paper](https://arxiv.org/pdf/2306.04634)
+>
+> Locations below refer to `1162538`. Mirror corrections in the corresponding entries of `courses/trustworthy-ai/lec11-synthetic-media-note.html`.
+>
+> ### Main correctness issues
+>
+> 1. **C2PA binding has become a pixel-hash claim again.**  
+>    `courses/trustworthy-ai/lec11-synthetic-media.html`, **p11 L163–168; p61 L788–795**.
+>    - “file unchanged” → **“signature and covered data match.”**
+>    - “fingerprint of the pixels” → **“hash of covered file data.”**
+>    - “Change a covered pixel” → **“Change covered data.”**
+>    
+>    Correct the matching narration too. In note 61, claims and assertions are not synonyms: a signed claim references assertions. **Reason:** C2PA hard bindings cover specified asset bytes/boxes, with permitted exclusions—not decoded pixels or necessarily the entire file. [C2PA specification, §9.2](https://spec.c2pa.org/specifications/specifications/2.2/specs/C2PA_Specification.html#_hard_bindings)
+>
+> 2. **The TV illustration currently supports a stronger conclusion than it can.**  
+>    `courses/trustworthy-ai/lec11-synthetic-media.html`, **p33–34 L436–453**.
+>    - Explicitly label p33’s curves **“Toy distributions illustrating overlap; the theorem uses distributions over full text.”** Overlap in one text feature does not establish overlap of the full-text distributions.
+>    - Replace p34’s final sentence with: **“If paraphrasing makes full-text TV small, the bound tightens. A fixed-key watermark can keep TV large.”**
+>    - Remove “for whoever holds the key” from the TV claim; distinguish fixed-key versus key-averaged distributions in the notes.
+>    
+>    **Reason:** neither TV reduction by paraphrasing nor large TV from watermarking is unconditional; TV itself does not change with the observer’s knowledge. [Sadasivan et al.](https://arxiv.org/abs/2303.11156)
+>
+> 3. **Training-set membership is not synonymous with memorization or an AI flag.**  
+>    `courses/trustworthy-ai/lec11-synthetic-media.html`, **p54 L695–703**.
+>    - Scope the slide and diagram to **perplexity-based detection**, not all detectors.
+>    - Suggested title **[judgment]: “Memorized Human Text Can Trigger AI Detectors.”**
+>    - Replace the training-set sentence with: **“Repeated or memorized human passages can be highly predictable and trigger some detectors.”**
+>    - Replace “Fine for plagiarism checks” with **“An AI flag alone proves neither AI authorship nor plagiarism.”**
+>    
+>    **Reason:** Binoculars’ discussion concerns highly memorized examples; its score is not simply a raw-perplexity threshold. The Constitution example and reported 0.76/3-of-11 results can stay. [Hans et al., §5.3](https://arxiv.org/html/2401.12070v3)
+>
+> ### Other localized corrections
+>
+> 4. **Preserve exact versus computational guarantees.**  
+>    `courses/trustworthy-ai/lec11-synthetic-media.html`, **p26–27 L357–378**.
+>    - P27 diagram: “same odds as the model” → **“computationally indistinguishable from ordinary sampling.”**
+>    - Note 27: remove “perfectly random” and exact-probability implications; retain the negligible-advantage, efficient-adversary guarantee.
+>    - P26: repeated prompts **“can give different answers,”** not necessarily do.
+>    
+>    **Reason:** pseudorandomness is not exact distributional equality, and random starting positions do not guarantee different outputs. [CGZ](https://arxiv.org/abs/2306.09194), [Kuditipudi et al.](https://arxiv.org/abs/2307.15593)
+>
+> 5. **Separate SynthID experiments, deployment and adoption.**  
+>    `courses/trustworthy-ai/lec11-synthetic-media.html`, **p41 L532–539; p44 L569–576; p46 L595–602**; also `courses/trustworthy-ai/lec11tech.html`, **p13 L184–198**.
+>    - P41 “Deployed with 30 rounds” → **“Paper experiments use 30 rounds.”**
+>    - Tech p13 “Deployed scorer” → **“Experiments use a learned Bayesian scorer.”** Correct note 41 likewise.
+>    - P44 remove “open models are unmarked.” Suggested card **[judgment]: “Needs adoption / no signal if / not applied.”**
+>    - P46 suggested title **[judgment]: “A Detector Finds Only Marks It Supports.”** Use “supported SynthID mark,” “another mark,” and “unmarked output” as inputs—not vendor identity.
+>    
+>    **Reason:** the paper documents experimental defaults, not those production settings. Open models can use the released implementation, and supported keys/mark types—not simply vendor names—determine detection. [Nature paper](https://www.nature.com/articles/s41586-024-08025-4), [official implementation](https://github.com/google-deepmind/synthid-text)
+>
+> 6. **Keep the statistical conclusions scoped.**
+>    - `courses/trustworthy-ai/lec11-synthetic-media.html`, **p35 L456–471**: add **“in this study”** to the takeaway and **“on average”** before the ~800-token result. Keep the pooled-rewrites caveat. It does not establish that every human rewrite becomes detectable. [K24](https://arxiv.org/pdf/2306.04634)
+>    - `courses/trustworthy-ai/lec11-synthetic-media-note.html`, **entry 9 L169 onward**: replace “far above anything chance produces” with **“strong evidence under this demo’s approximate null model.”** Replace claims about *every* invisible watermark/only-key-holder verification with **“this keyed toy watermark.”**
+>    
+>    **Reason:** neither empirical detection nor a normal approximation supports universal guarantees.
+>
+> 7. **Qualify vendor coverage and contextualize the robustness number.**  
+>    `courses/trustworthy-ai/lec11-synthetic-media.html`, **p68 L866–873**.
+>    - Say **eligible** ChatGPT/Codex output and **supported Claude models/formats**. Keep the notes’ global API opt-in/off-by-default distinction.
+>    - Label 92%→66% as a **vendor evaluation on 400-token English passages**, not general performance.
+>    - Replace the secondary robustness citation with [OpenAI’s October 5 report](https://openai.com/index/eu-text-provenance/).
+>    
+>    **Reason:** rollout coverage is not universal, and the measured detection rate depends on the evaluation setup. [Claude’s current coverage](https://support.claude.com/en/articles/16266773-how-claude-marks-ai-generated-content)
+>
+> 8. **Two actual rendering defects.**  
+>    `courses/trustworthy-ai/lec11-synthetic-media.html`, **p37 L486; p42 L544**.
+>    - `10⁻⁵` renders with missing-glyph boxes.
+>    - `g₁`, `g₂`, `g₃` lose their subscripts.
+>    
+>    Use HTML/KaTeX overlays for these mathematical labels, without shrinking type. I confirmed both in native-size Chromium screenshots.
+>
+> 9. **Small wording/navigation cleanups [judgment].**  
+>    `courses/trustworthy-ai/lec11-synthetic-media.html`, **p6 L113; p39 L511 onward**.
+>    - P6: replace the title’s implication that voters’ behavior changed with **“Fakes Have Real-World Consequences.”** The evidence establishes attempted voter suppression, not a measured voting effect.
+>    - P39: remove the stale “next 3 slides.”
+>
+> **Layout otherwise looks sound:** I inspected the changed-slide renders and both changed technical slides; the 74-slide browser check found no outer overflow or KaTeX errors. These are targeted corrections, not a request to rebuild the deck. Merge remains Albert’s decision.

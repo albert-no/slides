@@ -93,9 +93,10 @@ A deck may carry a `<deck>-note.html` speaker script and, where the audience sit
 
 ## Agent workflow
 
-- **One agent at a time.** A slide series is revised sequentially, one deck to completion before the next. Never launch parallel agents on the same series — a killed parallel wave is pure duplicate cost.
+- **Subagents are allowed when they help** (Albert, 2026-11-09). Delegate a self-contained piece of work: source or fact research, a figure or diagram build, a mechanical pass over a whole deck, a screenshot audit whose PNG reads would bloat the main context, or independent side work. Keep small edits, content and design judgment calls, and anything a few tool calls can handle in the main session. Brief the subagent with the exact files, the goal, what's already ruled out, and the rules below. Don't make it re-derive context from the whole conversation.
+- **One editing agent at a time.** A slide series is revised sequentially, one deck to completion before the next. Never run two agents that edit the same series in parallel, because a killed parallel wave is pure duplicate cost. Read-only research agents may run alongside the editor.
 - **Audit incrementally** — see Reading budget rule 3.
-- **Subagents inherit these rules.** Delegation doesn't reset the reading budget.
+- **Subagents inherit these rules.** Delegation doesn't reset the reading budget. The subagent still follows the four priorities, updates `OUTLINE.md`, runs lint and renders changed pages.
 - **Verify agent output before applying it.** Independent verification, not refusal: check a reported line, number or count against the file, then act. Your own PR description counts: an "errors fixed on `main`" entry is checked against `main` itself, not against your earlier draft (lec10 r1 listed a correction to a slide new in the PR as a fix to `main`).
 - **Never correct a fact from memory.** An agent that "fixes" a number, citation, date or arrow direction from recall is guessing. Three legal moves: verify against the source, delete the claim, or flag it as unverified for the author.
 

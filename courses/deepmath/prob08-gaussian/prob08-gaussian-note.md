@@ -602,7 +602,9 @@ $X$ and $Y$ have the same distribution. **End of proof.**
 This closes the loop: Definition 1 implies Definition 2 implies Definition 3
 implies Definition 2, and Definition 2 implies Definition 1 whenever the
 covariance is invertible. Honest accounting: the only unproved ingredient in
-this whole set of notes is MGF uniqueness, flagged above.
+this equivalence argument is multivariate MGF uniqueness, flagged above; the
+notes elsewhere also import the volume fact of Section 6.4 and the MGF
+continuity theorem used in Section 8.4.
 
 *Source note.* In two places the LaTeX source `probability25.tex` refers to
 "the density in Definition 2"; in the source's own numbering the density
@@ -863,8 +865,9 @@ Definitions 2 and 3 still apply.
 
 **Optional: a proof without the volume fact.** A Jacobian-free route exists;
 it is longer, which is why the slides use the volume picture. It uses only
-the independence of the $W_j$, scalar MGFs with their uniqueness theorem, and
-the one-dimensional substitution rule; it does not use parts 5 or 6.
+the independence of the $W_j$, scalar MGFs, multivariate MGF uniqueness (the
+fact imported in Section 4.3) to identify the joint law of $QW$, and the
+one-dimensional substitution rule; it does not use parts 5 or 6.
 
 *Step 1 (triangularize).* Gram-Schmidt on the rows of $D$ (the QR
 decomposition of $D^{\mathsf T}$) writes $D = LQ$ with $Q$ orthogonal and $L$
@@ -875,8 +878,9 @@ $l_{kk} \neq 0$, and $|\det L| = |\det D|$, $LL^{\mathsf T} = DQ^{\mathsf T}QD^{
 the $W_j$,
 $\mathbb E[e^{s^{\mathsf T} Z}] = \mathbb E[e^{(Q^{\mathsf T}s)^{\mathsf T} W}]
  = \prod_j e^{(Q^{\mathsf T}s)_j^2/2} = e^{\|Q^{\mathsf T}s\|^2/2} = e^{\|s\|^2/2}$,
-which is the MGF of $W$. By MGF uniqueness, $Z$ has the same distribution as
-$W$: independent standard-normal coordinates. So $X = LZ + \mu$.
+which is the MGF of $W$. By multivariate MGF uniqueness (Section 4.3), $Z$ has
+the same distribution as $W$: independent standard-normal coordinates. So
+$X = LZ + \mu$.
 
 *Step 3 (peel off one coordinate at a time).* Since $L$ is lower triangular,
 $x_k = l_{kk} z_k + \sum_{j<k} l_{kj} z_j + \mu_k$, so $x_k$ depends on
@@ -1041,7 +1045,7 @@ $Y \sim \mathcal N(0,1)$ and $X = Y^2$. Then
 $\operatorname{Cov}(X, Y) = \mathbb E[Y^3] = 0$, so the best affine predictor
 is the constant $\mathbb E[X] = 1$, yet $\mathbb E[X|Y] = Y^2$. For jointly
 Gaussian pairs the two projections coincide because, by part 7(a),
-$\mathbb E[X|Y]$ is affine; it is linear only when the means are zero.
+$\mathbb E[X|Y]$ is affine. After centering, the affine formula is linear.
 
 ### 6.8 Part 7, step 2: guess linear, verify orthogonality
 
@@ -1609,17 +1613,17 @@ non-Gaussian data the same average is a non-Gaussian mixture.
 
 ### 8.9 Vectors, and the generation skeleton
 
-Everything above is coordinatewise independent, so it lifts to $\mathbb{R}^d$
-verbatim: $X_n = \sqrt{1-\beta}\,X_{n-1} + \sqrt{\beta}\,Z_n$ with
+Conditional on a fixed $X_0$, everything above is coordinatewise
+independent, so it lifts to $\mathbb{R}^d$ verbatim: $X_n = \sqrt{1-\beta}\,X_{n-1} + \sqrt{\beta}\,Z_n$ with
 $Z_n \sim \mathcal N(0, I_d)$, closed form
 $X_n \mid X_0 = x_0 \sim \mathcal N(\sqrt{\bar\alpha_n}\, x_0,\; (1 - \bar\alpha_n) I_d)$,
 and limit $\mathcal N(0, I_d)$. Given $X_0 = x_0$, all conditional
 covariances stay multiples of $I_d$, since the recursion never mixes
 coordinates. With random $X_0$ of covariance $\Sigma_0$ the marginal
 covariance is $(1-\beta)^n \Sigma_0 + (1 - (1-\beta)^n) I_d$: same
-eigenvectors as $\Sigma_0$, eigenvalues pulled toward $1$, so dependence
-between coordinates attenuates but persists at every finite $n$ unless
-$\Sigma_0$ is diagonal.
+eigenvectors as $\Sigma_0$, eigenvalues pulled toward $1$, so off-diagonal
+covariances decay by $(1-\beta)^n$; diagonal covariance alone does not imply
+independent coordinates for non-Gaussian data.
 
 The deck's sampler is a *simplified Gaussian reverse sampler*: draw
 $x_T \sim \mathcal N(0, I_d)$, which is close to the law of $X_T$ for large

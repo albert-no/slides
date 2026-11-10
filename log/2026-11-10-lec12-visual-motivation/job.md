@@ -5,12 +5,12 @@ audience / mode / duration: existing mixed-major undergraduate audience (leaf OU
 baseline: cd0da5ca7ad75ceef107d28ad110407f0c33b4ff
 id commit: a6d894b9b93f852af5ba6f22131663282339f3b3
 branch: 2026-11-10-lec12-visual-motivation
-reviewed work: 6d1e21cc4b484d0b6333ca8d2607b79e9ec9facf
-review verdict: revise (review-r1.md; F01–F07 blocking)
+reviewed work: f2e696dbe9793da8ce1167d7a368408bd278ed2c (round 2); previous round 6d1e21cc4b484d0b6333ca8d2607b79e9ec9facf
+review verdict: revise (review-r2.md; F02 residual and F09 on S76/p58); round limit reached
 active plan: plan-v2.md
 pr: not open
-state: in-work
-round: 1 of 2
+state: escalated
+round: 2 of 2
 albert decisions:
 - 2026-11-10: Whole-deck visual/motivational revision, larger diagram labels, repair broken arrows. Albert will make detailed revisions afterward in a separate PR.
 - 2026-11-10: “I meant lec12 fairness” corrects lec11 in the original request. Lec11 is out of scope.

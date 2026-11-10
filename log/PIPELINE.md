@@ -15,12 +15,18 @@ Keeping the two apart is deliberate: an untracked file at a path that a merged b
 |---|---|---|
 | `job.md` | slides-review, working folder | Header (below), and for a small job the request and the spec too |
 | `requests.md` | slides-review, working folder | Albert's request or comments, verbatim, each with an ID (`C01`…). Never edited after it is written; later comments are appended |
-| `evidence.md` | slides-review, working folder | Claim and source register (`E01`…). Medium and large jobs |
-| `plan.md` | slides-review, working folder | The plan, with a revision number. Slide-level specs and packages (`P1`…) |
+| `evidence.md` | slides-review, working folder | Claim and source register (`E01`…). Medium and large jobs. Append-only |
+| `plan-vN.md` | slides-review, working folder | The plan, one file per version (`plan-v1.md`, `plan-v2.md`…). Slide-level specs and packages (`P1`…). From v2 on it opens with what changed since the previous version |
 | `work-rN.md` | slides, tracked record | Work report for round N |
 | `review-rN.md` | slides-review, working folder | Review of round N |
 
 Each file has one writer. The other agent reads it and never edits it. slides reads the working folder directly. slides-review reads the tracked record through git at the commit slides names. A small job needs only `job.md`, `work-r1.md` and `review-r1.md`.
+
+**Living and frozen files.**
+
+- Living: the `job.md` header (slides-review updates state, round and decisions as the job moves), and `requests.md` and `evidence.md`, which are append-only. An existing entry is never edited; a correction is a new entry that names the one it replaces.
+- Frozen once announced: `plan-vN.md`, `review-rN.md`, `work-rN.md`, and the request and spec inside a small job's `job.md`. A changed plan or spec is a new `plan-vN.md` with its own pointer. The pointer names the exact file.
+- slides copies a frozen file into the tracked record once, when it receives the pointer. It refreshes its copies of the living files at every push, so the record always holds the latest state.
 
 The files are the messages. Messages between the agents are one-line pointers: `job <job-id>: <file> ready — <state>`, plus the commit SHA when slides hands over work. Do not copy chat transcripts, raw session output or hidden reasoning into any file.
 
@@ -31,8 +37,10 @@ job: <job-id>
 size: small | medium | large
 deck: <path to the deck>
 audience / mode / duration: <for new decks and restructures>
-baseline: <commit>
+baseline: <commit SHA the job starts from; Albert's page numbers refer to it>
+id commit: <SHA of the ID-only commit, if this job added slide IDs>
 branch: <job branch>
+pr: <number, once open; for a review-only job, the existing PR>
 state: <state>
 round: <N> of <limit>
 albert decisions: <dated list: approvals, answers, merge order>
@@ -50,13 +58,13 @@ The branch name is the `<job-id>`. slides creates it from `baseline`; slides-rev
 
 - **Comments** `C01`…: one per comment from Albert, in `requests.md`.
 - **Evidence** `E01`…: one per source-backed claim, in `evidence.md`.
-- **Slides** `S01`…: a `data-slide-id` attribute on each slide. slides adds them the first time a deck enters a job, in a commit that changes nothing else. IDs are never renumbered. A split of `S07` gives `S07a`, `S07b`. A new slide takes the next free number, and the plan states its position ("`S57`, after `S07`"). The matching `<article>` in the note file carries the same ID; slides adds both in the same ID-only commit.
+- **Slides** `S01`…: a `data-slide-id` attribute on each slide. slides adds them the first time a deck enters a job, in a commit that changes nothing else, and reports that commit; slides-review records it as `id commit`. IDs are never renumbered. A split of `S07` gives `S07a`, `S07b`. A new slide takes the next free number, and the plan states its position ("`S57`, after `S07`"). The matching `<article>` in the note file carries the same ID; slides adds both in the same ID-only commit.
 - **Packages** `P1`…: groups of slides one worker can do alone.
 - **Findings** `F01`…: one per review finding; numbering continues across rounds.
 
 Albert gives feedback by page number, so keep the trail: comment → baseline page and title → slide ID → new page.
 
-## `plan.md`
+## `plan-vN.md`
 
 1. **Summary**: what changes and why, in a few lines. For a large job: audience, objectives, argument, title sequence, time budget.
 2. **Coverage table** (medium and large): `comment | baseline page / title | slide IDs | package`.
@@ -80,7 +88,7 @@ Per entry: the claim; the source with version, and page, section or figure; the 
 
 ## `work-rN.md`
 
-- branch and head commit
+- branch and head commit, and the ID-only commit if this job added slide IDs
 - per package: what was done
 - slide mapping: `slide ID | old page | new page | split or moved`
 - deviations from the plan, each with the reason
@@ -101,8 +109,8 @@ Only blocking findings start another round. Review order: Albert's request, the 
 
 ## Git, PR and merge
 
-- slides owns branches, commits and pushes. It copies a working-folder file into the tracked record, unchanged, when it receives the `ready` pointer for that file, and commits it with its next push. slides-review announces a file only when it is complete and does not change an announced file afterwards; a changed plan gets a new revision number and a new pointer.
-- slides-review reviews a named commit, read through git on its read-only mount (`git show <sha>:<path>`, `git diff main...<sha>`, `git archive <sha>` into scratch space to render). Approval is pinned to that commit.
+- slides owns branches, commits and pushes, and keeps the tracked record as described under "Living and frozen files". slides-review announces a file only when it is complete.
+- slides-review reviews a named commit, read through git on its read-only mount (`git show <sha>:<path>`, `git diff <baseline> <sha>`, `git archive <sha>` into scratch space to render). Diffs use the SHAs recorded in `job.md`, never a moving `main`; when the job added slide IDs, `git diff <id commit> <sha>` shows the content changes without the ID noise. Approval is pinned to the reviewed commit.
 - After `approved`, slides copies the final review into the tracked record and pushes. slides-review confirms that the commits after the reviewed one touch only `log/<job-id>/`, then opens the PR against `main` through the GitHub API.
 - **Nobody merges unless Albert directly orders the merge of that PR.** One order, one PR.
 - After the merge, slides-review may delete its working folder. The tracked record is the permanent log.
@@ -113,4 +121,4 @@ Agents do not post in Slack for agent-to-agent work. Only slides-review reports 
 
 ## Direct requests
 
-Edits Albert asks slides for directly in #claw-slides are outside this contract: no job folder, no slides-review review, and slides opens the PR. If Albert asks for a review of one, slides-review opens a small job for it. The merge rule applies to every PR.
+Edits Albert asks slides for directly in #claw-slides are outside this contract: no job folder, no slides-review review, and slides opens the PR. If Albert asks for a review of one, slides-review opens a small job for it. When that edit already has a PR, the job reviews that PR: `job.md` records its number, its branch and the PR's base commit as `baseline`; slides pushes fixes and the tracked record to the same branch; and no second PR is opened. On `approved` the state goes straight to `pr-open`. The merge rule applies to every PR.

@@ -1548,7 +1548,7 @@ D(p_{\text{data}} \| q_\theta)$ is minimized by minimizing the forward KL
 divergence, under the usual assumptions that $p_{\text{data}}$ has a density
 with finite differential entropy $h$ and the expectations exist.
 The question of this section is which of today's generative models actually
-solve this problem, and what the others solve instead. All three families
+solve this problem, and what the others solve instead. Both example families
 below share the goal $q_\theta \approx p_{\text{data}}$; they differ in
 whether $q_\theta(x)$ can be evaluated, and hence in the objective they can
 train on.
@@ -1755,147 +1755,19 @@ gradient of the data density. Text-to-image systems such as latent diffusion /
 Stable Diffusion (Rombach et al. 2022) and Imagen (Saharia et al. 2022) are
 diffusion models of this kind.
 
-### 11.4 The Jensen-Shannon divergence
-
-**Definition.** For distributions $p$ and $q$ on the same space, let
-$m = \tfrac12(p + q)$ be their mixture. The Jensen-Shannon divergence is
-$$\text{JS}(p \| q) = \tfrac12\, D(p \| m) + \tfrac12\, D(q \| m).$$
-It compares each distribution with their average rather than with each
-other.
-
-**Properties.**
-
-- *Symmetric:* swapping $p$ and $q$ leaves $m$ and the sum unchanged, so
-  $\text{JS}(p \| q) = \text{JS}(q \| p)$. The KL divergence is not symmetric.
-- *Nonnegative, zero only at equality:* both terms are KL divergences, hence
-  $\ge 0$. If $\text{JS} = 0$ then $D(p \| m) = 0$, so $p = m$, which forces
-  $p = q$.
-- *Bounded by $\ln 2$:* since $m \ge \tfrac12 p$, the ratio $p/m$ never
-  exceeds $2$, so $D(p \| m) = \mathbb{E}_p[\ln(p/m)] \le \ln 2$, and likewise
-  $D(q \| m) \le \ln 2$. Hence $0 \le \text{JS} \le \ln 2$ nats (one bit).
-- *Always finite:* by the same bound, even when $q$ assigns zero probability
-  to outcomes that $p$ uses, which is exactly where $D(p \| q)$ is infinite.
-
-**Worked example.** Take two outcomes with $p = (\tfrac12, \tfrac12)$ and
-$q = (1, 0)$, so $m = (\tfrac34, \tfrac14)$. Then $D(p \| q) = \infty$ because
-$p$ puts mass $\tfrac12$ on the second outcome and $q$ puts none;
-$D(q \| p) = 1 \cdot \ln 2 \approx 0.69$;
-$D(p \| m) = \tfrac12 \ln\tfrac23 + \tfrac12 \ln 2 = \tfrac12 \ln\tfrac43 \approx 0.144$;
-$D(q \| m) = \ln\tfrac43 \approx 0.288$; and
-$\text{JS} = \tfrac12(0.144 + 0.288) = \tfrac34 \ln\tfrac43 \approx 0.22$ nats.
-For disjoint supports, $p = (1, 0)$ and $q = (0, 1)$, we get $m = (\tfrac12,
-\tfrac12)$ and $\text{JS} = \ln 2$, the maximum.
-
-### 11.5 GANs: the loss written out and interpreted
-
-**The framework.** A generative adversarial network produces samples as
-$x = G(z)$ with $z$ drawn from a simple distribution such as a standard
-Gaussian; write $q$ for the resulting distribution of $G(z)$ and $p$ for
-$p_{\text{data}}$. Sampling is cheap, but $q(x)$ is generally not available in
-closed form (when $G$ maps onto a lower-dimensional surface it need not even
-exist as a density), and GAN training never evaluates it. Instead a
-discriminator $D(x) \in [0, 1]$, read as the probability that $x$ is real, is
-trained against the generator. The original objective (Goodfellow et al.
-2014), with natural logarithms, is the minimax game
-$$\min_G \max_D \; V(D, G) = \mathbb{E}_{x \sim p}\big[\ln D(x)\big] + \mathbb{E}_{z}\big[\ln\big(1 - D(G(z))\big)\big].$$
-For fixed $G$, maximizing $V$ over $D$ is minimizing the binary
-cross-entropy of a classifier that labels real samples $1$ and generated
-samples $0$: the discriminator is trained by maximum likelihood for that
-classification problem, while the generator is not trained by maximum
-likelihood for its own distribution.
-
-**Step 1: the best discriminator.** Assume $q$ has a density. Changing
-variables $x = G(z)$ in the second expectation,
-$$V(D, G) = \int \big[\, p(x) \ln D(x) + q(x) \ln\big(1 - D(x)\big) \big]\, dx.$$
-With $G$ fixed, $D$ is unrestricted, so the integrand can be maximized
-separately at each $x$. Take $f(y) = a \ln y + b \ln(1 - y)$ on $[0, 1]$,
-with the conventions $\ln 0 = -\infty$ and $0 \cdot \ln 0 = 0$. If $a, b > 0$,
-then $f'(y) = a/y - b/(1-y)$ and $f''(y) < 0$, so $f$ is maximized at the
-interior point $y = a/(a+b)$. If $b = 0 < a$, the maximum is at $y = 1$, and
-if $a = 0 < b$ it is at $y = 0$; both again equal $a/(a+b)$. Hence
-$$D^*(x) = \frac{p(x)}{p(x) + q(x)},$$
-with $D^* = 1$ where $q(x) = 0 < p(x)$ and $D^* = 0$ where $p(x) = 0 < q(x)$.
-Where $p(x) + q(x) = 0$ the integrand vanishes, and the value of $D^*$ there is
-irrelevant. If $D$ is restricted to $(0, 1)$, as a sigmoid output is, these
-boundary optima are only limiting suprema, approached but not attained.
-For the two-mode mixture of Section 11.6 against the wide Gaussian fit A, $D^*$
-is high near the modes, where data outweighs the model, and near zero between
-them and in the tails, where the model puts mass the data does not.
-
-**Step 2: plug in.** With $m = \tfrac12(p + q)$ we have $D^* = p/(2m)$ and
-$1 - D^* = q/(2m)$, so
-$$V(D^*, G) = \mathbb{E}_p\Big[\ln \frac{p}{2m}\Big] + \mathbb{E}_q\Big[\ln \frac{q}{2m}\Big] = D(p \| m) + D(q \| m) - 2 \ln 2 = 2\, \text{JS}(p \| q) - \ln 4.$$
-This is Theorem 1 of Goodfellow et al. By Section 11.4 the minimum over $G$ is
-$-\ln 4$, attained exactly when $q = p$, where $D^* \equiv \tfrac12$: the
-discriminator can do no better than a coin flip.
-
-**Interpretation.** Under two conditions, the original minimax objective and
-a discriminator that is optimal over all functions, the generator minimizes
-the Jensen-Shannon divergence $\text{JS}(p_{\text{data}} \| q_\theta)$, where
-MLE minimizes the forward KL divergence $D(p_{\text{data}} \| q_\theta)$. Both
-have the same ideal target $q_\theta = p_{\text{data}}$; they differ in how
-they penalize a wrong model on the way. KL is asymmetric, and it is infinite
-when $q_\theta = 0$ on a set of positive data probability; merely assigning
-too little mass need not make it infinite. JS is symmetric and at most
-$\ln 2$. The optimal discriminator also carries the density ratio:
-$D^*/(1 - D^*) = p/q$, so a trained discriminator is an estimate of the
-data-to-model density ratio, a quantity the generator never computes. These statements are an interpretation of
-one objective, not a property of GANs in general: in practice the
-discriminator is a finite network trained a few steps at a time, and
-Goodfellow et al. already train the generator with the non-saturating variant
-(maximize $\ln D(G(z))$) for stronger gradients early in learning. StyleGAN
-(Karras et al. 2019), trained on the 70,000-image Flickr-Faces-HQ (FFHQ)
-dataset, uses WGAN-GP for its baseline configuration and the non-saturating
-loss with R1 regularization for the final one; it is the best-known example of
-photographs of faces of people who do not exist.
-
-### 11.6 Why the divergence matters: a dropped mode
-
-Take data $p = \tfrac12\mathcal{N}(-3,1) + \tfrac12\mathcal{N}(3,1)$ and two
-candidate single-Gaussian fits: A $= \mathcal{N}(0, 10)$, which matches the
-data's mean $0$ and variance $1 + 9 = 10$ and is therefore the population MLE
-among Gaussians (minimizing $D(p\|q)$ over Gaussians matches the first two
-moments), and B $= \mathcal{N}(3,1)$, which reproduces one mode and ignores
-the other. Numerical integration (in nats) gives:
-
-| fit | $D(p \| q)$ (MLE) | $\text{JS}$ (minimax GAN) | $D(q \| p)$ (reverse) |
-|---|---|---|---|
-| A, covers both modes | 0.46 | 0.13 | 0.94 |
-| B, drops one mode | 8.31 | 0.21 | 0.69 |
-
-Both KL and JS prefer A, but KL penalizes B much more. The forward KL
-divergence of MLE contains $\ln(p/q)$ weighted by $p$: wherever the
-data has mass and the model has almost none, the term explodes - the
-continuous version of the zero-count veto of Section 8.5, where a single
-unseen feature drove a likelihood to zero. Forward KL therefore strongly
-penalizes very low model density where data occurs (it is often called
-*mass-covering*). The Jensen-Shannon divergence is bounded,
-$\text{JS} \le \ln 2 \approx 0.69$ (Section 11.4), so missing a whole mode costs a bounded amount; here
-JS still prefers A, by $0.09$ nats against KL's $7.85$. The reverse KL
-$D(q\|p)$ actually prefers B: it is *mode-seeking*.
-
-This example does not demonstrate why GAN training collapses. At the ideal
-optimum of the unrestricted JS objective the model equals the data
-distribution, with every mode present; the example only compares two fixed,
-misspecified candidates. GANs are observed in practice to drop modes ("mode
-collapse"), but explaining that requires the dynamics of training a finite
-generator and discriminator, which this comparison does not model.
-
-### 11.7 The scorecard
+### 11.4 The scorecard
 
 | family | $q_\theta(x)$ computable? | training loss | relation to MLE |
 |---|---|---|---|
 | Language model | yes, chain rule | next-token cross-entropy | exactly MLE (autoregressive pretraining, ordinary cross-entropy SFT) |
 | Diffusion | generally intractable | per-step Gaussian negative log-likelihood (the variational bound), or the reweighted noise-prediction loss | full bound: exact MLE of the path model $p_\theta(x_{0:T})$; simple loss: reweighted denoising; neither is in general MLE of $q_\theta(x_0)$ |
-| GAN | not needed | adversarial game | not MLE; with the original minimax objective and an optimal discriminator, minimizes the Jensen-Shannon divergence |
 
-One goal, $q_\theta \approx p_{\text{data}}$. Among these three training
+One goal, $q_\theta \approx p_{\text{data}}$. Of these two training
 setups, only autoregressive pretraining (and cross-entropy fine-tuning) takes the exact maximum-likelihood
 route for $q_\theta(x)$ itself. For diffusion models, the full bound is
 maximum likelihood for the whole noising path, and only a bound for the image;
 the simple loss used in practice reweights that bound into a denoising
-objective. GANs replace the KL
-divergence of MLE by the Jensen-Shannon divergence.
+objective.
 
 ---
 
@@ -1944,40 +1816,28 @@ divergence of MLE by the Jensen-Shannon divergence.
    at https://doi.org/10.1017/9781108627771. Chapter 15: minimax lower bounds,
    where Fano's inequality is run over a packing of hard distributions - the
    theory-workhorse use mentioned in Section 6.6.
-7. I. J. Goodfellow, J. Pouget-Abadie, M. Mirza, B. Xu, D. Warde-Farley,
-   S. Ozair, A. Courville and Y. Bengio, "Generative Adversarial Nets", 2014,
-   arXiv:1406.2661, at https://arxiv.org/abs/1406.2661. Theorem 1: with the
-   optimal discriminator the generator criterion is
-   $-\ln 4 + 2\,\text{JS}(p_{\text{data}} \| p_g)$ for the original minimax
-   objective; Section 3 also proposes the non-saturating generator loss
-   (Section 11.5).
-8. J. Ho, A. Jain and P. Abbeel, "Denoising Diffusion Probabilistic Models",
+7. J. Ho, A. Jain and P. Abbeel, "Denoising Diffusion Probabilistic Models",
    2020, arXiv:2006.11239, at https://arxiv.org/abs/2006.11239. Training on
    the variational bound on negative log-likelihood, and the simplified,
    weighted bound $L_{\text{simple}}$; the sampler "resembles Langevin dynamics" and the
    loss "resembles denoising score matching over multiple noise scales"
    (Section 11.3).
-9. T. B. Brown et al., "Language Models are Few-Shot Learners", 2020,
+8. T. B. Brown et al., "Language Models are Few-Shot Learners", 2020,
    arXiv:2005.14165, at https://arxiv.org/abs/2005.14165. GPT-3 models trained
    for a total of 300 billion tokens (Section 11.2).
-10. Llama Team, AI at Meta, "The Llama 3 Herd of Models", 2024,
+9. Llama Team, AI at Meta, "The Llama 3 Herd of Models", 2024,
     arXiv:2407.21783, at https://arxiv.org/abs/2407.21783. 405B-parameter
     model pretrained on 15.6T text tokens (Section 11.2).
-11. R. Rombach, A. Blattmann, D. Lorenz, P. Esser and B. Ommer,
+10. R. Rombach, A. Blattmann, D. Lorenz, P. Esser and B. Ommer,
     "High-Resolution Image Synthesis with Latent Diffusion Models", 2022,
     arXiv:2112.10752, at https://arxiv.org/abs/2112.10752; and C. Saharia et
     al., "Photorealistic Text-to-Image Diffusion Models with Deep Language
     Understanding" (Imagen), 2022, arXiv:2205.11487, at
     https://arxiv.org/abs/2205.11487 (Section 11.3).
-12. T. Karras, S. Laine and T. Aila, "A Style-Based Generator Architecture for
-    Generative Adversarial Networks", 2019, arXiv:1812.04948, at
-    https://arxiv.org/abs/1812.04948. StyleGAN and the 70,000-image FFHQ
-    dataset; losses WGAN-GP and non-saturating with R1 regularization
-    (Section 11.5).
-13. Y. Song and S. Ermon, "Generative Modeling by Estimating Gradients of the
+11. Y. Song and S. Ermon, "Generative Modeling by Estimating Gradients of the
     Data Distribution", Advances in Neural Information Processing Systems,
     2019, pp. 11895-11907. Score-based generation over multiple noise scales,
-    cited by reference 8 (Section 11.3).
-14. P. Vincent, "A Connection Between Score Matching and Denoising
+    cited by reference 7 (Section 11.3).
+12. P. Vincent, "A Connection Between Score Matching and Denoising
     Autoencoders", Neural Computation 23(7):1661-1674, 2011. Denoising score
-    matching, cited by reference 8 (Section 11.3).
+    matching, cited by reference 7 (Section 11.3).

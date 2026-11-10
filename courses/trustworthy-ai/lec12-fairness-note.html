@@ -553,14 +553,14 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article data-slide-id="S36">
-<h2>36. Three Places to Intervene</h2>
-<p class="pace">Mitigation · ≈1.5 min · elapsed ≈47 min</p>
-<p>Three stages. Before training, change the data: reweighing. During training, change the objective: reductions. After training, change the decision rule: group-specific thresholds.</p>
-<p>In practice you pick the stage you can actually touch. A hospital buying a vendor's score may only control the threshold. A team training its own model can change the objective.</p>
+<h2>36. Change Data, Training, or Decisions</h2>
+<p class="pace">Mitigation · ≈0.75 min · elapsed ≈47 min</p>
+<p>Three stages. Before training, change the data: reweighing changes how much each example counts. During training, change the objective: reductions changes the training costs. After training, change the decision rule: group-specific thresholds set a cutoff per group.</p>
+<p>In practice you pick the stage you can actually touch. A hospital buying a vendor's score may only control the threshold. A team training its own model can change the objective. Each method also needs different access: reweighing needs the group in the training data; reductions needs the group during training and produces a randomized classifier; group thresholds need the group at decision time and labeled held-out data.</p>
 <p><span class="kt">Key takeaway:</span> Pick the stage you can actually touch.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Pipeline Data → Training → Outputs, labeled pre-process (reweighing), in-process (reductions), post-process (group thresholds).</p>
+<p>Stage map Data → Training → Decisions. Below each stage, the method that acts there and the object it changes: reweighing (example weights), reductions (training costs), group thresholds (a cutoff per group). Arrows point from each method to the stage it changes.</p>
 <h3>Going further</h3>
 <p><strong>Another in-process method: adversarial debiasing.</strong> Zhang, Lemoine and Mitchell (AIES 2018) train a predictor and an adversary at the same time. In the abstract's words, the goal is to "maximize the predictor's ability to predict Y while minimizing the adversary's ability to predict Z", where Z is the protected attribute. On UCI Adult the authors report a model that "does not lose much accuracy while achieving very close to equality of odds". It is not in the deck because it shares the reductions slot and adds no new idea for this audience.</p>
 <h3>Primary sources</h3>
@@ -571,14 +571,15 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article data-slide-id="S37">
-<h2>37. Reweighing</h2>
-<p class="pace">Mitigation · ≈2 min · elapsed ≈49 min</p>
+<h2>37. Reweighing Changes Influence, Not Labels</h2>
+<p class="pace">Mitigation · ≈1.5 min · elapsed ≈49 min</p>
 <p>Reweighing, from Kamiran and Calders. Give each training example a weight so that group and label look independent. The rule: a (group, label) cell's weight is the share you'd expect if group and label were independent, divided by the share you actually observe.</p>
-<p>A cell below its independence-expected share gets a weight above 1; a cell above it gets a weight below 1. No example is deleted and no label is changed. Weighting needs full support: if a (group, label) combination that independence requires has no examples, no weight can create them, and the weighted data stay dependent. Example: expected 30%, observed 20%, weight 1.5. That comes from group s being half the data and 60% of labels positive: $0.5 \times 0.6 = 0.3$ expected, against 0.2 observed.</p>
-<p><span class="kt">Key takeaway:</span> Reweighing makes group and label look independent, without deleting anything.</p>
+<p>Take one cell: positive examples in group A. Group A is half the data and 60% of all labels are positive, so independence predicts $0.5 \times 0.6 = 0.3$, a 30% share. We observe 20 of 100, a 20% share. The weight is 30% ÷ 20% = 1.5. On the slide the same 20 dots get bigger: these are the same 20 people, each now counting 1.5 times, so together they count as 30. Nobody new appears and nobody's label changes.</p>
+<p>A cell below its independence-expected share gets a weight above 1; a cell above it gets a weight below 1. Weighting needs full support: if a (group, label) combination that independence requires has no examples, no weight can create them, and the weighted data stay dependent.</p>
+<p><span class="kt">Key takeaway:</span> Reweighing changes how much examples count, not who is in the data or what their labels say.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>The verbal rule, weight = expected share ÷ observed share, with a numeric example. The formula $w(a, y) = \Pr[A = a]\Pr[Y = y] / \Pr[A = a, Y = y]$, defined when $\Pr[A = a, Y = y] \gt 0$, is in the supplement.</p>
+<p>Twenty filled dots (recorded positives in group A, out of 100 examples) become the same twenty dots drawn with 1.5 times the area. Generated by <code>figs/lec12-visual-motivation/reweighing.py</code> (exact fractions; no random inputs). The formula $w(a, y) = \Pr[A = a]\Pr[Y = y] / \Pr[A = a, Y = y]$, defined when $\Pr[A = a, Y = y] \gt 0$, is in the supplement.</p>
 <h3>Assumptions</h3>
 <p>The group is known at training time. The labels are taken as correct. Every required (group, label) cell has examples.</p>
 <h3>Going further</h3>
@@ -591,25 +592,35 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article data-slide-id="S38">
-<h2>38. Reweighing: A Worked Example</h2>
+<h2>38. Weights Balance the Training Table</h2>
 <p class="pace">Mitigation · ≈2 min · elapsed ≈51 min</p>
-<p>A hundred examples, 60% positive. Group s has 20 positive and 30 negative; group o has 40 positive and 10 negative. So s is 40% positive and o is 80%.</p>
-<p>The weights are 1.5 for (s, +), 0.67 for (s, −), 0.75 for (o, +) and 2.0 for (o, −). After weighting, s has 30 positive and 20 negative, and o has 30 positive and 20 negative: 60% positive in each group, matching the overall rate.</p>
-<p><span class="kt">Key takeaway:</span> After reweighing, each group has the overall positive rate.</p>
+<p>A hundred examples, 60% positive. Group A has 20 positive and 30 negative; group B has 40 positive and 10 negative. So A is 40% positive and B is 80%.</p>
+<p>The weights are 3/2 for (A, positive), 2/3 for (A, negative), 3/4 for (B, positive) and 2 for (B, negative). After weighting, A counts as 30 positive and 20 negative, and B as 30 positive and 20 negative: 60% positive in each group, matching the overall rate.</p>
+<p>This balances the training table, nothing more. A model trained on it need not give equal selection rates on test data; that has to be measured.</p>
+<p><span class="kt">Key takeaway:</span> After reweighing, each group in the training table has the overall positive rate.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Before and after bars of weighted positive and negative counts for groups s and o, plus the weight table.</p>
+<p>Stacked bars of recorded counts (left) and weighted counts (right) for groups A and B; filled segment = positive label, hollow = negative; each weighted segment carries its weight. Generated by <code>figs/lec12-visual-motivation/reweighing.py</code>, which asserts the exact weights and the 30/20 weighted cells.</p>
 <h3>Setup, model, date</h3>
-<p>Instructor-built counts. Check: (s, +) = 0.5 × 0.6 / 0.2 = 1.5; (s, −) = 0.5 × 0.4 / 0.3 ≈ 0.67; (o, +) = 0.5 × 0.6 / 0.4 = 0.75; (o, −) = 0.5 × 0.4 / 0.1 = 2.0.</p>
+<p>Instructor-built counts. Weight table:</p>
+<table>
+<tr><th>Cell</th><th>Expected share</th><th>Observed share</th><th>Weight</th><th>Weighted count</th></tr>
+<tr><td>A, positive</td><td>0.5 × 0.6 = 0.30</td><td>0.20</td><td>3/2</td><td>30</td></tr>
+<tr><td>A, negative</td><td>0.5 × 0.4 = 0.20</td><td>0.30</td><td>2/3</td><td>20</td></tr>
+<tr><td>B, positive</td><td>0.5 × 0.6 = 0.30</td><td>0.40</td><td>3/4</td><td>30</td></tr>
+<tr><td>B, negative</td><td>0.5 × 0.4 = 0.20</td><td>0.10</td><td>2</td><td>20</td></tr>
+</table>
+<p>Use the exact 2/3: 30 × 2/3 = 20 exactly, whereas the rounded 0.67 gives 20.1.</p>
+<h3>What this does not establish</h3>
+<p>Parity of a model's test predictions.</p>
 </div>
 </article>
 
 <article data-slide-id="S39">
-<h2>39. Reweighing, Measured</h2>
-<p class="pace">Mitigation · ≈2 min · elapsed ≈53 min</p>
-<p>From the AI Fairness 360 paper. These bars measure parity metrics of the training data before and after reweighing. Blue is before, orange is after.</p>
-<p>Statistical parity difference, SPD, is the favorable-outcome rate of the unprivileged group minus that of the privileged group; ideal 0, negative means the unprivileged group gets fewer favorable outcomes. Disparate impact, DI, is the same two rates as a ratio, unprivileged over privileged; ideal 1. Privileged groups: male and white for Adult, male and older for German, female and Caucasian for COMPAS, where the favorable outcome is no recidivism.</p>
-<p>In the plot both metrics move toward their ideal values after reweighing; the paper says the least improvement is on German Credit, the smallest dataset. The orange bars sit near the ideal but not exactly on it, with error bars. But be careful about what is measured: this is the data, not a trained model. A model trained on reweighted data need not be fair by the same metric.</p>
+<h2>39. Training-Data Parity Moved Toward Its Target</h2>
+<p class="pace">Mitigation · ≈1.5 min · elapsed ≈53 min</p>
+<p>From the AI Fairness 360 paper. Read the two definitions first. Statistical parity difference, SPD, is the favorable-outcome rate of the unprivileged group minus that of the privileged group; ideal 0, negative means the unprivileged group gets fewer favorable outcomes. Disparate impact, DI, is the same two rates as a ratio, unprivileged over privileged; ideal 1. Privileged groups: male and white for Adult, male and older for German, female and Caucasian for COMPAS, where the favorable outcome is no recidivism.</p>
+<p>These bars measure the training data before and after reweighing. Blue is before, orange is after. Both metrics move toward their ideal values after reweighing; the paper says the least improvement is on German Credit, the smallest dataset. The orange bars sit near the ideal but not exactly on it, with error bars. But be careful about what is measured: this is the data, not a trained model. A model trained on reweighted data need not be fair by the same metric.</p>
 <p><span class="kt">Key takeaway:</span> Reweighing fixes the data's parity; the trained model must be checked separately.</p>
 <div class="detail">
 <h3>The figure</h3>
@@ -625,15 +636,15 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </div>
 </article>
 
-<article data-slide-id="S40">
-<h2>40. The Reductions Approach</h2>
-<p class="pace">Mitigation · ≈2.5 min · elapsed ≈55.5 min</p>
-<p>Agarwal and colleagues turn a fairness constraint into a sequence of ordinary training runs. The fairness gap gets a price, like a penalty. Each round reweights the examples by that price and fits a plain cost-weighted classifier. Then it measures the gap, adjusts the price, and repeats.</p>
-<p>The output is a random mix of the classifiers fit along the way. That randomization is part of the guarantee, which is worth telling a deployer: two identical people can get different decisions.</p>
-<p><span class="kt">Key takeaway:</span> Reductions: fairness constraints via repeated ordinary fits.</p>
+<article data-slide-id="S40a">
+<h2>S40a. Reductions Reuses Ordinary Training</h2>
+<p class="pace">Mitigation · ≈1 min · elapsed ≈?</p>
+<p>Agarwal and colleagues turn a fairness constraint into a sequence of ordinary training runs. The main idea first: the fairness gap gets a price, like a penalty, and that price shows up as costs on the training examples. An ordinary learner that accepts example weights can handle those costs without any change to the learner.</p>
+<p>One round has three steps. Choose the example costs. Fit an ordinary classifier on the weighted examples. Measure how much the fitted model violates the constraint.</p>
+<p><span class="kt">Key takeaway:</span> Reductions handles a fairness constraint with ordinary cost-weighted fits.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Loop: reweight examples → train plain classifier → measure the gap → adjust weights; stop with a randomized mix.</p>
+<p>Three boxes, choose example costs → fit an ordinary classifier → measure constraint violation; arrow labels name what passes between steps (weighted examples, the fitted model).</p>
 <h3>Assumptions</h3>
 <p>Group known at training time; any learner that accepts example weights; the output is randomized.</p>
 <h3>Going further</h3>
@@ -645,74 +656,158 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </div>
 </article>
 
-<article data-slide-id="S41">
-<h2>41. Reductions, Measured</h2>
-<p class="pace">Mitigation · ≈2 min · elapsed ≈57.5 min</p>
-<p>Two panels from the paper's Figure 1, top row, Adult and COMPAS; the row has five datasets and we omit adult4, Dutch census and Law School. The x-axis is the violation of demographic parity, the y-axis test error; lower left is better. Gold is the reductions method: the convex envelope of the tradeoffs it found, evaluated on test data, with a 95% band. The other markers are baselines: unconstrained, post-processing, reweighing and relabeling.</p>
-<p>The authors' reading: reductions "dominates or matches" the baselines up to statistical uncertainty. This is an empirical curve with 95% bands, not the optimal frontier.</p>
-<p><span class="kt">Key takeaway:</span> Reductions matches or beats the baselines empirically.</p>
+<article data-slide-id="S40b">
+<h2>S40b. Measured Violations Change the Next Fit</h2>
+<p class="pace">Mitigation · ≈1 min · elapsed ≈?</p>
+<p>Now close the loop. The measured violation goes back and sets the costs for the next round; then the next classifier is fit on the re-weighted examples, measured again, and so on.</p>
+<p>Two things not to confuse. The costs change from round to round; the recorded labels never do. And the method's output is not the last classifier: it is a random mix of the classifiers fit along the way. That randomization is part of the guarantee, which is worth telling a deployer: two identical people can get different decisions.</p>
+<p><span class="kt">Key takeaway:</span> Measured violations reprice the examples for the next fit; labels stay as recorded.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Agarwal et al., ICML 2018, Fig. 1, top row, adult and COMPAS panels with the shared legend: test error vs DP violation, logistic regression.</p>
+<p>The same three steps, with the first step now "update example costs" and a return arrow from "measure constraint violation" that lands on the cost update, labelled "measured violation sets the next costs". The slide makes no claim that each round improves or about how fast the loop settles; the formal game and the iteration bound are in the supplement.</p>
+<h3>Going further</h3>
+<p>Saddle-point formulation: lec12tech.html, slide 15.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1803.02453">Agarwal, Beygelzimer, Dudík, Langford &amp; Wallach, "A Reductions Approach to Fair Classification", ICML 2018</a> — §3, Algorithm 1 (exponentiated gradient).</li>
+</ul>
+</div>
+</article>
+
+<article data-slide-id="S75">
+<h2>S75. A Random Mixture Can Balance Expected Selection</h2>
+<p class="pace">Mitigation · ≈1.5 min · elapsed ≈?</p>
+<p>Why would the output be a random mix? A made-up example. Classifier h1 selects 80% of group A and 40% of group B. Classifier h2 selects 20% of A and 60% of B. Neither is balanced. Now, for each decision, flip a fair coin that ignores the group, and use h1 on heads and h2 on tails. In expectation group A is selected at ½·80% + ½·20% = 50%, and group B at ½·40% + ½·60% = 50%.</p>
+<p>Three cautions. This mixes decisions; it is not averaging the two scores and re-thresholding. The coin does not look at the group; it is not a switch that uses h1 for one group and h2 for the other. And the 50% is an expectation: in a finite sample the observed counts can differ a little.</p>
+<p><span class="kt">Key takeaway:</span> Randomizing between classifiers can reach an expected balance that no single one of them reaches.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>A fair coin (ignores group) points to two classifier cards with their selection rates by group; both feed an "expected selection" box at 50% / 50%. Generated by <code>figs/lec12-visual-motivation/reductions_mix.py</code>: inputs h1 = (0.8, 0.4), h2 = (0.2, 0.6), mixing weights ½, ½; exact fractions, no random inputs.</p>
+<h3>What this establishes</h3>
+<p>That a group-independent random mixture can equalize expected selection when neither component does.</p>
+<h3>What this does not establish</h3>
+<p>This is a teaching illustration, not an experiment from Agarwal et al. It says nothing about error, optimality or convergence.</p>
+</div>
+</article>
+
+<article data-slide-id="S41a">
+<h2>S41a. Reductions Shows an Empirical Tradeoff on Adult</h2>
+<p class="pace">Mitigation · ≈1 min · elapsed ≈?</p>
+<p>One panel from the paper's Figure 1, top row: Adult, demographic parity, logistic regression. The x-axis is the violation of demographic parity, the y-axis test error; lower left is better. Gold is the reductions method: the convex envelope of the tradeoffs it found, evaluated on test data, with a 95% band. The other markers are baselines: unconstrained, post-processing, reweighing and relabeling.</p>
+<p>The authors' reading: reductions "dominates or matches" the baselines up to statistical uncertainty. This is an empirical curve with 95% bands, not the optimal frontier.</p>
+<p><span class="kt">Key takeaway:</span> On Adult, reductions matches or beats the baselines empirically.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Agarwal et al., ICML 2018, Fig. 1, top row, adult panel, cropped from the official PDF (page 8) without alteration; the legend is redrawn as an HTML key beside the figure, using the paper's marker shapes and colours.</p>
 <h3>Setup, model, date</h3>
 <p>Adult with gender, Adult with gender and race, ProPublica COMPAS (7,918 examples), Law School (20,649) and Dutch census (60,420). In the experiments the protected attribute was included as a feature for all methods.</p>
 <h3>What this establishes</h3>
-<p>On these datasets, reductions found tradeoffs at least as good as the baselines.</p>
+<p>On this dataset, reductions found tradeoffs at least as good as the baselines.</p>
 <h3>What this does not establish</h3>
 <p>That any curve shown is the best possible tradeoff.</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/1803.02453">Agarwal, Beygelzimer, Dudík, Langford &amp; Wallach, "A Reductions Approach to Fair Classification", ICML 2018</a> — Algorithm 1 (exponentiated gradient), Theorem 1; §4 experiments on Adult (two protected-attribute settings), COMPAS, Law School and Dutch census; Fig. 1.</li>
+<li><a href="https://proceedings.mlr.press/v80/agarwal18a/agarwal18a.pdf">Agarwal, Beygelzimer, Dudík, Langford &amp; Wallach, "A Reductions Approach to Fair Classification", ICML 2018</a> (also <a href="https://arxiv.org/abs/1803.02453">arXiv 1803.02453</a>) — Algorithm 1 (exponentiated gradient), Theorem 1; §4 experiments on Adult (two protected-attribute settings), COMPAS, Law School and Dutch census; Fig. 1.</li>
+</ul>
+</div>
+</article>
+
+<article data-slide-id="S41b">
+<h2>S41b. The Same Method Has a Different COMPAS Curve</h2>
+<p class="pace">Mitigation · ≈1 min · elapsed ≈?</p>
+<p>Same axes, same key, different dataset: COMPAS. The curve has a different shape here, and the baselines sit in different places relative to it. The point is that performance is dataset-specific; do not compare error levels across the two panels as if they measured the same task.</p>
+<p>Figure 1's top row has five datasets; we show Adult and COMPAS and omit adult4, Dutch census and Law School.</p>
+<p><span class="kt">Key takeaway:</span> The same method gives a dataset-specific tradeoff curve.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Agarwal et al., ICML 2018, Fig. 1, top row, COMPAS panel, cropped from the official PDF (page 8). The crop is two unmodified rectangles: the panel itself, and its x-tick row shifted so that the neighbouring panel's "0.15" tick label is excluded; the uncovered sliver is left blank page. Nothing is painted over. The key beside it is the same redrawn HTML key as on the Adult slide.</p>
+<h3>What this does not establish</h3>
+<p>A universal ranking of methods, or that this curve is the best possible tradeoff on COMPAS.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://proceedings.mlr.press/v80/agarwal18a/agarwal18a.pdf">Agarwal, Beygelzimer, Dudík, Langford &amp; Wallach, "A Reductions Approach to Fair Classification", ICML 2018</a> — Fig. 1, top row.</li>
 </ul>
 </div>
 </article>
 
 <article data-slide-id="S42">
-<h2>42. Group-Specific Thresholds</h2>
+<h2>42. Thresholds Change Decisions Without Retraining Scores</h2>
 <p class="pace">Mitigation · ≈2 min · elapsed ≈59.5 min</p>
-<p>The post-processing route from Hardt, Price and Srebro. Freeze the score. Use labeled held-out data to draw each group's ROC curve. Then pick a point per group that satisfies the criterion. For equalized odds, that point may lie under a curve, so some decisions are randomized.</p>
+<p>The post-processing route from Hardt, Price and Srebro. Freeze the score. Use labeled held-out data to draw each group's ROC curve: false-positive rate on x, true-positive rate on y. Then pick an operating point per group that satisfies the criterion.</p>
+<p>For equalized odds, both groups must sit at the same point. The pink region is the set of rate pairs both groups can reach: under both curves and above the diagonal. The red star is the best such point for the loss. It may lie under a group's curve, so some decisions for that group are randomized.</p>
 <p>Two requirements: the group label at decision time, and labeled held-out data. The first can be legally sensitive.</p>
 <p><span class="kt">Key takeaway:</span> Post-processing: keep the score, change each group's threshold.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Hardt, Price and Srebro, NeurIPS 2016, Fig. 2: feasible points for equalized odds (middle) and equal opportunity (right).</p>
+<p>Hardt, Price and Srebro, Fig. 2, middle panel (equalized odds), cropped from arXiv v1 without alteration; the right edge is trimmed so the neighbouring panel's axis label is excluded. Blue and green are the two groups' ROC curves; pink is their overlap above the diagonal; the black arrows are the paper's loss-direction vectors. The right panel (equal opportunity), where only the true-positive rates must match, is not shown; there each group's point stays on its own curve. The key beside the figure is redrawn.</p>
 <h3>Going further</h3>
 <p>Derived-predictor formulation: lec12tech.html, slide 16.</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/1610.02413">Hardt, Price &amp; Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016</a> — equalized odds and equal opportunity (Defs. 2.1–2.2); ROC geometry (Figs. 1–2); FICO case study (Figs. 9, 11).</li>
+<li><a href="https://arxiv.org/abs/1610.02413">Hardt, Price &amp; Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016</a> — equalized odds and equal opportunity (Defs. 2.1–2.2); ROC geometry (Figs. 1–2); FICO case study (§7, Figs. 9, 11).</li>
 </ul>
 </div>
 </article>
 
-<article data-slide-id="S43">
-<h2>43. The Cost, on FICO Data</h2>
-<p class="pace">Mitigation · ≈2 min · elapsed ≈61.5 min</p>
-<p>What does a criterion cost? The plot shows the lender's profit, as a share of the most it could make, against the break-even repayment rate. An 82% break-even rate means a loan pays off only if more than 82% of borrowers like this one repay. At that rate the paper reports: a single race-blind threshold keeps 99.3%; equal opportunity 92.8%; equalized odds 80.2%; demographic parity 69.8%.</p>
+<article data-slide-id="S43a">
+<h2>S43a. Fairness Constraints Change Modeled Lender Profit</h2>
+<p class="pace">Mitigation · ≈1 min · elapsed ≈?</p>
+<p>What does a criterion cost? The plot shows the lender's profit, as a share of the most it could make, against the break-even repayment rate. An 82% break-even rate means a loan pays off only if more than 82% of borrowers like this one repay. Each curve is one threshold rule: a single race-blind threshold, equal opportunity, equalized odds, demographic parity.</p>
 <p>The paper's other panel, not on the slide, shows the share of non-defaulters approved in each group under each criterion.</p>
-<p>Two cautions. The utility is the lender's profit, not anyone's welfare. And it is a single dataset with the paper's cost assumption.</p>
-<p><span class="kt">Key takeaway:</span> Stricter criteria cost more lender profit on this data.</p>
+<p>Two cautions. The utility is the lender's profit in the paper's model, not anyone's welfare. And it is a single dataset with the paper's cost assumption.</p>
+<p><span class="kt">Key takeaway:</span> In this model, fairness constraints change the lender's profit, by different amounts.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Hardt, Price and Srebro, NeurIPS 2016, Fig. 11, right panel: share of maximum profit vs minimal non-default rate for profitability. The left panel (non-defaulters approved per group) is described in the script only.</p>
+<p>Hardt, Price and Srebro, Fig. 11, right panel: share of maximum profit vs minimal non-default rate for profitability. Cropped from arXiv v1 without alteration; the plot title and the y-axis label are cropped out (the y-label overlapped the left panel's legend box) and both axes are restated in the key. The paper's legend names are Single threshold, Opportunity, Equal odds, Demography. The left panel (non-defaulters approved per group) is described in the script only.</p>
 <h3>Assumptions</h3>
-<p>Profit model with an 82% break-even rate, as in the paper.</p>
+<p>Profit model as in the paper; break-even rate varied along x.</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/1610.02413">Hardt, Price &amp; Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016</a> — equalized odds and equal opportunity (Defs. 2.1–2.2); ROC geometry (Figs. 1–2); FICO case study (Figs. 9, 11).</li>
+<li><a href="https://arxiv.org/abs/1610.02413">Hardt, Price &amp; Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016</a> — §7 "Case study: FICO scores" (arXiv v1; the earlier slide cited §6), Figs. 9, 11.</li>
 </ul>
 </div>
 </article>
 
-<article data-slide-id="S44">
-<h2>44. An Empirical Tradeoff, Not the Optimal Frontier</h2>
-<p class="pace">Mitigation · ≈2 min · elapsed ≈63.5 min</p>
-<p>From AI Fairness 360: balanced accuracy against disparate impact on the Adult dataset, with race as the attribute. Balanced accuracy is the mean of the true-positive and true-negative rates; that is the standard definition, the paper does not spell it out. Top is before mitigation, bottom after. Each dot is a method's mean over 25 splits, with ±1 SD bars. Colour is the method, dark for logistic regression and light for random forest; adversarial debiasing is a neural network and prejudice remover is logistic regression only.</p>
-<p>Reweighing moves disparate impact to about 0.9 at about 0.745 balanced accuracy, close to where it started. Reject option classification raises DI to about 0.8 to 0.9 but sits near 0.65 balanced accuracy. Adversarial debiasing was already near 0.665 before mitigation: it runs on differently processed data, so its row is not a cost of mitigation. Thresholds were tuned on validation data and scored on test. Again, this shows how these methods did, not the best achievable.</p>
+<article data-slide-id="S43b">
+<h2>S43b. One FICO Setting Gives Different Profit Costs</h2>
+<p class="pace">Mitigation · ≈1 min · elapsed ≈?</p>
+<p>Fix one setting: break-even at 82%. The paper reports the share of maximal profit for each rule: a single race-blind threshold keeps 99.3%; equal opportunity 92.8%; equalized odds 80.2%; demographic parity 69.8%.</p>
+<p>These are the paper's numbers for this one setting and this profit model. They are not a general ranking of fairness criteria, and lender profit is not social welfare.</p>
+<p><span class="kt">Key takeaway:</span> At this setting, stricter criteria cost more modeled lender profit.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Bars drawn from the four values stated in the §7 text, not traced from the curves. Inputs: 99.3, 92.8, 80.2, 69.8 (% of maximal profit) at break-even 0.82; order single threshold, equal opportunity, equalized odds, demographic parity; colours follow the paper's curves.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1610.02413">Hardt, Price &amp; Srebro, "Equality of Opportunity in Supervised Learning", NeurIPS 2016</a> — §7 "Case study: FICO scores", text accompanying Fig. 11.</li>
+</ul>
+</div>
+</article>
+
+<article data-slide-id="S44a">
+<h2>S44a. Before Mitigation, Disparate Impact Sits Well Below 1</h2>
+<p class="pace">Mitigation · ≈1.25 min · elapsed ≈?</p>
+<p>From AI Fairness 360: balanced accuracy against disparate impact on the Adult dataset, with race as the attribute. Balanced accuracy is the mean of the true-positive and true-negative rates; that is the standard definition, the paper does not spell it out. Disparate impact has ideal value 1. Each dot is a method's mean over 25 splits, with ±1 SD bars. Colour is the method, dark for logistic regression and light for random forest; adversarial debiasing is a neural network and prejudice remover is logistic regression only.</p>
+<p>Before mitigation, most methods' classifiers sit near 0.745 balanced accuracy with disparate impact around 0.45 to 0.6, far from 1. Adversarial debiasing starts lower, near 0.665.</p>
+<p><span class="kt">Key takeaway:</span> Before mitigation, every method's classifier is well short of disparate impact 1.</p>
+<div class="detail">
+<h3>The figure</h3>
+<p>Bellamy et al. 2018, Fig. 5(b), top (before) panel: the panel image extracted unmodified from the arXiv v1 PDF, with an HTML legend re-drawn from the paper's colours. The y-axis title is not part of this panel image; it is stated on the slide.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1810.01943">Bellamy et al., "AI Fairness 360: An Extensible Toolkit for Detecting, Understanding, and Mitigating Unwanted Algorithmic Bias" (arXiv 1810.01943, 2018)</a> — Fig. 5(b): balanced accuracy vs disparate impact on Adult (race), 25 splits.</li>
+</ul>
+</div>
+</article>
+
+<article data-slide-id="S44b">
+<h2>S44b. Measured Methods Are Not an Optimal Frontier</h2>
+<p class="pace">Mitigation · ≈1.25 min · elapsed ≈?</p>
+<p>After mitigation. Reweighing moves disparate impact to about 0.9 at about 0.745 balanced accuracy, close to where it started. Reject option classification raises DI to about 0.8 to 0.9 but sits near 0.65 balanced accuracy. Adversarial debiasing was already near 0.665 before mitigation: it runs on differently processed data, so its row is not a cost of mitigation. Thresholds were tuned on validation data and scored on test. Again, this shows how these methods did, not the best achievable.</p>
 <p><span class="kt">Key takeaway:</span> Some methods moved DI toward 1 cheaply here; reject option paid in accuracy.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Bellamy et al. 2018, Fig. 5(b): balanced accuracy vs disparate impact, Adult (race), before and after mitigation, with an HTML legend re-drawn from the paper's colours.</p>
+<p>Bellamy et al. 2018, Fig. 5(b), bottom (after) panel: extracted unmodified from the arXiv v1 PDF; same redrawn legend. All nine methods in the paper's legend are listed in the key.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1810.01943">Bellamy et al., "AI Fairness 360: An Extensible Toolkit for Detecting, Understanding, and Mitigating Unwanted Algorithmic Bias" (arXiv 1810.01943, 2018)</a> — Fig. 4(a),(c): reweighing on the training data; Fig. 5(b): balanced accuracy vs disparate impact on Adult (race), 25 splits.</li>
@@ -721,14 +816,21 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 </article>
 
 <article data-slide-id="S45">
-<h2>45. Method Cards</h2>
-<p class="pace">Mitigation · ≈1.5 min · elapsed ≈65 min</p>
-<p>One card per method. Reweighing targets parity in the training data, was evaluated on the reweighted data with a data metric only, and needs the group at training time. Reductions targets a DP or equalized-odds constraint, was evaluated on test classification error, and outputs a randomized classifier. Group thresholds target equal opportunity or odds, were evaluated on FICO profit, and need the group at decision time plus labeled held-out data.</p>
-<p>All three take $Y$ as given. If the label is biased, as in Section 01, none of them fixes it.</p>
+<h2>45. Each Intervention Fixes a Different Object</h2>
+<p class="pace">Mitigation · ≈2 min · elapsed ≈65 min</p>
+<p>One card per method, under the stage it acts on. Reweighing changes the weighted training table and needs the group in the training data. Reductions changes the learned predictor, under a constraint, needs the group during training and outputs a randomized classifier. Group thresholds change the decision rule and need the group at decision time plus labeled held-out data.</p>
+<p>All three take the recorded label $Y$ as given. If the label is biased, as in Section 01, none of them fixes it.</p>
 <p><span class="kt">Key takeaway:</span> Every method takes the label as given.</p>
 <div class="detail">
 <h3>The figure</h3>
-<p>Table: method, target, evaluated on, utility, assumptions.</p>
+<p>Stage strip Data → Training → Decisions over three cards: what each method changes and what access it needs.</p>
+<h3>Full comparison</h3>
+<table>
+<tr><th>Method</th><th>Targets</th><th>Evaluated on</th><th>Utility</th><th>Assumes</th></tr>
+<tr><td>Reweighing</td><td>parity in training data</td><td>AIF360: the reweighted data</td><td>data metric only</td><td>group known in training</td></tr>
+<tr><td>Reductions</td><td>DP or EO constraint</td><td>Agarwal: test sets</td><td>classification error</td><td>group in training; randomized output</td></tr>
+<tr><td>Group thresholds</td><td>equal opportunity or odds</td><td>Hardt: FICO data</td><td>share of max profit</td><td>group at decision; labeled held-out data</td></tr>
+</table>
 </div>
 </article>
 

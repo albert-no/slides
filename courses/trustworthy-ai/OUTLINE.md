@@ -43,7 +43,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **rebuilt 2026-10**, motivation revision 2026-10-25 (91 sl, 90 min, concept-first, no activities; note 91 entries). Blocks: integrity 3–14 · who poisons 15–18 · poisoning 19–32 · backdoors 33–47 · web-scale data 48–57 · language models 58–75 (in the wild 68–71) · defenses 76–91 |
 | 10 | `lec10-jailbreak.html` | Jailbreaks: safety training, fragility, search, budget, evaluation & defenses, self-assessment monitoring | **rebuilt 2026-10**, Albert feedback round 2026-11-02 (88 sl, 90 min, concept-first, no activities; note 88 entries; tech 21 sl). Blocks: what safety training adds 3–13 (motivation 4–6, Wei example 7, safety and refusal 9–10) · fragility 14–30 · search 31–41 · attack budget 42–59 (test-time scaling 43–45, in-context learning 47) · evaluation & defenses 60–76 · self-assessment 77–85 · wrap-up 86–88 |
 | 11 | `lec11-synthetic-media.html` | Synthetic media: text watermarks, robustness, detection without a watermark, provenance (C2PA) & labelling law | **new 2026-10** (74 sl after Albert r1 2026-11, 16 cited image files + 5 tables/figures redrawn, 90 min, concept-first, no activities; note 74 entries; tech 14 sl). Former Wk 11 prompt injection → rebuilt as Wk 13; former Wk 12 watermark deck replaced |
-| 12 | `lec12-fairness.html` | Fairness: where bias enters, criteria, COMPAS and impossibility, mitigation, audits beyond classifiers | **new 2026-10** (56 sl, 17 real figure crops, 90 min, concept-first, no activities; note 56 entries; tech 17 sl). Merges the former Wk 13–14 fairness decks → `backup-fairness-defs.html`, `backup-fairness-mitigation.html` |
+| 12 | `lec12-fairness.html` | Fairness: where bias enters, criteria, COMPAS and impossibility, mitigation, audits beyond classifiers | **new 2026-10; visual revision 2026-11** (74 sl, 22 cited figure crops, 90 min, concept-first, no activities; note 74 entries; tech 23 sl; stable slide IDs S01–S75 in `data-slide-id`). Merges the former Wk 13–14 fairness decks → `backup-fairness-defs.html`, `backup-fairness-mitigation.html` |
 | 13 | `lec13-prompt-injection.html` | Prompt injection: direct and indirect, agents, three incidents, why it is hard, measured defenses and CaMeL | **new 2026-10** (53 sl, 7 real figure crops, 90 min, concept-first, no activities; note 53 entries; tech 15 sl). Replaces `backup-prompt-injection.html` (deleted) |
 | 14 | `lec14-agentic-threats.html` | Emerging agentic threats: autonomy, deception and multi-agent risks; course finale | **new 2026-10** (51 sl, 5 real figure crops, 90 min, concept-first, no activities; note 51 entries; tech 14 sl). Replaces `backup-agentic-autonomy.html` (deleted); former Wk 15 governance deck → `backup-governance.html` |
 
@@ -72,7 +72,7 @@ Built in the **2026-07-15 tech-supplement pass**; all lint-clean, KaTeX-verified
 | `lec09tech.html` | Wk 9 (poisoning) | count vs rate α; feature-collision objective; backdoor objective + ASR; spectral signatures; Neural Cleanse + MAD index; activation clustering | **rebuilt 2026-10** (18 sl) |
 | `lec10tech.html` | Wk 10 (jailbreak) | ASR + SE; any-of-N; judge-error correction; RLHF KL objective; per-token KL; refusal direction ablation; GCG loss + budget; PAIR budget; MSJ and BoN power laws | **rebuilt 2026-10** (21 sl; formulas checked against the paper PDFs) |
 | `lec11tech.html` | Wk 11 (synthetic media) | green-list rule (KGW Alg. 2); idealized Binomial null + assumptions; z &gt; 4 ≈ 3×10⁻⁵ (normal approx.) vs exact tail at T = 20; √T growth under constant green rate; repeated pairs, nominal vs measured FPR (K24 App. A.3, Fig. 7); base-rate formula; TV bound AUROC ≤ ½+TV−TV²/2 (TV defined; keyed detectors); distortion-free vs undetectable; SynthID-Text mean g-score | **new 2026-10** (14 sl; formulas checked against the saved papers) |
-| `lec12tech.html` | Wk 12 (fairness) | four rates per group (with positivity); five criteria written out; Dwork (D,d)-Lipschitz (Def. 2.1); Kusner counterfactual fairness (Def. 5); calibration vs PPV via the score mix; Chouldechova identity (eq. 2.6); Kleinberg proof sketch; worked example computed; reweighing; reductions saddle point; Hardt derived predictor | **new 2026-10** (17 sl; formulas checked against the saved papers) |
+| `lec12tech.html` | Wk 12 (fairness) | four rates per group (with positivity); five criteria written out; Dwork (D,d)-Lipschitz (Def. 2.1); Kusner counterfactual fairness (Def. 5); calibration vs PPV via the score mix; Chouldechova identity (eq. 2.6); Kleinberg proof sketch; worked example computed; reweighing; reductions saddle point; Hardt derived predictor | **new 2026-10; split 2026-11** (23 sl, IDs S57–S73; formulas checked against the saved papers) |
 | `lec13tech.html` | Wk 13 (prompt injection) | trusted vs attacker-controlled state; PI-SEC game and $\Omega_p$ (CaMeL §4); control vs data part of an action; confused deputy and least privilege; capability labels, propagation, STRICT mode; dual LLM → CaMeL policy check; conditional guarantee; AgentDojo BU / UA / ASR; static vs adaptive ASR with budget $q$ | **new 2026-10** (15 sl; checked against the saved papers) |
 | `lec14tech.html` | Wk 14 (agentic threats) | time-horizon logistic fit $\sigma(\beta(\log h-\log t))$; 50% → 80% horizon; doubling time from the log-linear trend; compounding vs independence; the control game (safety, usefulness); upfront auditing closed form; per-task hazard $S_N$ (Ge-Wang eq. 4); empirical safety and its denominator; toy SIS propagation model labelled not empirical | **new 2026-10** (14 sl; checked against the saved papers; implied $\beta$ range and $S^*$ marked as our arithmetic) |
 | `backup-fairness-defstech.html` | former Wk 13 (fairness defs) | demographic parity / equalized odds / calibration as conditional-prob defs; base rates; impossibility theorem (Chouldechova/Kleinberg) + proof sketch | **fixed 2026-08** (15 sl: base-rate identity was inverted (1−p)/p → p/(1−p) per Chouldechova eq 2.6; proof-sketch step 1 corrected (calibration ≠ "PPV = base rate" → predictive parity demands equal PPV across groups); unverifiable numeric-wedge table replaced with an exactly derivable two-value-score construction; impossibility attribution now dual Chouldechova + Kleinberg) |
@@ -104,7 +104,7 @@ cropped-and-cited paper figure or a data-backed SVG:
 - `lec08` panda→gibbon (`figs/panda-gibbon.png`) + Eykholt stop-sign (`figs/eykholt-stopsign.png`, CVPR 2018 Fig 1).
 - `lec09` BadNets trigger strip (`figs/badnets-trigger.png`, Gu et al. 2017 Fig 7).
 - `lec10` Wei failure modes (`figs/wei-jailbroken-redacted.png`, NeurIPS 2023 Fig 1, attack wording redacted), GCG schematic (`figs/gcg-schematic.png`, Zou 2023 Fig 1); 2026-10 rebuild: 13 cited image files in total — see its section.
-- `lec12` (2026-10): 17 cited crops — see its section. Former fairness decks (now `backup-fairness-defs`/`backup-fairness-mitigation`): Bianchi occupation grid (`figs/bianchi-occupations.png`, FAccT 2023 Fig 1); `lec14` Gender Shades table (`figs/gender-shades.png`, FAT* 2018 Table 4). backup-fairness-defs COMPAS TODO removed (illustrative SVG kept — real news graphic is copyrighted).
+- `lec12` (2026-10, revised 2026-11): 22 cited crops, new ones in `figs/lec12-visual-motivation/` with their SVG generators — see its section. Former fairness decks (now `backup-fairness-defs`/`backup-fairness-mitigation`): Bianchi occupation grid (`figs/bianchi-occupations.png`, FAccT 2023 Fig 1); `lec14` Gender Shades table (`figs/gender-shades.png`, FAT* 2018 Table 4). backup-fairness-defs COMPAS TODO removed (illustrative SVG kept — real news graphic is copyrighted).
 - `backup-fairness-mitigation` (former lec14) figure pass 2026-09: 20 cited crops (AIF360 Figs. 1/4/5, Feldman Fig. 1, Agarwal Fig. 1, Zhang Fig. 2 + Table 3, Hardt Figs. 2/10/11, model card + datasheet examples, SMACTR Fig. 2, PPB faces, Actionable Auditing Tables 1–2, Tamkin Figs. 1/2/5, Eloundou Fig. 10, Wilson & Caliskan Fig. 2) + 14 SVGs; see the backup-fairness-mitigation section.
 - `lec06` Vectara HHEM hallucination bar chart (inline SVG, data Sep 22, 2026).
 - `backup-copyright` Somepalli pairs (`figs/somepalli-pairs.png`, CVPR 2023 Fig 1); `backup-sycophancy` Sharma preference forest plot (`figs/sharma-sycophancy.png`, ICLR 2024 Fig 5); `backup-model-stealing` Knockoff pipeline (`figs/knockoff-pipeline.png`, CVPR 2019 Fig 2) + SVD hidden-dim plot (`figs/stealing-projection.png`, Carlini ICML 2024 Fig 1).
@@ -537,6 +537,678 @@ measured result shown with criterion, population, utility and assumptions; an em
 optimal frontier; method cards. Beyond classifiers: Gender Shades and the Actionable Auditing follow-up, BBQ,
 Bianchi text-to-image stereotypes; governance obligations and limits (~3.5 min). Math in `lec12tech.html`.
 
+### Sections (74 slides, 90 min: where bias enters 10 · measuring 20 · COMPAS + impossibility 15 · mitigation 20 · beyond classifiers 15 · synthesis 10)
+
+Slide IDs (`data-slide-id`, note `<article data-slide-id>`) are stable across revisions; splits carry letters (S13a–d), new slides S74–S75.
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:30`, `:42` | |
+| **01 — Where Bias Enters** | 3–11 | `:74` | who gets the opportunity (S74) `:94` · Obermeyer cost proxy (Fig. 1a crop) `:131` · past records shape decisions `:148` · three places `:179` · benchmark composition (Gender Shades) `:228` · proxy label `:260` · missing outcomes `:290` · dropping a column `:322` |
+| **02 — Measuring Fairness** | 12–28 | `:363` | one decision, two outcomes `:390` · four rates as counts (S13a–d) `:401`–`:431` · demographic parity `:441` · equal opportunity `:452` · equalized odds `:463` · Hardt Fig. 1 (S17a/b) `:474`, `:492` · calibration `:509`, `:520`, `:530` · population compared `:540`, `:550` · Hardt Fig. 9 FICO thresholds `:560` |
+| **03 — COMPAS and Impossibility** | 29–43 | `:578` | what the audit measured `:599` · FPR by group `:639` · prior-count bins `:667` · Chouldechova Fig. 1 (S26a/b) `:687`, `:707` · different denominators `:727` · rearrest ≠ offending `:761` · base rates `:794` · three equalities `:935` · Kleinberg conditions `:967` · calibrated worked example (S32a/b, S33) `:1000`, `:1149`, `:1193` · choose the harm `:1223` |
+| **04 — Mitigation** | 44–59 | `:1261` | three places `:1286` · reweighing `:1319`, `:1381`, `:1428` · reductions loop and mixture (S40a/b, S75) `:1441`, `:1473`, `:1507` · Agarwal Fig. 1 Adult / COMPAS `:1559`, `:1578` · group thresholds `:1597` · FICO profit (S43a/b) `:1615`, `:1633` · AIF360 DI before/after (S44a/b) `:1663`, `:1686` · method summary `:1710` |
+| **05 — Beyond Classifiers** | 60–69 | `:1735` | Gender Shades Table 4 (SVG) `:1757` · re-audit `:1767` · BBQ examples (S49a/b) `:1777`, `:1797` · BBQ bias score `:1817`, `:1841` · Bianchi Fig. 3 (S51a/b) `:1850`, `:1861` · governance (NYC rules example) `:1887` |
+| **06 — Synthesis** | 70–74 | `:1906` | care case: label (S54a) `:1914` · fix (S54b) `:1952` · decision, denominator, tradeoff `:1968` · closer "Which rate?" `:1982` |
+
+**Key citations (checked against saved PDFs / page captures, 2026-10-10; new sources checked on
+arXiv 2026-10-20; register in the review package):** Geirhos 2019 (Fig 1; arXiv 1811.12231);
+Nguyen 2015 (Fig 1; arXiv 1412.1897); Goodfellow 2015 (Figs 1, 2; §3); Szegedy 2014 (Fig 5);
+Ilyas 2019 (Fig 1; Fig 2, App. Table 7); Papernot 2017 substitute attack (arXiv 1602.02697); Papernot 2016 (Fig 3; §5,
+Tables 3–4); Madry 2018 (Figs 1, 3; Table 2; ℓ2 appendix); Carlini & Wagner 2017 (notes/tech);
+Tsipras 2019 (Fig 1); Athalye 2018 (Table 1; §4 BPDA/EOT); Athalye EOT 2018; Carlini 2019
+checklist; Tramèr 2020; Croce & Hein 2020 (AutoAttack; all but 1 of >50 lower, 13 of 49 deterministic >10 pts, 8 >30 pts; §6, §6.1, Tables 2 and 4); Croce 2021 RobustBench
+(§3 restrictions); robustbench.github.io CIFAR-10 ℓ∞ snapshot 10 Oct 2026; Cohen 2019 (Figs 2–3,
+Thm 1, CERTIFY, Table 1, App. Table 2); Eykholt 2018 (Fig 1; Table 1 lab 100%, Table 3 drive-by
+100/84.8%, constrained pseudo-random crop 70%); Kurakin, Goodfellow & Bengio 2017 (§3.1 destruction rate, §3.2 setup, Table 3, §4; arXiv 1607.02533); Hendrycks & Dietterich 2019 (Fig 1); Jin 2020
+TextFooler (Table 6; arXiv 1907.11932); Zou 2023 GCG (Fig 1; arXiv 2307.15043); Carlini 2023
+(§6, Table 3; arXiv 2306.15447); Greshake 2023 (arXiv 2302.12173).
+
+**Note:** `lec08-adversarial-note.html` — 101 entries (core route ≈83.5 min; 8 slides marked optional: 66–67, 78–79, 82–84, 90); each has a minute budget and elapsed
+time, script, key takeaway; content slides add figure / setup-model-date / establishes / does
+not establish / assumptions / primary-source links. C&W formulation in entries 56 and 61; PGD restarts (Madry Fig 1) in entry 59; the three Athalye worked cases and Table 1 marks in entry 69.
+
+**Tech:** `lec08tech.html` — 24 slides: perturbation set (4), goals (5), FGSM (6), sign as the
+linearized optimum incl. ℓ2 (7), linear model $w^\top\eta=\varepsilon\|w\|_1$ (8), PGD with random
+start (9), projections (10), C&W (11), margin loss (12), min-max (14), Danskin with its smooth/unique-maximizer condition (15), cost (16),
+smoothed classifier (18), Cohen Thm 1 (19), Neyman–Pearson proof sketch (20), CERTIFY with
+Clopper–Pearson and α (21), radius reading (22), cost/scope (23).
+
+## lec09-poisoning.html
+
+**Topic:** Data poisoning and backdoors (90 min; mixed-major sophomores/juniors; concept-first,
+light math, no proofs; **no activities**; motivation-first, revised 2026-10-25; Albert r1 2026-10-27). Opens with integrity as the goal: an answer-key story, the Clever Hans source tag (Lapuschkin Fig 2a) as an accidental shortcut, then the BadNets stop sign (Gu Fig 8) as a planted one, and Tay (scoped quote). Who poisons and why: five motives, SpamBayes poisoning (Nelson LEET 2008: 101 emails = 1%). Poisoning is
+how and a backdoor is what (Venn); three framing questions (who writes the data, what the attacker
+wants, how it's measured). Availability vs targeted (Biggio Figs 1, 3); clean-label feature collision
+(Poison Frogs Figs 6a, 1, 3b: one poison, 100% of 1,099 trials in transfer; about 60% with 50 poisons end to end;
+limits slide). BadNets (Figs 3, 6, 4, 7, 1). ASR is defined per mapping (all-to-one, source-specific, all-to-all), plus an illustrative 7 → 1 worked example. Web scale: Carlini split-view (est. $60/yr → 0.01% of
+LAION-400M URLs) separates access cost from damage; frontrunning (Fig 6; 6.5% is a qualified estimate); 2022 hash snapshot vs post-disclosure (Table 1 as HTML). Wan
+instruction tuning (one train + one test row of Fig 1), after a four-doors map (pretraining, instruction tuning, RLHF, retrieval). Souly: 250 docs ≈ 420k tokens, a shrinking *token* fraction (12B → 0.0035%, 260B → 0.00016%); the
+pretraining trigger → gibberish DoS backdoor (Fig 1a); Fig 2 with legend (perplexity rise, not ASR); scope slide. Sleeper Agents: installation separate from
+persistence. RLHF poisoning (Rando &amp; Tramèr ICLR 2024: about 5% to survive RLHF). Retrieval-time poisoning: PoisonedRAG (5 texts, about 90%), fake support numbers in AI search (Aurascape, Dec 2025), Pravda network audit (NewsGuard, Mar 2025: 33.5% repeated), with a documented-vs-not slide. Nightshade motive and Fig 7 (50/100/300 poisons). Glaze ≠ Nightshade (different metrics, no cross-comparable numbers). Defenses: hashes catch changes, not
+pre-existing poison; spectral signatures and Neural Cleanse in depth (needs/assumes/fails); the
+rest in the notes table. Closing five-question checklist applied to the $60 claim. Excludes
+adversarial examples (lec08), jailbreaks (lec10), prompt injection (lec13). Math in `lec09tech.html`.
+
+### Sections (91 slides, 90 min: integrity 13 · who poisons 4 · poisoning 16 · backdoors 15 · web-scale data 10 · language models 18 · defenses + synthesis 14)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:30`, `:42` | |
+| **01 — Why We Want Integrity** | 3–14 | `:79` | answer-key story (SVG) `:87` · strangers' data `:96` · Clever Hans tag (Lapuschkin Fig 2a) `:104` · shortcut found by accident `:113` · accident vs on purpose `:123` · stop sign (Gu Fig 8) `:132` · Tay (Microsoft quote, scoped) `:148` · integrity def-card + 3 failure modes `:163` · why integrity matters `:172` · sticker meaning (test vs train time) `:180` · Venn: poisoning vs backdoor `:188` |
+| **02 — Who Poisons, and Why** | 15–18 | `:197` | who writes training data (5 motives) `:205` · spam filter poisoning (Nelson 2008) `:214` · three questions `:224` |
+| **03 — Data Poisoning** | 19–32 | `:233` | two goals `:241` · boundary tilt `:249` · Biggio setup (error map SVG) `:257` · Biggio Fig 1 `:266` · Biggio Fig 3 `:276` · targeted `:292` · clean label (Frogs Fig 6a) `:301` · feature space (SVG) `:319` · fish/dog collision (3-step SVG) `:327` · Frogs setup `:336` · one poison (Frogs Fig 1) `:344` · 50 poisons (Frogs Fig 3b) `:360` · did / did not show `:371` |
+| **04 — Backdoors and Triggers** | 33–47 | `:393` | hidden "if" `:401` · guard-dog whistle `:409` · BadNets setup (outsourcing SVG) `:418` · BadNets Fig 3 `:427` · clean accuracy + ASR (SVG) `:437` · ASR by attack type (table in words) `:446` · all-to-all Fig 6 `:460` · Fig 4 `:477` · worked example 7 → 1 `:486` · reading the three numbers `:494` · traffic-sign trigger (Fig 7) `:508` · invisible triggers `:518` · shortcut `:526` · who can plant (Fig 1) `:535` |
+| **05 — Web-Scale Data** | 48–57 | `:545` | lists of links `:553` · est. $60/yr (Carlini Fig 1) `:561` · access ≠ damage `:578` · Wikipedia snapshot timeline (SVG) `:588` · frontrunning (Fig 6) `:598` · 2022 hashes (Table 1, HTML) `:614` · Nightshade motive + uptake `:631` · Nightshade Fig 7 `:640` · Glaze vs Nightshade `:656` |
+| **06 — Poisoning Language Models** | 58–75 | `:673` | four doors (pretrain / tune / RLHF / retrieval) `:681` · instruction tuning defined `:690` · Wan Fig 1 rows `:698` · Souly Fig 1a `:711` · 250 docs token-fraction table `:721` · Souly Fig 2 `:736` · does/does not say `:745` · RLHF poisoning setup (Rando) `:766` · RLHF results table `:776` · RAG poisoning (PoisonedRAG) `:791` · fake support numbers (Aurascape) `:801` · Pravda network (NewsGuard) `:811` · in the wild: documented vs not `:821` · why build a backdoor on purpose `:841` · Sleeper Fig 1 stage 1 `:849` · Fig 2a `:866` · got in vs stayed `:886` |
+| **07 — Defenses, and What to Ask** | 76–91 | `:903` | why poison is hard to find `:911` · three places to defend `:919` · hashes `:927` · spectral idea (SVG) `:936` · spectral (Tran Fig 3) `:948` · Tran Fig 1 `:959` · spectral needs/assumes/fails `:975` · Neural Cleanse idea (SVG) `:986` · Neural Cleanse `:999` · NC needs/assumes/fails `:1004` · five questions `:1018` · applied to $60 `:1026` · established vs open `:1041` · takeaways `:1061` · closer `:1075` |
+
+**Key citations (checked against saved PDFs, 2026-10-10; register in the review package):** Gu,
+Dolan-Gavitt & Garg 2017 (BadNets; Figs 1, 3, 4, 6, 7, 8); Biggio, Nelson & Laskov ICML 2012 (Figs 1, 3);
+Shafahi et al. NeurIPS 2018 (Figs 1, 3b, 6a; Eq. 1); Carlini et al. IEEE S&P 2024 (Fig 1, Fig 6,
+Table 1; §4.4–4.5, §6.2); Wan et al. ICML 2023 (Fig 1); Souly et al. 2025 (arXiv 2510.07192;
+Figs 1–2); Hubinger et al. 2024 (arXiv 2401.05566; Figs 1–2); Shan et al. Glaze (USENIX Sec 2023) and
+Nightshade (IEEE S&P 2024); Tran, Li & Madry NeurIPS 2018 (Fig 1, Fig 3, Algorithm 1, Table 2); Wang
+et al. Neural Cleanse IEEE S&P 2019 (§III, §IV, §VIII). Notes only: Chen et al. 2018 (activation
+clustering), Liu et al. RAID 2018 (fine-pruning), Gao et al. 2019 (STRIP).
+
+**Figures (24 cited crops in `figs/`):** `lapuschkin-clever-hans-tag.png` `:107` · `badnets-real-stopsign.png` `:137` · `biggio-gradient-attack.png` `:270` · `biggio-multipoint.png` `:280` · `frogs-schematic.png` `:305` · `frogs-transfer-attack.png` `:348` · `frogs-feature-b.png` `:363` · `badnets-mnist-triggers.png` `:431` · `badnets-error-vs-poison.png` `:464` · `badnets-confusion.png` `:480` · `badnets-trigger.png` `:511` · `badnets-approaches.png` `:538` · `carlini-cost.png` `:566` · `carlini-wiki-cdf.png` `:602` · `nightshade-fig7-poisoned-concepts.png` `:644` · `wan-train-row.png` `:703` · `wan-test-row.png` `:705` · `souly-overview.png` `:715` · `souly-constant-count.png` `:739` · `sleeper-setup.png` `:854` · `sleeper-code-vuln.png` `:870` · `spectral-pipeline.png` `:949` · `tran-data-eig.png` `:963` · `tran-rep-eig.png` `:964`. HTML tables: `:450`, `:497`, `:617`, `:659`, `:725`, `:779`, `:975`, `:1007`, `:1029`. Inline SVG: `:90`, `:99`, `:116`, `:126`, `:167`, `:175`, `:183`, `:191`, `:208`, `:218`, `:227`, `:244`, `:252`, `:261`, `:295`, `:322`, `:330`, `:339`, `:404`, `:412`, `:421`, `:440`, `:489`, `:521`, `:529`, `:556`, `:581`, `:591`, `:635`, `:684`, `:693`, `:770`, `:795`, `:805`, `:815`, `:844`, `:914`, `:922`, `:930`, `:939`, `:989`, `:998`, `:1021`.
+
+**2026-10 rebuild (65 → 59):** rebuilt to the slides-review brief (#106). Model stealing,
+activation clustering and fine-pruning slides removed from the deck (the last two are in the notes
+table). The figures `tramer-extraction`, `actclust-pca`, `finepr-activations`, `glaze-results`,
+`nightshade-outputs` and `wan-trigger-phrases` were deleted.
+Round 2 (slides-review #112): token-fraction fix (Souly), ASR per mapping, scoped claims (P5, 7, 10,
+12, 14, 15, 18, 34, 36, 39, 42, 53, 59), figures recaptured or re-selected (P17, 31, 37, 38, 40, 41,
+43, 44, 51); `wan-overview`, `carlini-datasets-table` and `spectral-histograms` replaced and deleted.
+
+**2026-10-25 motivation revision (59 → 91):** after the lec08 pattern — integrity goal first, like-you're-five and setup slides before each figure-heavy study, seven sections; new figures `lapuschkin-clever-hans-tag.png` and `nightshade-fig7-poisoned-concepts.png`; in-the-wild retrieval poisoning added at Albert's request. Build: `/workspace/agent/lec09/r4/build_deck.py` (agent workspace).
+
+**Note:** `lec09-poisoning-note.html` — 91 entries. Each entry has a minute
+budget and elapsed time, a script, and a key takeaway. Content slides add the figure,
+setup/model/date, what the slide establishes and does not establish, assumptions, and
+primary-source links. The defense comparison table is in entry 78 (Spectral, AC, NC,
+Fine-Pruning, STRIP, hashes); the worked-example code is in entry 42.
+
+**Tech:** `lec09tech.html` — 18 slides:
+- count N, doc fraction N/|D|, token fraction N·L̄/T with Souly numbers (4)
+- Frogs Eq. 1 (5–6, ℓ∞ variant)
+- feature map needed (7)
+- backdoor objective, "common formalization"; λ = α/(1−α) (8)
+- ASR with y ≠ y_t (9)
+- spectral τ, 1.5ε removal (11–12)
+- separation as an assumption (13)
+- Neural Cleanse Eq. 3 (14)
+- MAD anomaly index, MAD > 0, flags a *suspected* label (15)
+- activation clustering; smaller-cluster rule as a heuristic (16)
+- adaptive-attack caveat (17)
+
+## lec10-jailbreak.html
+
+**Topic:** Jailbreaks (90 min; mixed-major sophomores/juniors; concept-first, light math, no proofs;
+**no activities**; no working jailbreak strings). Opens general before specific: assistants help but decline some
+requests, why getting around refusal matters (uplift, scale, agency), jailbreak prompts shared in the wild (Shen
+et al.), then Wei Fig 1 as the example. Jailbreak defined as bypassing safeguards *through inputs*; prompt
+injection, poisoning and weight-level safety removal separated (the last as a labelled contrast). Alignment →
+safety training → refusal made explicit (Ouyang; Bai), with Llama 2 Chat's safety recipe (Touvron §4.2) as the
+worked example. Under- vs over-refusal; access ladder; every ASR needs denominator, budget, model/version, judge.
+Fragility: Wei's two failure modes and Table 1; shallow alignment step by step (Qi 2025: stock opening, forced
+openings on the base model, Figs 1–2, recovery-example construction, Table 2) and one refusal direction (Arditi:
+method in three steps, then Fig 1) as findings in tested settings; fine-tuning as a service explained before the
+Qi 2024 contrast (Tables 1–3). Search: GCG (≈256K evaluations; transfer Table 2, ensemble 86.6/46.9 is any-of-4)
+vs PAIR (attacker, target and judge models pass only text; ≤ 90 queries, Table 2). Budget: test-time scaling in
+general (Brown; Snell), any-of-N illustration, in-context learning → many-shot (Fig 2; Fig 5 axes explained;
+intercept not slope; 61% → 2% warning, non-adaptive), Best-of-N (Fig 3; resend reliability Table 1), translation
+and cipher attacks on separate slides with the StrongREJECT re-check. Evaluation: judge ladder, PAIR judge
+Table 1, StrongREJECT Fig 1 (redrawn, redacted), HarmBench length, XSTest over-refusal, Ganguli κ = 0.32.
+Defenses: Constitutional Classifiers (Fig 1 redrawn; two tests, each with its cost) and circuit breakers (one-line
+idea, two training losses, Table 1) + adaptive re-attack (Schwinn &amp; Geisler; BoN). Monitoring: Anthropic's
+self-assessment (Zhang et al., Safeguards blog, Oct 2026) with self-attribution bias (Khullar et al. 2026) as the
+main limit. Excludes prompt injection (lec13), poisoning (lec09). Math in `lec10tech.html`.
+
+### Sections (88 slides, 90 min: safety training 13 · fragility 17 · search 11.5 · attack budget 18.5 · evaluation + defenses 17.5 · self-assessment 9 · wrap-up 3.5)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:38`, `:50` | |
+| **01 — What Safety Training Adds** | 3–13 | `:83` | assistants help, decline some (SVG) `:91` · why it matters: uplift, scale, agency (SVG) `:100` · in the wild (Shen et al., stat tiles) `:109` · refused then answered (Wei Fig 1, redacted) `:125` · definition + neighbouring threats (HTML) `:136` · alignment → safety training → refusal (SVG) `:152` · Llama 2 Chat safety recipe (SVG) `:162` · two ways to fail (SVG) `:172` · access ladder (SVG) `:180` · four ASR labels (SVG) `:188` |
+| **02 — Why Refusal Is Fragile** | 14–30 | `:198` | two hypotheses (SVG) `:206` · competing objectives (SVG) `:216` · key-wording ablations (SVG) `:225` · mismatched generalization (SVG) `:235` · Wei Table 1 (HTML) `:244` · stock opening phrase (SVG) `:260` · base model with forced openings (bars) `:271` · per-token KL (Qi 2025 Fig 1) `:282` · prefilling (Qi 2025 Fig 2) `:299` · recovery-example construction (SVG) `:316` · recovery augmentation (Table 2, HTML) `:326` · refusal-direction method, three steps (SVG) `:343` · refusal direction (Arditi Fig 1) `:353` · fine-tuning as a service (SVG) `:363` · fine-tuning contrast (Qi 2024, HTML) `:373` · findings × access (HTML) `:389` |
+| **03 — Searching for Jailbreaks** | 31–41 | `:404` | families (SVG) `:412` · search loop (SVG) `:421` · GCG objective (SVG) `:430` · GCG step + 256K budget (SVG) `:441` · transfer (GCG Fig 1) `:450` · transfer table (GCG Table 2, HTML) `:466` · PAIR's three models: Mixtral attacker, target, Llama Guard judge (SVG) `:481` · one round (Chao Fig 2, redacted) `:491` · PAIR vs GCG (Chao Table 2, HTML) `:500` · gradient vs LLM search (HTML) `:517` |
+| **04 — Scaling the Attack Budget** | 42–59 | `:533` | test-time scaling (SVG) `:541` · Brown: 250 samples, 15.9% → 56% (SVG) `:550` · Snell: 4× / 14× (stat tiles) `:561` · any-of-N bars (SVG, illustrative) `:575` · in-context learning (SVG) `:584` · many-shot schematic: fake question, fake compliant answer (SVG) `:595` · MSJ Fig 2 `:605` · intercept vs slope, axes explained (MSJ Fig 5 middle panel) `:623` · BoN augmentations (SVG) `:641` · BoN Fig 3 (Text panel + legend) `:652` · resend reliability (Table 1 as bars) `:670` · translation protocol (SVG) `:682` · translation results (bars) `:694` · CipherChat (SVG) `:705` · two studies, two protocols (HTML) `:716` · adversarial example vs jailbreak (SVG) `:732` · budget summary `:740` |
+| **05 — Evaluation and Defenses** | 60–76 | `:753` | judge ladder (SVG) `:761` · PAIR judge table (HTML) `:769` · StrongREJECT (Fig 1 redrawn, redacted) `:785` · HarmBench Fig 2 `:796` · XSTest with system-prompt column (HTML) `:813` · Ganguli setup: four model kinds (HTML) `:830` · Ganguli Fig 1 left panel `:847` · three defense places (SVG) `:865` · Constitutional Classifiers (Fig 1 redrawn) `:873` · CC test 1: bug bounty (stat tiles) `:882` · CC test 2: Haiku classifiers (bars) `:898` · circuit breakers (CB Fig 1 top row) `:910` · CB training: two losses (SVG) `:920` · CB Table 1 (HTML) `:931` · better optimization (Schwinn &amp; Geisler; BoN; bars) `:946` · asymmetry (SVG) `:958` |
+| **06 — Monitoring With Self-Assessment** | 77–85 | `:966` | why monitor, not only block (SVG) `:974` · existing monitors: cheap vs flexible (SVG) `:985` · one extra question per reply: KV cache, ≈10 tokens (SVG) `:995` · distillation from a costly teacher (SFT + RL, SVG) `:1005` · recall 78% / 94% at 1% FPR (stat tiles) `:1017` · leave-one-out (SVG) `:1033` · weak real-time blocker: 13/24 vs 6/24 (bars) `:1045` · limits: self-attribution bias (SVG) `:1057` |
+| Wrap-up | 86–88 | — | checklist (7 questions incl. access, denominator; HTML) `:1066` · takeaways `:1082` · closer `:1096` |
+
+**Key citations (checked against saved PDFs, 2026-10-10; new sources 2026-11-02):** Shen et al. ACM CCS 2024
+(arXiv 2308.03825; Abstract, §1, §4.1); Touvron et al. 2023 Llama 2 (arXiv 2307.09288; §4.2); Wei, Haghtalab &amp;
+Steinhardt NeurIPS 2023 (Fig 1, §3, Table 1); Ouyang et al. NeurIPS 2022; Bai et al. 2022 (arXiv 2212.08073); Qi
+et al. ICLR 2025 (arXiv 2406.05946; §2.2, Table 1, Figs 1–2, §3.1, Table 2); Arditi et al. NeurIPS 2024 (Fig 1); Qi et al. ICLR
+2024 (arXiv 2310.03693; Tables 1–3); Zou et al. 2023 GCG (arXiv 2307.15043; Fig 1, Algorithm 1, Table 2 — ensemble
+86.6% GPT-3.5 / 46.9% GPT-4, single suffix ≈34%; the old "84%" claim was wrong); Chao et al. PAIR (arXiv
+2310.08419; Fig 2, Tables 1–2); Brown et al. 2024 (arXiv 2407.21787; Abstract, §1, Fig 1); Snell et al. 2024
+(arXiv 2408.03314; §2, §7, Figs 5 and 9); Anil et al. NeurIPS 2024 (Figs 1, 2, 5; §4.1, §5.4); Hughes et al. BoN
+(arXiv 2412.03556; §2, Fig 3, §3.1, Table 1, §5.4); Yong et al. 2023 (arXiv 2310.02446; Table 1); Yuan et al.
+CipherChat ICLR 2024; Souly et al. StrongREJECT NeurIPS 2024 (Fig 1, Table 2); Mazeika et al. HarmBench ICML 2024
+(Fig 2, §3.2); Röttger et al. XSTest NAACL 2024 (Table 1); Ganguli et al. 2022 (Fig 1 left panel, §3.4–3.5, §4);
+Sharma et al. 2025 (arXiv 2501.18837; Fig 1, §3–5, Fig 6); Zou et al. Circuit Breakers NeurIPS 2024 (Fig 1,
+Algorithm 1, Table 1); Schwinn &amp; Geisler 2024 (arXiv 2407.15902; Table 1); Zhang et al., "Scaling Misuse
+Detection with Self-Assessment", Anthropic Safeguards blog, Oct 2026 (Figs 1–5); Khullar et al. 2026 (arXiv
+2603.04582). Notes only: Perez et al. EMNLP 2022.
+
+**Figures (13 cited image files in `figs/`):** `wei-jailbroken-redacted.png` `:125` · `qi25-kl.png` `:282` ·
+`qi25-prefill.png` `:299` · `arditi-fig1.png` `:353` · `gcg-schematic.png` `:450` · `pair-fig2-redacted.png` `:491` ·
+`msj-fig2ab.png` `:605` · `msj-fig5-rl.png` (MSJ Fig 5 middle panel) `:623` · `bon-fig3-text.png` +
+`bon-fig3-legend.png` `:652` · `harmbench-fig2.png` `:796` · `ganguli-redteam.png` (Fig 1 left panel) `:847` ·
+`cb-top.png` `:910`. Redacted by the lecturer, with disclosure in the cite and note: Wei Fig 1 (demanded-opening
+wording, Base64 payload) and PAIR Fig 2 (rewritten prompt, reply); `wei-jailbroken.png` (unredacted) is kept only
+for lec01. Redrawn as SVG with disclosure: MSJ Fig 1 (schematic, dialogue contents not shown), StrongREJECT Fig 1
+(redacted), Constitutional Classifiers Fig 1 (simplified).
+
+**2026-10 rebuild (60 → 58):** rebuilt to the slides-review brief (#118). Persona/fake-authority/obfuscation
+zoo, system-prompt hardening, demo and "frontier" slides removed; evaluation and defenses expanded to 20 min.
+Figures `ouyang-3steps`, `ouyang-winrate`, `bai-cai`, `qishallow-kl`, `arditi-refusal`, `gcg-asr`,
+`gcg-transfer`, `pair-schematic`, `msj-powerlaw`, `yong-translate`, `yong-table`, `cipher-overview`,
+`qift-overview`, `szegedy-ostrich`, `ganguli-success`, `perez-overview`, `sharma-overview`, `cb-overview`,
+`bon-powerlaw` were deleted. Review round 2 (slides-review #120) deleted the unredacted PAIR Fig 2 and
+full three-panel BoN Fig 3 crops (replaced by the redacted / text-panel versions) and replaced the old slide 35
+sketch with the real Fig 5 panel.
+
+**2026-11-02 Albert feedback round (58 → 88):** diagram labels enlarged and every table re-aligned (headers
+over their columns); generic motivation (4–6) before the Wei example (7), whose point is now its title; safety
+training and refusal introduced explicitly, with Llama 2 Chat as the example (9–10); shallow alignment step by
+step (20–25, incl. what the Augmented model was trained on); Arditi's method before its figure (26–27);
+fine-tuning as a service explained (28); GCG Fig 1 author note moved to the cite (36); PAIR's judge made explicit
+(38–39); test-time scaling (43–45) and in-context learning (47) added before the budget attacks; many-shot
+schematic without "[redacted]" (48); MSJ Fig 5 and BoN Fig 3 axes stated first (50, 52); resend reliability as
+bars (53); crowded slides split: competing objectives (16–17), translation/ciphers (54–57), Ganguli (66–67),
+Constitutional Classifiers evidence (70–71), circuit breakers (72–73, one-line idea and what it does not
+break); the re-attack framed as better optimization (75); new Section 06 on Anthropic's self-assessment monitor
+(77–85). Fixes: aligned model shown at 0% on slide 21 (was 2.1%); XSTest is Table 1; Ganguli is the Fig 1 left
+panel; a "universal" Constitutional Classifiers jailbreak means all 10 questions at half the detail of an
+unguarded model.
+
+**Note:** `lec10-jailbreak-note.html` — 88 entries. Each entry has a minute budget and elapsed time, a script,
+and a key takeaway. Content slides add the figure, setup/model/date, what the slide establishes and does not
+establish, assumptions, and primary-source links (26 sources). The BoN reliability inconsistency (Table 1
+caption vs body vs rows) is recorded in entry 53; the Brown plateau inconsistency (abstract vs §4) in entry 44.
+
+**Tech:** `lec10tech.html` — 21 slides:
+- ASR estimate + binomial SE (4)
+- any-of-N $1-(1-p)^N$ and $N_q$ (5); heterogeneous $p_i$ (6)
+- judge error correction (7); retry amplifies false positives (8)
+- RLHF KL objective (10); per-token KL $D_k$ (11); refusal direction + ablation (12)
+- GCG loss (14); GCG step and 256K budget (15); PAIR $N_s \times K = 90$ (16)
+- MSJ $Cn^{-\alpha}+K$ with NLL, C, α, K defined (18); intercept vs exponent, slope −α (19); BoN $-\log\mathrm{ASR}=aN^{-b}$ (20)
+
+## lec11-synthetic-media.html
+
+**Topic:** Synthetic media: watermarks, detection and provenance (90 min; mixed-major sophomores/juniors;
+concept-first, light math, no proofs; **no activities**). Generic opener: realistic generated images (Midjourney pope,
+Sora frame), Nightingale &amp; Farid faces study (48.2% / 59.0%), real harms (Pentagon image, Biden robocall FCC fines,
+Arup); Arup deepfake call (HKD 200M / ≈ USD 25M) as the
+origin case; visible Gemini sparkle vs an invisible keyed mark (Apollo 11 demo); three kinds of evidence — embed (watermark), guess (detector), sign (provenance) — and
+"origin is not truth" (no mark ≠ human; no credentials ≠ fake). KGW taught thoroughly as the one mechanism:
+keyed green list, boost δ, green-count z-test, threshold → nominal FPR, √T growth, repeated pairs → nominal vs
+measured threshold (K24 Fig 7 right), δ-vs-perplexity trade-off; distortion-free / undetectable named only, as two
+different guarantees, then one slide each on Kuditipudi EXP (Fig 1) and Christ–Gunn–Zamir. Robustness
+compared only with setups: Kuditipudi random swaps (m = 35, median p-value), Krishna DIPPER (300 tokens, 1% FPR), Sadasivan
+recursive paraphrase, TV defined then the impossibility bound, K24 human rewrites (~800 tokens at 10⁻⁵) and copy-paste dilution; TV bound vs empirical
+robustness as differently scoped claims. SynthID in detail: family (image / audio / video / text), pipeline (Fig 1),
+tournament (Fig 2), mean g-score, Fig 3a, limits. Production: Tree-Ring image
+table, a detector finds only the marks it supports, three meanings of "standard". Keyless detection: overlapping
+scores, labelled base-rate illustration (FPR ≠ P(human | flagged)), Liang 2023, the US Constitution flagged as AI
+(GPTZero; Binoculars 0.76; memorized human text can trigger perplexity-based detectors), the withdrawn OpenAI
+classifier (explicitly historical), DFDC private test. Provenance: C2PA manifest, signed edit chain,
+supported / on by default / preserved, soft bindings; labelling law (China 1 Sep 2025, Korea 22 Jan 2026,
+EU Art. 50 2 Aug 2026; Art. 50(2) transition to 2 Dec 2026); EU Code of Practice text marking (≥ 200 tokens) and
+the OpenAI (eligible EU ChatGPT / Codex output) and Anthropic (supported Claude models, worldwide) text watermarks. Excludes model-weight watermarks and copyright. Math in `lec11tech.html`.
+Rigorous treatment: `courses/privacy/lectures/06-watermark/`.
+
+### Sections (74 slides, 90 min: problem 14 · watermarking 20 · robustness + production 25 · detection 13 · provenance + policy 12 · synthesis 6)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:36`, `:48` | |
+| **01 — The Provenance Problem** | 3–13 | `:81` | generated media looks real (pope + Sora) `:89` · faces study (bar chart) `:101` · real-world consequences (3 cards) `:112` · Arup case (SVG) `:121` · visible Gemini sparkle `:131` · invisible mark demo `:144` · embed / guess / sign `:154` · origin is not truth (table) `:162` · three questions `:170` · scope: outputs not models `:183` |
+| **02 — Text Watermarking** | 14–27 | `:203` | token-by-token (SVG) `:211` · keyed split `:220` · boost δ `:230` · KGW Fig 1 `:239` · chance rate γ `:255` · threshold `:263` · KGW Fig 3a `:274` · repeats: mechanism `:291` · repeats: K24 Fig 7 right `:302` · KGW Fig 2 left `:318` · distortion-free / undetectable `:336` · Kuditipudi EXP (Fig 1) `:356` · Christ–Gunn–Zamir `:367` |
+| **03 — Robustness and Production** | 28–47 | `:379` | attack ladder (SVG) `:387` · Kuditipudi Fig 4b `:396` · DIPPER (Krishna Table 1 redrawn) `:413` · Sadasivan Fig 3a legend (bars redrawn) `:424` · TV defined `:435` · TV bound curve `:446` · K24 Fig 4 right `:456` · K24 Fig 2 copy-paste (redrawn) `:474` · compare with setups (takeaway; table in note) `:484` · impossible vs robust `:496` · SynthID family `:513` · SynthID Fig 1 `:524` · SynthID Fig 2 tournament `:534` · mean g-score `:544` · SynthID Fig 3a `:559` · SynthID limits `:575` · Tree-Ring Table 2 subset `:585` · detector finds only supported marks `:601` · three "standards" `:611` |
+| **04 — Detecting Without a Watermark** | 48–58 | `:625` | overlapping scores `:633` · base-rate tree (labelled illustration) `:642` · FPR vs P(human\|flag) `:651` · Liang Fig 1a `:675` · US Constitution flagged `:691` · memorized human text (perplexity axis) `:701` · OpenAI classifier `:712` · DFDC split `:733` · DFDC Table 2 redrawn (log loss) `:742` · lead not verdict `:753` |
+| **05 — Provenance and Policy** | 59–68 | `:767` | detection vs provenance `:775` · C2PA manifest (SVG) `:794` · signed chain `:804` · supported / default / preserved (vendor's words) `:814` · soft binding `:829` · law timeline `:839` · two kinds of label `:848` · EU text rule (Code of Practice) `:862` · ChatGPT and Claude text marks `:872` |
+| **06 — Synthesis** | 69–74 | `:883` | embed / guess / sign table `:891` · three cases `:905` · checklist (7 questions) `:918` · takeaways `:934` · closer `:947` |
+
+**Key citations (checked against saved PDFs / pages, 2026-10-10):** Kirchenbauer et al. ICML 2023 (arXiv
+2301.10226; Alg 2, §3, Figs 1, 2, 3a); Kirchenbauer et al. ICLR 2024 (arXiv 2306.04634; Figs 2, 4 right, 7 right, App A.3);
+Kuditipudi et al. TMLR (arXiv 2307.15593; Def 1, Fig 4a/4b, m = 35); Christ, Gunn &amp; Zamir (arXiv 2306.09194);
+Krishna et al. NeurIPS 2023 (arXiv 2303.13408; Table 1); Sadasivan et al. TMLR 2025 (arXiv 2303.11156; Thm 1,
+Fig 3a legend); Dathathri et al. Nature 634 (2024; Fig 3a); Wen et al. Tree-Ring NeurIPS 2023 (Table 2); Liang et al.
+Patterns 2023 (Fig 1a); OpenAI classifier post (Jan / Jul 2023, via archive); Dolhansky et al. DFDC (arXiv
+2006.07397; §3, §5–6, Table 2); C2PA Technical Specification 2.2 (May 2025; §9.1–9.2) + Soft Binding API; Google SynthID Detector
+post (May 2025, vendor statement); Arup (CNN, May 2024). Added 2026-11 (Albert r1): Dathathri et al. Figs 1, 2, eq. (1);
+Kuditipudi Fig 1; Nightingale &amp; Farid PNAS 2022; Pentagon image (NPR, AP, Bloomberg, May 2023); FCC DA 24-790 and
+Kramer forfeiture (Sept 2024); Ars Technica on the Constitution / GPTZero; Hans et al. Binoculars; Google Keyword
+(26 Aug 2025, 20 Nov 2025); EU Code of Practice on Transparency of AI-Generated Content (10 Jun 2026, Measure 1.1); BleepingComputer (5 Oct 2026); City A.M. (12 Aug 2026); OpenAI and Anthropic help-centre pages. Law (official texts, snapshots in the r2 review package): CAC Measures
+国信办通字〔2025〕2号 + GB 45438-2025; Reg. (EU) 2024/1689 Arts. 50, 99, 113 and Reg. (EU) 2026/1744; Korea AI Basic
+Act Arts. 31, 40, 43 and Enforcement Decree Art. 23 (law.go.kr). Products (vendor pages): Leica Content Credentials
+page, Samsung Newsroom US (7 Feb 2025), Google Keyword blog (10 Sep 2025).
+
+**Figures (16 cited image files in `figs/`):** `pope-puffer-midjourney.jpg` `:94` · `sora-tokyo.jpg` `:95` (shared with lec01) ·
+`sm-gemini-sparkle.png` `:136` · `sm-gemini-sparkle-corner.png` `:137` · `sm-invisible-wm-demo.png` `:148` (own demo, Apollo 11 photo) ·
+`sm-kgw-fig1.png` `:244` · `sm-kgw-fig3a.png` `:279` · `sm-k24-fig7r.png` `:307` · `sm-kgw-fig2l.png` `:323` ·
+`sm-kud-fig1.png` `:360` · `sm-kud-fig4b.png` `:402` · `sm-k24-fig4r.png` `:462` · `sm-synthid-fig1.png` `:528` ·
+`sm-synthid-fig2.png` `:538` · `sm-synthid-fig3a.png` `:564` · `liang-toefl.png` `:681`.
+Redrawn (inline SVG/HTML, disclosed in cites): Krishna Table 1 (KGW rows), Sadasivan Fig 3a legend values (bars),
+K24 Fig 2 copy-paste values read from the figure (range bars), Tree-Ring Table 2 (subset), DFDC Table 2.
+Illustrative (labelled): next-word bars, green strips, z-curves, base-rate tree, g-score grids, perplexity axis.
+Charted from paper numbers: Nightingale &amp; Farid accuracy bars.
+
+**2026-10 rebuild:** replaces the former Wk 11 prompt-injection deck (moved unchanged to
+backup-prompt-injection, since rebuilt as `lec13-prompt-injection.html`) and the former Wk 12 watermark deck (lec12-watermark, 68 sl; deleted with its note,
+its tech file and 13 figures used only by it: `dfdc-logloss`, `kgw-example`, `kgw-zscore-length`,
+`kgw-zscore-ppl`, `kirchenbauer-human-paraphrase`, `kirchenbauer-robust-bars`, `krishna-dipper`,
+`kud-protocol`, `kud-substitution`, `sadasivan-roc`, `sadasivan-vuln`, `synthid-detect`, `synthid-overview`).
+Built to the slides-review brief (#126). Review round 2 (slides-review #128): z &gt; 4 as a normal-approximation
+tail; repeat-scoring scoped to WikiText; distortion-free vs undetectable separated; C2PA validity vs signer trust;
+law and product rows from official texts; median p-value, TV and log-loss readings corrected; crops `sm-k24-fig7`,
+`sm-kud-fig4` replaced by single panels and `sm-sad-fig3a`, `sm-k24-fig2` by redrawn charts (old files deleted).
+
+**Note:** `lec11-synthetic-media-note.html` — 74 entries with minute budget and elapsed time, script, key
+takeaway; content slides add figure, setup/model/date, establishes / does not establish, assumptions and
+primary-source links (22 sources). Entry 65 carries the three-jurisdiction table from the official texts (enacted
+text / applies from / who / form / exceptions / enforcement). Entry 37 carries the robustness-study setups table cut from the deck. Entry 27 carries an EXP vs. Christ–Gunn–Zamir comparison (randomness source / guarantee / repeated queries / edits), notes only.
+
+**Tech:** `lec11tech.html` — 14 slides:
+- green-list rule (4); idealized independent-Bernoulli null (5); z-statistic, normal-approximation 3×10⁻⁵ vs exact
+  tail at T = 20 (6)
+- √T growth under constant green rate (7); repeated pairs, m > 1, scoped to WikiText (8)
+- base-rate formula with the 2% / 20% examples (10); TV definition, bound + proof idea, keyed detectors (11);
+  distortion-free (fresh key) vs undetectable (12); SynthID-Text seed, tournament, mean g-score eq. (1) (13)
+
+## lec12-fairness.html
+
+**Topic:** Fairness (90 min; mixed-major sophomores/juniors; concept-first, light math, no proofs on the
+slides; **no activities**). Where bias enters (opens with the Obermeyer cost-as-proxy case; sampling, labels, feedback;
+Gender Shades benchmark composition; why dropping the protected attribute fails). Measuring fairness: four rates and
+their denominators, demographic parity, equalized odds (Hardt ROC plane), calibration within groups vs predictive
+parity, five criteria on the same FICO data. COMPAS: ProPublica vs Northpointe as different criteria, rearrest
+≠ offending, base rates, Chouldechova identity, Kleinberg et al. conditions, a calibrated worked example with
+unequal errors, choosing by context. Mitigation at three points (reweighing, reductions, group thresholds), each
+measured result shown with criterion, population, utility and assumptions; an empirical tradeoff is not the
+optimal frontier; method cards. Beyond classifiers: Gender Shades and the Actionable Auditing follow-up, BBQ,
+Bianchi text-to-image stereotypes; governance obligations and limits (~3.5 min). Math in `lec12tech.html`.
+
+### Sections (56 slides, 90 min: where bias enters 10 · measuring 20 · COMPAS + impossibility 15 · mitigation 20 · beyond classifiers 15 · synthesis 10)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:30`, `:42` | |
+| **01 — Where Bias Enters** | 3–10 | `:74` | Obermeyer cost proxy `:83` · model learns its world `:108` · three places `:125` · sampling (Gender Shades composition) `:141` · label problem `:164` · feedback loop `:181` · drop race fails `:207` |
+| **02 — Measuring Fairness** | 11–21 | `:229` | notation (Y = recorded outcome) `:236` · four rates `:253` · demographic parity `:287` · equalized odds `:306`, `:321` · Hardt ROC plane `:343` · calibration `:355` · calibration vs PPV `:370` · five criteria `:387` · FICO thresholds `:402` |
+| **03 — COMPAS and Impossibility** | 22–34 | `:414` | what COMPAS is `:421` · FPR by group `:440` · within subgroups `:463` · Northpointe, read by row `:482` · different criteria `:496` · rearrest ≠ offending `:513` · base rates `:530` · Chouldechova `:548` · Kleinberg `:566` · worked example `:580` · why the gap appears here `:605` · context `:627` |
+| **04 — Mitigation** | 35–45 | `:644` | three places `:651` · reweighing `:683`, `:699`, `:718` · reductions `:732`, `:748` · group thresholds `:764` · FICO cost `:775` · empirical tradeoff ≠ optimal frontier `:794` · method cards `:810` |
+| **05 — Beyond Classifiers** | 46–52 | `:824` | Gender Shades (Table 4 redrawn as SVG) `:831` · after the audit `:843` · BBQ `:882`, `:901` · Bianchi `:913` · governance `:932` |
+| **06 — Synthesis** | 53–56 | `:948` | checklist `:955` · takeaways `:969` · closer "Which rate?" `:983` |
+
+**Key citations (checked against saved PDFs / pages, 2026-10-10):** Obermeyer et al. Science 2019; Buolamwini
+&amp; Gebru FAT* 2018 (Table 4); Raji &amp; Buolamwini AIES 2019; Dwork et al. ITCS 2012; Hardt, Price &amp; Srebro
+NeurIPS 2016 (Figs. 1, 2, 9, 11; FICO §7); Kleinberg, Mullainathan &amp; Raghavan ITCS 2017 (Thms 1.1, 1.2);
+Chouldechova Big Data 2017 (Def. 2.2, eq. 2.6, Figs. 1–3); Larson et al. ProPublica 2016; Dieterich et al.
+Northpointe 2016; Kamiran &amp; Calders KAIS 2012; Bellamy et al. AIF360 2018 (Figs. 4, 5b); Agarwal et al. ICML 2018
+(Fig. 1); Parrish et al. BBQ, Findings of ACL 2022 (Figs. 1, 3); Bianchi et al. FAccT 2023 (Fig. 3). Governance:
+NYC DCWP rules, NY State Comptroller audit (Dec 2025), Reg. (EU) 2024/1689 and 2026/1744, Colorado SB26-189, Korea
+AI Basic Act.
+
+**Figures (22 cited image files):** in `figs/`: `chouldechova-fpr-priors-hi.png` `:671` · `reweighing-aif360.png`
+`:1435`. In `figs/lec12-visual-motivation/` (2026-11): `p1-obermeyer-fig1a.png` `:135` · `p2-hardt-fig1-eqodds.png`
+`:478` · `p2-hardt-fig1-eqopp.png` `:496` · `p2-hardt-fig9-raw.png` `:565` · `p3-chouldechova-fig1-left.png` `:691` ·
+`p3-chouldechova-fig1-right.png` `:711` · `p4-reductions-adult.png` `:1563` · `p4-reductions-compas.png` `:1582` ·
+`p4-hardt-eo-panel.png` `:1602` · `p4-hardt-fico-profit.png` `:1619` · `p4-aif360-di-before.png` `:1668` ·
+`p4-aif360-di-after.png` `:1691` · five `p56-bbq-*` example crops `:1782`–`:1807` · `p56-bbq-fig3-scores.png` `:1844` ·
+`p56-bianchi-fig3-rows1-2.png` `:1854` · `p56-bianchi-fig3-row6.png` `:1855`. Gender Shades (S47) is an SVG redrawn from
+Table 4. Computed diagrams are inline SVG from `criteria_examples.py`, `calibrated_errors.py`, `reweighing.py`,
+`reductions_mix.py`, `p56_plot_values_audits.py` (same folder). The 2026-10 crops (`hardt-eqodds-roc.png`,
+`hardt-fico-thresholds.png`, `chouldechova-deciles.png`, `chouldechova-calib-pp.png`, `reductions-*.png`,
+`hardt-eo-threshold.png`, `hardt-fico-profit.png`, `aif360-di-panel.png`, `bbq-*-hi.png`, `bianchi-occupations.png`)
+are no longer on lec12 slides and stay in `figs/` for the backups.
+
+**2026-11 visual revision** (job `2026-11-10-lec12-visual-motivation`, record in `log/`): larger diagram labels,
+rebuilt arrows, motivating lending example (S74) and worked counts, original-figure crops, splits (S13a–d, S17a/b,
+S19a/b, S20a/b, S26a/b, S32a/b, S40a/b + S75, S41a/b, S43a/b, S44a/b, S49a/b, S50a/b, S51a/b, S54a/b), tech split
+to 23 pages.
+
+**2026-10 rebuild:** replaces the former Wk 11 prompt-injection deck (moved unchanged to
+backup-prompt-injection, since rebuilt as `lec13-prompt-injection.html`) and the former Wk 12 watermark deck (lec12-watermark, 68 sl; deleted with its note,
+its tech file and 13 figures used only by it: `dfdc-logloss`, `kgw-example`, `kgw-zscore-length`,
+`kgw-zscore-ppl`, `kirchenbauer-human-paraphrase`, `kirchenbauer-robust-bars`, `krishna-dipper`,
+`kud-protocol`, `kud-substitution`, `sadasivan-roc`, `sadasivan-vuln`, `synthid-detect`, `synthid-overview`).
+Built to the slides-review brief (#126). Review round 2 (slides-review #128): z &gt; 4 as a normal-approximation
+tail; repeat-scoring scoped to WikiText; distortion-free vs undetectable separated; C2PA validity vs signer trust;
+law and product rows from official texts; median p-value, TV and log-loss readings corrected; crops `sm-k24-fig7`,
+`sm-kud-fig4` replaced by single panels and `sm-sad-fig3a`, `sm-k24-fig2` by redrawn charts (old files deleted).
+
+**Note:** `lec11-synthetic-media-note.html` — 74 entries with minute budget and elapsed time, script, key
+takeaway; content slides add figure, setup/model/date, establishes / does not establish, assumptions and
+primary-source links (22 sources). Entry 65 carries the three-jurisdiction table from the official texts (enacted
+text / applies from / who / form / exceptions / enforcement). Entry 37 carries the robustness-study setups table cut from the deck. Entry 27 carries an EXP vs. Christ–Gunn–Zamir comparison (randomness source / guarantee / repeated queries / edits), notes only.
+
+**Tech:** `lec11tech.html` — 14 slides:
+- green-list rule (4); idealized independent-Bernoulli null (5); z-statistic, normal-approximation 3×10⁻⁵ vs exact
+  tail at T = 20 (6)
+- √T growth under constant green rate (7); repeated pairs, m > 1, scoped to WikiText (8)
+- base-rate formula with the 2% / 20% examples (10); TV definition, bound + proof idea, keyed detectors (11);
+  distortion-free (fresh key) vs undetectable (12); SynthID-Text seed, tournament, mean g-score eq. (1) (13)
+
+## lec12-fairness.html
+
+**Topic:** Fairness (90 min; mixed-major sophomores/juniors; concept-first, light math, no proofs on the
+slides; **no activities**). Where bias enters (opens with the Obermeyer cost-as-proxy case; sampling, labels, feedback;
+Gender Shades benchmark composition; why dropping the protected attribute fails). Measuring fairness: four rates and
+their denominators, demographic parity, equalized odds (Hardt ROC plane), calibration within groups vs predictive
+parity, five criteria on the same FICO data. COMPAS: ProPublica vs Northpointe as different criteria, rearrest
+≠ offending, base rates, Chouldechova identity, Kleinberg et al. conditions, a calibrated worked example with
+unequal errors, choosing by context. Mitigation at three points (reweighing, reductions, group thresholds), each
+measured result shown with criterion, population, utility and assumptions; an empirical tradeoff is not the
+optimal frontier; method cards. Beyond classifiers: Gender Shades and the Actionable Auditing follow-up, BBQ,
+Bianchi text-to-image stereotypes; governance obligations and limits (~3.5 min). Math in `lec12tech.html`.
+
+### Sections (74 slides, 90 min: where bias enters 10 · measuring 20 · COMPAS + impossibility 15 · mitigation 20 · beyond classifiers 15 · synthesis 10)
+
+Slide IDs (`data-slide-id`, note `<article data-slide-id>`) are stable across revisions; splits carry letters (S13a–d), new slides S74–S75.
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:30`, `:42` | |
+| **01 — Where Bias Enters** | 3–11 | `:74` | who gets the opportunity (S74) `:94` · Obermeyer cost proxy (Fig. 1a crop) `:131` · past records shape decisions `:148` · three places `:179` · benchmark composition (Gender Shades) `:228` · proxy label `:260` · missing outcomes `:290` · dropping a column `:322` |
+| **02 — Measuring Fairness** | 12–28 | `:363` | one decision, two outcomes `:390` · four rates as counts (S13a–d) `:401`–`:431` · demographic parity `:441` · equal opportunity `:452` · equalized odds `:463` · Hardt Fig. 1 (S17a/b) `:474`, `:492` · calibration `:509`, `:520`, `:530` · population compared `:540`, `:550` · Hardt Fig. 9 FICO thresholds `:560` |
+| **03 — COMPAS and Impossibility** | 29–43 | `:578` | what the audit measured `:599` · FPR by group `:639` · prior-count bins `:667` · Chouldechova Fig. 1 (S26a/b) `:687`, `:707` · different denominators `:727` · rearrest ≠ offending `:761` · base rates `:794` · three equalities `:935` · Kleinberg conditions `:967` · calibrated worked example (S32a/b, S33) `:1000`, `:1149`, `:1193` · choose the harm `:1223` |
+| **04 — Mitigation** | 44–59 | `:1261` | three places `:1286` · reweighing `:1319`, `:1381`, `:1428` · reductions loop and mixture (S40a/b, S75) `:1441`, `:1473`, `:1507` · Agarwal Fig. 1 Adult / COMPAS `:1559`, `:1578` · group thresholds `:1597` · FICO profit (S43a/b) `:1615`, `:1633` · AIF360 DI before/after (S44a/b) `:1663`, `:1686` · method summary `:1710` |
+| **05 — Beyond Classifiers** | 60–69 | `:1735` | Gender Shades Table 4 (SVG) `:1757` · re-audit `:1767` · BBQ examples (S49a/b) `:1777`, `:1797` · BBQ bias score `:1817`, `:1841` · Bianchi Fig. 3 (S51a/b) `:1850`, `:1861` · governance (NYC rules example) `:1887` |
+| **06 — Synthesis** | 70–74 | `:1906` | care case: label (S54a) `:1914` · fix (S54b) `:1952` · decision, denominator, tradeoff `:1968` · closer "Which rate?" `:1982` |
+
+**Key citations (checked against saved PDFs / page captures, 2026-10-10; new sources checked on
+arXiv 2026-10-20; register in the review package):** Geirhos 2019 (Fig 1; arXiv 1811.12231);
+Nguyen 2015 (Fig 1; arXiv 1412.1897); Goodfellow 2015 (Figs 1, 2; §3); Szegedy 2014 (Fig 5);
+Ilyas 2019 (Fig 1; Fig 2, App. Table 7); Papernot 2017 substitute attack (arXiv 1602.02697); Papernot 2016 (Fig 3; §5,
+Tables 3–4); Madry 2018 (Figs 1, 3; Table 2; ℓ2 appendix); Carlini & Wagner 2017 (notes/tech);
+Tsipras 2019 (Fig 1); Athalye 2018 (Table 1; §4 BPDA/EOT); Athalye EOT 2018; Carlini 2019
+checklist; Tramèr 2020; Croce & Hein 2020 (AutoAttack; all but 1 of >50 lower, 13 of 49 deterministic >10 pts, 8 >30 pts; §6, §6.1, Tables 2 and 4); Croce 2021 RobustBench
+(§3 restrictions); robustbench.github.io CIFAR-10 ℓ∞ snapshot 10 Oct 2026; Cohen 2019 (Figs 2–3,
+Thm 1, CERTIFY, Table 1, App. Table 2); Eykholt 2018 (Fig 1; Table 1 lab 100%, Table 3 drive-by
+100/84.8%, constrained pseudo-random crop 70%); Kurakin, Goodfellow & Bengio 2017 (§3.1 destruction rate, §3.2 setup, Table 3, §4; arXiv 1607.02533); Hendrycks & Dietterich 2019 (Fig 1); Jin 2020
+TextFooler (Table 6; arXiv 1907.11932); Zou 2023 GCG (Fig 1; arXiv 2307.15043); Carlini 2023
+(§6, Table 3; arXiv 2306.15447); Greshake 2023 (arXiv 2302.12173).
+
+**Note:** `lec08-adversarial-note.html` — 101 entries (core route ≈83.5 min; 8 slides marked optional: 66–67, 78–79, 82–84, 90); each has a minute budget and elapsed
+time, script, key takeaway; content slides add figure / setup-model-date / establishes / does
+not establish / assumptions / primary-source links. C&W formulation in entries 56 and 61; PGD restarts (Madry Fig 1) in entry 59; the three Athalye worked cases and Table 1 marks in entry 69.
+
+**Tech:** `lec08tech.html` — 24 slides: perturbation set (4), goals (5), FGSM (6), sign as the
+linearized optimum incl. ℓ2 (7), linear model $w^\top\eta=\varepsilon\|w\|_1$ (8), PGD with random
+start (9), projections (10), C&W (11), margin loss (12), min-max (14), Danskin with its smooth/unique-maximizer condition (15), cost (16),
+smoothed classifier (18), Cohen Thm 1 (19), Neyman–Pearson proof sketch (20), CERTIFY with
+Clopper–Pearson and α (21), radius reading (22), cost/scope (23).
+
+## lec09-poisoning.html
+
+**Topic:** Data poisoning and backdoors (90 min; mixed-major sophomores/juniors; concept-first,
+light math, no proofs; **no activities**; motivation-first, revised 2026-10-25; Albert r1 2026-10-27). Opens with integrity as the goal: an answer-key story, the Clever Hans source tag (Lapuschkin Fig 2a) as an accidental shortcut, then the BadNets stop sign (Gu Fig 8) as a planted one, and Tay (scoped quote). Who poisons and why: five motives, SpamBayes poisoning (Nelson LEET 2008: 101 emails = 1%). Poisoning is
+how and a backdoor is what (Venn); three framing questions (who writes the data, what the attacker
+wants, how it's measured). Availability vs targeted (Biggio Figs 1, 3); clean-label feature collision
+(Poison Frogs Figs 6a, 1, 3b: one poison, 100% of 1,099 trials in transfer; about 60% with 50 poisons end to end;
+limits slide). BadNets (Figs 3, 6, 4, 7, 1). ASR is defined per mapping (all-to-one, source-specific, all-to-all), plus an illustrative 7 → 1 worked example. Web scale: Carlini split-view (est. $60/yr → 0.01% of
+LAION-400M URLs) separates access cost from damage; frontrunning (Fig 6; 6.5% is a qualified estimate); 2022 hash snapshot vs post-disclosure (Table 1 as HTML). Wan
+instruction tuning (one train + one test row of Fig 1), after a four-doors map (pretraining, instruction tuning, RLHF, retrieval). Souly: 250 docs ≈ 420k tokens, a shrinking *token* fraction (12B → 0.0035%, 260B → 0.00016%); the
+pretraining trigger → gibberish DoS backdoor (Fig 1a); Fig 2 with legend (perplexity rise, not ASR); scope slide. Sleeper Agents: installation separate from
+persistence. RLHF poisoning (Rando &amp; Tramèr ICLR 2024: about 5% to survive RLHF). Retrieval-time poisoning: PoisonedRAG (5 texts, about 90%), fake support numbers in AI search (Aurascape, Dec 2025), Pravda network audit (NewsGuard, Mar 2025: 33.5% repeated), with a documented-vs-not slide. Nightshade motive and Fig 7 (50/100/300 poisons). Glaze ≠ Nightshade (different metrics, no cross-comparable numbers). Defenses: hashes catch changes, not
+pre-existing poison; spectral signatures and Neural Cleanse in depth (needs/assumes/fails); the
+rest in the notes table. Closing five-question checklist applied to the $60 claim. Excludes
+adversarial examples (lec08), jailbreaks (lec10), prompt injection (lec13). Math in `lec09tech.html`.
+
+### Sections (91 slides, 90 min: integrity 13 · who poisons 4 · poisoning 16 · backdoors 15 · web-scale data 10 · language models 18 · defenses + synthesis 14)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:30`, `:42` | |
+| **01 — Why We Want Integrity** | 3–14 | `:79` | answer-key story (SVG) `:87` · strangers' data `:96` · Clever Hans tag (Lapuschkin Fig 2a) `:104` · shortcut found by accident `:113` · accident vs on purpose `:123` · stop sign (Gu Fig 8) `:132` · Tay (Microsoft quote, scoped) `:148` · integrity def-card + 3 failure modes `:163` · why integrity matters `:172` · sticker meaning (test vs train time) `:180` · Venn: poisoning vs backdoor `:188` |
+| **02 — Who Poisons, and Why** | 15–18 | `:197` | who writes training data (5 motives) `:205` · spam filter poisoning (Nelson 2008) `:214` · three questions `:224` |
+| **03 — Data Poisoning** | 19–32 | `:233` | two goals `:241` · boundary tilt `:249` · Biggio setup (error map SVG) `:257` · Biggio Fig 1 `:266` · Biggio Fig 3 `:276` · targeted `:292` · clean label (Frogs Fig 6a) `:301` · feature space (SVG) `:319` · fish/dog collision (3-step SVG) `:327` · Frogs setup `:336` · one poison (Frogs Fig 1) `:344` · 50 poisons (Frogs Fig 3b) `:360` · did / did not show `:371` |
+| **04 — Backdoors and Triggers** | 33–47 | `:393` | hidden "if" `:401` · guard-dog whistle `:409` · BadNets setup (outsourcing SVG) `:418` · BadNets Fig 3 `:427` · clean accuracy + ASR (SVG) `:437` · ASR by attack type (table in words) `:446` · all-to-all Fig 6 `:460` · Fig 4 `:477` · worked example 7 → 1 `:486` · reading the three numbers `:494` · traffic-sign trigger (Fig 7) `:508` · invisible triggers `:518` · shortcut `:526` · who can plant (Fig 1) `:535` |
+| **05 — Web-Scale Data** | 48–57 | `:545` | lists of links `:553` · est. $60/yr (Carlini Fig 1) `:561` · access ≠ damage `:578` · Wikipedia snapshot timeline (SVG) `:588` · frontrunning (Fig 6) `:598` · 2022 hashes (Table 1, HTML) `:614` · Nightshade motive + uptake `:631` · Nightshade Fig 7 `:640` · Glaze vs Nightshade `:656` |
+| **06 — Poisoning Language Models** | 58–75 | `:673` | four doors (pretrain / tune / RLHF / retrieval) `:681` · instruction tuning defined `:690` · Wan Fig 1 rows `:698` · Souly Fig 1a `:711` · 250 docs token-fraction table `:721` · Souly Fig 2 `:736` · does/does not say `:745` · RLHF poisoning setup (Rando) `:766` · RLHF results table `:776` · RAG poisoning (PoisonedRAG) `:791` · fake support numbers (Aurascape) `:801` · Pravda network (NewsGuard) `:811` · in the wild: documented vs not `:821` · why build a backdoor on purpose `:841` · Sleeper Fig 1 stage 1 `:849` · Fig 2a `:866` · got in vs stayed `:886` |
+| **07 — Defenses, and What to Ask** | 76–91 | `:903` | why poison is hard to find `:911` · three places to defend `:919` · hashes `:927` · spectral idea (SVG) `:936` · spectral (Tran Fig 3) `:948` · Tran Fig 1 `:959` · spectral needs/assumes/fails `:975` · Neural Cleanse idea (SVG) `:986` · Neural Cleanse `:999` · NC needs/assumes/fails `:1004` · five questions `:1018` · applied to $60 `:1026` · established vs open `:1041` · takeaways `:1061` · closer `:1075` |
+
+**Key citations (checked against saved PDFs, 2026-10-10; register in the review package):** Gu,
+Dolan-Gavitt & Garg 2017 (BadNets; Figs 1, 3, 4, 6, 7, 8); Biggio, Nelson & Laskov ICML 2012 (Figs 1, 3);
+Shafahi et al. NeurIPS 2018 (Figs 1, 3b, 6a; Eq. 1); Carlini et al. IEEE S&P 2024 (Fig 1, Fig 6,
+Table 1; §4.4–4.5, §6.2); Wan et al. ICML 2023 (Fig 1); Souly et al. 2025 (arXiv 2510.07192;
+Figs 1–2); Hubinger et al. 2024 (arXiv 2401.05566; Figs 1–2); Shan et al. Glaze (USENIX Sec 2023) and
+Nightshade (IEEE S&P 2024); Tran, Li & Madry NeurIPS 2018 (Fig 1, Fig 3, Algorithm 1, Table 2); Wang
+et al. Neural Cleanse IEEE S&P 2019 (§III, §IV, §VIII). Notes only: Chen et al. 2018 (activation
+clustering), Liu et al. RAID 2018 (fine-pruning), Gao et al. 2019 (STRIP).
+
+**Figures (24 cited crops in `figs/`):** `lapuschkin-clever-hans-tag.png` `:107` · `badnets-real-stopsign.png` `:137` · `biggio-gradient-attack.png` `:270` · `biggio-multipoint.png` `:280` · `frogs-schematic.png` `:305` · `frogs-transfer-attack.png` `:348` · `frogs-feature-b.png` `:363` · `badnets-mnist-triggers.png` `:431` · `badnets-error-vs-poison.png` `:464` · `badnets-confusion.png` `:480` · `badnets-trigger.png` `:511` · `badnets-approaches.png` `:538` · `carlini-cost.png` `:566` · `carlini-wiki-cdf.png` `:602` · `nightshade-fig7-poisoned-concepts.png` `:644` · `wan-train-row.png` `:703` · `wan-test-row.png` `:705` · `souly-overview.png` `:715` · `souly-constant-count.png` `:739` · `sleeper-setup.png` `:854` · `sleeper-code-vuln.png` `:870` · `spectral-pipeline.png` `:949` · `tran-data-eig.png` `:963` · `tran-rep-eig.png` `:964`. HTML tables: `:450`, `:497`, `:617`, `:659`, `:725`, `:779`, `:975`, `:1007`, `:1029`. Inline SVG: `:90`, `:99`, `:116`, `:126`, `:167`, `:175`, `:183`, `:191`, `:208`, `:218`, `:227`, `:244`, `:252`, `:261`, `:295`, `:322`, `:330`, `:339`, `:404`, `:412`, `:421`, `:440`, `:489`, `:521`, `:529`, `:556`, `:581`, `:591`, `:635`, `:684`, `:693`, `:770`, `:795`, `:805`, `:815`, `:844`, `:914`, `:922`, `:930`, `:939`, `:989`, `:998`, `:1021`.
+
+**2026-10 rebuild (65 → 59):** rebuilt to the slides-review brief (#106). Model stealing,
+activation clustering and fine-pruning slides removed from the deck (the last two are in the notes
+table). The figures `tramer-extraction`, `actclust-pca`, `finepr-activations`, `glaze-results`,
+`nightshade-outputs` and `wan-trigger-phrases` were deleted.
+Round 2 (slides-review #112): token-fraction fix (Souly), ASR per mapping, scoped claims (P5, 7, 10,
+12, 14, 15, 18, 34, 36, 39, 42, 53, 59), figures recaptured or re-selected (P17, 31, 37, 38, 40, 41,
+43, 44, 51); `wan-overview`, `carlini-datasets-table` and `spectral-histograms` replaced and deleted.
+
+**2026-10-25 motivation revision (59 → 91):** after the lec08 pattern — integrity goal first, like-you're-five and setup slides before each figure-heavy study, seven sections; new figures `lapuschkin-clever-hans-tag.png` and `nightshade-fig7-poisoned-concepts.png`; in-the-wild retrieval poisoning added at Albert's request. Build: `/workspace/agent/lec09/r4/build_deck.py` (agent workspace).
+
+**Note:** `lec09-poisoning-note.html` — 91 entries. Each entry has a minute
+budget and elapsed time, a script, and a key takeaway. Content slides add the figure,
+setup/model/date, what the slide establishes and does not establish, assumptions, and
+primary-source links. The defense comparison table is in entry 78 (Spectral, AC, NC,
+Fine-Pruning, STRIP, hashes); the worked-example code is in entry 42.
+
+**Tech:** `lec09tech.html` — 18 slides:
+- count N, doc fraction N/|D|, token fraction N·L̄/T with Souly numbers (4)
+- Frogs Eq. 1 (5–6, ℓ∞ variant)
+- feature map needed (7)
+- backdoor objective, "common formalization"; λ = α/(1−α) (8)
+- ASR with y ≠ y_t (9)
+- spectral τ, 1.5ε removal (11–12)
+- separation as an assumption (13)
+- Neural Cleanse Eq. 3 (14)
+- MAD anomaly index, MAD > 0, flags a *suspected* label (15)
+- activation clustering; smaller-cluster rule as a heuristic (16)
+- adaptive-attack caveat (17)
+
+## lec10-jailbreak.html
+
+**Topic:** Jailbreaks (90 min; mixed-major sophomores/juniors; concept-first, light math, no proofs;
+**no activities**; no working jailbreak strings). Opens general before specific: assistants help but decline some
+requests, why getting around refusal matters (uplift, scale, agency), jailbreak prompts shared in the wild (Shen
+et al.), then Wei Fig 1 as the example. Jailbreak defined as bypassing safeguards *through inputs*; prompt
+injection, poisoning and weight-level safety removal separated (the last as a labelled contrast). Alignment →
+safety training → refusal made explicit (Ouyang; Bai), with Llama 2 Chat's safety recipe (Touvron §4.2) as the
+worked example. Under- vs over-refusal; access ladder; every ASR needs denominator, budget, model/version, judge.
+Fragility: Wei's two failure modes and Table 1; shallow alignment step by step (Qi 2025: stock opening, forced
+openings on the base model, Figs 1–2, recovery-example construction, Table 2) and one refusal direction (Arditi:
+method in three steps, then Fig 1) as findings in tested settings; fine-tuning as a service explained before the
+Qi 2024 contrast (Tables 1–3). Search: GCG (≈256K evaluations; transfer Table 2, ensemble 86.6/46.9 is any-of-4)
+vs PAIR (attacker, target and judge models pass only text; ≤ 90 queries, Table 2). Budget: test-time scaling in
+general (Brown; Snell), any-of-N illustration, in-context learning → many-shot (Fig 2; Fig 5 axes explained;
+intercept not slope; 61% → 2% warning, non-adaptive), Best-of-N (Fig 3; resend reliability Table 1), translation
+and cipher attacks on separate slides with the StrongREJECT re-check. Evaluation: judge ladder, PAIR judge
+Table 1, StrongREJECT Fig 1 (redrawn, redacted), HarmBench length, XSTest over-refusal, Ganguli κ = 0.32.
+Defenses: Constitutional Classifiers (Fig 1 redrawn; two tests, each with its cost) and circuit breakers (one-line
+idea, two training losses, Table 1) + adaptive re-attack (Schwinn &amp; Geisler; BoN). Monitoring: Anthropic's
+self-assessment (Zhang et al., Safeguards blog, Oct 2026) with self-attribution bias (Khullar et al. 2026) as the
+main limit. Excludes prompt injection (lec13), poisoning (lec09). Math in `lec10tech.html`.
+
+### Sections (88 slides, 90 min: safety training 13 · fragility 17 · search 11.5 · attack budget 18.5 · evaluation + defenses 17.5 · self-assessment 9 · wrap-up 3.5)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:38`, `:50` | |
+| **01 — What Safety Training Adds** | 3–13 | `:83` | assistants help, decline some (SVG) `:91` · why it matters: uplift, scale, agency (SVG) `:100` · in the wild (Shen et al., stat tiles) `:109` · refused then answered (Wei Fig 1, redacted) `:125` · definition + neighbouring threats (HTML) `:136` · alignment → safety training → refusal (SVG) `:152` · Llama 2 Chat safety recipe (SVG) `:162` · two ways to fail (SVG) `:172` · access ladder (SVG) `:180` · four ASR labels (SVG) `:188` |
+| **02 — Why Refusal Is Fragile** | 14–30 | `:198` | two hypotheses (SVG) `:206` · competing objectives (SVG) `:216` · key-wording ablations (SVG) `:225` · mismatched generalization (SVG) `:235` · Wei Table 1 (HTML) `:244` · stock opening phrase (SVG) `:260` · base model with forced openings (bars) `:271` · per-token KL (Qi 2025 Fig 1) `:282` · prefilling (Qi 2025 Fig 2) `:299` · recovery-example construction (SVG) `:316` · recovery augmentation (Table 2, HTML) `:326` · refusal-direction method, three steps (SVG) `:343` · refusal direction (Arditi Fig 1) `:353` · fine-tuning as a service (SVG) `:363` · fine-tuning contrast (Qi 2024, HTML) `:373` · findings × access (HTML) `:389` |
+| **03 — Searching for Jailbreaks** | 31–41 | `:404` | families (SVG) `:412` · search loop (SVG) `:421` · GCG objective (SVG) `:430` · GCG step + 256K budget (SVG) `:441` · transfer (GCG Fig 1) `:450` · transfer table (GCG Table 2, HTML) `:466` · PAIR's three models: Mixtral attacker, target, Llama Guard judge (SVG) `:481` · one round (Chao Fig 2, redacted) `:491` · PAIR vs GCG (Chao Table 2, HTML) `:500` · gradient vs LLM search (HTML) `:517` |
+| **04 — Scaling the Attack Budget** | 42–59 | `:533` | test-time scaling (SVG) `:541` · Brown: 250 samples, 15.9% → 56% (SVG) `:550` · Snell: 4× / 14× (stat tiles) `:561` · any-of-N bars (SVG, illustrative) `:575` · in-context learning (SVG) `:584` · many-shot schematic: fake question, fake compliant answer (SVG) `:595` · MSJ Fig 2 `:605` · intercept vs slope, axes explained (MSJ Fig 5 middle panel) `:623` · BoN augmentations (SVG) `:641` · BoN Fig 3 (Text panel + legend) `:652` · resend reliability (Table 1 as bars) `:670` · translation protocol (SVG) `:682` · translation results (bars) `:694` · CipherChat (SVG) `:705` · two studies, two protocols (HTML) `:716` · adversarial example vs jailbreak (SVG) `:732` · budget summary `:740` |
+| **05 — Evaluation and Defenses** | 60–76 | `:753` | judge ladder (SVG) `:761` · PAIR judge table (HTML) `:769` · StrongREJECT (Fig 1 redrawn, redacted) `:785` · HarmBench Fig 2 `:796` · XSTest with system-prompt column (HTML) `:813` · Ganguli setup: four model kinds (HTML) `:830` · Ganguli Fig 1 left panel `:847` · three defense places (SVG) `:865` · Constitutional Classifiers (Fig 1 redrawn) `:873` · CC test 1: bug bounty (stat tiles) `:882` · CC test 2: Haiku classifiers (bars) `:898` · circuit breakers (CB Fig 1 top row) `:910` · CB training: two losses (SVG) `:920` · CB Table 1 (HTML) `:931` · better optimization (Schwinn &amp; Geisler; BoN; bars) `:946` · asymmetry (SVG) `:958` |
+| **06 — Monitoring With Self-Assessment** | 77–85 | `:966` | why monitor, not only block (SVG) `:974` · existing monitors: cheap vs flexible (SVG) `:985` · one extra question per reply: KV cache, ≈10 tokens (SVG) `:995` · distillation from a costly teacher (SFT + RL, SVG) `:1005` · recall 78% / 94% at 1% FPR (stat tiles) `:1017` · leave-one-out (SVG) `:1033` · weak real-time blocker: 13/24 vs 6/24 (bars) `:1045` · limits: self-attribution bias (SVG) `:1057` |
+| Wrap-up | 86–88 | — | checklist (7 questions incl. access, denominator; HTML) `:1066` · takeaways `:1082` · closer `:1096` |
+
+**Key citations (checked against saved PDFs, 2026-10-10; new sources 2026-11-02):** Shen et al. ACM CCS 2024
+(arXiv 2308.03825; Abstract, §1, §4.1); Touvron et al. 2023 Llama 2 (arXiv 2307.09288; §4.2); Wei, Haghtalab &amp;
+Steinhardt NeurIPS 2023 (Fig 1, §3, Table 1); Ouyang et al. NeurIPS 2022; Bai et al. 2022 (arXiv 2212.08073); Qi
+et al. ICLR 2025 (arXiv 2406.05946; §2.2, Table 1, Figs 1–2, §3.1, Table 2); Arditi et al. NeurIPS 2024 (Fig 1); Qi et al. ICLR
+2024 (arXiv 2310.03693; Tables 1–3); Zou et al. 2023 GCG (arXiv 2307.15043; Fig 1, Algorithm 1, Table 2 — ensemble
+86.6% GPT-3.5 / 46.9% GPT-4, single suffix ≈34%; the old "84%" claim was wrong); Chao et al. PAIR (arXiv
+2310.08419; Fig 2, Tables 1–2); Brown et al. 2024 (arXiv 2407.21787; Abstract, §1, Fig 1); Snell et al. 2024
+(arXiv 2408.03314; §2, §7, Figs 5 and 9); Anil et al. NeurIPS 2024 (Figs 1, 2, 5; §4.1, §5.4); Hughes et al. BoN
+(arXiv 2412.03556; §2, Fig 3, §3.1, Table 1, §5.4); Yong et al. 2023 (arXiv 2310.02446; Table 1); Yuan et al.
+CipherChat ICLR 2024; Souly et al. StrongREJECT NeurIPS 2024 (Fig 1, Table 2); Mazeika et al. HarmBench ICML 2024
+(Fig 2, §3.2); Röttger et al. XSTest NAACL 2024 (Table 1); Ganguli et al. 2022 (Fig 1 left panel, §3.4–3.5, §4);
+Sharma et al. 2025 (arXiv 2501.18837; Fig 1, §3–5, Fig 6); Zou et al. Circuit Breakers NeurIPS 2024 (Fig 1,
+Algorithm 1, Table 1); Schwinn &amp; Geisler 2024 (arXiv 2407.15902; Table 1); Zhang et al., "Scaling Misuse
+Detection with Self-Assessment", Anthropic Safeguards blog, Oct 2026 (Figs 1–5); Khullar et al. 2026 (arXiv
+2603.04582). Notes only: Perez et al. EMNLP 2022.
+
+**Figures (13 cited image files in `figs/`):** `wei-jailbroken-redacted.png` `:125` · `qi25-kl.png` `:282` ·
+`qi25-prefill.png` `:299` · `arditi-fig1.png` `:353` · `gcg-schematic.png` `:450` · `pair-fig2-redacted.png` `:491` ·
+`msj-fig2ab.png` `:605` · `msj-fig5-rl.png` (MSJ Fig 5 middle panel) `:623` · `bon-fig3-text.png` +
+`bon-fig3-legend.png` `:652` · `harmbench-fig2.png` `:796` · `ganguli-redteam.png` (Fig 1 left panel) `:847` ·
+`cb-top.png` `:910`. Redacted by the lecturer, with disclosure in the cite and note: Wei Fig 1 (demanded-opening
+wording, Base64 payload) and PAIR Fig 2 (rewritten prompt, reply); `wei-jailbroken.png` (unredacted) is kept only
+for lec01. Redrawn as SVG with disclosure: MSJ Fig 1 (schematic, dialogue contents not shown), StrongREJECT Fig 1
+(redacted), Constitutional Classifiers Fig 1 (simplified).
+
+**2026-10 rebuild (60 → 58):** rebuilt to the slides-review brief (#118). Persona/fake-authority/obfuscation
+zoo, system-prompt hardening, demo and "frontier" slides removed; evaluation and defenses expanded to 20 min.
+Figures `ouyang-3steps`, `ouyang-winrate`, `bai-cai`, `qishallow-kl`, `arditi-refusal`, `gcg-asr`,
+`gcg-transfer`, `pair-schematic`, `msj-powerlaw`, `yong-translate`, `yong-table`, `cipher-overview`,
+`qift-overview`, `szegedy-ostrich`, `ganguli-success`, `perez-overview`, `sharma-overview`, `cb-overview`,
+`bon-powerlaw` were deleted. Review round 2 (slides-review #120) deleted the unredacted PAIR Fig 2 and
+full three-panel BoN Fig 3 crops (replaced by the redacted / text-panel versions) and replaced the old slide 35
+sketch with the real Fig 5 panel.
+
+**2026-11-02 Albert feedback round (58 → 88):** diagram labels enlarged and every table re-aligned (headers
+over their columns); generic motivation (4–6) before the Wei example (7), whose point is now its title; safety
+training and refusal introduced explicitly, with Llama 2 Chat as the example (9–10); shallow alignment step by
+step (20–25, incl. what the Augmented model was trained on); Arditi's method before its figure (26–27);
+fine-tuning as a service explained (28); GCG Fig 1 author note moved to the cite (36); PAIR's judge made explicit
+(38–39); test-time scaling (43–45) and in-context learning (47) added before the budget attacks; many-shot
+schematic without "[redacted]" (48); MSJ Fig 5 and BoN Fig 3 axes stated first (50, 52); resend reliability as
+bars (53); crowded slides split: competing objectives (16–17), translation/ciphers (54–57), Ganguli (66–67),
+Constitutional Classifiers evidence (70–71), circuit breakers (72–73, one-line idea and what it does not
+break); the re-attack framed as better optimization (75); new Section 06 on Anthropic's self-assessment monitor
+(77–85). Fixes: aligned model shown at 0% on slide 21 (was 2.1%); XSTest is Table 1; Ganguli is the Fig 1 left
+panel; a "universal" Constitutional Classifiers jailbreak means all 10 questions at half the detail of an
+unguarded model.
+
+**Note:** `lec10-jailbreak-note.html` — 88 entries. Each entry has a minute budget and elapsed time, a script,
+and a key takeaway. Content slides add the figure, setup/model/date, what the slide establishes and does not
+establish, assumptions, and primary-source links (26 sources). The BoN reliability inconsistency (Table 1
+caption vs body vs rows) is recorded in entry 53; the Brown plateau inconsistency (abstract vs §4) in entry 44.
+
+**Tech:** `lec10tech.html` — 21 slides:
+- ASR estimate + binomial SE (4)
+- any-of-N $1-(1-p)^N$ and $N_q$ (5); heterogeneous $p_i$ (6)
+- judge error correction (7); retry amplifies false positives (8)
+- RLHF KL objective (10); per-token KL $D_k$ (11); refusal direction + ablation (12)
+- GCG loss (14); GCG step and 256K budget (15); PAIR $N_s \times K = 90$ (16)
+- MSJ $Cn^{-\alpha}+K$ with NLL, C, α, K defined (18); intercept vs exponent, slope −α (19); BoN $-\log\mathrm{ASR}=aN^{-b}$ (20)
+
+## lec11-synthetic-media.html
+
+**Topic:** Synthetic media: watermarks, detection and provenance (90 min; mixed-major sophomores/juniors;
+concept-first, light math, no proofs; **no activities**). Generic opener: realistic generated images (Midjourney pope,
+Sora frame), Nightingale &amp; Farid faces study (48.2% / 59.0%), real harms (Pentagon image, Biden robocall FCC fines,
+Arup); Arup deepfake call (HKD 200M / ≈ USD 25M) as the
+origin case; visible Gemini sparkle vs an invisible keyed mark (Apollo 11 demo); three kinds of evidence — embed (watermark), guess (detector), sign (provenance) — and
+"origin is not truth" (no mark ≠ human; no credentials ≠ fake). KGW taught thoroughly as the one mechanism:
+keyed green list, boost δ, green-count z-test, threshold → nominal FPR, √T growth, repeated pairs → nominal vs
+measured threshold (K24 Fig 7 right), δ-vs-perplexity trade-off; distortion-free / undetectable named only, as two
+different guarantees, then one slide each on Kuditipudi EXP (Fig 1) and Christ–Gunn–Zamir. Robustness
+compared only with setups: Kuditipudi random swaps (m = 35, median p-value), Krishna DIPPER (300 tokens, 1% FPR), Sadasivan
+recursive paraphrase, TV defined then the impossibility bound, K24 human rewrites (~800 tokens at 10⁻⁵) and copy-paste dilution; TV bound vs empirical
+robustness as differently scoped claims. SynthID in detail: family (image / audio / video / text), pipeline (Fig 1),
+tournament (Fig 2), mean g-score, Fig 3a, limits. Production: Tree-Ring image
+table, a detector finds only the marks it supports, three meanings of "standard". Keyless detection: overlapping
+scores, labelled base-rate illustration (FPR ≠ P(human | flagged)), Liang 2023, the US Constitution flagged as AI
+(GPTZero; Binoculars 0.76; memorized human text can trigger perplexity-based detectors), the withdrawn OpenAI
+classifier (explicitly historical), DFDC private test. Provenance: C2PA manifest, signed edit chain,
+supported / on by default / preserved, soft bindings; labelling law (China 1 Sep 2025, Korea 22 Jan 2026,
+EU Art. 50 2 Aug 2026; Art. 50(2) transition to 2 Dec 2026); EU Code of Practice text marking (≥ 200 tokens) and
+the OpenAI (eligible EU ChatGPT / Codex output) and Anthropic (supported Claude models, worldwide) text watermarks. Excludes model-weight watermarks and copyright. Math in `lec11tech.html`.
+Rigorous treatment: `courses/privacy/lectures/06-watermark/`.
+
+### Sections (74 slides, 90 min: problem 14 · watermarking 20 · robustness + production 25 · detection 13 · provenance + policy 12 · synthesis 6)
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | `:36`, `:48` | |
+| **01 — The Provenance Problem** | 3–13 | `:81` | generated media looks real (pope + Sora) `:89` · faces study (bar chart) `:101` · real-world consequences (3 cards) `:112` · Arup case (SVG) `:121` · visible Gemini sparkle `:131` · invisible mark demo `:144` · embed / guess / sign `:154` · origin is not truth (table) `:162` · three questions `:170` · scope: outputs not models `:183` |
+| **02 — Text Watermarking** | 14–27 | `:203` | token-by-token (SVG) `:211` · keyed split `:220` · boost δ `:230` · KGW Fig 1 `:239` · chance rate γ `:255` · threshold `:263` · KGW Fig 3a `:274` · repeats: mechanism `:291` · repeats: K24 Fig 7 right `:302` · KGW Fig 2 left `:318` · distortion-free / undetectable `:336` · Kuditipudi EXP (Fig 1) `:356` · Christ–Gunn–Zamir `:367` |
+| **03 — Robustness and Production** | 28–47 | `:379` | attack ladder (SVG) `:387` · Kuditipudi Fig 4b `:396` · DIPPER (Krishna Table 1 redrawn) `:413` · Sadasivan Fig 3a legend (bars redrawn) `:424` · TV defined `:435` · TV bound curve `:446` · K24 Fig 4 right `:456` · K24 Fig 2 copy-paste (redrawn) `:474` · compare with setups (takeaway; table in note) `:484` · impossible vs robust `:496` · SynthID family `:513` · SynthID Fig 1 `:524` · SynthID Fig 2 tournament `:534` · mean g-score `:544` · SynthID Fig 3a `:559` · SynthID limits `:575` · Tree-Ring Table 2 subset `:585` · detector finds only supported marks `:601` · three "standards" `:611` |
+| **04 — Detecting Without a Watermark** | 48–58 | `:625` | overlapping scores `:633` · base-rate tree (labelled illustration) `:642` · FPR vs P(human\|flag) `:651` · Liang Fig 1a `:675` · US Constitution flagged `:691` · memorized human text (perplexity axis) `:701` · OpenAI classifier `:712` · DFDC split `:733` · DFDC Table 2 redrawn (log loss) `:742` · lead not verdict `:753` |
+| **05 — Provenance and Policy** | 59–68 | `:767` | detection vs provenance `:775` · C2PA manifest (SVG) `:794` · signed chain `:804` · supported / default / preserved (vendor's words) `:814` · soft binding `:829` · law timeline `:839` · two kinds of label `:848` · EU text rule (Code of Practice) `:862` · ChatGPT and Claude text marks `:872` |
+| **06 — Synthesis** | 69–74 | `:883` | embed / guess / sign table `:891` · three cases `:905` · checklist (7 questions) `:918` · takeaways `:934` · closer `:947` |
+
+**Key citations (checked against saved PDFs / pages, 2026-10-10):** Kirchenbauer et al. ICML 2023 (arXiv
+2301.10226; Alg 2, §3, Figs 1, 2, 3a); Kirchenbauer et al. ICLR 2024 (arXiv 2306.04634; Figs 2, 4 right, 7 right, App A.3);
+Kuditipudi et al. TMLR (arXiv 2307.15593; Def 1, Fig 4a/4b, m = 35); Christ, Gunn &amp; Zamir (arXiv 2306.09194);
+Krishna et al. NeurIPS 2023 (arXiv 2303.13408; Table 1); Sadasivan et al. TMLR 2025 (arXiv 2303.11156; Thm 1,
+Fig 3a legend); Dathathri et al. Nature 634 (2024; Fig 3a); Wen et al. Tree-Ring NeurIPS 2023 (Table 2); Liang et al.
+Patterns 2023 (Fig 1a); OpenAI classifier post (Jan / Jul 2023, via archive); Dolhansky et al. DFDC (arXiv
+2006.07397; §3, §5–6, Table 2); C2PA Technical Specification 2.2 (May 2025; §9.1–9.2) + Soft Binding API; Google SynthID Detector
+post (May 2025, vendor statement); Arup (CNN, May 2024). Added 2026-11 (Albert r1): Dathathri et al. Figs 1, 2, eq. (1);
+Kuditipudi Fig 1; Nightingale &amp; Farid PNAS 2022; Pentagon image (NPR, AP, Bloomberg, May 2023); FCC DA 24-790 and
+Kramer forfeiture (Sept 2024); Ars Technica on the Constitution / GPTZero; Hans et al. Binoculars; Google Keyword
+(26 Aug 2025, 20 Nov 2025); EU Code of Practice on Transparency of AI-Generated Content (10 Jun 2026, Measure 1.1); BleepingComputer (5 Oct 2026); City A.M. (12 Aug 2026); OpenAI and Anthropic help-centre pages. Law (official texts, snapshots in the r2 review package): CAC Measures
+国信办通字〔2025〕2号 + GB 45438-2025; Reg. (EU) 2024/1689 Arts. 50, 99, 113 and Reg. (EU) 2026/1744; Korea AI Basic
+Act Arts. 31, 40, 43 and Enforcement Decree Art. 23 (law.go.kr). Products (vendor pages): Leica Content Credentials
+page, Samsung Newsroom US (7 Feb 2025), Google Keyword blog (10 Sep 2025).
+
+**Figures (16 cited image files in `figs/`):** `pope-puffer-midjourney.jpg` `:94` · `sora-tokyo.jpg` `:95` (shared with lec01) ·
+`sm-gemini-sparkle.png` `:136` · `sm-gemini-sparkle-corner.png` `:137` · `sm-invisible-wm-demo.png` `:148` (own demo, Apollo 11 photo) ·
+`sm-kgw-fig1.png` `:244` · `sm-kgw-fig3a.png` `:279` · `sm-k24-fig7r.png` `:307` · `sm-kgw-fig2l.png` `:323` ·
+`sm-kud-fig1.png` `:360` · `sm-kud-fig4b.png` `:402` · `sm-k24-fig4r.png` `:462` · `sm-synthid-fig1.png` `:528` ·
+`sm-synthid-fig2.png` `:538` · `sm-synthid-fig3a.png` `:564` · `liang-toefl.png` `:681`.
+Redrawn (inline SVG/HTML, disclosed in cites): Krishna Table 1 (KGW rows), Sadasivan Fig 3a legend values (bars),
+K24 Fig 2 copy-paste values read from the figure (range bars), Tree-Ring Table 2 (subset), DFDC Table 2.
+Illustrative (labelled): next-word bars, green strips, z-curves, base-rate tree, g-score grids, perplexity axis.
+Charted from paper numbers: Nightingale &amp; Farid accuracy bars.
+
+**2026-10 rebuild:** replaces the former Wk 11 prompt-injection deck (moved unchanged to
+backup-prompt-injection, since rebuilt as `lec13-prompt-injection.html`) and the former Wk 12 watermark deck (lec12-watermark, 68 sl; deleted with its note,
+its tech file and 13 figures used only by it: `dfdc-logloss`, `kgw-example`, `kgw-zscore-length`,
+`kgw-zscore-ppl`, `kirchenbauer-human-paraphrase`, `kirchenbauer-robust-bars`, `krishna-dipper`,
+`kud-protocol`, `kud-substitution`, `sadasivan-roc`, `sadasivan-vuln`, `synthid-detect`, `synthid-overview`).
+Built to the slides-review brief (#126). Review round 2 (slides-review #128): z &gt; 4 as a normal-approximation
+tail; repeat-scoring scoped to WikiText; distortion-free vs undetectable separated; C2PA validity vs signer trust;
+law and product rows from official texts; median p-value, TV and log-loss readings corrected; crops `sm-k24-fig7`,
+`sm-kud-fig4` replaced by single panels and `sm-sad-fig3a`, `sm-k24-fig2` by redrawn charts (old files deleted).
+
+**Note:** `lec11-synthetic-media-note.html` — 74 entries with minute budget and elapsed time, script, key
+takeaway; content slides add figure, setup/model/date, establishes / does not establish, assumptions and
+primary-source links (22 sources). Entry 65 carries the three-jurisdiction table from the official texts (enacted
+text / applies from / who / form / exceptions / enforcement). Entry 37 carries the robustness-study setups table cut from the deck. Entry 27 carries an EXP vs. Christ–Gunn–Zamir comparison (randomness source / guarantee / repeated queries / edits), notes only.
+
+**Tech:** `lec11tech.html` — 14 slides:
+- green-list rule (4); idealized independent-Bernoulli null (5); z-statistic, normal-approximation 3×10⁻⁵ vs exact
+  tail at T = 20 (6)
+- √T growth under constant green rate (7); repeated pairs, m > 1, scoped to WikiText (8)
+- base-rate formula with the 2% / 20% examples (10); TV definition, bound + proof idea, keyed detectors (11);
+  distortion-free (fresh key) vs undetectable (12); SynthID-Text seed, tournament, mean g-score eq. (1) (13)
+
+## lec12-fairness.html
+
+**Topic:** Fairness (90 min; mixed-major sophomores/juniors; concept-first, light math, no proofs on the
+slides; **no activities**). Where bias enters (opens with the Obermeyer cost-as-proxy case; sampling, labels, feedback;
+Gender Shades benchmark composition; why dropping the protected attribute fails). Measuring fairness: four rates and
+their denominators, demographic parity, equalized odds (Hardt ROC plane), calibration within groups vs predictive
+parity, five criteria on the same FICO data. COMPAS: ProPublica vs Northpointe as different criteria, rearrest
+≠ offending, base rates, Chouldechova identity, Kleinberg et al. conditions, a calibrated worked example with
+unequal errors, choosing by context. Mitigation at three points (reweighing, reductions, group thresholds), each
+measured result shown with criterion, population, utility and assumptions; an empirical tradeoff is not the
+optimal frontier; method cards. Beyond classifiers: Gender Shades and the Actionable Auditing follow-up, BBQ,
+Bianchi text-to-image stereotypes; governance obligations and limits (~3.5 min). Math in `lec12tech.html`.
+
 ### Sections (56 slides, 90 min: where bias enters 10 · measuring 20 · COMPAS + impossibility 15 · mitigation 20 · beyond classifiers 15 · synthesis 10)
 
 | Section | Slides | Divider line | Notable slides |
@@ -574,16 +1246,19 @@ governance ≈ 3 min; Dwork and Kusner formal in the tech supplement and notes. 
 rules in the deck with formulas in notes/tech, scoped COMPAS and figure readings, enlarged figures, governance dates
 checked 10 Oct 2026; Wilson &amp; Caliskan removed.
 
-**Note:** `lec12-fairness-note.html` — 56 entries with minute budget and elapsed time, script, key takeaway;
+**Note:** `lec12-fairness-note.html` — 74 entries (one per slide ID) with minute budget and elapsed time, script, key takeaway;
 content slides add figure, setup/date, establishes / does not establish, assumptions and primary-source links
 (28 sources). "Going further" blocks hold the notes-only material (Dwork/Kusner, Zhang, Amazon, Tamkin, Eloundou,
 Gemini, EO 14319).
 
-**Tech:** `lec12tech.html` — 17 slides:
-- four rates with positivity (4); five criteria (5); Dwork individual fairness (6); Kusner counterfactual
-  fairness (7); calibration and PPV via the score mix (8)
-- Chouldechova identity (10); Kleinberg proof sketch (11); worked example computed (12)
-- reweighing with cell support (14); reductions saddle point (15); group thresholds as a derived predictor (16)
+**Tech:** `lec12tech.html` — 23 slides (IDs S57–S73, splits lettered):
+- four rates, four denominators, with positivity (4); four criteria on the decision (5); calibration as a
+  condition on the score, discrete/binned scores (6); Dwork individual fairness (7); Kusner counterfactual
+  fairness (8); calibration averages over selected scores (9)
+- Chouldechova identity and its corollary (11–12); Kleinberg et al. exceptional cases and proof sketch (13–14);
+  calibrated worked example: equal PPV, unequal errors (15–16)
+- reweighing with cell support and a worked example (18–19); reductions saddle point and cost-sensitive oracle
+  (20–21); postprocessing attainable region (22)
 
 ## lec13-prompt-injection.html
 

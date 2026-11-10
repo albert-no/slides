@@ -3,11 +3,14 @@ size: medium
 deck: courses/trustworthy-ai/lec12-fairness.html; paired lec12-fairness-note.html; visual/consistency pass on lec12tech.html
 audience / mode / duration: existing mixed-major undergraduate audience (leaf OUTLINE: sophomores/juniors), concept-first, 90 minutes, no activities
 baseline: cd0da5ca7ad75ceef107d28ad110407f0c33b4ff
-id commit: pending slides' ID-only commit
+id commit: a6d894b9b93f852af5ba6f22131663282339f3b3
 branch: 2026-11-10-lec12-visual-motivation
+reviewed work: 6d1e21cc4b484d0b6333ca8d2607b79e9ec9facf
+review verdict: revise (review-r1.md; F01–F07 blocking)
+active plan: plan-v2.md
 pr: not open
 state: in-work
-round: 0 of 2
+round: 1 of 2
 albert decisions:
 - 2026-11-10: Whole-deck visual/motivational revision, larger diagram labels, repair broken arrows. Albert will make detailed revisions afterward in a separate PR.
 - 2026-11-10: “I meant lec12 fairness” corrects lec11 in the original request. Lec11 is out of scope.

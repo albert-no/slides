@@ -5,11 +5,13 @@ size: medium
 deck: courses/deepmath/prob07-estimation/prob07-estimation.html
 audience / mode / duration: existing junior-undergraduate AI mathematics course / rigorous / unchanged retained teaching pace; deletion reduces duration, no replacement material
 baseline: cdc2949fd21af93b014994acb56a4c048a95becb
-id commit: pending from slides
+id commit: 9f2273b425192bef87a90bb66f25a3de17b93187 (deck-only; legacy section-organized notes recorded as F02)
 branch: 2026-11-10-prob07-remove-gan
 pr: not opened
 state: in-work
-round: 1 of 2
+round: 2 of 2
+review commit: a825c1ed76945e1f2cc6f121eb6e5996b2b9a5a7
+content commit: 61a2337da9be32ee0f9852865643fd35e3d69a66
 albert decisions:
 - 2026-11-10: Remove the GAN part completely, including JS divergence. This supersedes the older request to expand GAN/JS material in PR #62.
 - No merge authorization.
@@ -34,3 +36,9 @@ Medium: seven consecutive content slides removed, four retained/shared slides ad
 - Baseline contains no stable slide IDs; assign S01–S137 in baseline order in an ID-only commit, including matching note articles as the contract requires. Record the SHA separately from content changes.
 - The HTML companion is currently section-organized rather than one article per slide. Keep all retained prose/math intact during ID setup. If a faithful note-ID mapping requires substantive rewriting, return that as a plan issue before broadening this deletion job.
 - Review the exact work-report commit. Open a PR only after approval and a verified log-only tail; never merge without Albert's direct order.
+
+## Review decisions — 2026-11-10
+
+- Round 1 reviewed a825c1ed76945e1f2cc6f121eb6e5996b2b9a5a7: C01 complete; content/render satisfactory; verdict revise for F01 (11 section-table Location offsets).
+- State passed in-review → revise → in-work on delivery of review-r1.md. Round 2 is metadata-only; no additional slide edits requested.
+- Note-ID plan issue: no matching per-slide articles exist in the baseline. Preserve chapter-style companions; record pre-existing structural limitation as nonblocking F02 rather than expand deletion into a note migration. No pipeline/standing instruction changes.

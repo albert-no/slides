@@ -56,13 +56,14 @@ scripts/
   outline-lint.py verify OUTLINE.md file:line pointers
   doc-index-lint.py verify/regenerate the section index in the reference docs
 OUTLINE.md       per-folder content index (root / topic / leaf)
+PLANNER_BRIEF.md entry point for the slides-review planner (model-neutral)
 backup/          dated snapshots of docs before major rewrites
-log/             per-PR verbatim slides ↔ slides-review transcripts (`YYYY-MM-DD-<pr-summary>.md`)
+log/             job contract (`PIPELINE.md`), tracked job records (`<job-id>/`), older per-PR transcripts
 ```
 
 Only authoring source and image assets are committed; `*.standalone.html` is a build artifact.
 
-**Agent discussion log.** Any PR worked with the `slides-review` agent carries a `log/YYYY-MM-DD-<pr-summary>.md` holding every message both ways, verbatim and in order with KST timestamps. Add it on the PR branch and link it from the PR body.
+**Pipeline jobs.** Jobs run by the `slides-review` agent follow `log/PIPELINE.md`: slides-review plans, reviews and opens the PR; slides does the slide work, commits and pushes. Its working folder `log/jobs/<job-id>/` is never tracked; the tracked record `log/<job-id>/` on the job branch is the log. No chat transcripts. Nobody merges unless Albert orders the merge of that PR. Planner entry point: `PLANNER_BRIEF.md`.
 
 ## Editing workflow
 

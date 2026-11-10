@@ -1,7 +1,9 @@
-# Agent discussion logs
+# Logs
 
-One file per pull request worked jointly by the **slides** (authoring) and **slides-review** (review) agents.
+**Pipeline jobs (from 2026-11-10).** `log/PIPELINE.md` is the contract between the **slides-review** (planning, review, PR) and **slides** (authoring) agents.
 
-- File name: `YYYY-MM-DD-<pr-summary>.md` — the date the PR work started plus a short PR-title-style summary.
-- Content: every message sent and received between the two agents during that PR, verbatim, in order, with Asia/Seoul timestamps. A timeline table at the top gives one line per message.
-- The log is committed on the PR branch and linked from the PR body.
+- `log/jobs/<job-id>/` — slides-review's working folder. Untracked (`.gitignore`).
+- `log/<job-id>/` — the tracked record on the job branch: an unchanged copy of the job files plus slides' work reports. It reaches `main` with the PR and is the permanent log.
+- Job files only. No chat transcripts, raw session output or hidden reasoning.
+
+**Older per-PR transcripts (before 2026-11-10).** `YYYY-MM-DD-<pr-summary>.md`: every message between the two agents during that PR, verbatim, in order, with Asia/Seoul timestamps. Kept as history; no new ones are written.

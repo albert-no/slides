@@ -8,9 +8,9 @@ baseline: cdc2949fd21af93b014994acb56a4c048a95becb
 id commit: 9f2273b425192bef87a90bb66f25a3de17b93187 (deck-only; legacy section-organized notes recorded as F02)
 branch: 2026-11-10-prob07-remove-gan
 pr: not opened
-state: in-work
+state: approved
 round: 2 of 2
-review commit: a825c1ed76945e1f2cc6f121eb6e5996b2b9a5a7
+review commit: bd7bc5e9309096a2150bae4ce715676a61cf441f
 content commit: 61a2337da9be32ee0f9852865643fd35e3d69a66
 albert decisions:
 - 2026-11-10: Remove the GAN part completely, including JS divergence. This supersedes the older request to expand GAN/JS material in PR #62.
@@ -42,3 +42,5 @@ Medium: seven consecutive content slides removed, four retained/shared slides ad
 - Round 1 reviewed a825c1ed76945e1f2cc6f121eb6e5996b2b9a5a7: C01 complete; content/render satisfactory; verdict revise for F01 (11 section-table Location offsets).
 - State passed in-review → revise → in-work on delivery of review-r1.md. Round 2 is metadata-only; no additional slide edits requested.
 - Note-ID plan issue: no matching per-slide articles exist in the baseline. Preserve chapter-style companions; record pre-existing structural limitation as nonblocking F02 rather than expand deletion into a note migration. No pipeline/standing instruction changes.
+
+- Round 2 reviewed bd7bc5e9309096a2150bae4ce715676a61cf441f: F01 closed; verdict approved. No new blockers. Awaiting final review copy/push before PR creation; any post-review commits must be job-log-only.

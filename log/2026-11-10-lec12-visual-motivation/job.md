@@ -5,11 +5,11 @@ audience / mode / duration: existing mixed-major undergraduate audience (leaf OU
 baseline: cd0da5ca7ad75ceef107d28ad110407f0c33b4ff
 id commit: a6d894b9b93f852af5ba6f22131663282339f3b3
 branch: 2026-11-10-lec12-visual-motivation
-reviewed work: f2e696dbe9793da8ce1167d7a368408bd278ed2c (round 2); previous round 6d1e21cc4b484d0b6333ca8d2607b79e9ec9facf
-review verdict: round 2 revise; F02 residual and F09 on S76/p58 pending authorized final fixes
+reviewed work: f43a5fbce5e8511757f622166125c5d4b82e5024 (authorized final check); round 2 f2e696dbe9793da8ce1167d7a368408bd278ed2c; round 1 6d1e21cc4b484d0b6333ca8d2607b79e9ec9facf
+review verdict: approved (review-r3.md; F01–F09 closed)
 active plan: plan-v3.md
 pr: not open
-state: in-work
+state: approved
 round: 3 of 3 (one localized exception authorized by Albert; ordinary medium limit remains 2)
 albert decisions:
 - 2026-11-10: Whole-deck visual/motivational revision, larger diagram labels, repair broken arrows. Albert will make detailed revisions afterward in a separate PR.

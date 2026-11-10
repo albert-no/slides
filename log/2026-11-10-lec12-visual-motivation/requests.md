@@ -23,3 +23,7 @@ I meant lec12 fairness
 ## C07 — resume
 Source: Albert in claw-slides-review, 2026-11-10 12:28 KST.
 Continue from the job folder.
+
+## C08 — authorize localized fixes and final targeted check
+Source: Albert in claw-slides-review, 2026-11-10 13:40 KST, replying to the request to authorize the two p58 fixes and one final targeted check after the two-round limit.
+yes go ahead

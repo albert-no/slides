@@ -6,15 +6,17 @@ baseline: cd0da5ca7ad75ceef107d28ad110407f0c33b4ff
 id commit: a6d894b9b93f852af5ba6f22131663282339f3b3
 branch: 2026-11-10-lec12-visual-motivation
 reviewed work: f2e696dbe9793da8ce1167d7a368408bd278ed2c (round 2); previous round 6d1e21cc4b484d0b6333ca8d2607b79e9ec9facf
-review verdict: revise (review-r2.md; F02 residual and F09 on S76/p58); round limit reached
-active plan: plan-v2.md
+review verdict: round 2 revise; F02 residual and F09 on S76/p58 pending authorized final fixes
+active plan: plan-v3.md
 pr: not open
-state: escalated
-round: 2 of 2
+state: in-work
+round: 3 of 3 (one localized exception authorized by Albert; ordinary medium limit remains 2)
 albert decisions:
 - 2026-11-10: Whole-deck visual/motivational revision, larger diagram labels, repair broken arrows. Albert will make detailed revisions afterward in a separate PR.
 - 2026-11-10: “I meant lec12 fairness” corrects lec11 in the original request. Lec11 is out of scope.
 - 2026-11-10 12:28 KST: Albert directly authorized resumption: “Continue from the job folder.” Continue the same pinned baseline and medium job; plan-v1 completed.
+
+- 2026-11-10 13:40 KST: Albert authorized the two localized S76/p58 corrections and one final targeted check: “yes go ahead” (C08). Hold lifted for plan-v3 only; no merge authorization.
 
 ## Size and scope decision
 Medium: all six existing sections are involved, but the argument, audience and 90-minute teaching scope stay. Reuse the deck's established literature and figures; add instructor-built examples and staged explanations, not a literature survey. Up to two review rounds. No large-job approval gate is needed unless scope or argument grows.

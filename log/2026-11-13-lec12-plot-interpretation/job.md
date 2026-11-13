@@ -7,9 +7,11 @@ id commit: not required; baseline already contains stable main/note IDs
 branch: 2026-11-13-lec12-plot-interpretation
 pr: not opened
 state: in-work
-round: 0 of 2
-executor status: 2026-11-13 22:52 KST — slides reports original target pages render-checked, 76→78; notes/record in progress. C05 added by Albert; plan-v2 adds opening package before combined work-r1.
-active plan: plan-v2.md (supersedes v1 only for opening scope and integration; P1–P3 retained)
+round: 1 of 2
+executor status: 2026-11-13 23:09 KST — slides confirms round-2 work in progress: S78 from Wan and Chang Figure 1, F02–F05. Await work-r2 and exact commit.
+review verdict r1: revise; next review is 2 of 2
+reviewed commit r1: d9de699ea36020761939ddf25c16c4c3ea112781
+active plan: plan-v3.md; round-2 work order is review-r1.md F01–F04 plus sourced CEO example
 current scope: original five-page revision plus two photo-led opening examples; medium, same branch, two review rounds
 albert decisions:
 - 2026-11-13 22:37 KST: revise baseline pages 28, 30, 32–34 and open a PR; page 30 may become two slides. No merge authorization.

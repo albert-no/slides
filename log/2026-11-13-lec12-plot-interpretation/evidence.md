@@ -77,3 +77,24 @@ Verified 2026-11-13 against the primary sources below, the existing figure crops
 - Setup: prompt template “A photo of the face of [OCCUPATION]”. Figure 3 shows software developer, flight attendant, chef, cook, taxi driver and housekeeper; Appendix Figure A6 shows pilot, firefighter, nurse and therapist. Both source images were inspected. Neither is a CEO-photo source.
 - Limit: historical study, not a test of the new demonstration's generator. Opening does not need the later percentages or a new literature survey. If generation is unavailable, propose an honestly attributed published occupation example rather than relabeling another occupation as CEO.
 - Label: published result / source-scope check.
+
+## E12 — S77 photograph verified
+- Claim: S77 uses an actual Commons group photograph, not a model-test output. File page and imageinfo metadata identify “CEE Youth Group Yerevan Meeting 2025, 2nd Day 42”, photographer Հակուլիկ, photographed 22 November 2025; CC0 1.0.
+- Source/version: https://commons.wikimedia.org/wiki/File:CEE_Youth_Group_Yerevan_Meeting_2025,_2nd_Day_42.jpg ; Commons API imageinfo/extmetadata checked 2026-11-13. Original SHA-1 3dc3dca2376e489522f1793fed28c0f333703173.
+- Setup: executor uses the 1920-pixel rendition as `courses/trustworthy-ai/figs/lec12-plot-interpretation/s77-group-photo.jpg`; no roles supplied in the classroom task.
+- Limit: the photograph does not establish the individuals' importance, competence or other status. The work report's “no public figures” is not established by this metadata and is not needed for the slide.
+- Label: illustrative example with verified photographic provenance.
+
+## E13 — Randomization is about the illustrated utility optimum
+- Clarification to E02 and plan-v1/v2: equalized odds alone does not logically require randomization even on this dataset; an always-reject rule has equal TPR/FPR. Figure 9 displays the profit-optimal decision rules under the stated constraints and cost model. The supported statement is that the illustrated profit-optimal equalized-odds solution uses randomization for some groups.
+- Source/version: https://arxiv.org/pdf/1610.02413v1 §7, pp17–19, optimization setup and Figure 9; the constant-rule counterexample follows directly from the definitions.
+- Setup: conditional acceptance probability in the interval is fitted; it is not necessarily 1/2. No exact mixing probability for a shown interval has been established here.
+- Limit: do not say all equal-error solutions require randomness, or categorically exclude 50/50 without the fitted parameter.
+- Label: published result plus our definitional counterexample.
+
+## E14 — Published CEO output replaces unavailable live generation
+- Supersedes the unexecuted live-generation route in E10; no successful new generation is claimed. Executor reports one denied request and no output; do not retry the denied scope or change credentials for this job.
+- Source/version: Wan and Chang, “The Male CEO and the Female Assistant: Evaluation and Mitigation of Gender Biases in Text-To-Image Generation of Dual Subjects”, ACL 2025, https://aclanthology.org/2025.acl-long.449/ ; authoritative PDF https://aclanthology.org/2025.acl-long.449.pdf , Figure 1, printed p9174 / PDF p1; single-person protocol in Appendix B.
+- Claim/setup: Figure 1's top-row CEO panel is a genuine DALL-E 3 output for the single-occupation prompt template, instantiated as “Generate a picture of one CEO.” The paper presents it as a single-person example, distinct from the bottom-row paired-role examples. Review visually matched the CEO panel to the PDF's embedded 1024×1024 image object 273 (first image in a page-1 pdfimages extraction).
+- Limit: a published selected example, not a new run, random audit sample, claim of stereotype prevalence or a real CEO photograph. Publication year 2025 is not an asserted generation date. Do not infer demographics or claim this one example proves the model is biased or unbiased. Do not import the paired-subject 74% result into the opening.
+- Label: published example, used illustratively. The executor records its repo asset and reproduction/extraction path in work-r2.

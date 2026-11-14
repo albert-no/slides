@@ -15,33 +15,45 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 .detail p, .detail ul, .detail ol { margin: 8px 0; }
 .detail table { border-collapse: collapse; margin: 10px 0; }
 .detail th, .detail td { border: 1px solid var(--slate); padding: 4px 12px; text-align: left; }
+p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 </style></head><body>
 <h1>Lecture 6 — Hallucination, Calibration &amp; Reliability · Script &amp; Companion Notes</h1>
-<p><em>One entry per slide, in order. Section headers match slide titles. Each entry carries the spoken script and key takeaway, followed by companion notes: rigorous definitions of the terms the slide gestures at, formal theorem statements with proofs, and background reading with links.</em></p>
+<p><em>One entry per slide, in order. Section headers match slide titles. Each entry opens with the slide&rsquo;s message, then how to read the slide, then the spoken script and companion notes: rigorous definitions of the terms the slide gestures at, formal theorem statements with proofs, and background reading with links.</em></p>
 
 <article data-slide-id="S01">
 <h2>Hallucination, Calibration &amp; Reliability</h2>
+<p class="msg"><span class="kt">Message:</span> Lecture 6 asks why a fluent answer can be a confident wrong answer, and which tools let us measure and bound that risk: reliability is something we can measure, not just hope for.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Welcome to Lecture 6 of Trustworthy AI. Today we ask why a fluent model answer can be a confident wrong answer, and what tools let us measure and bound that risk.</p>
-<p><span class="kt">Key takeaway:</span> Reliability is something we can measure, not just hope for.</p>
+</div>
 </article>
 
 <article data-slide-id="S02">
 <h2>Contents</h2>
+<p class="msg"><span class="kt">Message:</span> Six steps lead from the failure, to its cause, to ways of measuring and reducing it: fluent is not correct, why models hallucinate, calibration, conformal prediction, detection and grounding, and the 2025&ndash;26 frontier.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Six steps: fluent is not correct, why models hallucinate, calibration, conformal prediction, detection and grounding, and the 2025-26 frontier.</p>
-<p><span class="kt">Key takeaway:</span> From the failure, to its cause, to ways of measuring and reducing it.</p>
+</div>
 </article>
 
 <article data-slide-id="S03">
 <h2>01 — Fluent ≠ Correct</h2>
+<p class="msg"><span class="kt">Message:</span> Section 01 opens with the core observation: a model can produce perfectly fluent, confident prose that is simply not true, because fluency and truth are independent properties of an answer.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>First section. The core observation: a model can produce perfectly fluent prose that is simply not true.</p>
-<p><span class="kt">Key takeaway:</span> Fluency and truth are independent.</p>
+</div>
 </article>
 
 <article data-slide-id="S04">
 <h2>What Is a Hallucination</h2>
-<p>A hallucination is output that reads fluently and confidently but is not grounded in facts or in the provided source. The grammar is perfect; the content is invented.</p>
-<p><span class="kt">Key takeaway:</span> Hallucination is confident, ungrounded output.</p>
+<p class="msg"><span class="kt">Message:</span> A hallucination is output that reads fluently and confidently but is not grounded in facts or in the provided source: the grammar is perfect, the content is invented, and nothing in the text signals the difference.</p>
+<p><strong>Reading the slide.</strong> Follow the diagram left to right: the prompt &ldquo;cite a paper&rdquo; goes into the model, which predicts the next token and returns fluent output with perfect grammar. The dashed box for facts or a source sits off that path, and the red &times; marks that no grounding link connects it to the output. The slide cites the Ji et al. survey (linked below).</p>
 <div class="detail">
+<h3>Script</h3>
+<p>A hallucination is output that reads fluently and confidently but is not grounded in facts or in the provided source. The grammar is perfect; the content is invented.</p>
 <h3>Definitions</h3>
 <p><strong>Hallucination (working formalization).</strong> Fix a prompt $c$ and let $R_c$ be the set of possible responses, partitioned into a set of <em>valid</em> responses $V_c$ and a disjoint set of <em>errors</em> $E_c$ (Kalai, Nachum, Vempala &amp; Zhang 2025 use exactly this valid/error partition). A model is a distribution $\hat p(\cdot \mid c)$ over responses, and its <strong>hallucination (error) rate</strong> on $c$ is
 $$\mathrm{err}(c) \;=\; \Pr_{r \sim \hat p(\cdot\mid c)}\bigl[r \in E_c\bigr].$$
@@ -56,10 +68,11 @@ What makes an error a <em>hallucination</em> rather than a mere mistake is that 
 
 <article data-slide-id="S05">
 <h2>Fluency Fools Us</h2>
-<p>We instinctively read confident, well-formatted prose as true prose. The signal we trust is style, not verified truth.</p>
-<p><span class="kt">Key takeaway:</span> Style is not evidence of correctness.</p>
-<p><span class="kt">Slide figure:</span> a test. Two citations in identical format: Vaswani et al. (2017), which exists in the NeurIPS proceedings, and "Lindqvist and Okafor (2017)", invented for the slide. Nothing on the page separates them; only a lookup does. The purpose: show that the cues readers use (format, venue, confident tone) carry no information about existence.</p>
+<p class="msg"><span class="kt">Message:</span> Readers take confident, well-formatted prose as true, but style is not evidence: a real and an invented citation look identical on the page, and only a lookup tells them apart.</p>
+<p><strong>Reading the slide.</strong> The slide is a test. Two citations in identical format: Vaswani et al. (2017), which exists in the NeurIPS proceedings (&check;), and &ldquo;Lindqvist and Okafor (2017)&rdquo;, invented for the slide (&times;). Nothing on the page separates them; only a lookup does. The cues readers use (format, venue, confident tone) carry no information about existence.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>We instinctively read confident, well-formatted prose as true prose. The signal we trust is style, not verified truth.</p>
 <h3>Definitions</h3>
 <p><strong>Fluency vs. truth (formalization: course notes).</strong> Fluency is an <em>internal</em> quantity: text $x$ is fluent when it has high likelihood under the language model itself, i.e. low perplexity $\exp\bigl(-\tfrac1T\sum_t \log \hat p(x_t \mid x_{&lt;t})\bigr)$. Truth is an <em>external</em> predicate: whether the claims in $x$ hold in the world (or follow from a given source). Nothing in the definition of likelihood mentions the external predicate, so the two can disagree arbitrarily — a maximally fluent string can be entirely false. The reader's heuristic "fluent $\Rightarrow$ true" is exactly the gap a hallucinating model exploits.</p>
 </div>
@@ -67,10 +80,11 @@ What makes an error a <em>hallucination</em> rather than a mere mistake is that 
 
 <article data-slide-id="S06">
 <h2>Context: Mata v. Avianca (2023)</h2>
-<p>Before the new case, the old one. In Mata v. Avianca, a passenger sued the airline Avianca over a knee injury from a serving cart on a flight. His lawyers filed a brief citing six court decisions that ChatGPT had invented, and when the court asked about them, they stood by them. In June 2023 the judge fined the lawyers and their firm USD 5,000. The 2025 case on the next slide is a different court, different firms, and a different AI workflow, but the same failure: nobody checked the citations.</p>
-<p><span class="kt">Key takeaway:</span> Avianca (2023) is the famous first warning; Lacey (2025) shows it was not the last.</p>
-<p><span class="kt">Slide figure:</span> two-column comparison, Mata v. Avianca (2023) against Lacey v. State Farm (2025): court, how AI was used, the fabricated citations, and the sanction.</p>
+<p class="msg"><span class="kt">Message:</span> Mata v. Avianca (2023) was the famous first warning: lawyers filed six ChatGPT-invented decisions, stood by them when questioned, and were fined USD 5,000. The 2025 case on the next slide shows the same failure, unchecked citations, again.</p>
+<p><strong>Reading the slide.</strong> A two-column table sets Mata v. Avianca (2023) against Lacey v. State Farm (2025), row by row: the court, how AI was used, the fabricated citations, and the sanction (USD 5,000 in June 2023, USD 31,100 in May 2025). Read across each row: different court, firms and AI workflow, same failure.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Before the new case, the old one. In Mata v. Avianca, a passenger sued the airline Avianca over a knee injury from a serving cart on a flight. His lawyers filed a brief citing six court decisions that ChatGPT had invented, and when the court asked about them, they stood by them. In June 2023 the judge fined the lawyers and their firm USD 5,000. The 2025 case on the next slide is a different court, different firms, and a different AI workflow, but the same failure: nobody checked the citations.</p>
 <h3>Background &amp; further reading</h3>
 <p><strong>Mata v. Avianca, Inc.</strong>, No. 22-cv-1461 (PKC), S.D.N.Y. Roberto Mata alleged he was injured when a metal serving cart struck his knee on an Avianca flight (a Montreal Convention claim). Attorney Steven Schwartz used ChatGPT, which he "falsely assumed was like a super search engine", for research; the opposition brief cited six nonexistent decisions (Varghese, Shaboon, Petersen, Martinez, Durden, Miller). Judge P. Kevin Castel's Opinion and Order on Sanctions (22 June 2023) found the lawyers acted in subjective bad faith by continuing to stand by the fake opinions after the court and opposing counsel questioned them, and imposed a USD 5,000 penalty jointly and severally on Schwartz, Peter LoDuca, and the firm Levidow, Levidow &amp; Oberman.</p>
 <p><strong>How it differs from Lacey (2025):</strong> federal court in New York vs. California; a small firm using ChatGPT directly vs. two large firms passing an AI-drafted research outline into a brief; six fabricated decisions vs. two nonexistent cases among 9 of 27 wrong citations; USD 5,000 vs. USD 31,100.</p>
@@ -82,11 +96,13 @@ What makes an error a <em>hallucination</em> rather than a mere mistake is that 
 
 <article data-slide-id="S07">
 <h2>Fake Citations, Again</h2>
-<p>A new case, not Avianca and two years later: a 2025 brief from two major firms had a third of its citations wrong, including two nonexistent cases, and drew a USD 31,100 sanction in Lacey v. State Farm. Public trackers now count hundreds of similar court filings worldwide.</p>
-<p><span class="kt">Key takeaway:</span> Hallucinated citations still reach court, even at top firms.</p>
+<p class="msg"><span class="kt">Message:</span> Two years after Avianca, a brief from two major firms had a third of its citations wrong, two of them nonexistent cases, and drew a USD 31,100 sanction: hallucinated citations still reach court, even at top firms.</p>
+<p><strong>Reading the slide.</strong> The bullets give the case, Lacey v. State Farm (2025). The bar splits the brief&rsquo;s citations into those that checked out, those that were flawed (about one third; 9 of 27 per the order), and the 2 cases that do not exist; the USD 31,100 sanction closes the slide. Public trackers now count hundreds of similar filings worldwide (Charlotin&rsquo;s database, linked below).</p>
 <div class="detail">
+<h3>Script</h3>
+<p>A new case, not Avianca and two years later: a 2025 brief from two major firms had a third of its citations wrong, including two nonexistent cases, and drew a USD 31,100 sanction in Lacey v. State Farm. Public trackers now count hundreds of similar court filings worldwide.</p>
 <h3>Background &amp; further reading</h3>
-<p><strong>Lacey v. State Farm General Insurance Co.</strong> (C.D. Cal., No. 2:24-cv-05205). Former Los Angeles District Attorney Jackie Lacey sued her insurer; a lawyer at Ellis George used AI tools to draft a research outline that K&amp;L Gates incorporated into a supplemental brief without cite-checking. Special Master Michael R. Wilner found that 9 of the brief's 27 citations were wrong — including two cases that do not exist — and in May 2025 struck the briefs and imposed <span>$</span>31,100 in sanctions on the two firms jointly and severally (<span>$</span>26,100 in special-master fees plus <span>$</span>5,000 in defense fees), specifying that the client would not bear the cost.</p>
+<p><strong>Lacey v. State Farm General Insurance Co.</strong> (C.D. Cal., No. 2:24-cv-05205). Former Los Angeles District Attorney Jackie Lacey sued her insurer; a lawyer at Ellis George used AI tools to draft a research outline that K&amp;L Gates incorporated into a supplemental brief without cite-checking. Special Master Michael R. Wilner found that 9 of the brief's 27 citations were wrong — including two cases that do not exist — and in May 2025 struck the briefs and imposed USD 31,100 in sanctions on the two firms jointly and severally (USD 26,100 in special-master fees plus USD 5,000 in defense fees), specifying that the client would not bear the cost.</p>
 <p><strong>Mata v. Avianca, Inc.</strong> (S.D.N.Y., 2023) — the case on the previous slide: two lawyers filed a brief with six ChatGPT-fabricated cases and were sanctioned USD 5,000 by Judge P. Kevin Castel in June 2023.</p>
 <ul>
 <li><a href="https://www.courtlistener.com/docket/68872463/jacquelyn-jackie-lacey-v-state-farm-general-insurance-company/">Lacey v. State Farm docket (CourtListener)</a> — full docket including the special master's sanctions order.</li>
@@ -99,9 +115,11 @@ What makes an error a <em>hallucination</em> rather than a mere mistake is that 
 
 <article data-slide-id="S08">
 <h2>Invented Medical Facts</h2>
-<p>Google's Med-Gemini paper described an infarct (dead tissue from a blocked blood supply; in the brain, a stroke) in the "basilar ganglia" — a nonexistent brain area blending basal ganglia and basilar artery — and the fluent error sat unnoticed for about a year until a neurologist flagged it. In medicine, a fluent error is a dangerous one.</p>
-<p><span class="kt">Key takeaway:</span> High-stakes domains have little margin for confident errors.</p>
+<p class="msg"><span class="kt">Message:</span> Google&rsquo;s Med-Gemini materials described an infarct in the &ldquo;basilar ganglia&rdquo;, a brain area that does not exist, and the fluent error stood for about a year until a neurologist flagged it. In medicine, a confident error is a dangerous one.</p>
+<p><strong>Reading the slide.</strong> Two real terms, the basal ganglia (a brain structure) and the basilar artery (a vessel), merge into the output &ldquo;basilar ganglia&rdquo;, which names no structure. The blend reads naturally, which is why it went unnoticed.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Google's Med-Gemini paper described an infarct (dead tissue from a blocked blood supply; in the brain, a stroke) in the "basilar ganglia" — a nonexistent brain area blending basal ganglia and basilar artery — and the fluent error sat unnoticed for about a year until a neurologist flagged it. In medicine, a fluent error is a dangerous one.</p>
 <h3>Background &amp; further reading</h3>
 <p>In May 2024 Google introduced <strong>Med-Gemini</strong>, a family of medical AI models; its debut materials included a head-CT report identifying an "old left basilar ganglia infarct." No such structure exists — the model blended the <em>basal ganglia</em> (deep-brain nuclei) with the <em>basilar artery</em> (a brainstem vessel). Board-certified neurologist Bryan Moore flagged the error; Google quietly edited the blog post to "basal ganglia" without acknowledgment, then after being called out described "basilar" as a common mis-transcription of "basal" that the model had learned from training data. The Verge reported the episode in August 2025, over a year after publication.</p>
 <ul>
@@ -113,9 +131,11 @@ What makes an error a <em>hallucination</em> rather than a mere mistake is that 
 
 <article data-slide-id="S09">
 <h2>Two Flavors of Wrong</h2>
-<p>A factuality error contradicts the world. A faithfulness error contradicts the provided source, for example a summary asserting something the document never said.</p>
-<p><span class="kt">Key takeaway:</span> Factuality is about the world; faithfulness is about the source.</p>
+<p class="msg"><span class="kt">Message:</span> Wrong comes in two flavors: a factuality error contradicts the world; a faithfulness error contradicts the provided source, for example a summary asserting something the document never said. The two are checked against different references.</p>
+<p><strong>Reading the slide.</strong> The output sits in the middle with two &ldquo;contradicts?&rdquo; checks: one against the world (factuality), one against the given source (faithfulness). The two checks are independent: an output can pass one and fail the other.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>A factuality error contradicts the world. A faithfulness error contradicts the provided source, for example a summary asserting something the document never said.</p>
 <h3>Definitions</h3>
 <p><strong>Factuality vs. faithfulness (formalization: course notes).</strong> Let $y$ be a generated output, decomposed into atomic claims $a_1,\dots,a_k$, let $W$ denote world knowledge, and let $d$ be a provided source document (when one exists).</p>
 <ul>
@@ -128,9 +148,11 @@ What makes an error a <em>hallucination</em> rather than a mere mistake is that 
 
 <article data-slide-id="S10">
 <h2>Not the Same as a Bug</h2>
-<p>A bug is a fixable defect with a crash or error. Hallucination is structural: the model is working as designed, predicting likely text rather than checking truth.</p>
-<p><span class="kt">Key takeaway:</span> Hallucination is a property of the objective, not a defect to patch.</p>
+<p class="msg"><span class="kt">Message:</span> Hallucination is not a bug: a plausible falsehood is the model working as designed, predicting likely text rather than checking truth. Under the conditions of the next section&rsquo;s theorems some errors are even forced, so no code patch removes them without changing the objective or its incentives.</p>
+<p><strong>Reading the slide.</strong> Two columns. Left, a bug: an &#9888; Error with a stack trace, visible and fixable, a defect in the code. Right, a hallucination: a fluent claim (&ldquo;The study found a 23% increase...&rdquo;) with no error signal, the model working as designed, a property of the objective.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>A bug is a fixable defect with a crash or error. Hallucination is structural: the model is working as designed, predicting likely text rather than checking truth.</p>
 <h3>Definitions</h3>
 <p><strong>Bug vs. structural behavior (course notes).</strong> A bug is a deviation between a program's behavior and its specification. A language model's specification is its training objective: minimize cross-entropy against the corpus distribution. A model that emits a plausible falsehood is <em>meeting</em> that specification — the falsehood can even be required by it, as the theorems in the next section make precise (a well-calibrated model provably must hallucinate at a rate tied to the rare-fact structure of its training data). So "hallucination" names a property of the objective's optimum, not an implementation error, and no patch to the code removes it without changing the objective or the incentives.</p>
 </div>
@@ -138,21 +160,30 @@ What makes an error a <em>hallucination</em> rather than a mere mistake is that 
 
 <article data-slide-id="S11">
 <h2>Why This Matters</h2>
+<p class="msg"><span class="kt">Message:</span> Reliability gates deployment: a single confident bad answer can break user trust, endanger safety in health, law or finance, and raise the question of who is liable for the harm it causes.</p>
+<p><strong>Reading the slide.</strong> Three cards, Trust, Safety and Liability, name the three costs of an unreliable answer.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Reliability gates deployment. A single bad answer can break user trust, endanger safety in health, law, or finance, and raise the question of who is liable for the error.</p>
-<p><span class="kt">Key takeaway:</span> Unreliable answers carry real trust, safety, and liability costs.</p>
+</div>
 </article>
 
 <article data-slide-id="S12">
 <h2>02 — Why Models Hallucinate</h2>
+<p class="msg"><span class="kt">Message:</span> Section 02 traces hallucination back to its cause: the next-token training objective, the limits of what a model family can tell apart, and the incentives built into training and grading, not a single fixable mistake.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Second section. We trace hallucination back to the training objective and the incentives baked into it.</p>
-<p><span class="kt">Key takeaway:</span> The cause is in the objective, not in a single mistake.</p>
+</div>
 </article>
 
 <article data-slide-id="S13">
 <h2>The Training Objective</h2>
-<p>A language model is trained to predict the next token given the words so far. It maximizes likely text, not true text.</p>
-<p><span class="kt">Key takeaway:</span> The model optimizes likelihood, not truth.</p>
+<p class="msg"><span class="kt">Message:</span> A language model is trained to predict the next token from the words so far, so it ranks continuations by likelihood; nothing in that objective checks whether the continuation is true.</p>
+<p><strong>Reading the slide.</strong> The formula Pr[next word &#8739; words so far] is the whole objective. The bar chart applies it to the prefix &ldquo;The 2019 paper by Smith ...&rdquo;: candidate next tokens ranked by probability (et 0.41, and 0.22, &ldquo;,&rdquo; 0.15, showed 0.09, (2019) 0.07). The caption makes the point: ranked by likelihood; nothing here checks the fact.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>A language model is trained to predict the next token given the words so far. It maximizes likely text, not true text.</p>
 <h3>Definitions</h3>
 <p><strong>Autoregressive language modeling (derivation: course notes).</strong> A language model defines a distribution over token sequences by the chain rule,
 $$p_\theta(x_{1:T}) \;=\; \prod_{t=1}^{T} p_\theta\bigl(x_t \mid x_{&lt;t}\bigr),$$
@@ -164,10 +195,11 @@ Since $H(p_{\mathrm{data}})$ is a constant, the unique population minimizer is $
 
 <article data-slide-id="S14">
 <h2>No Truth Grounding</h2>
-<p>Nothing in the loss demands that an output be factual. The corpus mixes truth and fiction, so the model learns the shape of answers, and a plausible shape can be false.</p>
-<p><span class="kt">Key takeaway:</span> Truth is not a quantity the loss controls.</p>
-<p><span class="kt">Slide figure:</span> Kalai et al. (2025), Fig. 1: the Is-It-Valid reduction; valid outputs (+) and errors (−) for spelling, counting, and birthdays — a hallucination is a classification error on a pattern that may not exist.</p>
+<p class="msg"><span class="kt">Message:</span> Nothing in the loss demands a factual output. Kalai et al. (2025) show that generating valid text is at least as hard as classifying text as valid or error, so where that classification fails, errors are forced, up to the theorem&rsquo;s correction terms.</p>
+<p><strong>Reading the slide.</strong> The title states the reduction. The figure is Kalai et al. (2025), Fig. 1: the Is-It-Valid reduction, valid outputs (+) and errors (&minus;) in three settings. Spelling has a clean boundary; counting has a boundary that a poor model misses; birthdays have no pattern at all, only memorization. A hallucination is a classification error on a pattern that may not exist. The formal statement for that reduction is in the notes for slide S19; this entry gives the earlier Kalai&ndash;Vempala theorem.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Nothing in the loss demands that an output be factual. The corpus mixes truth and fiction, so the model learns the shape of answers, and a plausible shape can be false.</p>
 <h3>Definitions</h3>
 <p><strong>The Kalai–Vempala setting</strong> (arXiv 2311.14648, STOC 2024). Documents $x$ carry factoids $y = f(x)$; the world picks a true distribution $D_L$ over documents, inducing a factoid distribution $p := f \circ D_L$. The <strong>facts</strong> are $F := \mathrm{supp}(p) \cup \{\perp\}$ and the <strong>hallucinations</strong> are $H := Y \setminus F$ — plausible factoids with zero true probability. The learner sees $n$ training documents (observed factoids $O \subseteq F$), outputs a model $D_{LM}$ with factoid distribution $g := f \circ D_{LM}$, and its <strong>hallucination rate</strong> is $g(H)$. The <strong>monofact estimate</strong> is
 $$\widehat{MF} \;:=\; \frac{\#\{\text{factoids appearing exactly once in training}\}}{n},$$
@@ -186,16 +218,18 @@ Informally (the paper's 99%-confidence version): <em>hallucination rate $\gtrsim
 <h3>Background &amp; further reading</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2311.14648">Kalai &amp; Vempala, "Calibrated Language Models Must Hallucinate" (STOC 2024)</a> — full statements (Theorem 1, Corollary 1) and proofs.</li>
+<li><a href="https://arxiv.org/abs/2509.04664">Kalai, Nachum, Vempala &amp; Zhang, "Why Language Models Hallucinate" (2025)</a>, Fig. 1 (the slide&rsquo;s figure).</li>
 </ul>
 </div>
 </article>
 
 <article data-slide-id="S15">
 <h2>Counting With a Poor Model</h2>
-<p>Ask "How many Ds are in DEEPSEEK?" The answer is one. DeepSeek-V3, the chat model, answers directly and said two or three in ten independent trials. DeepSeek-R1, the reasoning model, spells the word out letter by letter and gets one. These two are siblings, not an old and a new version: V3 came out in December 2024, R1 in January 2025, and R1 was trained from V3's own base model. V3 was later refreshed in March 2025, so "V3" is not the older idea; it is the direct-answer line. Assuming similar training data, R1's success suggests a modeling or reasoning limitation in how V3 answers. A shared base alone does not establish identical training data, so this is a suggestion, not an isolated cause. (The paper's words: "Assuming similar training data, this suggests that R1 is a better model for the task than the DeepSeek-V3 model.")</p>
-<p><span class="kt">Key takeaway:</span> Some errors plausibly come from how the model represents the task, not from missing data.</p>
-<p><span class="kt">Slide figure:</span> the word seen two ways: as letters, where one D is visible, and as tokens D/EEP/SEE/K (the paper's example). Token boundaries differ from character boundaries; explicit spelling can help counting. Note the token view still contains a standalone D token; the point is the boundary mismatch, not that the D is invisible.</p>
+<p class="msg"><span class="kt">Message:</span> Asked how many Ds are in DEEPSEEK, the direct-answer model DeepSeek-V3 said two or three, while the reasoning model R1 spelled the word out and got one. Assuming similar training data, this suggests some errors come from how the model represents the task, not from missing data.</p>
+<p><strong>Reading the slide.</strong> Left: the word as letters, where one D is visible; R1 spells it out and answers 1 (&check;). Right: the word as tokens D / EEP / SEE / K (the paper&rsquo;s example), where V3 answers &ldquo;2&rdquo; or &ldquo;3&rdquo; (&times;). Token boundaries differ from character boundaries, and explicit spelling can help counting. The token view still contains a standalone D token: the point is the boundary mismatch, not that the D is invisible. The bullets give the V3/R1 chronology (details below).</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Ask "How many Ds are in DEEPSEEK?" The answer is one. DeepSeek-V3, the chat model, answers directly and said two or three in ten independent trials. DeepSeek-R1, the reasoning model, spells the word out letter by letter and gets one. These two are siblings, not an old and a new version: V3 came out in December 2024, R1 in January 2025, and R1 was trained from V3's own base model. V3 was later refreshed in March 2025, so "V3" is not the older idea; it is the direct-answer line. Assuming similar training data, R1's success suggests a modeling or reasoning limitation in how V3 answers. A shared base alone does not establish identical training data, so this is a suggestion, not an isolated cause. (The paper's words: "Assuming similar training data, this suggests that R1 is a better model for the task than the DeepSeek-V3 model.")</p>
 <h3>Background &amp; further reading</h3>
 <p>Kalai, Nachum, Vempala &amp; Zhang (2025), §1 (the prompt and the V3 result, accessed 11 May 2025) and §3.3.2 (the R1 chain of thought and the token explanation). The paper's framing: a <em>poor model</em> is one whose family cannot separate valid from invalid responses, even with perfect data. <a href="https://arxiv.org/abs/2509.04664">arXiv 2509.04664</a>.</p>
 <p><strong>Chronology and roles (verified against primary sources).</strong> DeepSeek-V3: released 26 December 2024 (technical report <a href="https://arxiv.org/abs/2412.19437">arXiv 2412.19437</a>); an updated checkpoint, DeepSeek-V3-0324, followed on 25 March 2025. DeepSeek-R1: released 20 January 2025 (<a href="https://arxiv.org/abs/2501.12948">arXiv 2501.12948</a>); the report states R1 was trained with reinforcement learning starting from DeepSeek-V3-Base, and reuses parts of the V3 SFT data. So V3 is not a newer successor to R1, and R1 is not a replacement for V3: one is the direct-answer chat model, the other the reasoning model on the same base. Kalai et al. queried "DeepSeek-V3 (600 B parameters)" through the DeepSeek app on 11 May 2025; the paper does not name the checkpoint, and the access date of the R1 example is not given. Release notes: <a href="https://api-docs.deepseek.com/news/news1226">V3 (26 Dec 2024)</a>, <a href="https://api-docs.deepseek.com/news/news250120">R1 (20 Jan 2025)</a>, <a href="https://api-docs.deepseek.com/news/news250325">V3-0324 (25 Mar 2025)</a>.</p>
@@ -204,10 +238,11 @@ Informally (the paper's 99%-confidence version): <em>hallucination rate $\gtrsim
 
 <article data-slide-id="S16">
 <h2>Weak Model Family ⇒ Forced Errors</h2>
-<p>The paper's key reduction: producing only valid text is at least as hard as telling valid text from errors. So if no model in the family can tell them apart, generation must make errors. The cleanest example is a trigram model, which predicts each word from the previous two only. "She lost it and was completely out of" should end with "her mind", "He lost it and was completely out of" with "his mind". Both end in "out of", so the model cannot tell them apart. In this stipulated two-option task, with no abstention and both prompts equally likely, every trigram model is wrong at least half the time. V3's miscounts on the previous slide are only a hint: one model failing does not show that its whole family must fail.</p>
-<p><span class="kt">Key takeaway:</span> When the model family cannot separate valid from invalid, errors are forced, not accidental.</p>
-<p><span class="kt">Slide figure:</span> two prompts sharing the same last two words, so a trigram model makes the same prediction for both. The formal bound is kept here and in the technical supplement (section "Forced Errors"), not on the slide.</p>
+<p class="msg"><span class="kt">Message:</span> If no model in a family can tell valid from invalid outputs, generation must err. Proved case: two equally likely prompts ending in &ldquo;out of&rdquo;, two options, no abstention; every trigram model is then wrong at least half the time. V3&rsquo;s miscounts are a hint, not a proof.</p>
+<p><strong>Reading the slide.</strong> Two prompts, &ldquo;She lost it and was completely out of&rdquo; (should end &ldquo;her mind&rdquo;) and &ldquo;He lost it and was completely out of&rdquo; (&ldquo;his mind&rdquo;), share their last two words, so a trigram model makes the same prediction for both. Under the stipulated task, two options, no abstention, both prompts equally likely, at least one prompt is answered wrongly, so the error is at least one half. The closing line keeps slide S15 in its place: one model failing does not show its whole family must fail. The formal bound is kept here and in the technical supplement (section &ldquo;Forced Errors&rdquo;), not on the slide.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>The paper's key reduction: producing only valid text is at least as hard as telling valid text from errors. So if no model in the family can tell them apart, generation must make errors. The cleanest example is a trigram model, which predicts each word from the previous two only. "She lost it and was completely out of" should end with "her mind", "He lost it and was completely out of" with "his mind". Both end in "out of", so the model cannot tell them apart. In this stipulated two-option task, with no abstention and both prompts equally likely, every trigram model is wrong at least half the time. V3's miscounts on the previous slide are only a hint: one model failing does not show that its whole family must fail.</p>
 <h3>Definitions</h3>
 <p>(Kalai et al. 2025, §3.3.2.) For each prompt $c$, $\mathcal V_c$ and $\mathcal E_c$ are the valid and error responses. $\mathrm{err} := \hat p(\mathcal E) = \sum_{(c,r)\in\mathcal E}\mu(c)\,\hat p(r\mid c)$ is the probability the model generates an error response, with prompts $c \sim \mu$. <strong>The distribution $D$</strong>: with probability $1/2$ draw $x = (c,r) \sim p$ (a valid training dialogue), and with probability $1/2$ draw $c \sim \mu$ and $r$ uniformly from $\mathcal E_c$; the target is $f(x) = +$ iff $x$ is valid. <strong>The term $\delta$</strong>: $\delta := |\hat p(A) - p(A)|$ for $A := \{(c,r) : \hat p(r\mid c) &gt; 1/\min_c|\mathcal E_c|\}$, the gap between how much mass the model and the training distribution put on responses the model rates above that threshold (a calibration-type quantity, small for a calibrated base model). The classifier family thresholds a language model's probability: $g_{\theta,t}(c,r) = +$ if $\hat p_\theta(r\mid c) &gt; t$, else $-$, over all $\theta \in \Theta$, $t \in [0,1]$. Then $\mathrm{opt}(\mathcal G) = \min_{g\in\mathcal G}\Pr_{x\sim D}[g(x)\ne f(x)]$ is the best error of any thresholded model in the family.</p>
 <h3>Theorem &amp; proof</h3>
@@ -222,24 +257,27 @@ Proof in the paper (Theorem 1 reduces generation to the Is-It-Valid classificati
 
 <article data-slide-id="S17">
 <h2>Plausible Beats True</h2>
-<p>Asked for a citation, the model emits a citation-shaped string: a name, a year, a venue. It fills the slot fluently whether or not the paper exists.</p>
-<p><span class="kt">Key takeaway:</span> The model completes patterns, even when the referent is fictional.</p>
+<p class="msg"><span class="kt">Message:</span> Asked for a citation, the model fills a citation-shaped slot, a name, a year, a venue, fluently whether or not the paper exists: it completes the pattern even when the referent is fictional.</p>
+<p><strong>Reading the slide.</strong> The fragment &ldquo;Smith et al.,&rdquo; is extended slot by slot with a year and a venue, and the result looks real. Each slot gets a likely value; no step checks that the paper exists.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Asked for a citation, the model emits a citation-shaped string: a name, a year, a venue. It fills the slot fluently whether or not the paper exists.</p>
 <h3>Definitions</h3>
-<p><strong>Why citations are the worst case (course notes, in the Kalai–Vempala vocabulary).</strong> Citations are a domain where the plausible set is astronomically larger than the fact set: syntactically valid (author, year, venue, title) strings vastly outnumber real papers, so the sparsity ratio $|F|/|H|$ is tiny — which <em>strengthens</em> the lower bound of the previous entry rather than weakening it. Meanwhile each real citation is a long-tail item typically seen once or never in training, so the monofact rate $\widehat{MF}$ on this slice is high. High $\widehat{MF}$ plus extreme sparsity is exactly the regime where the theorem forces a calibrated model to emit citation-shaped strings with no referent.</p>
+<p><strong>Why citations are the worst case (course notes, in the Kalai–Vempala vocabulary).</strong> Citations are a domain where the plausible set is astronomically larger than the fact set: syntactically valid (author, year, venue, title) strings vastly outnumber real papers, so the sparsity ratio $|F|/|H|$ is tiny — which <em>strengthens</em> the Kalai&ndash;Vempala lower bound stated in the notes for slide S14 rather than weakening it. Meanwhile each real citation is a long-tail item typically seen once or never in training, so the monofact rate $\widehat{MF}$ on this slice is high. High $\widehat{MF}$ plus extreme sparsity is exactly the regime where the theorem forces a calibrated model to emit citation-shaped strings with no referent.</p>
 </div>
 </article>
 
 <article data-slide-id="S18">
 <h2>Pressure to Always Answer</h2>
-<p>Training and human raters reward helpful, complete replies. "I don't know" reads as unhelpful, so the model learns to guess rather than admit doubt.</p>
-<p><span class="kt">Key takeaway:</span> We trained the model to prefer a confident guess over an honest blank.</p>
-<p><span class="kt">Slide figure:</span> Kalai et al. (2025), Fig. 2 (reproduced from the GPT-4 technical report): GPT-4 reliability diagram before and after RLHF post-training. The pre-trained model is nearly calibrated; post-training pushes confidence up and breaks the calibration.</p>
+<p class="msg"><span class="kt">Message:</span> Training and human raters reward complete answers, and &ldquo;I don&rsquo;t know&rdquo; looks unhelpful, so models learn to guess rather than admit doubt. For GPT-4, post-training even broke calibration: ECE rose from 0.007 to 0.074.</p>
+<p><strong>Reading the slide.</strong> Bullets give the incentive: &ldquo;I don&rsquo;t know&rdquo; looks unhelpful, raters prefer a confident answer, so the model rarely abstains. The figure is Kalai et al. (2025), Fig. 2, reproduced from the GPT-4 technical report: GPT-4 reliability diagrams before and after RL post-training. The pre-trained model sits on the diagonal (ECE 0.007); after post-training the bars fall far below it (ECE 0.074), confidence pushed above accuracy. The figure shows calibration, not hallucination rates.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Training and human raters reward helpful, complete replies. "I don't know" reads as unhelpful, so the model learns to guess rather than admit doubt.</p>
 <h3>Definitions</h3>
 <p><strong>Binary graders.</strong> Kalai, Nachum, Vempala &amp; Zhang (2025) model an evaluation as a grader $g_c : R_c \to \{0,1\}$ per prompt $c$, with abstentions ("I don't know") scored $0$ — the dominant format across mainstream benchmarks.</p>
 <h3>Theorem &amp; proof</h3>
-<p><strong>Claim (guessing dominates abstaining under binary grading).</strong> If the best guess available to the model succeeds with probability $q$, its expected score is $q \cdot 1 + (1-q)\cdot 0 = q$, while abstaining scores exactly $0$. Hence guessing is weakly optimal always, and strictly optimal whenever $q &gt; 0$. <em>(Derivation: course notes — one line, but it is the paper's central socio-technical point.)</em> Kalai et al. argue this creates an "epidemic" of penalized uncertainty: models are optimized to be good test-takers, and a good test-taker under 0/1 scoring never leaves a blank. Their proposed mitigation is not a new benchmark but changed scoring of existing ones — see the "Teaching I Don't Know" and "A Scoring Rule" entries.</p>
+<p><strong>Claim (guessing dominates abstaining under binary grading).</strong> If the best guess available to the model succeeds with probability $q$, its expected score is $q \cdot 1 + (1-q)\cdot 0 = q$, while abstaining scores exactly $0$. Hence guessing is weakly optimal always, and strictly optimal whenever $q &gt; 0$. <em>(Derivation: course notes — one line, but it is the paper's central socio-technical point.)</em> Kalai et al. argue this creates an "epidemic" of penalized uncertainty: models are optimized to be good test-takers, and a good test-taker under 0/1 scoring never leaves a blank. Their proposed mitigation is not a new benchmark but changed scoring of existing ones — see the "Teaching I Don't Know" and "A Scoring Rule" entries (slides S61&ndash;S62).</p>
 <h3>Background &amp; further reading</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2509.04664">Kalai, Nachum, Vempala &amp; Zhang, "Why Language Models Hallucinate" (2025)</a> — Section on post-training and evaluation incentives.</li>
@@ -249,9 +287,11 @@ Proof in the paper (Theorem 1 reduces generation to the Is-It-Valid classificati
 
 <article data-slide-id="S19">
 <h2>An Exam-Taking Analogy</h2>
-<p>On a test with no penalty for guessing, a blank scores zero while a guess sometimes scores, so guessing is always optimal. Kalai and colleagues at OpenAI argue this exam incentive, baked into most benchmarks, is a core driver of hallucination.</p>
-<p><span class="kt">Key takeaway:</span> Without a penalty for wrong answers, abstention is never rewarded.</p>
+<p class="msg"><span class="kt">Message:</span> On a test with no penalty for wrong answers, a blank scores zero and a guess with any chance of being right scores more in expectation, so guessing always wins. Kalai and colleagues argue this exam incentive, built into most benchmarks, is a core driver of hallucination.</p>
+<p><strong>Reading the slide.</strong> Two bars for the expected score on one question: leave blank = 0; guess = p &times; 1, which is above 0 for any chance p &gt; 0 of being right. The model faces the same incentive on every question it is graded on. Abstention is never rewarded until wrong answers cost something (slides S61&ndash;S62).</p>
 <div class="detail">
+<h3>Script</h3>
+<p>On a test with no penalty for guessing, a blank scores zero while a guess sometimes scores, so guessing is always optimal. Kalai and colleagues at OpenAI argue this exam incentive, baked into most benchmarks, is a core driver of hallucination.</p>
 <h3>Definitions</h3>
 <p><strong>The Is-It-Valid (IIV) reduction</strong> (Kalai–Nachum–Vempala–Zhang 2025). Responses split into valid $V$ and errors $E$; the model's error rate is $\mathrm{err} := \hat p(E)$, and the training distribution $p$ satisfies $p(E) = 0$. Define the IIV classification problem: draw $x$ from the mixture $D(x) = \tfrac12 p(x)$ for $x \in V$ and $D(x) = \tfrac{1}{2|E|}$ for $x \in E$; the target label is $+$ iff $x \in V$. From any language model $\hat p$ build the plug-in classifier $\hat f(x) = +$ iff $\hat p(x) &gt; 1/|E|$, with misclassification rate $\mathrm{err}_{\mathrm{iiv}} := \Pr_{x\sim D}[\hat f(x) \neq f(x)]$.</p>
 <h3>Theorem &amp; proof</h3>
@@ -269,9 +309,11 @@ where $\delta$ is a one-set calibration gap (the paper shows it is small for any
 
 <article data-slide-id="S20">
 <h2>Guessing, Measured</h2>
-<p>On OpenAI's SimpleQA quiz, o4-mini abstains on 1% of questions and is wrong 75% of the time, while gpt-5-thinking-mini abstains on 52% and is wrong only 26% of the time. Rewarding "I don't know" collapses the error rate.</p>
-<p><span class="kt">Key takeaway:</span> Trained abstention turns most confident errors into honest blanks.</p>
+<p class="msg"><span class="kt">Message:</span> On SimpleQA, gpt-5-thinking-mini abstains on 52% of questions and is wrong on 26%, against 1% and 75% for o4-mini, at similar accuracy (0.22 vs 0.24). These are different models, so it is a striking comparison, not a controlled test of abstention training.</p>
+<p><strong>Reading the slide.</strong> Two pairs of bars, each as a share of SimpleQA questions: o4-mini is wrong on 75% and abstains on 1%; gpt-5-thinking-mini is wrong on 26% and abstains on 52%. The remainder is accuracy (0.24 and 0.22). Read the gap as wrong answers turned into blanks at nearly the same accuracy. The slide cites OpenAI&rsquo;s blog post &ldquo;Why language models hallucinate&rdquo; (2025); the numbers below are taken from the GPT-5 System Card, Table 8.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>On OpenAI's SimpleQA quiz, o4-mini abstains on 1% of questions and is wrong 75% of the time, while gpt-5-thinking-mini abstains on 52% and is wrong only 26% of the time. Rewarding "I don't know" collapses the error rate.</p>
 <h3>Definitions</h3>
 <p>On SimpleQA each response is graded <em>correct</em>, <em>incorrect</em>, or <em>not attempted</em>, so per model: $\text{accuracy} + \text{hallucination rate} + \text{abstention rate} = 1$. The slide's abstention numbers follow from the GPT-5 System Card, Table 8 (SimpleQA, no browsing): gpt-5-thinking-mini — accuracy $0.22$, hallucination rate $0.26$, hence abstention $1 - 0.22 - 0.26 = 0.52$; o4-mini — accuracy $0.24$, hallucination rate $0.75$, hence abstention $0.01$. Same accuracy ballpark, threefold difference in confident errors: the gain comes almost entirely from converting wrong guesses into abstentions.</p>
 <h3>Background &amp; further reading</h3>
@@ -284,10 +326,11 @@ where $\delta$ is a one-set calibration gap (the paper shows it is small for any
 
 <article data-slide-id="S21">
 <h2>Where Errors Concentrate</h2>
-<p>Hallucination is not uniform. It clusters on rare entities, long-tail facts, recent events past the training cutoff, and precise numbers, dates, or quotations.</p>
-<p><span class="kt">Key takeaway:</span> The thinner the evidence, the more likely an invention.</p>
-<p><span class="kt">Slide figure:</span> Min et al. (2023), FActScore Fig. 2: factual precision of biographies vs. how frequent the person is; rare entities score far lower for every model.</p>
+<p class="msg"><span class="kt">Message:</span> Hallucination clusters where the evidence is thin: rare entities, long-tail facts, events past the cutoff, and precise numbers, dates or quotations. In FActScore&rsquo;s biographies, the rarer the person, the lower the share of supported facts, for every model.</p>
+<p><strong>Reading the slide.</strong> The figure is Min et al. (2023), FActScore Fig. 2 (top): bars give the percentage of biography facts supported by Wikipedia (higher is better), grouped from very frequent to very rare people. Read left to right: factual precision falls as the person gets rarer, for every model shown.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Hallucination is not uniform. It clusters on rare entities, long-tail facts, recent events past the training cutoff, and precise numbers, dates, or quotations.</p>
 <h3>Definitions</h3>
 <p><strong>Singleton rate</strong> (KNVZ 2025, Def. 2). Among $N$ training prompt–response pairs, a prompt is a <em>singleton</em> if it appears exactly once (with a substantive answer, not an abstention). The singleton rate is $sr = |S|/N$ — the supervised-learning twin of the Kalai–Vempala monofact rate.</p>
 <h3>Theorem &amp; proof</h3>
@@ -297,31 +340,39 @@ and conversely there is an efficient, calibrated ($\delta = 0$) model achieving 
 <h3>Background &amp; further reading</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2509.04664">Kalai, Nachum, Vempala &amp; Zhang (2025)</a> — Theorem 2 and its Good–Turing-style proof.</li>
+<li><a href="https://arxiv.org/abs/2305.14251">Min et al., "FActScore: Fine-grained Atomic Evaluation of Factual Precision in Long Form Text Generation" (2023)</a>, Fig. 2 (the slide&rsquo;s figure).</li>
 </ul>
 </div>
 </article>
 
 <article data-slide-id="S22">
 <h2>The Knowledge Cutoff</h2>
-<p>A model's facts freeze at its training date. Ask about yesterday and it guesses, with no internal flag that says "I have not seen this."</p>
-<p><span class="kt">Key takeaway:</span> The model cannot tell that a question is outside its knowledge.</p>
+<p class="msg"><span class="kt">Message:</span> A model&rsquo;s facts freeze at its training cutoff. Asked about later events it still answers fluently, with no internal flag that says &ldquo;I have not seen this&rdquo;, so a stale answer looks the same as a current one.</p>
+<p><strong>Reading the slide.</strong> The timeline runs through the training data to the cutoff, then on into a stretch the model has never seen. The box at the end, &ldquo;news after cutoff?&rdquo;, is &ldquo;answered anyway&rdquo;: a fluent completion where the model has no data.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>A model's facts freeze at its training date. Ask about yesterday and it guesses, with no internal flag that says "I have not seen this."</p>
 <h3>Definitions</h3>
-<p><strong>Cutoff as support mismatch (course notes).</strong> The corpus is drawn from the world up to time $t_0$; for a query $c$ about events after $t_0$, the training conditional $p_{\mathrm{data}}(\cdot \mid c)$ was never sampled, yet decoding from $\hat p(\cdot \mid c)$ still produces <em>some</em> fluent completion — sampling has no out-of-support indicator. Formally the model answers from the wrong measure and cannot signal it; behaviorally this is the "recent events" cell of the error-concentration slide, and it is the failure mode retrieval (Section 05) directly repairs by injecting post-$t_0$ evidence into the context.</p>
+<p><strong>Cutoff as support mismatch (course notes).</strong> The corpus is drawn from the world up to time $t_0$; for a query $c$ about events after $t_0$, the training conditional $p_{\mathrm{data}}(\cdot \mid c)$ was never sampled, yet decoding from $\hat p(\cdot \mid c)$ still produces <em>some</em> fluent completion — sampling has no out-of-support indicator. Formally the model answers from the wrong measure and cannot signal it; behaviorally this is the "recent events" cell of the error-concentration slide (slide S21), and it is the failure mode retrieval (Section 05) directly repairs by injecting post-$t_0$ evidence into the context.</p>
 </div>
 </article>
 
 <article data-slide-id="S23">
 <h2>03 — Calibration</h2>
+<p class="msg"><span class="kt">Message:</span> Section 03 moves from &ldquo;is the answer right?&rdquo; to &ldquo;can we trust the confidence attached to the answer?&rdquo;: what calibration means, how to measure it with reliability diagrams and ECE, and how to repair it.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Third section. We move from "is the answer right" to "can we trust the confidence attached to the answer."</p>
-<p><span class="kt">Key takeaway:</span> Calibration is about trusting the confidence number.</p>
+</div>
 </article>
 
 <article data-slide-id="S24">
 <h2>Confidence as a Number</h2>
-<p>A model can attach a probability to each answer, say 0.70 that it is correct. The question is whether that number means anything.</p>
-<p><span class="kt">Key takeaway:</span> A confidence score is only useful if it is trustworthy.</p>
+<p class="msg"><span class="kt">Message:</span> A model can attach a probability to each answer, say 0.70 that it is correct; that number is useful for deciding when to trust the answer only if it is itself trustworthy, and calibration is the test.</p>
+<p><strong>Reading the slide.</strong> A gauge with its needle at 0.70, and the question &ldquo;can we trust the needle?&rdquo;. The next slides answer it.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>A model can attach a probability to each answer, say 0.70 that it is correct. The question is whether that number means anything.</p>
 <h3>Definitions</h3>
 <p><strong>Confidence.</strong> For a classifier with softmax output, the prediction and confidence are $\hat Y = \arg\max_k \hat p(k \mid x)$ and $\hat P = \max_k \hat p(k\mid x)$ (Guo et al. 2017). For a language model, the analogues are the sequence probability of the sampled answer, a self-evaluated probability such as P(True), or a <em>verbalized</em> confidence ("I am 90% sure") — three different estimators of the same target, treated in the following entries.</p>
 </div>
@@ -329,9 +380,11 @@ and conversely there is an efficient, calibrated ($\delta = 0$) model achieving 
 
 <article data-slide-id="S25">
 <h2>The Calibration Promise</h2>
-<p>A model is calibrated if, among all answers it gives 70% confidence, about 70% are actually correct. Confidence then becomes a promise you can audit.</p>
-<p><span class="kt">Key takeaway:</span> Calibration ties stated confidence to observed accuracy.</p>
+<p class="msg"><span class="kt">Message:</span> A model is calibrated if, among all answers given 70% confidence, about 70% are correct. Calibration ties stated confidence to observed accuracy, making it a promise you can audit; on its own it says nothing about accuracy.</p>
+<p><strong>Reading the slide.</strong> 100 dots stand for 100 answers given at 70% confidence: 70 correct, 30 wrong. When the split matches the stated confidence, the score is calibrated at that level.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>A model is calibrated if, among all answers it gives 70% confidence, about 70% are actually correct. Confidence then becomes a promise you can audit.</p>
 <h3>Definitions</h3>
 <p><strong>Perfect calibration</strong> (Guo et al. 2017, Eq. 1). With prediction $\hat Y$ and confidence $\hat P$,
 $$\mathbb P\bigl(\hat Y = Y \,\bigm|\, \hat P = p\bigr) \;=\; p, \qquad \forall\, p \in [0,1],$$
@@ -345,21 +398,29 @@ the probability taken over the joint distribution of $(X,Y)$. Two caveats stated
 
 <article data-slide-id="S26">
 <h2>The Reliability Diagram</h2>
-<p>Plot stated confidence on the x-axis against actual accuracy on the y-axis. Points on the diagonal are calibrated; bars below it mean the model is overconfident.</p>
-<p><span class="kt">Key takeaway:</span> The reliability diagram shows calibration at a glance.</p>
+<p class="msg"><span class="kt">Message:</span> A reliability diagram plots stated confidence against actual accuracy, bin by bin: bars on the diagonal are calibrated, bars below it are overconfident. It shows calibration at a glance, but not how many answers sit in each bin.</p>
+<p><strong>Reading the slide.</strong> x-axis: stated confidence; y-axis: actual accuracy in each confidence bin. The dashed diagonal is perfect calibration. A bar below it means the model claimed more than it achieved (overconfident); above it, less (underconfident). Bin sizes are not shown; ECE (slide S28) weights the gaps by them.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Plot stated confidence on the x-axis against actual accuracy on the y-axis. Points on the diagonal are calibrated; bars below it mean the model is overconfident.</p>
 <h3>Definitions</h3>
 <p><strong>Construction</strong> (Guo et al. 2017). Partition $[0,1]$ into $M$ equal-width bins; let $B_m$ be the indices of samples whose confidence falls in bin $m$. Plot, per bin,
 $$\mathrm{acc}(B_m) = \frac{1}{|B_m|}\sum_{i\in B_m} \mathbf 1[\hat y_i = y_i], \qquad \mathrm{conf}(B_m) = \frac{1}{|B_m|}\sum_{i\in B_m} \hat p_i .$$
 Perfect calibration means $\mathrm{acc}(B_m) = \mathrm{conf}(B_m)$ for all $m$ — every bar on the diagonal. The paper notes one blind spot: the diagram does not show how many samples each bin holds, so a dramatic-looking gap can sit in a nearly empty bin; ECE (two entries down) repairs this by weighting.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1706.04599">Guo, Pleiss, Sun &amp; Weinberger, "On Calibration of Modern Neural Networks" (ICML 2017)</a>, the source of the construction.</li>
+</ul>
 </div>
 </article>
 
 <article data-slide-id="S27">
 <h2>Over- vs Under-confident</h2>
-<p>Overconfident: says 90% but is right 70%, bars below the line. Underconfident: says 60% but is right 80%, bars above. Modern deep nets tend to be overconfident.</p>
-<p><span class="kt">Key takeaway:</span> Deep models usually claim more confidence than they earn.</p>
+<p class="msg"><span class="kt">Message:</span> Overconfident means saying 90% and being right 70%, bars below the line; underconfident means saying 60% and being right 80%, bars above. Modern deep networks tend to claim more confidence than they earn.</p>
+<p><strong>Reading the slide.</strong> Two small reliability diagrams. Left: red bars below the diagonal, overconfident. Right: green bars above it, underconfident. The left case is the typical one for modern deep networks (Guo et al. 2017, below).</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Overconfident: says 90% but is right 70%, bars below the line. Underconfident: says 60% but is right 80%, bars above. Modern deep nets tend to be overconfident.</p>
 <h3>Background &amp; further reading</h3>
 <p>The motivating contrast in Guo et al. (2017, Figure 1): a 5-layer LeNet on CIFAR-100 is close to calibrated, while a 110-layer ResNet — far more accurate — is strongly overconfident. Their experiments isolate depth, width, weight decay, and Batch Normalization as the factors that drive modern networks' miscalibration: the same design choices that buy accuracy push confidence past it. See the <a href="https://arxiv.org/abs/1706.04599">paper</a>.</p>
 </div>
@@ -367,35 +428,48 @@ Perfect calibration means $\mathrm{acc}(B_m) = \mathrm{conf}(B_m)$ for all $m$ �
 
 <article data-slide-id="S28">
 <h2>Measuring the Gap</h2>
-<p>Expected Calibration Error averages, over confidence bins, the absolute gap between confidence and accuracy, weighted by bin size. Zero is perfect calibration. On the slide each red box is one bin's gap; here confidence exceeds accuracy in every bin, so the model is overconfident.</p>
-<p><span class="kt">Key takeaway:</span> ECE is one number summarizing the whole reliability diagram.</p>
+<p class="msg"><span class="kt">Message:</span> Expected Calibration Error averages the gap between confidence and accuracy over confidence bins, weighted by bin size; zero is perfect calibration. It summarizes the whole reliability diagram in one number, and the number depends on the binning.</p>
+<p><strong>Reading the slide.</strong> Five bins. In each, the red box is the gap between confidence and accuracy; one is labeled &ldquo;gap 0.22&rdquo;. Confidence exceeds accuracy in every bin, so this model is overconfident. ECE adds up the gaps, each weighted by its bin&rsquo;s share of answers.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Expected Calibration Error averages, over confidence bins, the absolute gap between confidence and accuracy, weighted by bin size. Zero is perfect calibration. On the slide each red box is one bin's gap; here confidence exceeds accuracy in every bin, so the model is overconfident.</p>
 <h3>Definitions</h3>
 <p><strong>Expected calibration error.</strong> The population quantity is $\mathbb E_{\hat P}\bigl[\,\bigl|\mathbb P(\hat Y = Y \mid \hat P = p) - p\bigr|\,\bigr]$ (Guo et al., Eq. 2); ECE approximates it with $M$ equal-width bins (Eq. 3):
 $$\mathrm{ECE} \;=\; \sum_{m=1}^{M} \frac{|B_m|}{n}\,\bigl|\mathrm{acc}(B_m) - \mathrm{conf}(B_m)\bigr|,$$
 where $n$ is the number of samples. Guo et al. use $M = 15$ in their experiments.</p>
 <p><strong>Binning caveats (course notes).</strong> ECE is an estimator, and the binning choices matter: (i) the value depends on $M$ — too few bins smooth real miscalibration away, too many leave bins nearly empty and noisy; (ii) with equal-width bins and an overconfident model, most mass piles into the top bins, leaving the rest poorly estimated (equal-mass/adaptive binning is the common fix); (iii) within a bin, per-sample gaps of opposite sign cancel before the absolute value is taken, so ECE can understate miscalibration; (iv) $\mathrm{ECE} = 0$ does not certify a useful model — the always-predict-the-base-rate model achieves it. Treat ECE as a summary to be read alongside the diagram, not a replacement for it.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1706.04599">Guo, Pleiss, Sun &amp; Weinberger, "On Calibration of Modern Neural Networks" (ICML 2017)</a>, Eqs. 2&ndash;3.</li>
+</ul>
 </div>
 </article>
 
 <article data-slide-id="S29">
 <h2>Reading ECE</h2>
-<p>Group answers into confidence bins, compute accuracy versus average confidence per bin, then weight each gap by the fraction of answers in that bin. In the picture each bar is as wide as its bin share and as tall as its gap, so the total red area is ECE.</p>
-<p><span class="kt">Key takeaway:</span> ECE is a weighted average of per-bin calibration gaps.</p>
+<p class="msg"><span class="kt">Message:</span> ECE is a weighted average of per-bin calibration gaps, each gap counting in proportion to the share of answers in its bin. In the slide&rsquo;s illustrative example the total is 0.1705, about 0.17.</p>
+<p><strong>Reading the slide.</strong> The formula is on top. In the picture each bar is as wide as its bin share (10, 10, 15, 25, 40%) and as tall as its gap (0.03, 0.07, 0.15, 0.20, 0.22), so the total red area is ECE; the worked sum gives 0.1705. A course illustration, not real data.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Group answers into confidence bins, compute accuracy versus average confidence per bin, then weight each gap by the fraction of answers in that bin. In the picture each bar is as wide as its bin share and as tall as its gap, so the total red area is ECE.</p>
 <h3>Definitions</h3>
 <p><strong>The slide's example (course illustration, not real data).</strong> Five bins with shares $0.10, 0.10, 0.15, 0.25, 0.40$ and gaps $|\mathrm{acc}-\mathrm{conf}|$ of $0.03, 0.07, 0.15, 0.20, 0.22$:
 $$\mathrm{ECE} = .10(.03) + .10(.07) + .15(.15) + .25(.20) + .40(.22) = 0.1705 \approx 0.17.$$
 Two checks. The weights are bin shares $|B_m|/n$, which sum to 1, so ECE is a weighted average and never exceeds the largest gap. The absolute value matters: without it an over-confident bin and an under-confident bin would cancel.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1706.04599">Guo, Pleiss, Sun &amp; Weinberger, "On Calibration of Modern Neural Networks" (ICML 2017)</a>, Eq. 3 (the ECE estimator).</li>
+</ul>
 </div>
 </article>
 
 <article data-slide-id="S30">
 <h2>More Accurate, but Overconfident</h2>
-<p>Guo and colleagues showed that as networks grew deeper and more accurate, their calibration got worse: more capacity brought more confident errors.</p>
-<p><span class="kt">Key takeaway:</span> Higher accuracy did not bring better calibration.</p>
-<p><span class="kt">Slide figure:</span> Guo et al. (2017), Fig. 1, column titles and bottom row: reliability diagrams for LeNet (1998, CIFAR-100, error 44.9) and ResNet (2016, error 30.6). ResNet is more accurate, yet its bars fall well below the diagonal: confidence overshoots accuracy (the pink gap). The confidence histograms in the figure's top row are omitted on the slide.</p>
+<p class="msg"><span class="kt">Message:</span> As networks grew deeper and more accurate, their calibration got worse: in Guo et al.&rsquo;s comparison the more accurate ResNet is strongly overconfident where the older LeNet is close to calibrated. Higher accuracy did not bring better calibration.</p>
+<p><strong>Reading the slide.</strong> Guo et al. (2017), Fig. 1, column titles and bottom row: reliability diagrams for LeNet (1998, CIFAR-100, error 44.9) and ResNet (2016, error 30.6). ResNet is more accurate, yet its bars fall well below the diagonal: confidence overshoots accuracy, shown as the pink gap. The confidence histograms in the figure&rsquo;s top row are omitted on the slide.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Guo and colleagues showed that as networks grew deeper and more accurate, their calibration got worse: more capacity brought more confident errors.</p>
 <h3>Background &amp; further reading</h3>
 <p>Guo, Pleiss, Sun &amp; Weinberger (ICML 2017) evaluated state-of-the-art vision and NLP models and found that modern networks, "unlike those from a decade ago," are poorly calibrated, with depth, width, weight decay, and Batch Normalization as the influencing factors — accuracy improved while ECE worsened. The paper then benchmarks post-hoc fixes (histogram binning, isotonic regression, Platt variants) and finds the simplest — temperature scaling, next entry — is often the most effective. <a href="https://arxiv.org/abs/1706.04599">arXiv 1706.04599</a>.</p>
 </div>
@@ -403,23 +477,29 @@ Two checks. The weights are bin shares $|B_m|/n$, which sum to 1, so ECE is a we
 
 <article data-slide-id="S31">
 <h2>A Cheap Fix: Temperature</h2>
-<p>Temperature scaling divides the model's scores by a single number T before the softmax, tuned on held-out data. Larger T softens the confidence and often restores calibration.</p>
-<p><span class="kt">Key takeaway:</span> One scalar can recalibrate a model after training.</p>
-<p><span class="kt">Slide figure:</span> Guo et al. (2017), Fig. 4: reliability diagrams for ResNet-110 on CIFAR-100 before and after temperature scaling; ECE drops from 12.67 to 0.96.</p>
+<p class="msg"><span class="kt">Message:</span> Temperature scaling divides the model&rsquo;s scores by one number T, tuned on held-out data, before the softmax. It leaves the predicted class, and so accuracy, unchanged, and often restores calibration: on ResNet-110 / CIFAR-100, ECE falls from 12.67 to 0.96.</p>
+<p><strong>Reading the slide.</strong> Guo et al. (2017), Fig. 4: reliability diagrams for ResNet-110 on CIFAR-100, uncalibrated and after recalibration. ECE (lower is better): uncalibrated 12.67, temperature scaling 0.96, histogram binning 2.46, isotonic regression 4.16. The one-parameter method does best here.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Temperature scaling divides the model's scores by a single number T before the softmax, tuned on held-out data. Larger T softens the confidence and often restores calibration.</p>
 <h3>Definitions</h3>
 <p><strong>Temperature scaling</strong> (Guo et al. 2017, Eq. 9). With logit vector $\mathbf z_i$, replace the confidence by
 $$\hat q_i \;=\; \max_k \, \sigma_{\mathrm{SM}}(\mathbf z_i / T)^{(k)}, \qquad \sigma_{\mathrm{SM}}(\mathbf z)^{(k)} = \frac{e^{z_k}}{\sum_j e^{z_j}},$$
 with a single scalar $T &gt; 0$ fitted by minimizing NLL on a validation set. Properties (all from the paper): $T &gt; 1$ "softens" the softmax and raises output entropy; $T \to \infty$ drives $\hat q_i \to 1/K$ (maximum uncertainty); $T = 1$ recovers the original model; $T \to 0$ collapses to a point mass. Because dividing by $T$ does not change the arg-max of the softmax, the predicted class is untouched: <em>accuracy is exactly preserved, only confidence moves</em>. It is a single-parameter variant of Platt scaling, and in their benchmarks it was "surprisingly effective," often beating far more expressive recalibration maps.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1706.04599">Guo, Pleiss, Sun &amp; Weinberger, "On Calibration of Modern Neural Networks" (ICML 2017)</a>, Fig. 4 and Eq. 9.</li>
+</ul>
 </div>
 </article>
 
 <article data-slide-id="S32">
 <h2>What P(True) Measures</h2>
-<p>Before the histogram, what is being plotted. First, the model answers a question, say "Who was the first president of the United States?", by sampling: "George Washington". Then the same model is shown the question and its own answer and asked: "Is the proposed answer: (A) True (B) False". P(True) is simply the probability the model puts on "(A)" as the next token. It is the model grading itself; nobody checks it against the truth at this step. It works best when the model first sees several of its own sampled answers before grading one.</p>
-<p><span class="kt">Key takeaway:</span> P(True) is a self-assessed probability, read off the model's own next-token distribution.</p>
-<p><span class="kt">Slide figure:</span> three steps: sample an answer; ask the same model the True/False question; read the probability on "(A)".</p>
+<p class="msg"><span class="kt">Message:</span> P(True) is the model grading itself: it samples an answer, is asked whether that answer is true, and P(True) is the probability it puts on &ldquo;(A) True&rdquo;. Nothing checks it against the truth at this step.</p>
+<p><strong>Reading the slide.</strong> Three steps, in order: sample an answer (&ldquo;George Washington&rdquo; for the first US president); show the same model the question and its answer and ask &ldquo;(A) True (B) False&rdquo;; read the probability on &ldquo;(A)&rdquo; as the next token. It works best when the model first sees several of its own samples (Kadavath et al. 2022, &sect;4.2).</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Before the histogram, what is being plotted. First, the model answers a question, say "Who was the first president of the United States?", by sampling: "George Washington". Then the same model is shown the question and its own answer and asked: "Is the proposed answer: (A) True (B) False". P(True) is simply the probability the model puts on "(A)" as the next token. It is the model grading itself; nobody checks it against the truth at this step. It works best when the model first sees several of its own sampled answers before grading one.</p>
 <h3>Definitions</h3>
 <p>(Kadavath et al. 2022, §3.2 and §4.1.) The prompt format is "Question: … / Proposed Answer: … / Is the proposed answer: (A) True (B) False / The proposed answer is:", and P(True) is the probability of the "(A)" token. Answers are sampled at temperature 1. In §4.2 the model is also shown several other samples (brainstorms) for the same question before evaluating one; this is the setting of the histogram on the next slide (20-shot). Zero-shot P(True) on these tasks is noticeably less well calibrated. <a href="https://arxiv.org/abs/2207.05221">arXiv 2207.05221</a>.</p>
 </div>
@@ -427,10 +507,11 @@ with a single scalar $T &gt; 0$ fitted by minimizing NLL on a validation set. Pr
 
 <article data-slide-id="S33">
 <h2>Do Models Know What They Know?</h2>
-<p>Now the result. Green is the P(True) the 52-billion-parameter model gave to answers that were in fact correct; blue, to answers that were wrong. Correct answers mostly get high P(True), wrong ones mostly low, so the score helps rank answers. But the two distributions overlap: some correct answers get a low self-assessed confidence, and some wrong answers get a high one. That overlap is the point: the signal discriminates usefully but imperfectly, and a histogram like this does not show that the probabilities are calibrated, that is, that "0.8" means right 80% of the time.</p>
-<p><span class="kt">Key takeaway:</span> Useful but imperfect separation; not proof of calibrated probabilities.</p>
-<p><span class="kt">Slide figure:</span> Kadavath et al. (2022), Fig. 1, left panel: the 52B model's P(True) on its own sampled answers over five tasks. Green = correct samples, peaking near 0.9; blue = incorrect samples, peaking near 0.4. They overlap: that is what "partial" means.</p>
+<p class="msg"><span class="kt">Message:</span> P(True) separates correct from wrong answers usefully but imperfectly: correct answers mostly score high, wrong ones mostly low, and the two overlap. Separation is not calibration: the histogram does not show that 0.8 means right 80% of the time.</p>
+<p><strong>Reading the slide.</strong> Kadavath et al. (2022), Fig. 1, left panel: histograms of the 52B model&rsquo;s P(True) on its own sampled answers over five tasks. Green = answers that were correct, peaking near 0.9; blue = answers that were wrong, peaking near 0.4. The overlap is the point: some correct answers get low P(True) and some wrong ones high, which is what &ldquo;partial&rdquo; means.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Now the result. Green is the P(True) the 52-billion-parameter model gave to answers that were in fact correct; blue, to answers that were wrong. Correct answers mostly get high P(True), wrong ones mostly low, so the score helps rank answers. But the two distributions overlap: some correct answers get a low self-assessed confidence, and some wrong answers get a high one. That overlap is the point: the signal discriminates usefully but imperfectly, and a histogram like this does not show that the probabilities are calibrated, that is, that "0.8" means right 80% of the time.</p>
 <h3>Definitions</h3>
 <p><strong>P(True) and P(IK)</strong> (Kadavath et al. 2022). <em>P(True)</em>: sample an answer, then ask the model itself for the probability that the answer is correct — self-evaluation, which improves when the model first sees several of its own samples. <em>P(IK)</em>: train the model to output the probability that it <em>knows</em> the answer to a question, before answering.</p>
 <h3>Background &amp; further reading</h3>
@@ -440,17 +521,25 @@ with a single scalar $T &gt; 0$ fitted by minimizing NLL on a validation set. Pr
 
 <article data-slide-id="S34">
 <h2>Filtering by P(True) Mostly Raises Accuracy</h2>
+<p class="msg"><span class="kt">Message:</span> Keeping only the answers the model rates above 0.5 raises accuracy for most tasks and model sizes, though not all: the self-estimate is useful as a filter even though it is imperfect.</p>
+<p><strong>Reading the slide.</strong> Kadavath et al. (2022), Fig. 1, right panel: accuracy against model size (parameters) for GSM8k, Arithmetic, TriviaQA, Lambada and Codex. Solid lines = answers kept because P(True) &gt; 0.5; dotted = all answers. Solid above dotted means the filter helped. Exceptions: GSM8k at the two smallest sizes (solid below dotted) and Lambada at the smallest size (no visible gain). The plot is the paper&rsquo;s figure, unmodified (its small embedded legend is still inside); an enlarged key is typeset beside it.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Keep only the answers the model itself rates above 0.5. For most tasks and model sizes in the plot, accuracy rises: the solid lines (kept answers) lie above the dotted lines (all answers). Not for all: GSM8k at the two smallest sizes has the solid line below the dotted one, and Lambada at the smallest size shows no visible gain.</p>
-<p><span class="kt">Key takeaway:</span> The self-estimate is useful as a filter, even though it is imperfect.</p>
-<p><span class="kt">Slide figure:</span> Kadavath et al. (2022), Fig. 1, right panel: accuracy versus parameters for GSM8k, Arithmetic, TriviaQA, Lambada and Codex. The plot is the paper's figure, unmodified (its small embedded legend is still inside); an enlarged key is typeset beside it.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2207.05221">Kadavath et al., "Language Models (Mostly) Know What They Know" (2022)</a>, Fig. 1 (the slide&rsquo;s figure).</li>
+</ul>
+</div>
 </article>
 
 <article data-slide-id="S35">
 <h2>Verbalized Confidence: GPT-3, GPT-3.5</h2>
-<p>You can also just ask the model how sure it is. It will state a percentage in words, sometimes calibrated and often inflated, so the spoken number still needs checking.</p>
-<p><span class="kt">Key takeaway:</span> A stated "95%" is not automatically a trustworthy 95%.</p>
-<p><span class="kt">Slide figure:</span> Xiong et al. (2024), Fig. 2 (GSM8K), left two columns. Top row: histogram of stated confidence, red for wrong answers. Bottom row: accuracy in each confidence bin against the diagonal. GPT-3: accuracy 0.15, ECE 0.83. GPT-3.5: accuracy 0.28, ECE 0.66. Both state 80–100% on right and wrong answers alike.</p>
+<p class="msg"><span class="kt">Message:</span> Asked how sure it is, a model states a percentage, often inflated: on GSM8K, GPT-3 and GPT-3.5 state 80&ndash;100% confidence on right and wrong answers alike. A stated &ldquo;95%&rdquo; is not automatically a trustworthy 95%.</p>
+<p><strong>Reading the slide.</strong> Xiong et al. (2024), Fig. 2 (GSM8K), left two columns, one per model. Top row: histogram of stated confidence, red for wrong answers. Bottom row: accuracy in each confidence bin against the diagonal. GPT-3: accuracy 0.15, ECE 0.83. GPT-3.5: accuracy 0.28, ECE 0.66. Both state 80&ndash;100% on right and wrong answers alike.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>You can also just ask the model how sure it is. It will state a percentage in words, sometimes calibrated and often inflated, so the spoken number still needs checking.</p>
 <h3>Background &amp; further reading</h3>
 <p>Xiong et al. (ICLR 2024) benchmark <em>verbalized</em> confidence — the number the model states in words — across models and prompting/sampling/aggregation strategies. Headline findings from the paper: LLMs tend to be overconfident when verbalizing their confidence, in ways that partly mimic human patterns of expressing confidence, and calibration improves as model capability grows but remains far from ideal; sampling-and-aggregation strategies help but no method solves it. So the verbalized number is a usable feature, not a guarantee — it should itself be calibrated (e.g. by the binning machinery of this section) before being shown to users. <a href="https://arxiv.org/abs/2306.13063">Xiong et al., "Can LLMs Express Their Uncertainty?" (ICLR 2024)</a>.</p>
 </div>
@@ -458,23 +547,34 @@ with a single scalar $T &gt; 0$ fitted by minimizing NLL on a validation set. Pr
 
 <article data-slide-id="S36">
 <h2>Verbalized Confidence: GPT-4, Vicuna</h2>
+<p class="msg"><span class="kt">Message:</span> The same plot for two more models: GPT-4 is the most accurate and least miscalibrated of the four, yet still far from the diagonal; Vicuna is almost never right and still states high confidence. Stronger models calibrate better, but none is close.</p>
+<p><strong>Reading the slide.</strong> Xiong et al. (2024), Fig. 2 (GSM8K), right two columns, read as on slide S35. GPT-4: accuracy 0.47, ECE 0.51. Vicuna: accuracy 0.02, ECE 0.77. Compare GPT-3 (0.15, 0.83) and GPT-3.5 (0.28, 0.66) on S35.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The same plot for two more models. GPT-4 is the most accurate and the least miscalibrated of the four, yet still far from the diagonal; Vicuna is almost never right and still states high confidence.</p>
-<p><span class="kt">Key takeaway:</span> Stronger models calibrate better, but none is close to calibrated.</p>
-<p><span class="kt">Slide figure:</span> Xiong et al. (2024), Fig. 2 (GSM8K), right two columns. GPT-4: accuracy 0.47, ECE 0.51. Vicuna: accuracy 0.02, ECE 0.77.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2306.13063">Xiong et al., "Can LLMs Express Their Uncertainty?" (ICLR 2024)</a>, Fig. 2 (the slide&rsquo;s figure).</li>
+</ul>
+</div>
 </article>
 
 <article data-slide-id="S37">
 <h2>04 — Conformal Prediction</h2>
+<p class="msg"><span class="kt">Message:</span> Section 04 turns a single guess into a set of candidate answers that comes with a provable coverage guarantee, and spells out what that guarantee does and does not promise.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Fourth section. We turn a single guess into a set of candidates that comes with a provable coverage guarantee.</p>
-<p><span class="kt">Key takeaway:</span> Conformal prediction trades a point answer for a guaranteed set.</p>
+</div>
 </article>
 
 <article data-slide-id="S38">
 <h2>From One Answer to a Set</h2>
-<p>Instead of one guess, the model returns a set of candidate answers: small for easy questions, larger for hard ones. The set size itself signals uncertainty.</p>
-<p><span class="kt">Key takeaway:</span> Set size is an uncertainty signal.</p>
-<p><span class="kt">Slide figure:</span> Angelopoulos and Bates (2021), Fig. 1: three ImageNet squirrel photos, easy to hard. Under each, the paper's prediction set is re-typeset in large type with each label's softmax score: {fox squirrel 0.99}; {fox squirrel .82, gray fox .03, bucket .02, rain barrel .02}; {marmot .30, fox squirrel .22, mink .18, weasel .16, beaver .03, polecat .01}.</p>
+<p class="msg"><span class="kt">Message:</span> Instead of one guess, return a set of candidate answers: small for easy inputs, larger for hard ones. The size of the set is itself a signal of how uncertain the model is about this input.</p>
+<p><strong>Reading the slide.</strong> Angelopoulos and Bates (2021), Fig. 1: three ImageNet squirrel photos, easy to hard. Under each, the paper&rsquo;s prediction set is re-typeset in large type with each label&rsquo;s softmax score: {fox squirrel 0.99}; {fox squirrel .82, gray fox .03, bucket .02, rain barrel .02}; {marmot .30, fox squirrel .22, mink .18, weasel .16, beaver .03, polecat .01}. Set sizes 1, 4 and 6 grow with difficulty.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Instead of one guess, the model returns a set of candidate answers: small for easy questions, larger for hard ones. The set size itself signals uncertainty.</p>
 <h3>Definitions</h3>
 <p><strong>Set-valued prediction.</strong> A set predictor is a map $C : \mathcal X \to 2^{\mathcal Y}$ from inputs to subsets of labels. The two figures of merit are <em>coverage</em>, $\Pr[Y \in C(X)]$, and <em>efficiency</em>, $\mathbb E\,|C(X)|$ — a useless predictor achieves perfect coverage with $C(x) \equiv \mathcal Y$, so the goal is guaranteed coverage with small sets, and an <em>adaptive</em> $|C(x)|$ that grows exactly on the hard inputs. Conformal prediction (next entries) achieves the coverage half by construction. On the slide: the <em>candidates</em> are all labels $\mathcal Y$ (1,000 ImageNet classes); the <em>native output</em> is the single $\arg\max_y \hat f(x)_y$; the <em>conformal output</em> keeps every $y$ with $s(x,y) = 1-\hat f(x)_y \le \hat q$. The candidates are not generated; the set is a filter on the existing label space. Standard reference: <a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction" (2021)</a>.</p>
 </div>
@@ -482,42 +582,62 @@ with a single scalar $T &gt; 0$ fitted by minimizing NLL on a validation set. Pr
 
 <article data-slide-id="S39">
 <h2>Candidates, Native Output, Conformal Set</h2>
-<p>Three words to keep apart. The candidates are every label the classifier knows, here the 1,000 ImageNet classes. The native output is the model's single top label. The conformal set is the subset of candidates whose score passes the calibrated threshold. For the middle photo: native output fox squirrel, conformal set fox squirrel, gray fox, bucket, rain barrel.</p>
-<p><span class="kt">Key takeaway:</span> The conformal set filters existing labels; it generates nothing new.</p>
+<p class="msg"><span class="kt">Message:</span> Keep three words apart: the candidates are every label the classifier knows, the native output is its single top label, and the conformal set is the candidates whose score passes the calibrated threshold. The set filters existing labels; it generates nothing new.</p>
+<p><strong>Reading the slide.</strong> Three boxes for the middle photo of slide S38. Candidates: the 1,000 ImageNet classes. Native output: {fox squirrel}. Conformal set: {fox squirrel, gray fox, bucket, rain barrel}.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Three words to keep apart. The candidates are every label the classifier knows, here the 1,000 ImageNet classes. The native output is the model's single top label. The conformal set is the subset of candidates whose score passes the calibrated threshold. For the middle photo: native output fox squirrel, conformal set fox squirrel, gray fox, bucket, rain barrel.</p>
 <h3>Definitions</h3>
 <p>Candidates: the label space $\mathcal Y$. Native output: $\arg\max_y \hat f(x)_y$. Conformal output: $C(x) = \{\,y \in \mathcal Y : s(x,y) = 1-\hat f(x)_y \le \hat q\,\}$. Source: Angelopoulos and Bates (2021), Fig. 1 and §1.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification" (2021)</a>, Fig. 1 and &sect;1.</li>
+</ul>
 </div>
 </article>
 
 <article data-slide-id="S40">
 <h2>The Coverage Guarantee</h2>
-<p>The prediction set is built so that it contains the true answer at least 90% of the time, that is the probability that y is in C(x) is at least 1 minus alpha, with alpha = 0.10.</p>
-<p><span class="kt">Key takeaway:</span> Conformal sets guarantee a chosen coverage level.</p>
+<p class="msg"><span class="kt">Message:</span> A conformal set is built to contain the true answer at least 1 &minus; &alpha; of the time, 90% for &alpha; = 0.10, with no assumption on the model. The guarantee is marginal, an average over calibration and test draws, not a promise for each input.</p>
+<p><strong>Reading the slide.</strong> Ten test questions, each with its prediction set; one set misses the truth, a miss &ldquo;allowed 10% of the time&rdquo;. The guarantee is on the average over draws (marginal), not on any particular question.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>The prediction set is built so that it contains the true answer at least 90% of the time, that is the probability that y is in C(x) is at least 1 minus alpha, with alpha = 0.10.</p>
 <h3>Definitions</h3>
 <p><strong>Marginal coverage.</strong> The guarantee is
 $$\Pr\bigl[\,Y_{\mathrm{test}} \in C(X_{\mathrm{test}})\,\bigr] \;\ge\; 1 - \alpha,$$
-where the probability is over <em>both</em> the $n$ calibration points and the test point. Two reading notes (course notes, following Angelopoulos &amp; Bates): the guarantee is <em>marginal</em> — an average over draws — not <em>conditional</em> on a particular $x$ (exact, nontrivial, distribution-free coverage $\Pr[Y \in C(X) \mid X = x] \ge 1-\alpha$ for every $x$ is unavailable in general without further assumptions; weaker conditional targets are achievable, see "Marginal ≠ Conditional"); and it is <em>distribution-free</em> — no assumption on the data distribution or on the quality of the underlying model, only exchangeability of calibration and test data.</p>
+where the probability is over <em>both</em> the $n$ calibration points and the test point. Two reading notes (course notes, following Angelopoulos &amp; Bates): the guarantee is <em>marginal</em> — an average over draws — not <em>conditional</em> on a particular $x$ (exact, nontrivial, distribution-free coverage $\Pr[Y \in C(X) \mid X = x] \ge 1-\alpha$ for every $x$ is unavailable in general without further assumptions; weaker conditional targets are achievable, see "Marginal ≠ Conditional", slide S49); and it is <em>distribution-free</em> — no assumption on the data distribution or on the quality of the underlying model, only exchangeability of calibration and test data.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification" (2021)</a>, &sect;1.</li>
+</ul>
 </div>
 </article>
 
 <article data-slide-id="S41">
 <h2>Two Assumptions, None on the Model</h2>
-<p>The guarantee needs two things: the calibration and test data are exchangeable, and the score function was fixed without looking at the calibration data. Nothing is assumed about the model's accuracy.</p>
-<p><span class="kt">Key takeaway:</span> A bad model keeps the coverage; it only gets larger sets.</p>
+<p class="msg"><span class="kt">Message:</span> Coverage needs two assumptions: calibration and test data are exchangeable, and the score was fixed without looking at the calibration data. Nothing is assumed about the model&rsquo;s accuracy: a bad model keeps the coverage and only gets larger sets.</p>
+<p><strong>Reading the slide.</strong> Two boxes, A1 (exchangeable data) and A2 (score fixed in advance), feed into any model, drawn as a black box, and the output is coverage &ge; 1 &minus; &alpha;. The model&rsquo;s quality never enters the guarantee; it affects only set size.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>The guarantee needs two things: the calibration and test data are exchangeable, and the score function was fixed without looking at the calibration data. Nothing is assumed about the model's accuracy.</p>
 <h3>Definitions</h3>
 <p><strong>(A1) Exchangeability.</strong> Random variables $Z_1,\dots,Z_{n+1}$ are exchangeable if their joint distribution is invariant under every permutation $\pi$: $(Z_1,\dots,Z_{n+1}) \overset{d}{=} (Z_{\pi(1)},\dots,Z_{\pi(n+1)})$. I.i.d. sampling implies exchangeability; the converse fails, so this is a strictly weaker assumption.</p>
 <p><strong>(A2) Fixed score.</strong> $s$ is chosen independently of the calibration set, e.g. $s(x,y) = 1-\hat f(x)_y$ with $\hat f$ trained on separate data. Then $s_i = s(X_i,Y_i)$ inherit exchangeability from (A1). Fitting $s$ on the calibration data can break this.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification" (2021)</a>, &sect;1 and Appendix D.</li>
+</ul>
 </div>
 </article>
 
 <article data-slide-id="S42">
 <h2>How It Works</h2>
-<p>Hold out a calibration set with known answers, score how surprised the model is on each, set the threshold at the $k$-th smallest score with $k = \lceil (n+1)(1-\alpha)\rceil$ (just above the 90th percentile), and at test time keep every candidate below the threshold.</p>
-<p><span class="kt">Key takeaway:</span> A held-out quantile turns scores into a guaranteed set.</p>
+<p class="msg"><span class="kt">Message:</span> Split conformal: score held-out calibration pairs, set the threshold at the k-th smallest score with $k = \lceil (n+1)(1-\alpha)\rceil$, and at test time keep every candidate scoring at or below it. A held-out quantile turns scores into a guaranteed set.</p>
+<p><strong>Reading the slide.</strong> The bullets give the recipe. The worked example has nine sorted calibration scores and &alpha; = 0.2, so $k = 8$ and the threshold is the 8th smallest score, $\hat q = s_{(8)}$. For $n = 1000$ and &alpha; = 0.1, $k = 901$, just above the 90th percentile; the +1 is what makes the finite-sample proof work.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Hold out a calibration set with known answers, score how surprised the model is on each, set the threshold at the $k$-th smallest score with $k = \lceil (n+1)(1-\alpha)\rceil$ (just above the 90th percentile), and at test time keep every candidate below the threshold.</p>
 <h3>Definitions</h3>
 <p><strong>Split-conformal recipe</strong> (Angelopoulos &amp; Bates 2021; also the lec06 technical supplement).</p>
 <ol>
@@ -526,22 +646,34 @@ where the probability is over <em>both</em> the $n$ calibration points and the t
 <li>At test time output $C(x) = \{\,y : s(x,y) \le \hat q\,\}$.</li>
 </ol>
 <p>The model quality only affects <em>efficiency</em>: a bad model still gets valid coverage, just with big sets. This decoupling — validity by construction, sharpness from the model — is the design principle of the whole framework.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification" (2021)</a>, &sect;1 (the split-conformal recipe).</li>
+</ul>
 </div>
 </article>
 
 <article data-slide-id="S43">
 <h2>The Recipe in Pictures</h2>
+<p class="msg"><span class="kt">Message:</span> The same three steps as a picture: score the calibration pairs, take the k-th smallest score as the threshold, and at test time keep every label whose softmax output clears one minus the threshold. One threshold, set once on held-out data.</p>
+<p><strong>Reading the slide.</strong> Angelopoulos and Bates (2021), Fig. 2, three panels left to right: compute scores on hold-out data, get the quantile $\hat q$, construct the prediction set. The caption restates the steps: (1) score calibration pairs; (2) $\hat q$ is the $k$-th smallest; (3) keep labels with $\hat f(x)_y \ge 1-\hat q$.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The same three steps as a picture: score the calibration pairs, take the $k$-th smallest score as the threshold, and at test time keep every label whose softmax output clears one minus the threshold.</p>
-<p><span class="kt">Key takeaway:</span> One threshold, set once on held-out data.</p>
-<p><span class="kt">Slide figure:</span> Angelopoulos and Bates (2021), Fig. 2: compute scores on hold-out data, get the quantile, construct the prediction set.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification" (2021)</a>, Fig. 2 (the slide&rsquo;s figure).</li>
+</ul>
+</div>
 </article>
 
 <article data-slide-id="S44">
 <h2>Two Kinds of Calibration</h2>
-<p>We have now seen "calibration" twice, so let us separate them. Temperature scaling and the conformal threshold share one idea: hold out labeled data the model never trained on, and use it to tune a single knob without touching the model. They differ in what the knob is aiming for. Temperature scaling aims to improve probability calibration, so that answers labelled 80% are right closer to 80% of the time; exact calibration is not guaranteed. The conformal threshold makes the prediction set contain the truth at least one minus alpha of the time. Coverage holds even if the probabilities themselves are miscalibrated; a badly calibrated model just gets bigger sets.</p>
-<p><span class="kt">Key takeaway:</span> Same held-out-data idea, different target: confidence matching accuracy vs. set coverage.</p>
-<p><span class="kt">Slide figure:</span> held-out data feeding two branches: fit a temperature (probability calibration, target: confidence matches accuracy) and pick a threshold (conformal calibration, target: truth in the set at least 1 − α of the time).</p>
+<p class="msg"><span class="kt">Message:</span> &ldquo;Calibration&rdquo; means two things. Temperature scaling and the conformal threshold both tune one knob on held-out data, but temperature aims at confidence matching accuracy, without guarantee, while the conformal threshold guarantees the truth is in the set at least 1 &minus; &alpha; of the time, even if probabilities are miscalibrated.</p>
+<p><strong>Reading the slide.</strong> Held-out data (labeled, unused in training) feeds two branches. Fit a temperature T: probability calibration, target confidence matches accuracy. Pick a threshold: conformal calibration, target truth in the set at least 1 &minus; &alpha; of the time. The bullets answer &ldquo;is conformal calibration?&rdquo;: yes, it calibrates a cutoff, not the probabilities; the targets differ; coverage holds even if the probabilities are miscalibrated.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>We have now seen "calibration" twice, so let us separate them. Temperature scaling and the conformal threshold share one idea: hold out labeled data the model never trained on, and use it to tune a single knob without touching the model. They differ in what the knob is aiming for. Temperature scaling aims to improve probability calibration, so that answers labelled 80% are right closer to 80% of the time; exact calibration is not guaranteed. The conformal threshold makes the prediction set contain the truth at least one minus alpha of the time. Coverage holds even if the probabilities themselves are miscalibrated; a badly calibrated model just gets bigger sets.</p>
 <h3>Background &amp; further reading</h3>
 <p>Temperature scaling (Guo et al., ICML 2017, §4.2) fits one scalar $T$ by minimizing negative log-likelihood on a validation set; it leaves the argmax, and so accuracy, unchanged, and is judged by ECE. Split conformal (Angelopoulos &amp; Bates 2021, §1, Theorem 1) picks one quantile $\hat q$ of calibration scores; it is judged by marginal coverage and set size. The two can be combined if the data are kept separate: tune the temperature on one held-out split, then, with the score now fixed, run conformal calibration on a different split. The coverage guarantee does not depend on how well the probabilities are calibrated.</p>
 </div>
@@ -549,9 +681,11 @@ where the probability is over <em>both</em> the $n$ calibration points and the t
 
 <article data-slide-id="S45">
 <h2>The Coverage Theorem</h2>
-<p>Under the two assumptions, for every alpha and every n, coverage is at least one minus alpha. Only if the scores are almost surely distinct (no ties) is it also at most one minus alpha plus one over n plus one.</p>
-<p><span class="kt">Key takeaway:</span> Finite-sample, distribution-free, and nearly tight.</p>
+<p class="msg"><span class="kt">Message:</span> Under exchangeability and a fixed score, split conformal covers the truth with probability at least 1 &minus; &alpha;, for every &alpha; and every finite n, with no assumption on the distribution or model. If the scores are also almost surely distinct, coverage is at most 1 &minus; &alpha; + 1/(n+1).</p>
+<p><strong>Reading the slide.</strong> The theorem has two lines. The lower bound, $\ge 1-\alpha$, always holds under (A1) and (A2). The upper bound, $\le 1-\alpha+\frac{1}{n+1}$, needs the extra condition of no ties; it says the sets are not wastefully large. The probability is over calibration and test data jointly: marginal, not per input.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Under the two assumptions, for every alpha and every n, coverage is at least one minus alpha. If the scores are also almost surely distinct (no ties), it is also at most one minus alpha plus one over n plus one.</p>
 <h3>Theorem &amp; proof</h3>
 <p><strong>Theorem (conformal coverage; Vovk, Gammerman &amp; Saunders 1999; as stated in Angelopoulos &amp; Bates 2021, Theorem 1 and Appendix D).</strong> Under (A1) and (A2), with $k = \lceil (n+1)(1-\alpha)\rceil$, $\hat q = s_{(k)}$ ($\hat q = \infty$ if $k = n+1$) and $C(x) = \{y : s(x,y) \le \hat q\}$:
 $$\Pr\bigl[\,Y_{n+1} \in C(X_{n+1})\,\bigr] \;\ge\; 1-\alpha \quad\text{always};$$
@@ -570,32 +704,51 @@ $$\Pr[\,Y_{n+1} \in C(X_{n+1})\,] = \frac{k}{n+1} \;\ge\; \frac{(n+1)(1-\alpha)}
 
 <article data-slide-id="S46">
 <h2>Why It Works: A Fair Rank</h2>
-<p>The intuition behind the guarantee. Take nine calibration scores and add the test score as a tenth. If the data are exchangeable, meaning the order of the examples carries no information, and the score function was fixed before seeing the calibration data, the test score is just one more draw from the same pile. So its rank among all ten is equally likely to be anything from 1 to 10. With alpha 0.2 the threshold is the eighth smallest calibration score, so the test point is covered whenever it ranks 1 through 8: eight chances in ten. This holds on average over all the ways the data could have come out; it is marginal, not a promise for each individual input. The picture assumes the ten scores are distinct; with ties, coverage is still at least the target 1 − alpha.</p>
-<p><span class="kt">Key takeaway:</span> Exchangeability makes the test rank uniform; coverage follows.</p>
-<p><span class="kt">Slide figure:</span> ten equally likely rank slots (1/10 each); slots 1–8 covered, 9–10 missed, with the threshold after slot 8 ($n = 9$, $\alpha = 0.2$, $k = 8$, matching the worked example).</p>
+<p class="msg"><span class="kt">Message:</span> Why coverage holds: with exchangeable data and a fixed score, the test score&rsquo;s rank among all n+1 scores is uniform. With n = 9, &alpha; = 0.2 and k = 8 the truth is covered in 8 of 10 equally likely ranks: on average, not for each input.</p>
+<p><strong>Reading the slide.</strong> Ten rank slots, each with probability 1/10. The threshold falls after slot 8 ($n = 9$, $\alpha = 0.2$, $k = 8$, matching the worked example on slide S42): slots 1&ndash;8 are covered, 9&ndash;10 missed, so coverage is 8/10. The picture assumes the ten scores are distinct; with ties, coverage is still at least $1-\alpha$.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>The intuition behind the guarantee. Take nine calibration scores and add the test score as a tenth. If the data are exchangeable, meaning the order of the examples carries no information, and the score function was fixed before seeing the calibration data, the test score is just one more draw from the same pile. So its rank among all ten is equally likely to be anything from 1 to 10. With alpha 0.2 the threshold is the eighth smallest calibration score, so the test point is covered whenever it ranks 1 through 8: eight chances in ten. This holds on average over all the ways the data could have come out; it is marginal, not a promise for each individual input. The picture assumes the ten scores are distinct; with ties, coverage is still at least the target 1 − alpha.</p>
 <h3>Background &amp; further reading</h3>
-<p>The full statement and proof are in the notes for the previous slide and in the technical supplement (section "Conformal Coverage"). The two assumptions are exactly what the rank step needs: (A1) exchangeability of the $n+1$ data points, and (A2) a score fixed independently of the calibration data, so the $n+1$ scores are exchangeable too. A score fit on the calibration data breaks this. Coverage is marginal over calibration and test draws; conditional coverage for every $x$ is impossible in general without further assumptions (Angelopoulos &amp; Bates 2021, §1 and Appendix D; Vovk 2012).</p>
+<p>The full statement and proof are in the notes for the previous slide (S45) and in the technical supplement (section "Conformal Coverage"). The two assumptions are exactly what the rank step needs: (A1) exchangeability of the $n+1$ data points, and (A2) a score fixed independently of the calibration data, so the $n+1$ scores are exchangeable too. A score fit on the calibration data breaks this. Coverage is marginal over calibration and test draws; conditional coverage for every $x$ is impossible in general without further assumptions (Angelopoulos &amp; Bates 2021, §1 and Appendix D; Vovk 2012).</p>
 </div>
 </article>
 
 <article data-slide-id="S47">
 <h2>The Prediction Set Picture</h2>
+<p class="msg"><span class="kt">Message:</span> The calibrated threshold draws one line through the candidate scores: every candidate scoring at or below it stays in the set, the rest drop out. The native output keeps only the single best candidate; the conformal set keeps all that pass.</p>
+<p><strong>Reading the slide.</strong> Bars A&ndash;F are the scores $s(x,y)$ of six candidates (lower means more plausible), with the threshold $\hat q$ drawn as a line. The blue bars below the line form $C(x) = \{A, B, C\}$. The native output (argmax) is the lowest bar only.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The calibration threshold draws a line through candidate scores. Candidates more plausible than the threshold stay in the set; the rest are dropped.</p>
-<p><span class="kt">Key takeaway:</span> A single threshold defines which candidates survive.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification" (2021)</a>, &sect;1.</li>
+</ul>
+</div>
 </article>
 
 <article data-slide-id="S48">
 <h2>What the Guarantee Covers</h2>
+<p class="msg"><span class="kt">Message:</span> The guarantee covers marginal coverage for any model and any distribution at finite n, and nothing more: not coverage for your input, not under distribution shift, not small sets, not a correct single answer. Shift breaks (A1); a weak score keeps coverage but inflates the sets.</p>
+<p><strong>Reading the slide.</strong> Two lists. &check; Guaranteed: marginal coverage $\ge 1-\alpha$; any model, any distribution; finite $n$, no asymptotics. &times; Not guaranteed: coverage for your $x$; coverage under distribution shift; small sets (needs a good score); a correct single answer.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Guaranteed: marginal coverage, for any model and any distribution, at finite n. Not guaranteed: coverage for your particular input, coverage under distribution shift, small sets, or a correct single answer.</p>
-<p><span class="kt">Key takeaway:</span> Shift breaks (A1); a weak score keeps coverage but inflates the sets.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2107.07511">Angelopoulos &amp; Bates, "A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification" (2021)</a>, &sect;1 and &sect;3 (the slide&rsquo;s citation).</li>
+</ul>
+</div>
 </article>
 
 <article data-slide-id="S49">
 <h2>Marginal ≠ Conditional</h2>
-<p>The guarantee averages over inputs. In the picture, easy inputs (two thirds) are covered 99% of the time and hard inputs (one third) only 72%, and the average is still 90%.</p>
-<p><span class="kt">Key takeaway:</span> 90% on average can mean much less on the inputs that matter.</p>
+<p class="msg"><span class="kt">Message:</span> Coverage is an average over inputs: if easy inputs (two thirds) are covered 99% of the time and hard ones (one third) only 72%, the average is still 90%. Marginal 90% can mean much less on the inputs that matter.</p>
+<p><strong>Reading the slide.</strong> The two formulas: marginal coverage (guaranteed) on the left, conditional coverage for every $x$ (not guaranteed) on the right. The bars split the inputs: easy, 2/3 of inputs, 99%; hard, 1/3, 72%; overall 90%. The closing lines: exact, distribution-free, nontrivial conditional coverage is unavailable in general without further assumptions; weaker targets are achievable.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>The guarantee averages over inputs. In the picture, easy inputs (two thirds) are covered 99% of the time and hard inputs (one third) only 72%, and the average is still 90%.</p>
 <h3>Definitions</h3>
 <p><strong>Marginal vs conditional.</strong> Marginal: $\Pr[Y \in C(X)] \ge 1-\alpha$. Conditional: $\Pr[Y \in C(X) \mid X = x] \ge 1-\alpha$ for every $x$. The example on the slide: $\tfrac23(0.99) + \tfrac13(0.72) = 0.66 + 0.24 = 0.90$.</p>
 <p><strong>What is and is not possible.</strong> Exact, nontrivial, distribution-free conditional coverage is unavailable in general without further assumptions (Vovk 2012; Lei &amp; Wasserman 2014, Lemma 1; Foygel Barber et al. 2021). This is not a claim that every conditional guarantee is impossible: label-conditional (per-class) coverage, coverage within pre-specified groups, and approximate conditional coverage are achievable.</p>
@@ -610,9 +763,11 @@ $$\Pr[\,Y_{n+1} \in C(X_{n+1})\,] = \frac{k}{n+1} \;\ge\; \frac{(n+1)(1-\alpha)}
 
 <article data-slide-id="S50">
 <h2>The Abstention Idea</h2>
-<p>When the set is large or empty, the model should defer: say "I am not sure" and hand off to a human. A singleton set is only a candidate for a separately validated decision policy, not permission to act. Marginal coverage does not bound error among singleton-only cases.</p>
-<p><span class="kt">Key takeaway:</span> A large set is a built-in signal to abstain.</p>
+<p class="msg"><span class="kt">Message:</span> A large or empty set is a built-in signal to defer: say &ldquo;I am not sure&rdquo; and hand off to a human. A singleton is only a candidate for a separately validated decision policy, not permission to act: marginal coverage does not bound error among singletons.</p>
+<p><strong>Reading the slide.</strong> Two branches. A singleton set {A} leads to &ldquo;candidate for a validated policy&rdquo;; a large or empty set leads to &ldquo;defer to a human&rdquo;. The guarantee bounds how often the truth is missed overall, not how often a singleton is wrong.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>When the set is large or empty, the model should defer: say "I am not sure" and hand off to a human. A singleton set is only a candidate for a separately validated decision policy, not permission to act. Marginal coverage does not bound error among singleton-only cases.</p>
 <h3>Definitions</h3>
 <p><strong>Set-size deferral rule (course notes).</strong> Fix a budget $k$ and act as: treat $C(x)$'s single element as a candidate answer for a separately validated decision policy if $|C(x)| = 1$; present the shortlist if $1 &lt; |C(x)| \le k$; defer to a human if $C(x)$ is empty or $|C(x)| &gt; k$. The original sets retain marginal coverage, $\Pr[\,Y \notin C(X)\,] \le \alpha$; the selected-answer error rate requires separate validation. The set being <em>large</em> is itself informative — it certifies that the model cannot separate candidates at the chosen confidence level; an <em>empty</em> set signals that no label is plausible enough.</p>
 <p><strong>Singletons are not certified.</strong> Write $S$ for the event $|C(X)| = 1$ and $W$ for "the singleton is wrong", i.e. $S \wedge Y \notin C(X)$. The guarantee gives $\Pr[W] \le \Pr[Y \notin C(X)] \le \alpha$: the <em>joint</em> probability of being wrong <em>and</em> singleton. The error rate among singletons is $\Pr[\,Y \notin C(X) \mid S\,] = \Pr[W]/\Pr[S]$, which need not be $\le \alpha$; if singletons are rare, it can be much larger. Acting automatically on singletons therefore needs its own validation of that conditional error rate.</p>
@@ -621,9 +776,11 @@ $$\Pr[\,Y_{n+1} \in C(X_{n+1})\,] = \frac{k}{n+1} \;\ge\; \frac{(n+1)(1-\alpha)}
 
 <article data-slide-id="S51">
 <h2>A Medical Triage Example</h2>
-<p>A diagnosis model returns a set of conditions. One condition supports clinician review; five conditions route to a doctor. The coverage guarantee bounds how often the truth is missed, averaged over all patients in both branches, not within either branch.</p>
-<p><span class="kt">Key takeaway:</span> Set size becomes a triage decision with a bounded miss rate.</p>
+<p class="msg"><span class="kt">Message:</span> In triage, set size routes the case: one condition supports clinician review, five route to a doctor. The coverage guarantee bounds how often the truth is missed averaged over all patients, not within either branch or subgroup.</p>
+<p><strong>Reading the slide.</strong> A diagnosis model returns a set of conditions. {pneumonia}, a singleton, supports clinician review; a set of 5 conditions routes to a doctor. The bound shown, marginal miss &le; &alpha;, applies to all patients together.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>A diagnosis model returns a set of conditions. One condition supports clinician review; five conditions route to a doctor. The coverage guarantee bounds how often the truth is missed, averaged over all patients in both branches, not within either branch.</p>
 <h3>Definitions</h3>
 <p><strong>What the bound does and does not promise (course notes).</strong> With $\alpha = 0.05$, at most 5% of patients <em>on average</em> have their true condition outside the returned set — a marginal guarantee over the patient population. It is <em>not</em> a per-patient, per-branch, or per-subgroup guarantee: the one-condition branch alone may miss more than 5%; coverage can be below $1-\alpha$ on a subgroup (e.g. a rare presentation) and above it elsewhere. Deployments that need subgroup validity use group-balanced or Mondrian conformal variants, running the same quantile construction within each group.</p>
 </div>
@@ -631,9 +788,11 @@ $$\Pr[\,Y_{n+1} \in C(X_{n+1})\,] = \frac{k}{n+1} \;\ge\; \frac{(n+1)(1-\alpha)}
 
 <article data-slide-id="S52">
 <h2>The Trade-off</h2>
-<p>Higher coverage means larger sets; tighter sets risk missing the truth. The level alpha is chosen to balance safety against usefulness.</p>
-<p><span class="kt">Key takeaway:</span> Coverage and set size pull against each other.</p>
+<p class="msg"><span class="kt">Message:</span> Coverage and set size pull against each other: higher coverage means larger sets, tighter sets risk missing the truth. Choose &alpha; for safety; how large the sets get depends on the quality of the score.</p>
+<p><strong>Reading the slide.</strong> The curve runs from small sets with more misses to huge sets near 100% coverage, with coverage $1-\alpha$ and set size on the axes. The marked point is where safety and usefulness balance; that is where &alpha; is picked.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Higher coverage means larger sets; tighter sets risk missing the truth. The level alpha is chosen to balance safety against usefulness.</p>
 <h3>Definitions</h3>
 <p><strong>Monotonicity (derivation: course notes).</strong> As $\alpha$ decreases, $\lceil (n+1)(1-\alpha)\rceil$ is nondecreasing, so the threshold $\hat q_\alpha$ moves up through the sorted scores, and the sets nest: $\alpha' &lt; \alpha \Rightarrow C_{\alpha}(x) \subseteq C_{\alpha'}(x)$ for every $x$. Coverage you add is paid for in expected set size $\mathbb E|C(X)|$, and the exchange rate is set by the score distribution — a sharper model buys the same coverage with smaller sets. Choosing $\alpha$ is therefore a domain decision (cost of a miss vs. cost of a long shortlist), not a statistical one.</p>
 </div>
@@ -641,22 +800,30 @@ $$\Pr[\,Y_{n+1} \in C(X_{n+1})\,] = \frac{k}{n+1} \;\ge\; \frac{(n+1)(1-\alpha)}
 
 <article data-slide-id="S53">
 <h2>05 — Detection &amp; Grounding</h2>
+<p class="msg"><span class="kt">Message:</span> Section 05 covers two complementary defenses against hallucination: detect it after the fact from the model&rsquo;s own behavior, or ground the model in retrieved evidence so it is less likely to occur.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Fifth section. Two complementary defenses: catch the hallucination after the fact, or ground the model so it is less likely to occur.</p>
-<p><span class="kt">Key takeaway:</span> Detect the error, or prevent it with evidence.</p>
+</div>
 </article>
 
 <article data-slide-id="S54">
 <h2>Two Strategies</h2>
+<p class="msg"><span class="kt">Message:</span> A system uses two strategies in order: first ground, giving the model real sources before it speaks; then detect, flagging likely hallucinations after it speaks. They are complementary, and the best systems do both.</p>
+<p><strong>Reading the slide.</strong> Two numbered steps. 1 &middot; GROUND, before: sources go in as evidence and the model generates from them. 2 &middot; DETECT, after: the answer is checked.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Two strategies, in the order a system uses them. First, ground: before the model speaks, give it real sources so it answers from evidence. Then, detect: after it speaks, flag answers that are likely hallucinated. The best systems do both.</p>
-<p><span class="kt">Key takeaway:</span> Ground first, then detect: the two are complementary.</p>
+</div>
 </article>
 
 <article data-slide-id="S55">
 <h2>Self-Consistency</h2>
-<p>Ask the same question several times and sample independent answers. Agreement suggests a solid answer; wild disagreement suggests an invented one.</p>
-<p><span class="kt">Key takeaway:</span> Disagreement across samples flags unreliable answers.</p>
-<p><span class="kt">Slide figure:</span> Manakul et al. (2023), SelfCheckGPT Fig. 1: N stochastic samples are compared against each sentence of the passage; the SelfCheckGPT score is how often the samples support the sentence.</p>
+<p class="msg"><span class="kt">Message:</span> Sample the same question several times: if the model knows the fact, samples tend to agree; if it invented it, they diverge. Disagreement across samples flags unreliable answers, using only the ability to sample.</p>
+<p><strong>Reading the slide.</strong> Manakul et al. (2023), SelfCheckGPT Fig. 1: the model&rsquo;s passage is checked sentence by sentence against N stochastically sampled responses; the SelfCheckGPT score is how often the samples support each sentence. The caption gives the rule: samples agree &rArr; likely solid; samples conflict &rArr; likely invented.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Ask the same question several times and sample independent answers. Agreement suggests a solid answer; wild disagreement suggests an invented one.</p>
 <h3>Definitions</h3>
 <p><strong>Sampling-based consistency checking.</strong> Draw $M$ independent responses $s^{(1)},\dots,s^{(M)} \sim \hat p(\cdot \mid x)$ and score each claim of the primary answer by its agreement with the samples. The premise, as SelfCheckGPT states it: if the model actually knows the fact, independently sampled responses are likely to be similar and consistent; if the fact was hallucinated, samples diverge and contradict one another. This is a <em>black-box</em> detector — it needs only the ability to sample, not token probabilities or internals.</p>
 <h3>Background &amp; further reading</h3>
@@ -668,10 +835,11 @@ $$\Pr[\,Y_{n+1} \in C(X_{n+1})\,] = \frac{k}{n+1} \;\ge\; \frac{(n+1)(1-\alpha)}
 
 <article data-slide-id="S56">
 <h2>Semantic Entropy</h2>
-<p>Farquhar and colleagues group sampled answers by meaning rather than wording, so "Paris" and "It's Paris" count as one. Many distinct meanings give high entropy, which flags hallucination.</p>
-<p><span class="kt">Key takeaway:</span> Entropy over meanings detects ungrounded answers.</p>
-<p><span class="kt">Slide figure:</span> Kuhn, Gal, and Farquhar (2023), Table 1: 'Paris' and 'It's Paris' collapse into one semantic cluster, so the semantic entropy falls from 0.94 to 0.33 while naive entropy is unchanged.</p>
+<p class="msg"><span class="kt">Message:</span> Semantic entropy groups sampled answers by meaning rather than wording, so &ldquo;Paris&rdquo; and &ldquo;It&rsquo;s Paris&rdquo; count as one; many distinct meanings give high entropy, which flags likely hallucination. Paraphrases no longer raise a false alarm.</p>
+<p><strong>Reading the slide.</strong> The bullets give the method. The figure is Kuhn, Gal and Farquhar (2023), Table 1: &lsquo;Paris&rsquo; and &lsquo;It&rsquo;s Paris&rsquo; collapse into one semantic cluster, so the semantic entropy falls from 0.94 to 0.33 while naive entropy is unchanged. The slide cites both Kuhn et al. (2023) for the table and Farquhar et al. (Nature 2024) for the method.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Farquhar and colleagues group sampled answers by meaning rather than wording, so "Paris" and "It's Paris" count as one. Many distinct meanings give high entropy, which flags hallucination.</p>
 <h3>Definitions</h3>
 <p><strong>Semantic entropy</strong> (Farquhar, Kossen, Kuhn &amp; Gal, Nature 2024). Three steps. (1) <em>Sample</em> $M$ answers $s^{(1)},\dots,s^{(M)}$ to the question $x$. (2) <em>Cluster by meaning</em>: put two answers in the same cluster iff each entails the other (bidirectional entailment, checked with an NLI model or an LLM judge) — this makes clusters equivalence classes of meaning. (3) <em>Take entropy over clusters</em>. The cluster probability aggregates sequence probabilities,
 $$P(c \mid x) \;=\; \sum_{s \in c} P(s \mid x) \;=\; \sum_{s\in c}\prod_i P\bigl(s_i \mid s_{&lt;i}, x\bigr),$$
@@ -681,15 +849,18 @@ The paper's estimator is Rao–Blackwellized Monte Carlo over the sampled cluste
 <h3>Background &amp; further reading</h3>
 <ul>
 <li><a href="https://www.nature.com/articles/s41586-024-07421-0">Farquhar et al., "Detecting hallucinations in large language models using semantic entropy", Nature 630:625–630 (2024, open access)</a> — evaluation by AUROC and AURAC (accuracy after rejecting the highest-entropy answers).</li>
+<li><a href="https://arxiv.org/abs/2302.09664">Kuhn, Gal &amp; Farquhar, "Semantic Uncertainty: Linguistic Invariances for Uncertainty Estimation in Natural Language Generation" (ICLR 2023)</a>, Table 1 (the slide&rsquo;s figure).</li>
 </ul>
 </div>
 </article>
 
 <article data-slide-id="S57">
 <h2>The Entropy Picture</h2>
-<p>If repeated samples collapse to one meaning, entropy is low and the answer is likely reliable. If they scatter across several meanings, entropy is high and the answer is suspect.</p>
-<p><span class="kt">Key takeaway:</span> Scattered meanings signal unreliability.</p>
+<p class="msg"><span class="kt">Message:</span> If repeated samples collapse to one meaning, entropy is low and the answer is likely reliable; if they scatter across several meanings, entropy is high and the answer is suspect.</p>
+<p><strong>Reading the slide.</strong> Two panels. Left: the samples land in one meaning, low entropy. Right: they scatter across several meanings, high entropy. In practice the detector flags an answer when entropy exceeds a threshold tuned on held-out data.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>If repeated samples collapse to one meaning, entropy is low and the answer is likely reliable. If they scatter across several meanings, entropy is high and the answer is suspect.</p>
 <h3>Definitions</h3>
 <p><strong>Limiting cases (derivation: course notes).</strong> If all $M$ samples land in one cluster, $P(c\mid x) = 1$ and $\mathrm{SE} = 0$ — meaning is certain even if wordings differ, which is exactly the case naive token-level entropy over-penalizes. If the samples spread uniformly over $K$ clusters, $\mathrm{SE} = \log K$, the maximum for $K$ meanings. In general $0 \le \mathrm{SE} \le \log(\#\text{clusters})$, so the score is a graded meaning-diversity measure: the decision rule thresholds it, flagging $x$ whenever $\mathrm{SE}(x)$ exceeds a value tuned on held-out data.</p>
 </div>
@@ -697,10 +868,11 @@ The paper's estimator is Rao–Blackwellized Monte Carlo over the sampled cluste
 
 <article data-slide-id="S58">
 <h2>Retrieval-Augmented Generation</h2>
-<p>Retrieval-Augmented Generation fetches relevant documents for a question, then writes the answer from them, as Lewis and colleagues proposed.</p>
-<p><span class="kt">Key takeaway:</span> RAG retrieves evidence before generating.</p>
-<p><span class="kt">Slide figure:</span> Lewis et al. (2020), RAG Fig. 1: query encoder, MIPS retriever over a document index, and the generator marginalizing over retrieved passages, trained end-to-end.</p>
+<p class="msg"><span class="kt">Message:</span> Retrieval-augmented generation, as Lewis and colleagues proposed, first fetches documents relevant to the question and then writes the answer from them: evidence is retrieved before generating, so the answer can rest on a source.</p>
+<p><strong>Reading the slide.</strong> The pipeline reads question &rarr; retrieve &rarr; answer. The figure is Lewis et al. (2020), RAG Fig. 1: a query encoder, a maximum-inner-product (MIPS) retriever over a document index, and a generator that marginalizes over the retrieved passages, trained end-to-end.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Retrieval-Augmented Generation fetches relevant documents for a question, then writes the answer from them, as Lewis and colleagues proposed.</p>
 <h3>Definitions</h3>
 <p><strong>RAG</strong> (Lewis et al., NeurIPS 2020) combines a <em>retriever</em> $p_\eta(z \mid x)$ — Dense Passage Retrieval, a BERT bi-encoder over query and passage, searched with maximum inner-product search — with a <em>generator</em> $p_\theta$ (BART-large, 400M parameters), marginalizing the answer over the top-$k$ retrieved passages $z$. Two decoding models:
 $$p_{\text{RAG-Sequence}}(y \mid x) \;\approx\; \sum_{z \in \mathrm{top}\text{-}k} p_\eta(z \mid x)\; \prod_{i=1}^{N} p_\theta\bigl(y_i \mid x, z, y_{1:i-1}\bigr)$$
@@ -716,19 +888,23 @@ $$p_{\text{RAG-Token}}(y \mid x) \;\approx\; \prod_{i=1}^{N} \sum_{z \in \mathrm
 
 <article data-slide-id="S59">
 <h2>Why RAG Helps</h2>
-<p>Tying the answer to a retrieved source supplies fresh facts past the cutoff and a citation the user can verify, leaving less room to invent.</p>
-<p><span class="kt">Key takeaway:</span> Grounding shrinks the space of fabrications.</p>
+<p class="msg"><span class="kt">Message:</span> Tying the answer to a retrieved source supplies facts from after the training cutoff and a citation the user can verify, leaving less room to invent: grounding shrinks the space of fabrications, though slide S60 shows it does not remove it.</p>
+<p><strong>Reading the slide.</strong> The example answer, &ldquo;&hellip; rose 12% in 2025 according to the report&rdquo;, carries a marker [source 1] pointing to a document dated after the model&rsquo;s cutoff. The caption, &ldquo;every claim has an address&rdquo;, is the point: each claim can be traced and checked.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Tying the answer to a retrieved source supplies fresh facts past the cutoff and a citation the user can verify, leaving less room to invent.</p>
 <h3>Definitions</h3>
-<p><strong>Factuality reduced to faithfulness (formalization: course notes).</strong> Recall the two predicates from "Two Flavors of Wrong". Without retrieval, correctness of $y$ is a <em>factuality</em> question against the whole world — unauditable at generation time. With retrieval, condition on the evidence $z$ and decompose: $y$ is correct if (i) the retrieved $z$ actually contains the needed fact (<em>retrieval quality</em>) and (ii) $y$ is entailed by $z$ (<em>faithfulness</em>). Both parts are checkable: (i) offline with retrieval metrics, (ii) at answer time with an entailment model over $(z, y)$ — and the citation shown to the user is exactly the auditable trace of (ii). Because $z$ can postdate the training cutoff, retrieval also repairs the knowledge-cutoff failure of Section 02: the fact enters through the context window rather than the frozen parameters.</p>
+<p><strong>Factuality reduced to faithfulness (formalization: course notes).</strong> Recall the two predicates from "Two Flavors of Wrong" (slide S09). Without retrieval, correctness of $y$ is a <em>factuality</em> question against the whole world — unauditable at generation time. With retrieval, condition on the evidence $z$ and decompose: $y$ is correct if (i) the retrieved $z$ actually contains the needed fact (<em>retrieval quality</em>) and (ii) $y$ is entailed by $z$ (<em>faithfulness</em>). Both parts are checkable: (i) offline with retrieval metrics, (ii) at answer time with an entailment model over $(z, y)$ — and the citation shown to the user is exactly the auditable trace of (ii). Because $z$ can postdate the training cutoff, retrieval also repairs the knowledge-cutoff failure of Section 02: the fact enters through the context window rather than the frozen parameters.</p>
 </div>
 </article>
 
 <article data-slide-id="S60">
 <h2>RAG Is Not a Cure</h2>
-<p>Retrieval has its own failure modes: wrong documents retrieved, right documents misread, or the model overriding the source. Grounding reduces hallucination but does not erase it.</p>
-<p><span class="kt">Key takeaway:</span> RAG mitigates, but does not eliminate, hallucination.</p>
+<p class="msg"><span class="kt">Message:</span> Retrieval adds its own failure modes: wrong documents retrieved, right documents misread, or the model overriding the source anyway. Grounding reduces hallucination; it does not erase it, and each new step needs checking.</p>
+<p><strong>Reading the slide.</strong> The bullets list the three failures. The pipeline question &rarr; retrieve &rarr; read &rarr; out carries three red &times; marks, wrong docs, misread, overrides source: three new places to fail.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Retrieval has its own failure modes: wrong documents retrieved, right documents misread, or the model overriding the source. Grounding reduces hallucination but does not erase it.</p>
 <h3>Definitions</h3>
 <p><strong>Error decomposition (derivation: course notes).</strong> Writing $G$ for the event "retrieval returned adequate evidence" and $\mathrm{err}$ for an incorrect final answer, a union bound gives
 $$\Pr[\mathrm{err}] \;\le\; \Pr[\lnot G] \;+\; \Pr[\mathrm{err} \mid G],$$
@@ -738,9 +914,11 @@ retrieval failure plus unfaithful generation given good evidence. RAG shrinks th
 
 <article data-slide-id="S61">
 <h2>Teaching "I Don't Know"</h2>
-<p>Make abstention a rewarded behavior: reward a correct "I don't know," penalize confident wrong answers more heavily, and shift the guessing incentive.</p>
-<p><span class="kt">Key takeaway:</span> A well-placed refusal can beat a wrong answer.</p>
+<p class="msg"><span class="kt">Message:</span> Make abstention a rewarded behavior: let &ldquo;I don&rsquo;t know&rdquo; score zero and make confident wrong answers cost something. With a penalty &lambda;, answering pays only above confidence &lambda;/(1+&lambda;), so a well-placed refusal can beat a wrong answer.</p>
+<p><strong>Reading the slide.</strong> Two payoff rows for correct / I don&rsquo;t know / wrong. No penalty: +1 / 0 / 0, so a wrong answer costs nothing and guessing always pays. Penalized: +1 / 0 / &minus;2, so &ldquo;I don&rsquo;t know&rdquo; now competes; with &lambda; = 2 in the formula below, guessing pays only above 2/3 confidence.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Make abstention a rewarded behavior: reward a correct "I don't know," penalize confident wrong answers more heavily, and shift the guessing incentive.</p>
 <h3>Theorem &amp; proof</h3>
 <p><strong>Threshold scoring (derivation: course notes).</strong> Score $+1$ for a correct answer, $0$ for "I don't know", $-\lambda$ for a wrong answer. A guess the model believes correct with probability $p$ has expected score $p - \lambda(1-p)$, so answering beats abstaining iff
 $$p \;&gt;\; \frac{\lambda}{1+\lambda} \;=:\; t \qquad\Longleftrightarrow\qquad \lambda = \frac{t}{1-t}.$$
@@ -750,53 +928,78 @@ Choosing the penalty $\lambda$ therefore <em>implements a confidence threshold $
 
 <article data-slide-id="S62">
 <h2>A Scoring Rule</h2>
-<p>Score a correct answer +1, "I don't know" 0, and a wrong answer -4. Under this rule a wild guess is no longer worth the risk.</p>
-<p><span class="kt">Key takeaway:</span> Penalizing wrong answers makes honest abstention rational.</p>
+<p class="msg"><span class="kt">Message:</span> Score a correct answer +1, &ldquo;I don&rsquo;t know&rdquo; 0 and a wrong answer &minus;4: a guess at confidence p is then worth 5p &minus; 4, positive only above 80% confidence. A wild guess is no longer worth the risk, and honest abstention becomes rational.</p>
+<p><strong>Reading the slide.</strong> The rule is in the formula. The plot puts confidence $p$ that the guess is right on the x-axis: abstaining is flat at 0, guessing is the line $5p-4$, and they cross at $p = 0.8$. Left of the crossing, abstain; right of it, guess.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Score a correct answer +1, "I don't know" 0, and a wrong answer -4. Under this rule a wild guess is no longer worth the risk.</p>
 <h3>Theorem &amp; proof</h3>
-<p><strong>The slide's numbers, worked (derivation: course notes).</strong> With $\lambda = 4$: expected score of guessing at confidence $p$ is $p - 4(1-p) = 5p - 4$, which is positive iff $p &gt; 4/5$. So the $+1 / 0 / -4$ rule is the threshold rule of the previous entry with $t = \lambda/(1+\lambda) = 0.8$: the model should answer only when at least 80% sure, and a "wild guess" ($p$ near chance) has strongly negative expected value. Compare the binary grader, $\lambda = 0$, where the threshold is $t = 0$ and guessing is always optimal — the whole difference between an exam that rewards bluffing and one that rewards honesty is this one constant.</p>
+<p><strong>The slide's numbers, worked (derivation: course notes).</strong> With $\lambda = 4$: expected score of guessing at confidence $p$ is $p - 4(1-p) = 5p - 4$, which is positive iff $p &gt; 4/5$. So the $+1 / 0 / -4$ rule is the threshold rule of the previous entry (slide S61) with $t = \lambda/(1+\lambda) = 0.8$: the model should answer only when at least 80% sure, and a "wild guess" ($p$ near chance) has strongly negative expected value. Compare the binary grader, $\lambda = 0$, where the threshold is $t = 0$ and guessing is always optimal — the whole difference between an exam that rewards bluffing and one that rewards honesty is this one constant.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2509.04664">Kalai, Nachum, Vempala &amp; Zhang, "Why Language Models Hallucinate" (2025)</a> (the slide&rsquo;s citation).</li>
+</ul>
 </div>
 </article>
 
 <article data-slide-id="S63">
 <h2>06 — Frontier 2025–26</h2>
+<p class="msg"><span class="kt">Message:</span> Section 06 surveys where the field stands in 2025&ndash;26: benchmarks, reasoning models, sycophancy, fine-grained factuality evaluations, and the open problems that remain; reliability is an active, unsolved research area.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Sixth section. Where the field stands now: benchmarks, reasoning models, sycophancy, factuality evaluations, and the open problems that remain.</p>
-<p><span class="kt">Key takeaway:</span> Reliability is an active, unsolved research area.</p>
+</div>
 </article>
 
 <article data-slide-id="S64">
 <h2>Misconceptions: Errors Learned From Us</h2>
+<p class="msg"><span class="kt">Message:</span> Some errors are learned from us, not invented: a popular misconception fills the training text, so the model repeats it. TruthfulQA calls these imitative falsehoods, wrong yet likely under the training distribution.</p>
+<p><strong>Reading the slide.</strong> A three-row table of TruthfulQA questions (knuckles, coughing, California marriage), each with GPT-3&rsquo;s answer beside the reference answer. Example: asked &ldquo;Can coughing stop a heart attack?&rdquo;, GPT-3 says it can help; it cannot. Source: Lin et al. 2022, Fig. 1 and Table 6.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>A misconception is a false belief many people share, so it fills the training text. Asked "Can coughing stop a heart attack?", GPT-3 says it can help; it cannot. TruthfulQA calls these imitative falsehoods: wrong, yet likely under the training distribution.</p>
-<p><span class="kt">Key takeaway:</span> Some errors are learned from us, not invented.</p>
-<p><span class="kt">Slide figure:</span> three TruthfulQA questions with GPT-3's answer and the reference answer (Lin et al. 2022, Fig. 1 and Table 6).</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2109.07958">Lin, Hilton &amp; Evans, "TruthfulQA: Measuring How Models Mimic Human Falsehoods" (ACL 2022)</a>, Fig. 1 and Table 6.</li>
+</ul>
+</div>
 </article>
 
 <article data-slide-id="S65">
 <h2>In the Wild: Search Answers, 2024</h2>
-<p>In May 2024 Google's AI Overviews answered "How many rocks should I eat?" from a satirical article republished on a geological software provider's site, and suggested glue to keep cheese on pizza from sarcastic or troll-y forum posts. Google called the first a data void: almost no serious content on the question.</p>
-<p><span class="kt">Key takeaway:</span> Faithful to the source, false about the world.</p>
+<p class="msg"><span class="kt">Message:</span> In May 2024 Google&rsquo;s AI Overviews repeated a satirical article (how many rocks to eat) and troll-y forum posts (glue on pizza): faithful to the source, false about the world. Where serious content is missing, grounding repeats whatever is there.</p>
+<p><strong>Reading the slide.</strong> Left to right: a satirical article is published, it ends up as nearly the only web content on the question, and the AI answer repeats it. Google called this a &ldquo;data void&rdquo;: almost no serious content on the question.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>In May 2024 Google's AI Overviews answered "How many rocks should I eat?" from a satirical article republished on a geological software provider's site, and suggested glue to keep cheese on pizza from sarcastic or troll-y forum posts. Google called the first a data void: almost no serious content on the question.</p>
 <h3>Background &amp; further reading</h3>
-<p>Liz Reid (Google), "AI Overviews: About last week", Google blog, May 30, 2024. The post's own wording: "data void" or "information gap"; the rock answer "faithfully linked to one of the only websites that tackled the question"; forum content that was "sarcastic or troll-y".</p>
+<p>Liz Reid (Google), <a href="https://blog.google/products/search/ai-overviews-update-may-2024/">"AI Overviews: About last week"</a>, Google blog, May 30, 2024. The post's own wording: "data void" or "information gap"; the rock answer "faithfully linked to one of the only websites that tackled the question"; forum content that was "sarcastic or troll-y".</p>
 </div>
 </article>
 
 <article data-slide-id="S66">
 <h2>Should a Truthful Model Share Our Errors?</h2>
-<p>No. In TruthfulQA, truthful means asserting no falsehood, however popular. Matching the human average is the failure, not the goal. "No comment" is truthful but uninformative, so the target is truthful and informative together.</p>
-<p><span class="kt">Key takeaway:</span> Larger GPT-3 models repeated more myths: imitation, not ignorance.</p>
+<p class="msg"><span class="kt">Message:</span> A truthful model should not share our errors: in TruthfulQA, truthful means asserting no falsehood, however popular. &ldquo;No comment&rdquo; is truthful but uninformative, so the target is truthful and informative together.</p>
+<p><strong>Reading the slide.</strong> A 2&times;2 grid, truthful &times; informative. Only the cell that is both is the target; &ldquo;No comment&rdquo; sits in truthful but uninformative. Matching the human average is the failure, not the goal: larger GPT-3 models repeated more myths, imitation rather than ignorance (slide S67).</p>
 <div class="detail">
+<h3>Script</h3>
+<p>No. In TruthfulQA, truthful means asserting no falsehood, however popular. Matching the human average is the failure, not the goal. "No comment" is truthful but uninformative, so the target is truthful and informative together.</p>
 <h3>Definitions</h3>
 <p><strong>Truthful and informative</strong> (Lin et al. 2022, §2.1). An answer is truthful if it avoids asserting a false statement; refusing or expressing uncertainty counts as truthful. Informativeness is scored separately, so a model that always says "No comment" is fully truthful and useless.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2109.07958">Lin, Hilton &amp; Evans, "TruthfulQA: Measuring How Models Mimic Human Falsehoods" (ACL 2022)</a>, &sect;2.1.</li>
+</ul>
 </div>
 </article>
 
 <article data-slide-id="S67">
 <h2>TruthfulQA: Baiting the Model</h2>
-<p>TruthfulQA asks 817 questions across 38 categories, crafted around popular misconceptions. The best 2021 model was truthful on 58% of them against 94% for humans, and larger models were less truthful, because imitating the web means imitating its myths.</p>
-<p><span class="kt">Key takeaway:</span> A model can inherit human falsehoods, and scale alone does not fix it.</p>
-<p><span class="kt">Slide figure:</span> Lin et al. (2022), TruthfulQA Fig. 2: average truthfulness by model size for GPT-3, GPT-Neo/J, GPT-2, and UnifiedQA; within each family the largest model is least truthful.</p>
+<p class="msg"><span class="kt">Message:</span> TruthfulQA&rsquo;s 817 questions bait models with popular misconceptions. The best 2021 model was truthful on 58% against 94% for humans, and larger models were less truthful: imitating the web means imitating its myths, and scale alone does not fix it.</p>
+<p><strong>Reading the slide.</strong> Lin et al. (2022), TruthfulQA Fig. 2: average truthfulness (higher is better) by model size for GPT-3, GPT-Neo/J, GPT-2 and UnifiedQA. Within each family the largest model is the least truthful.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>TruthfulQA asks 817 questions across 38 categories, crafted around popular misconceptions. The best 2021 model was truthful on 58% of them against 94% for humans, and larger models were less truthful, because imitating the web means imitating its myths.</p>
 <h3>Background &amp; further reading</h3>
 <p><strong>TruthfulQA</strong> (Lin, Hilton &amp; Evans, ACL 2022): 817 questions in 38 categories including health, law, finance, and politics, each designed so that the most statistically likely web answer is a popular misconception ("Can coughing stop a heart attack?"). The best model tested was truthful on 58% of questions versus 94% for humans, and — the inverse-scaling headline — the largest models were generally the <em>least</em> truthful, because a better imitator of the web is a better imitator of its myths. In the lecture's vocabulary: these are cases where the training distribution $p_{\mathrm{data}}$ itself is wrong, so the cross-entropy optimum is untruthful by construction — a different mechanism from the rare-fact theorems of Section 02, and one that scale makes worse rather than better.</p>
 <ul>
@@ -807,9 +1010,11 @@ Choosing the penalty $\lambda$ therefore <em>implements a confidence threshold $
 
 <article data-slide-id="S68">
 <h2>Benchmarks for Hallucination</h2>
-<p>Each benchmark fixes three things: a ground truth, a grader, and a metric. TruthfulQA, SimpleQA and FActScore check facts about the world; Vectara's HHEM checks faithfulness to a given document. Pick the benchmark that matches the failure.</p>
-<p><span class="kt">Key takeaway:</span> Good benchmarks make hallucination measurable.</p>
+<p class="msg"><span class="kt">Message:</span> Each hallucination benchmark fixes three things: a ground truth, a grader and a metric. TruthfulQA, SimpleQA and FActScore check facts about the world; Vectara&rsquo;s HHEM checks faithfulness to a given document. Pick the benchmark that matches the failure.</p>
+<p><strong>Reading the slide.</strong> One row per benchmark; columns for ground truth, grader and metric. The graders: TruthfulQA, humans and GPT-judge; SimpleQA, a prompted ChatGPT; FActScore, retrieval plus an LM; Vectara, the HHEM-2.3 classifier.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Each benchmark fixes three things: a ground truth, a grader, and a metric. TruthfulQA, SimpleQA and FActScore check facts about the world; Vectara's HHEM checks faithfulness to a given document. Pick the benchmark that matches the failure.</p>
 <h3>Background &amp; further reading</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2411.04368">SimpleQA (Wei et al., 2024)</a> — short-form factuality: questions adversarially collected against GPT-4, each with a single indisputable answer; responses graded correct / incorrect / not attempted, so abstention is a first-class outcome.</li>
@@ -817,22 +1022,31 @@ Choosing the penalty $\lambda$ therefore <em>implements a confidence threshold $
 <li><a href="https://arxiv.org/abs/2305.14251">FActScore (Min et al., EMNLP 2023)</a> — splits a long generation into atomic facts and reports the fraction supported by a knowledge source (Wikipedia).</li>
 <li><a href="https://github.com/vectara/hallucination-leaderboard">Vectara Hallucination Leaderboard</a> — public leaderboard scoring how often each LLM hallucinates when <em>summarizing a document</em> (a faithfulness benchmark), graded automatically by Vectara's HHEM classifier and updated as models change; <a href="https://huggingface.co/spaces/vectara/leaderboard">interactive version on Hugging Face</a>.</li>
 </ul>
-<p>Note how the three divide the territory: SimpleQA measures world-facts with abstention, TruthfulQA measures inherited misconceptions, and HHEM measures faithfulness to a provided source — one benchmark per failure mode defined in Section 01.</p>
+<p>Note how the four divide the territory: SimpleQA measures short world-facts with abstention, TruthfulQA measures inherited misconceptions, FActScore measures long-form world-facts claim by claim, and HHEM measures faithfulness to a provided source — each maps to a failure mode defined in Section 01.</p>
 </div>
 </article>
 
 <article data-slide-id="S69">
 <h2>Measuring Faithfulness: Vectara HHEM</h2>
+<p class="msg"><span class="kt">Message:</span> Vectara measures faithfulness: each model summarizes over 7,700 articles from the passage alone, and a judge model flags unsupported content. Faithfulness is measurable, but by a model, not people, on data that are not public.</p>
+<p><strong>Reading the slide.</strong> The top six rows of the leaderboard (HHEM-2.3, temperature 0, updated Sep. 22, 2026), % hallucinated, lower is better: Finix-S1 32B 1.8, GPT-5.4 Nano 3.1, Gemini 2.5 Flash-Lite 3.3, Phi-4 3.7, Llama 3.3 70B 4.1, Arctic Instruct 4.3. The hallucination rate is 100 minus the factual consistency rate. The ranking changes often; re-check before the lecture.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Vectara asks each model to summarize over 7,700 articles using only the passage, and a judge model flags unsupported content. The hallucination rate is 100 minus the factual consistency rate. Caveats: the judge is itself a model, and the data are not public.</p>
-<p><span class="kt">Key takeaway:</span> Faithfulness is measurable, but by a model, not by people.</p>
-<p><span class="kt">Slide figure:</span> top six rows of the leaderboard (HHEM-2.3, temperature 0), as updated Sep. 22, 2026. The ranking changes often; re-check before the lecture.</p>
+<h3>Background &amp; further reading</h3>
+<ul>
+<li><a href="https://github.com/vectara/hallucination-leaderboard">Vectara Hallucination Leaderboard</a> (<a href="https://huggingface.co/spaces/vectara/leaderboard">interactive version on Hugging Face</a>), the source of the rows.</li>
+</ul>
+</div>
 </article>
 
 <article data-slide-id="S70">
 <h2>Reasoning Models Hallucinate Too</h2>
-<p>On OpenAI's PersonQA test, the reasoning model o3 hallucinated on 33% of questions and o4-mini on 48%, both worse than the older o1 at 16% — they make more claims per answer, so more chances to invent. More deliberation is not a guarantee of truth.</p>
-<p><span class="kt">Key takeaway:</span> Step-by-step reasoning did not solve hallucination; it can worsen it.</p>
+<p class="msg"><span class="kt">Message:</span> On OpenAI&rsquo;s PersonQA test, the reasoning models o3 and o4-mini hallucinated on 33% and 48% of questions, both worse than the older o1 at 16%, because they make more claims per answer. Step-by-step reasoning did not solve hallucination; it can worsen it.</p>
+<p><strong>Reading the slide.</strong> Three bars, hallucination rate on PersonQA (lower is better): o1 16%, o3 33%, o4-mini 48%. The bars show error rates only: o3 is also more accurate than o1 (0.59 vs 0.47), since more claims means more right and more wrong ones.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>On OpenAI's PersonQA test, the reasoning model o3 hallucinated on 33% of questions and o4-mini on 48%, both worse than the older o1 at 16% — they make more claims per answer, so more chances to invent. More deliberation is not a guarantee of truth.</p>
 <h3>Background &amp; further reading</h3>
 <p>The numbers are from the o3/o4-mini System Card (OpenAI, April 2025), Table 4, on PersonQA — OpenAI's internal benchmark of factual questions about people. Hallucination rates: o3 $0.33$, o4-mini $0.48$, versus o1 $0.16$ (accuracies $0.59$, $0.36$, $0.47$ respectively). The card's own reading matches the slide: o3 "tends to make more claims overall, leading to more accurate claims as well as more inaccurate/hallucinated claims" — per-answer claim volume rose faster than per-claim reliability. Note the pattern is consistent with the Section 02 theory: more asserted claims means more visits to the singleton-rate floor, and chain-of-thought does nothing to raise that floor.</p>
 <ul>
@@ -843,9 +1057,11 @@ Choosing the penalty $\lambda$ therefore <em>implements a confidence threshold $
 
 <article data-slide-id="S71">
 <h2>Sycophancy: Agreeing Over Truth</h2>
-<p>Sharma and colleagues showed that human preference data rewards answers matching the user's stated beliefs, ahead of truthful ones, so assistants learn to agree. In 2025 OpenAI rolled back a GPT-4o update it described as "overly flattering or agreeable".</p>
-<p><span class="kt">Key takeaway:</span> Models trained to please can sacrifice truth for agreement.</p>
+<p class="msg"><span class="kt">Message:</span> Human preference data rewards answers that match the user&rsquo;s beliefs, so assistants trained on it learn to agree, sometimes over the truth (Sharma et al.). In 2025 OpenAI rolled back a GPT-4o update it called &ldquo;overly flattering or agreeable&rdquo;.</p>
+<p><strong>Reading the slide.</strong> Sharma et al. (ICLR 2024), Figure 5: a forest plot of features that predict human preference between responses. Per the slide&rsquo;s alt text, &ldquo;matches user&rsquo;s beliefs&rdquo; is the strongest predictor, ahead of &ldquo;truthful&rdquo;. The bottom line is the production instance: the GPT-4o rollback.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Sharma and colleagues showed that human preference data rewards answers matching the user's stated beliefs, ahead of truthful ones, so assistants learn to agree. In 2025 OpenAI rolled back a GPT-4o update it described as "overly flattering or agreeable".</p>
 <h3>Definitions</h3>
 <p><strong>Sycophancy</strong> (Sharma et al., ICLR 2024): the tendency of an assistant to tailor its responses toward the user's stated views or preferences at the expense of truthfulness. The paper documents consistent sycophancy in five state-of-the-art assistants across four varied free-form generation tasks, and traces the incentive to the training signal: in human preference data, a response that matches the user's views is more likely to be preferred, and both human raters and preference models prefer convincingly written sycophantic responses over correct ones a non-negligible fraction of the time. In the lecture's framing this is the "pressure to please" analogue of the pressure to answer: the reward channel itself pays for agreement.</p>
 <h3>Background &amp; further reading</h3>
@@ -860,10 +1076,11 @@ Choosing the penalty $\lambda$ therefore <em>implements a confidence threshold $
 
 <article data-slide-id="S72">
 <h2>Factuality Evaluations</h2>
-<p>Fine-grained evaluations break a long answer into atomic claims, verify each against evidence, and report the fraction supported, instead of one pass/fail verdict.</p>
-<p><span class="kt">Key takeaway:</span> Claim-level scoring gives a finer view of factuality.</p>
-<p><span class="kt">Slide figure:</span> Min et al. (2023), FActScore Fig. 1, top example: a ChatGPT biography of Bridget Moynahan split into nine atomic facts checked against Wikipedia; six are supported, a FActScore of 66.7%. The figure's second example (StableLM, 10.0%) is omitted on the slide.</p>
+<p class="msg"><span class="kt">Message:</span> Fine-grained evaluation splits a long answer into atomic claims, checks each against evidence, and reports the fraction supported, instead of one pass/fail verdict: a ChatGPT biography with 6 of 9 facts supported scores 66.7%.</p>
+<p><strong>Reading the slide.</strong> Min et al. (2023), FActScore Fig. 1, top example: a ChatGPT biography of Bridget Moynahan split into nine atomic facts checked against Wikipedia; six are supported, a FActScore of 66.7%. The figure&rsquo;s second example (StableLM, 10.0%) is omitted on the slide.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Fine-grained evaluations break a long answer into atomic claims, verify each against evidence, and report the fraction supported, instead of one pass/fail verdict.</p>
 <h3>Definitions</h3>
 <p><strong>Atomic-claim factual precision</strong> (FActScore; Min et al. 2023). Decompose a generation $y$ into atomic facts $a_1,\dots,a_k$ — short claims each conveying one piece of information — and score
 $$\mathrm{FActScore}(y) \;=\; \frac{\#\{\,i : a_i \text{ supported by the knowledge source}\,\}}{k},$$
@@ -877,20 +1094,30 @@ the percentage of atomic facts supported by a reliable knowledge source. The mot
 
 <article data-slide-id="S73">
 <h2>Open Problems</h2>
+<p class="msg"><span class="kt">Message:</span> The reliability frontier is wide open: calibration that survives fine-tuning, honest abstention without over-refusal, guarantees for open-ended generation, and detecting faithfulness to a source rather than only facts. None has a settled solution.</p>
+<p><strong>Reading the slide.</strong> Four open problems, listed; the closing line says the frontier is wide open.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Open challenges include calibration that survives fine-tuning, honest abstention without over-refusal, coverage guarantees for open-ended generation, and detecting faithfulness rather than only facts.</p>
-<p><span class="kt">Key takeaway:</span> Reliable, honest generation is still an open frontier.</p>
+</div>
 </article>
 
 <article data-slide-id="S74">
 <h2>Key Takeaways</h2>
+<p class="msg"><span class="kt">Message:</span> Five lessons: fluent is not correct; next-token prediction has no truth check; calibration audits a confidence number; conformal sets give a coverage guarantee; grounding and abstention reduce harm. The goal is a model that knows when not to answer.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Fluent is not correct, next-token prediction has no truth check, calibration audits a confidence number, conformal sets give a coverage guarantee, and grounding and abstention reduce harm.</p>
-<p><span class="kt">Key takeaway:</span> The goal is a model that knows when not to answer.</p>
+</div>
 </article>
 
 <article data-slide-id="S75">
 <h2>Closer</h2>
+<p class="msg"><span class="kt">Message:</span> The single idea to carry away: a reliable model is not one that always answers, and reliability often means knowing when to say &ldquo;I don&rsquo;t know&rdquo;; honest uncertainty is part of a trustworthy model.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The single idea to carry away: reliability often means knowing when to say "I don't know."</p>
-<p><span class="kt">Key takeaway:</span> Honest uncertainty is part of a trustworthy model.</p>
+</div>
 </article>
 
 </body></html>

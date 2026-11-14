@@ -9,7 +9,7 @@ pr: not open
 state: in-work
 round: 0 of 2
 albert decisions: 2026-11-15 00:34 KST — authorized checking and revising all lec01–lec12 companion notes; brief slide message first, details second; pause if either provider reaches its five-hour limit and resume after reset; 2026-11-15 01:08 KST — C04: render slides to inspect plots and consult original papers/sources as needed during review
-last checkpoint UTC: 2026-11-14T16:09:06Z
+last checkpoint UTC: 2026-11-14T16:13:39Z
 capacity hold: no
 capacity provider: none reported
 capacity reset UTC: unknown; never infer from a five-hour elapsed timer
@@ -27,6 +27,10 @@ Planning complete; plan-v1.md is the work order for P1–P12. At 2026-11-15 00:4
 
 ### Second-wave checkpoint — 2026-11-15 01:06 KST
 slides reports P5–P8 integrated and pushed at cdc30b58c9f5c3392a5d17ec8a62ad709ae6096d. Package commits: P5 68209f7061b213328cc0bec1055c4035159223d3; P6 0b5642c367f61bd6b37c28b8c7b121bdb2c730bf; P7 a022ce74a804cfbd1328502cb4b67eeacba14cc9; P8 af133356ac7879f6e89341e470cc2b4637f85402. Owner verified ancestry from the first-wave checkpoint, content changes confined to these four canonical notes (plus job log), and unchanged ordered IDs/article counts 68/75/75/101. P1–P8 are now reported complete; P9–P12 are in progress. Executor reports zero lint errors across all eight notes; not independently rerun at this checkpoint. This is not work-r1, no substantive review/approval is implied, and round remains 0 of 2. No capacity limit reported.
+
+
+### Third-wave partial checkpoint — 2026-11-15 01:13 KST
+slides reports P9–P11 integrated and pushed at d8a6c904ed348d2597f983b85b8ba9ecab5971c3. Package commits: P9 101ec6998a11a351925f1d690629934904569017; P10 a40f90a9222b8e69465f0cac2233339c274280fb; P11 4668a6c16eca4bb785e2783ba45eb605a3227f59. Owner verified ancestry from the second-wave checkpoint, content changes confined to these three canonical notes (plus job log), and unchanged ordered IDs/article counts 91/88/74. P1–P11 are now reported complete; P12 is in progress. Integration checks, OUTLINE and complete work-r1 remain pending. This is not a work-r1 handoff or substantive review/approval; state in-work, round 0 of 2. C04 is recorded in requests.md and applies to the forthcoming source/visual review. No capacity limit reported.
 
 ## Capacity handling
 Either provider's confirmed capacity limit pauses new work for the whole job. Owner records provider, last safe commit/package and the actual reset time in this living header when available. Preserve the ordinary pipeline state and record capacity hold separately (the contract has no paused state). Do not switch model/provider/account or repeatedly retry a known block. When reset is confirmed, clear the hold and continue from the first incomplete package. A scheduled recovery check will inspect stalled/held work; it must not treat silence or a slow package as proof of a quota limit. Unknown reset time requires a bounded availability check, not a fabricated reset time. Checkpoint every lecture and at context/usage warnings; no restarting already completed packages.

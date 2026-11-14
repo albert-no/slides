@@ -47,8 +47,13 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 13 | `lec13-prompt-injection.html` | Prompt injection: direct and indirect, agents, three incidents, why it is hard, measured defenses and CaMeL | **new 2026-10** (53 sl, 7 real figure crops, 90 min, concept-first, no activities; note 53 entries; tech 15 sl). Replaces `backup-prompt-injection.html` (deleted) |
 | 14 | `lec14-agentic-threats.html` | Emerging agentic threats: autonomy, deception and multi-agent risks; course finale | **new 2026-10** (51 sl, 5 real figure crops, 90 min, concept-first, no activities; note 51 entries; tech 14 sl). Replaces `backup-agentic-autonomy.html` (deleted); former Wk 15 governance deck → `backup-governance.html` |
 
-Every deck has a companion **speaker script** `lecNN-…-note.html` (one entry per slide:
-title + 1–2 sentence script + **Key takeaway**). Scripts also exist for lec 1–2.
+Every deck has a companion **speaker script** `lecNN-…-note.html` (one `<article>` per slide,
+keyed by the same `data-slide-id`). Since the 2026-11-15 notes revision (lec01–lec12) each
+entry opens with a short **Message** (`p.msg`, the slide's point in 1–2 plain sentences), then
+**Reading the slide** (what the slide, plot or diagram shows), then the details under
+**Script** (script, figure, sources, minor points). lec13–lec14 notes keep the older
+script + **Key takeaway** format. Decks lec01–lec11 carry stable slide IDs `S01…SNN` in
+`data-slide-id` (sequential as of 2026-11-15).
 Every lecture also has an optional **technical supplement** `lecNNtech.html` — see below.
 
 ## Technical supplements (optional sub-decks)

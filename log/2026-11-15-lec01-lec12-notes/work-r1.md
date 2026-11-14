@@ -27,7 +27,7 @@ Each package rewrote one note, `courses/trustworthy-ai/lecNN-*-note.html`. Every
 | P12 | lec12 | 80 | 7da04f9 | 17/43/54 |
 | | **total** | **902** | | |
 
-The short Messages (9–20 words) belong to title, divider and closer entries (plan rule 1). There are 39 of 902 Messages at 51–55 words: lec01 5, lec03 2, lec04 8, lec07 3, lec09 6, lec11 10, lec12 5. They are over the target only because they keep a qualifier.
+The shortest Messages (9–20 words) are mostly title, divider and closer entries (plan rule 1). There are 39 of 902 Messages at 51–55 words: lec01 5, lec03 2, lec04 8, lec07 3, lec09 6, lec11 10, lec12 5. They are over the target only because they keep a qualifier.
 
 Shared surface: `courses/trustworthy-ai/OUTLINE.md`. The note-format paragraph now describes Message → Reading the slide → Script, says that lec13–lec14 notes keep the older Key-takeaway format, and records the stable IDs on lec01–lec11. No line pointers changed. No deck, tech supplement or `reference/` file was edited after the ID commit.
 

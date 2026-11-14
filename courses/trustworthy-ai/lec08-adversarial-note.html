@@ -16,9 +16,10 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 .detail p, .detail ul, .detail ol { margin: 8px 0; }
 .detail table, table.pacing { border-collapse: collapse; margin: 10px 0; }
 .detail th, .detail td, table.pacing th, table.pacing td { border: 1px solid var(--slate); padding: 4px 12px; text-align: left; }
+p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 </style></head><body>
 <h1>Lecture 8 — Adversarial Robustness: When Small Changes Break Models · Script &amp; Companion Notes</h1>
-<p><em>One entry per slide, in order. Each entry gives the slide's minute budget, the spoken script and the key takeaway. Content slides add companion notes: what the figure shows, the setup (who, which model, when), what the evidence does and does not establish, the assumptions, and links to the primary sources. Derivations and proofs live in the technical supplement, lec08tech.html. No in-class activities.</em></p>
+<p><em>One entry per slide, in order. Each entry gives the slide's minute budget, then opens with the slide's message, then how to read the slide, then the spoken script and the companion details. Content slides' companion notes give what the figure shows, the setup (who, which model, when), what the evidence does and does not establish, the assumptions, and links to the primary sources. Derivations and proofs live in the technical supplement, lec08tech.html. No in-class activities.</em></p>
 <table class="pacing"><tr><th>Block</th><th>Slides</th><th>Minutes</th></tr>
 <tr><td>Why robustness</td><td>1–11</td><td>10</td></tr>
 <tr><td>A tiny nudge</td><td>12–18</td><td>7</td></tr>
@@ -36,32 +37,43 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S01">
 <h2>1. Adversarial Robustness: When Small Changes Break Models</h2>
 <p class="pace">Why robustness · ≈0.5 min · elapsed ≈0.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Today the input itself is the problem: inputs the test set never checked, and inputs someone chooses on purpose to make an accurate model fail.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Welcome to Lecture 8. So far our failures came from the model or its training data. Today, the input itself becomes the problem: inputs the test set never checked, and inputs someone chooses on purpose to make the model fail.</p>
-<p><span class="kt">Key takeaway:</span> Today: what happens when the input is chosen by an adversary.</p>
+</div>
 </article>
 
 <article data-slide-id="S02">
 <h2>2. Contents</h2>
 <p class="pace">Why robustness · ≈1 min · elapsed ≈1.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Eight parts run from why we want robustness, through the attack, its causes, threat models, attack search and defenses, to physical-world attacks and LLMs, all asking what the model must stay right under.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Eight parts. First, why we want robustness at all. Second, the classic tiny change that flips a confident answer. Third, three lenses on why it happens. Fourth, who attacks and why, and the threat model every claim needs. Fifth, how attackers search for the worst input: FGSM, then PGD. Sixth, defenses and how to evaluate them honestly. Seventh, attacks in the physical world. Eighth, the same problem in large language models.</p>
 <p>One word runs through all of it: robustness. Keep asking what we want the model to stay right under, and why.</p>
-<p><span class="kt">Key takeaway:</span> Why robustness, the attack, why it happens, who attacks, the search, defenses, physical world, LLMs.</p>
+</div>
 </article>
 
 <article data-slide-id="S03">
 <h2>3. 01 — Why We Want Robustness</h2>
 <p class="pace">Why robustness · ≈0.5 min · elapsed ≈2 min</p>
+<p class="msg"><span class="kt">Message:</span> Section 01 motivates the lecture: being accurate on test data is not the same as being safe to deploy.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Before any attack, a motivation. Accurate on test data is not the same as safe to deploy.</p>
-<p><span class="kt">Key takeaway:</span> Accuracy alone does not make a model safe to deploy.</p>
+</div>
 </article>
 
 <article data-slide-id="S04">
 <h2>4. Models Now Make Real Decisions</h2>
 <p class="pace">Why robustness · ≈1 min · elapsed ≈3 min</p>
+<p class="msg"><span class="kt">Message:</span> Models already flag tumours, read road signs, block harmful posts and follow chatbot safety rules, so a wrong answer costs money, safety or trust, and we need a way to decide when a model is good enough to deploy.</p>
+<p><strong>Reading the slide.</strong> Four boxes, one per deployment setting: medical scans, driving, moderation, chatbots. Each box names the decision the model makes there. The line beneath states the cost of a wrong answer and poses the lecture's practical question. The slide gives no error rates; it only motivates the question.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Models already flag tumours in medical scans, read road signs, block harmful posts, and follow safety rules in chatbots. In each case a wrong answer costs money, safety or trust.</p>
 <p>So the practical question is: how do we decide a model is good enough to deploy?</p>
-<p><span class="kt">Key takeaway:</span> Wrong answers now have real costs.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Four-box schematic drawn for this lecture: medical scans, driving, moderation, chatbots.</p>
 </div>
@@ -70,10 +82,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S05">
 <h2>5. Test Accuracy Measures an Ordinary Day</h2>
 <p class="pace">Why robustness · ≈1 min · elapsed ≈4 min</p>
+<p class="msg"><span class="kt">Message:</span> Test accuracy rests on two assumptions, test inputs that look like the training inputs and nobody picking them to fool the model, so a score like 95% only answers how good the model is on an ordinary day.</p>
+<p><strong>Reading the slide.</strong> Left to right: training photos from one source, test photos from the same source, and a typical score of 95% correct. The two lines below are the assumptions that make that score meaningful. The 95% is a typical value for illustration, not a result for a named model.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The usual answer is test accuracy. It rests on two assumptions. One: test inputs look like the training inputs, because both come from the same source. Two: nobody picks them to fool the model.</p>
 <p>Under those assumptions, a score like 95% is meaningful. But it answers a narrow question: how good is the model on an ordinary day?</p>
-<p><span class="kt">Key takeaway:</span> Test accuracy assumes typical inputs and no adversary.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Schematic drawn for this lecture: training and test photos from one source; "95% correct" as a typical score.</p>
 <h3>Assumptions</h3>
@@ -84,11 +98,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S06">
 <h2>6. Real Inputs Break Both Assumptions</h2>
 <p class="pace">Why robustness · ≈1 min · elapsed ≈5 min</p>
+<p class="msg"><span class="kt">Message:</span> Deployment breaks both assumptions: new conditions such as fog or a new scanner shift the inputs with no one trying, and a spammer or fraudster may pick inputs to find a failure; the test set measured neither.</p>
+<p><strong>Reading the slide.</strong> Two boxes, one per broken assumption. Left: new conditions (fog, sketches, a new scanner) where nobody is trying to fool the model. Right: someone picks the input and searches for a failure. The bottom line joins them: both are inputs the test set never checked. The closing line leads into the cue-conflict example on slide S07.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Deployment breaks both. New conditions arrive: fog, sketches, a new hospital scanner. Nobody is trying to fool the model, but the inputs no longer look like the training set.</p>
 <p>And sometimes someone picks the input: a spammer, a fraudster, a prankster, actively searching for a failure.</p>
 <p>Both are inputs the test set never checked. First, a hint that models decide very differently from us.</p>
-<p><span class="kt">Key takeaway:</span> Shifted inputs and chosen inputs are both outside what the test set measures.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Two-box schematic drawn for this lecture: new conditions (no adversary) vs someone picks the input.</p>
 </div>
@@ -97,10 +113,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S07">
 <h2>7. A Cat With Elephant Skin Is an "Elephant" to a CNN</h2>
 <p class="pace">Why robustness · ≈1.5 min · elapsed ≈6.5 min</p>
+<p class="msg"><span class="kt">Message:</span> On a cat shape filled with elephant skin, a ResNet-50 trained on ImageNet answers "Indian elephant" while people see a cat: in this cue-conflict test the network followed texture, not shape.</p>
+<p><strong>Reading the slide.</strong> Geirhos et al. Fig. 1, three panels, with the network's top three guesses under each. (a) Elephant skin texture alone: Indian elephant, 81.4%. (b) A normal cat: tabby cat, 71.1%. (c) The cat's outline filled with elephant skin: Indian elephant, 63.9%. Compare (b) with (c): the shape is unchanged, only the texture changed, and the answer followed the texture. The figure shows one tested model and image, not every CNN.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Geirhos and colleagues built cue-conflict images. Panel (a) is elephant skin texture alone. Panel (b) is a normal cat. Panel (c) is the cat's shape, filled with elephant skin. Under each, the CNN's top three guesses.</p>
 <p>On (c), the network's top guess is an elephant: it follows the texture. Any person sees a cat.</p>
-<p><span class="kt">Key takeaway:</span> The CNN followed texture where people follow shape.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Fig. 1 of Geirhos et al.: (a) texture image, (b) content image, (c) texture-shape cue conflict, each with ResNet-50's top-3 ImageNet predictions.</p>
 <h3>Setup, model, date</h3>
@@ -119,10 +137,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S08">
 <h2>8. Humans See Shape; the CNN Saw Texture</h2>
 <p class="pace">Why robustness · ≈1 min · elapsed ≈7.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Matching our answers is not matching our reasons: these tested ImageNet models rely on texture where people rely on shape; Geirhos and colleagues also show training can raise shape bias, so this is motivation, not a universal explanation.</p>
+<p><strong>Reading the slide.</strong> Two columns: you look at the outline and say "a cat"; the CNN looks at the skin pattern and says "an elephant". The quotation is the authors' one-sentence summary. The bottom line limits the claim to the tested models.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The authors put it in one sentence: "A cat with an elephant texture is an elephant to CNNs, and still a cat to humans."</p>
 <p>These tested models rely on cues differently from human observers. The model was never asked to match our reasons, only our answers on the training data. Keep the scope: Geirhos and colleagues also show the same architecture becoming more shape-biased when trained differently, so this is motivation, not a universal explanation of every failure.</p>
-<p><span class="kt">Key takeaway:</span> Matching our answers does not mean matching our reasons.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Two-panel schematic drawn for this lecture; quotation from the abstract / Fig. 1 caption of Geirhos et al.</p>
 <h3>Primary sources</h3>
@@ -135,20 +155,26 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S09">
 <h2>9. Different Reasons Make a Weak Surface</h2>
 <p class="pace">Why robustness · ≈1 min · elapsed ≈8.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Cues the model uses but we ignore form an attack surface: an attacker can edit those cues without us noticing, so a model relying on other cues can fail where we do not expect.</p>
+<p><strong>Reading the slide.</strong> The definition box defines an attack surface. The three lines below build the argument in order: we never chose the model's cues, ignored cues can still drive its answer, so an attacker can edit them unnoticed. The bottom line states the consequence.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>An attack surface is any place an attacker can push a system into failing. Here is why different reasons create one.</p>
 <p>We never chose which cues the model uses. Cues we ignore, like texture, can still drive its answer. So an attacker can edit those cues, and we will not notice, because we are not looking at them.</p>
 <p>A model relying on other cues can fail where we do not expect.</p>
-<p><span class="kt">Key takeaway:</span> Cues the model uses but we ignore are a place to attack.</p>
+</div>
 </article>
 
 <article data-slide-id="S10">
 <h2>10. What We Want: Robustness</h2>
 <p class="pace">Why robustness · ≈1 min · elapsed ≈9.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Robustness means the answer stays right when the input changes in ways that should not matter, from invisible noise to fog to a sticker; this lecture focuses on deliberate changes an attacker picks.</p>
+<p><strong>Reading the slide.</strong> The definition box comes first. Three boxes give the kinds of change: tiny pixel noise, a natural change such as fog or a new camera, and a deliberate change such as a small sticker. Each should leave a stop sign a stop sign. The last line narrows the lecture to the third kind; natural shifts return on slide S90.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Name the goal. Robustness: the answer stays right when the input changes in ways that should not matter.</p>
 <p>Three examples: tiny pixel noise, invisible to us; a natural change such as fog or a new camera; a deliberate change, a small sticker. Each should leave a stop sign a stop sign.</p>
-<p>This lecture focuses on the third kind: changes an attacker picks. We return to natural changes briefly at the end of Section 07.</p>
-<p><span class="kt">Key takeaway:</span> Robustness: the answer survives changes that should not matter.</p>
-<div class="detail">
+<p>This lecture focuses on the third kind: changes an attacker picks. We return to natural changes briefly at the end of Section 07 (slide S90).</p>
 <h3>The figure</h3>
 <p>Three-box schematic drawn for this lecture.</p>
 </div>
@@ -157,30 +183,39 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S11">
 <h2>11. Why Robustness Matters</h2>
 <p class="pace">Why robustness · ≈0.5 min · elapsed ≈10 min</p>
+<p class="msg"><span class="kt">Message:</span> Robustness matters for safety, security and trust: accuracy means usually right, while robustness means staying right when someone or something pushes on the input.</p>
+<p><strong>Reading the slide.</strong> Three boxes: safety (a misread sign can crash a car), security (an attacker can steer the output), trust (we cannot vouch for an answer that flips). The bottom line contrasts accuracy with robustness.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Three reasons. Safety: a misread sign can crash a car. Security: an attacker can steer the output. Trust: we cannot vouch for an answer that flips under a change nobody can see.</p>
 <p>Accuracy means usually right. Robustness means staying right when pushed.</p>
-<p><span class="kt">Key takeaway:</span> Safety, security, trust: accuracy is not enough.</p>
+</div>
 </article>
 
 <article data-slide-id="S12">
 <h2>12. 02 — A Tiny Nudge</h2>
 <p class="pace">A tiny nudge · ≈0.5 min · elapsed ≈10.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Section 02 asks the question that frames the lecture: if a model is accurate on test data, can we trust it when someone else chooses the input?</p>
+<div class="detail">
+<h3>Script</h3>
 <p>One question frames today: if a model is accurate on test data, can we trust it when someone else chooses the input?</p>
-<p><span class="kt">Key takeaway:</span> Keep this question in mind all lecture.</p>
+</div>
 </article>
 
 <article data-slide-id="S13">
 <h2>13. A Tiny Nudge Flips a Confident Answer</h2>
 <p class="pace">A tiny nudge · ≈2 min · elapsed ≈12.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Adding a change of about one 8-bit brightness step per pixel, chosen using the model's gradients, turned GoogLeNet's 57.7% "panda" into a 99.3% "gibbon" on an image that looks unchanged to us.</p>
+<p><strong>Reading the slide.</strong> Read the threat-model line above the figure first: the attacker edits pixels slightly, knows the gradients, and wants any wrong label. Then Goodfellow et al. Fig. 1, left to right: the panda (57.7%), plus 0.007 times a sign pattern (itself read as nematode, 8.2%), equals an image read as gibbon (99.3%). The ε line converts .007 into about one 8-bit intensity step after GoogLeNet's input scaling. It is one example on one model, not a rate.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The most famous picture in this field. On the left, an image GoogLeNet calls "panda" with 57.7% confidence. In the middle, a pattern that looks like coloured static. We add a tiny multiple of it, 0.007, to the panda. On the right is the result. To us it is the same panda. The network now says "gibbon", with 99.3% confidence.</p>
 <p>How small is 0.007? The authors say it equals the size of the smallest bit of an 8-bit image encoding after GoogLeNet's conversion to real numbers: about one step of brightness per pixel.</p>
 <p>Notice the line above the figure. Every example today comes with a threat model: what the attacker controls, what they know, and what they want. Here: they change pixels by about one step each, they know the model's gradients, and they want any wrong label.</p>
-<p><span class="kt">Key takeaway:</span> A change too small to see can flip a confident prediction.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Fig. 1 of Goodfellow et al.: x (panda, 57.7%) + .007 × sign(∇ₓJ(θ, x, y)) (the noise, itself classified "nematode", 8.2%) = adversarial image ("gibbon", 99.3%).</p>
 <h3>Setup, model, date</h3>
-<p>GoogLeNet on ImageNet; ε = .007 in the ℓ∞ sense; white-box attack (FGSM, slide 57). Published 2015.</p>
+<p>GoogLeNet on ImageNet; ε = .007 in the ℓ∞ sense; white-box attack (FGSM, slide S57). Published 2015.</p>
 <h3>What this establishes</h3>
 <p>An adversarial example exists for this image and model, at a change humans do not notice.</p>
 <h3>What this does not establish</h3>
@@ -195,11 +230,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S14">
 <h2>14. Anatomy of an Adversarial Example</h2>
 <p class="pace">A tiny nudge · ≈1 min · elapsed ≈13.5 min</p>
+<p class="msg"><span class="kt">Message:</span> An adversarial example x′ = x + δ adds a change too small to alter the true label for a human, but chosen by search so the model's answer changes; random noise of the same size usually does nothing.</p>
+<p><strong>Reading the slide.</strong> The definition gives the formula. The diagram reads as an equation: clean input x, plus a change δ of size at most ε, equals x′, which looks the same. Under x′ the outcome: a human says panda, the model says gibbon. The bottom note says "small" needs a ruler, fixed later by a budget ε and a norm (S42–S45).</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Let us name the parts. An adversarial example is x′ = x + δ. The change δ is too small to alter the true label, at least for a human, but it is chosen so that the model's answer changes.</p>
 <p>The key word is "chosen". Random noise of the same size usually does nothing. The attacker searches for the specific δ that hurts the model most.</p>
-<p>And "small" needs a ruler. In Section 04 we will fix it with a budget ε and a norm, the way we measure size.</p>
-<p><span class="kt">Key takeaway:</span> Adversarial example = small, deliberately chosen change that flips the output.</p>
-<div class="detail">
+<p>And "small" needs a ruler. In Section 04 (slides S42–S45) we will fix it with a budget ε and a norm, the way we measure size.</p>
 <h3>The figure</h3>
 <p>Schematic drawn for this lecture: input x + change δ (size ≤ ε) = x′; a human still says panda, the model says gibbon.</p>
 <h3>Assumptions</h3>
@@ -210,10 +247,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S15">
 <h2>15. Not One Unlucky Image</h2>
 <p class="pace">A tiny nudge · ≈1 min · elapsed ≈14.5 min</p>
+<p class="msg"><span class="kt">Message:</span> The panda is not a lucky find: Szegedy et al. show six randomly chosen images that AlexNet classified correctly, each turned into an "ostrich" by a change we cannot see; the figure shows examples, not a rate.</p>
+<p><strong>Reading the slide.</strong> Szegedy et al. Fig. 5, read across each row. Left: a correctly classified image. Middle: the difference, magnified ten times so it is visible. Right: the adversarial image, which looks the same and is read as "ostrich". The caption says the examples were "strictly randomly chosen", so they are not hand-picked successes; the figure still does not report how often attacks succeed.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Is the panda a lucky find? This 2014 paper, which named the phenomenon, shows six more. In each row: a correctly classified image on the left, the difference magnified ten times in the middle, and the adversarial image on the right. AlexNet labels every right-hand image "ostrich".</p>
 <p>The authors state the examples were chosen strictly at random. Adversarial examples are the rule, not the exception, for standard networks.</p>
-<p><span class="kt">Key takeaway:</span> For standard networks, adversarial examples exist for almost every input.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Fig. 5 of Szegedy et al.: (a) and (b) each show three triples (original, magnified difference ×10, adversarial). All adversarial images are classified "ostrich, Struthio camelus".</p>
 <h3>Setup, model, date</h3>
@@ -232,10 +271,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S16">
 <h2>16. Clear Evidence the Model Sees Differently</h2>
 <p class="pace">A tiny nudge · ≈1 min · elapsed ≈15.5 min</p>
-<p>Put the panda in two columns. To a person, panda plus an invisible change is still a panda. To the model, the same panda plus the same change is a gibbon, 99.3% sure.</p>
-<p>A human observer still sees a panda. This is evidence that this model relies on cues we cannot even see, the same lesson as the elephant-skin cat, now at a scale too small to see at all.</p>
-<p><span class="kt">Key takeaway:</span> An invisible change fooling the model is evidence it relies on cues differently from us.</p>
+<p class="msg"><span class="kt">Message:</span> The same invisible change leaves a panda for a person but makes the model say gibbon with 99.3% confidence: evidence that this model relies on cues we cannot see, as with the elephant-skin cat on S07.</p>
+<p><strong>Reading the slide.</strong> Two columns, one per observer. Person: panda plus an invisible change is still a panda. Model: the same panda plus the same change is a gibbon, 99.3% sure. The bottom line draws the conclusion for this model only.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Put the panda in two columns. To a person, panda plus an invisible change is still a panda. To the model, the same panda plus the same change is a gibbon, 99.3% sure.</p>
+<p>A human observer still sees a panda. This is evidence that this model relies on cues we cannot even see, the same lesson as the elephant-skin cat (slide S07), now at a scale too small to see at all.</p>
 <h3>The figure</h3>
 <p>Two-column schematic drawn for this lecture from the panda example (Goodfellow et al., Fig. 1).</p>
 <h3>Primary sources</h3>
@@ -248,19 +289,25 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S17">
 <h2>17. A Weak Surface Attackers Can Use</h2>
 <p class="pace">A tiny nudge · ≈1 min · elapsed ≈16.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Adversarial examples are a usable weak surface: the attacker touches only the input, the change is invisible to reviewers, and a quick computer search finds it, so our goal is that no small change flips the answer.</p>
+<p><strong>Reading the slide.</strong> Three lines, one per property: input-only access, invisibility, found by search rather than luck. The bottom line turns them into the lecture's robustness goal.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Why does this matter for security? Three features make it a weak surface. The attacker touches only the input, not the model. The change is invisible, so a reviewer looking at the image sees nothing wrong. And it is found by a quick computer search, not by luck.</p>
 <p>So the robustness goal for this lecture: no small change should flip the answer.</p>
-<p><span class="kt">Key takeaway:</span> Input-only, invisible, easy to find: an ideal weak surface.</p>
+</div>
 </article>
 
 <article data-slide-id="S18">
 <h2>18. Who Chooses the Input Changes the Question</h2>
 <p class="pace">A tiny nudge · ≈0.5 min · elapsed ≈17 min</p>
+<p class="msg"><span class="kt">Message:</span> Accuracy is an average-case score where nature draws the test inputs; robust accuracy is worst case, where an adversary picks inputs within allowed changes, and a model can score high on the first and near zero on the second.</p>
+<p><strong>Reading the slide.</strong> Two boxes. Left: average case, nature draws inputs from the test distribution, measured by accuracy. Right: worst case, an adversary picks the input within allowed changes, measured by robust accuracy. The bottom line says high accuracy answers only the first question.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Here is the conceptual shift. Normal test accuracy is an average case: nature draws inputs from the test distribution, and we count how many are right.</p>
 <p>Robustness is a worst case: an adversary picks the input, within allowed changes, to make the model fail. That number is called robust accuracy.</p>
 <p>A model can be 95% accurate and have near-zero robust accuracy. High accuracy answers the first question, not the second.</p>
-<p><span class="kt">Key takeaway:</span> Accuracy is average case; robustness is worst case.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Two-panel schematic drawn for this lecture: average case (nature draws inputs → accuracy) vs worst case (adversary picks inputs within allowed changes → robust accuracy).</p>
 </div>
@@ -269,17 +316,22 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S19">
 <h2>19. 03 — Why It Happens</h2>
 <p class="pace">Why it happens · ≈0.5 min · elapsed ≈17.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Section 03 offers three lenses on why adversarial examples exist, off the data, small moves adding up, and hidden features, none of them the single settled cause.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Three lenses on why: off the data, small moves add up, and hidden features. None of them is the single settled cause.</p>
-<p><span class="kt">Key takeaway:</span> Three lenses, not one verdict.</p>
+</div>
 </article>
 
 <article data-slide-id="S20">
 <h2>20. Training Covers a Thin Slice of Inputs</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈18.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Natural photos form a thin slice of all possible images, and the model is trained only on that slice, so most of input space is never seen during training.</p>
+<p><strong>Reading the slide.</strong> An illustrative sketch. The large region is all possible images, mostly static and noise. The thin band inside is natural photos, and the dots on it are training images. The note says the real space has about 150,000 dimensions for a 224×224 colour image; the 2-D picture is an analogy, not data.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Think of every possible image of a given size. Almost all of them are static and noise. Natural photos form a thin slice of that space, and the training images sit on that slice.</p>
 <p>The model is taught only on the slice; the rest is unseen. Our sketch is two-dimensional; a 224×224 colour image actually has about 150,000 numbers.</p>
-<p><span class="kt">Key takeaway:</span> Training data covers a thin slice; most of input space is never seen.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Illustrative sketch drawn for this lecture: a box of "all possible images" with a thin band of natural photos and training points on it.</p>
 <h3>Assumptions</h3>
@@ -290,10 +342,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S21">
 <h2>21. Off the Data, Any Answer Is Possible</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈19.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Two models can fit the seen data equally well yet disagree completely off it, because nothing in training constrains the answer in the unseen region.</p>
+<p><strong>Reading the slide.</strong> A one-dimensional illustrative sketch. The shaded region is the seen data, with unseen regions on both sides. Models A and B agree inside the shaded region and diverge outside it. The point is that the data cannot say which off-data curve is right; the curves are not fitted to any real dataset.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>A one-dimensional version. Two models, A and B, fit the seen data equally well. Inside the shaded region they agree. Outside it, in the unseen domain, they diverge completely, and nothing in the training data says which is right.</p>
 <p>This is why a model can behave in a completely unpredictable way on unseen inputs: training never constrained it there.</p>
-<p><span class="kt">Key takeaway:</span> Off the data, training does not constrain the answer.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Illustrative sketch drawn for this lecture: a straight model A and a curved model B agreeing on five data points and diverging outside.</p>
 </div>
@@ -302,10 +356,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S22">
 <h2>22. Nonsense Images, Labelled With ≥ 99.6% Confidence</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈20.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Images evolved to maximise a class score, far from any real photo, were labelled by an ImageNet-trained AlexNet with at least 99.6% confidence: off the data, a network can be confidently wrong.</p>
+<p><strong>Reading the slide.</strong> Nguyen et al. Fig. 1. The images were evolved by a computer, not photographed. Top rows were evolved pixel by pixel and look like static; bottom rows were evolved as patterns. Under each is the network's label, every one at least 99.6% sure. The figure shows that such images exist for this network; it does not show that real attacks work this way.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Evidence from 2015. Nguyen, Yosinski and Clune evolved images by computer to maximize a class score. Top rows were evolved pixel by pixel, and look like static; bottom rows were evolved as patterns. Under each, the network's answer: at least 99.6% sure.</p>
 <p>These images are far from any real photo, yet the model is certain. That is the unseen domain in practice.</p>
-<p><span class="kt">Key takeaway:</span> Far from the data, a network can be confidently wrong.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Fig. 1 of Nguyen et al.: evolved images with AlexNet's labels, each with ≥ 99.6% confidence.</p>
 <h3>Setup, model, date</h3>
@@ -313,7 +369,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h3>What this establishes</h3>
 <p>Unrecognizable images can receive near-certain labels from this network.</p>
 <h3>What this does not establish</h3>
-<p>That the same happens for small changes to real photos; that is the next lens.</p>
+<p>That the same happens for small changes to real photos; that is the next lens (slides S24–S28).</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1412.1897">Nguyen, Yosinski &amp; Clune, "Deep Neural Networks Are Easily Fooled: High Confidence Predictions for Unrecognizable Images" (CVPR 2015)</a> — evolved images that AlexNet labels with ≥ 99.6% confidence (Fig. 1).</li>
@@ -324,10 +380,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S23">
 <h2>23. One View: A Tiny Step Can Leave the Data</h2>
 <p class="pace">Why it happens · ≈0.5 min · elapsed ≈21 min</p>
+<p class="msg"><span class="kt">Message:</span> If real photos form a thin slice, most directions leave it, so a tiny step can land where the model was never trained; this is one view among several, not a proven cause.</p>
+<p><strong>Reading the slide.</strong> An illustrative sketch: a real photo on the slice of natural photos, and a tiny arrow stepping off it. The caption states the claim and immediately qualifies it as one view, not a proven cause.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Connect this to small changes. If real photos form a thin slice, most directions leave it. A tiny step off the slice lands in territory the model was never taught on.</p>
 <p>This is one view among several, not a proven cause.</p>
-<p><span class="kt">Key takeaway:</span> A tiny step can leave the data slice.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Illustrative sketch drawn for this lecture.</p>
 </div>
@@ -336,10 +394,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S24">
 <h2>24. Like You're Five: Many Tiny Pushes Add Up</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈22 min</p>
-<p>Second lens, the simplest version. Imagine a balance scale with panda on one side and gibbon on the other. Every pixel is a grain of sand. Nudge every pixel a hair toward a wrong answer, here gibbon. One grain does nothing. But a picture has about 150,000 grains, and together they tip the scale.</p>
-<p>That is the whole idea; the next three slides make it precise.</p>
-<p><span class="kt">Key takeaway:</span> Each pixel moves too little to see; together they tip the decision.</p>
+<p class="msg"><span class="kt">Message:</span> Each pixel moves too little to see, but nudging all of them toward a wrong answer adds up, like 150,000 grains of sand together tipping a balance scale from panda to gibbon.</p>
+<p><strong>Reading the slide.</strong> A balance scale with panda on one side and gibbon on the other. Each grain stands for one pixel's tiny push. The caption says one grain is nothing and 150,000 grains tip the scale. Slides S25–S27 make the analogy precise.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Second lens, the simplest version. Imagine a balance scale with panda on one side and gibbon on the other. Every pixel is a grain of sand. Nudge every pixel a hair toward a wrong answer, here gibbon. One grain does nothing. But a picture has about 150,000 grains, and together they tip the scale.</p>
+<p>That is the whole idea; slides S25–S27 make it precise.</p>
 <h3>The figure</h3>
 <p>Illustrative balance-scale sketch drawn for this lecture.</p>
 </div>
@@ -348,10 +408,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S25">
 <h2>25. A Linear Score Adds Up Every Pixel</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈23 min</p>
+<p class="msg"><span class="kt">Message:</span> A linear model scores a class by a weighted sum over all n pixel values, so changing each pixel by δᵢ moves the score by the sum of wᵢδᵢ: n small terms added into one total.</p>
+<p><strong>Reading the slide.</strong> The formula s(x) = wᵀx = Σ wᵢxᵢ defines the score. w are the learned weights and n is the number of pixel values. The second line gives the change in score when pixel i moves by δᵢ. The intuition: every pixel contributes, so many small terms can add up.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Now with a formula. A simple model scores a class by a weighted sum: s(x) = w·x, the sum over n pixel values of wᵢ xᵢ. Here w are the weights the model learned and n is the number of pixel values.</p>
 <p>Change pixel i by δᵢ, and the score moves by the sum of wᵢ δᵢ: n small terms, one sum.</p>
-<p><span class="kt">Key takeaway:</span> A linear score sums n small contributions.</p>
-<div class="detail">
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1412.6572">Goodfellow, Shlens &amp; Szegedy, "Explaining and Harnessing Adversarial Examples" (ICLR 2015)</a> — the panda (Fig. 1), FGSM, the "too linear" argument (§3) and Figs. 2 and 4.</li>
@@ -362,10 +424,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S26">
 <h2>26. The Best Push: Follow the Sign of Each Weight</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈24 min</p>
+<p class="msg"><span class="kt">Message:</span> If each pixel may move at most ε, the best push moves every pixel ε in the direction its weight points, so every term adds and the score moves by ε times the sum of absolute weights.</p>
+<p><strong>Reading the slide.</strong> Read the rule, then the formula δ = ε·sign(w), which gives wᵀδ = ε‖w‖₁. The worked line shows the sign rule: w₁ = +2, raise pixel 1, gain 2ε; w₂ = −3, lower pixel 2, gain 3ε. The bottom line names why it works: every term is positive, nothing cancels.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The rule: each pixel may move at most ε. What is the best move? Push each pixel ε the way its weight points: up where the weight is positive, down where it is negative. That is δ = ε·sign(w). Tiny example: if w₁ = +2, raise pixel 1 by ε and the score gains 2ε; if w₂ = −3, lower pixel 2 by ε and the score gains 3ε. Both moves increase the chosen score.</p>
 <p>Then every term wᵢ δᵢ is positive; nothing cancels. The score moves by ε times the sum of |wᵢ|, written ε‖w‖₁.</p>
-<p><span class="kt">Key takeaway:</span> Aligning each pixel with its weight makes every term count.</p>
-<div class="detail">
 <h3>Assumptions</h3>
 <p>Exact for a linear score; for deep networks this is a local approximation.</p>
 <h3>Primary sources</h3>
@@ -378,10 +442,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S27">
 <h2>27. More Pixels, Bigger Swing</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈25 min</p>
+<p class="msg"><span class="kt">Message:</span> With the per-pixel change fixed, the total score change grows with the number of pixels: in the slide's illustrative numbers, 10 pixels move the score 0.001 and 150,000 pixels move it 15.</p>
+<p><strong>Reading the slide.</strong> Header: ε = 0.01 per pixel and average |wᵢ| = 0.01, both illustrative. The table has one row per pixel count: 10, 1,000 and 150,000. The middle column stays at 0.01 per pixel; the last column grows from 0.001 to 0.1 to 15. The table is arithmetic on assumed numbers, not a measurement on a real model.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Put numbers in, illustrative ones: ε = 0.01 per pixel and an average |wᵢ| of 0.01. With 10 pixels, the score moves 0.001. With 1,000 pixels, 0.1. With 150,000 pixels, 15.</p>
 <p>Each pixel's change stays the same tiny size. The score change grows with n. In high dimension, invisible per-pixel changes can make a large difference.</p>
-<p><span class="kt">Key takeaway:</span> Per-pixel change fixed, total effect grows with the number of pixels.</p>
-<div class="detail">
 <h3>Assumptions</h3>
 <p>Illustrative numbers; real weights are not all the same size.</p>
 </div>
@@ -390,10 +456,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S28">
 <h2>28. This Push Has a Name: FGSM</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈26 min</p>
-<p>This push has a name: FGSM, the Fast Gradient Sign Method. Move every pixel ε along the sign of the gradient of the loss with respect to the input.</p>
-<p>The gradient tells us which way each pixel raises the loss. It is the same sign-push idea, now applied to the loss rather than one class score. Pushing up one class score and pushing up the loss are not identical in general; FGSM uses the loss. We will use it as an attack in Section 05.</p>
-<p><span class="kt">Key takeaway:</span> FGSM = the sign push, using the loss gradient.</p>
+<p class="msg"><span class="kt">Message:</span> FGSM, the Fast Gradient Sign Method, applies the same sign push to the loss: move every pixel by ε along the sign of the loss gradient with respect to the input.</p>
+<p><strong>Reading the slide.</strong> The formula: x′ = x + ε·sign(∇ₓL(f(x), y)). The gradient says which way each pixel raises the loss; sign keeps only the direction; ε sets the size. The note below links it back to S26: the same idea applied to the loss instead of one class score. It is used as an attack on slide S57.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>This push has a name: FGSM, the Fast Gradient Sign Method. Move every pixel ε along the sign of the gradient of the loss with respect to the input.</p>
+<p>The gradient tells us which way each pixel raises the loss. It is the same sign-push idea, now applied to the loss rather than one class score. Pushing up one class score and pushing up the loss are not identical in general; FGSM uses the loss. We will use it as an attack in Section 05 (slide S57).</p>
 <h3>Setup, model, date</h3>
 <p>Goodfellow et al., §3–4.</p>
 <h3>Primary sources</h3>
@@ -406,10 +474,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S29">
 <h2>29. Non-Robust Features: What Is a "Feature"?</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈27 min</p>
+<p class="msg"><span class="kt">Message:</span> Ilyas and colleagues define a feature as any input pattern that helps predict the label; robust features like ears or outline survive tiny changes, while non-robust features, faint pixel patterns, still predict but flip under them.</p>
+<p><strong>Reading the slide.</strong> The definition box comes first. Two boxes below contrast robust features (ears, outline, fur; a tiny change cannot alter them) with non-robust features (faint pixel patterns; predictive, but flipped by a tiny change). Humans cannot see the second kind.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Third lens, from Ilyas and colleagues. First a definition: a feature is any pattern in the input that helps predict the label.</p>
 <p>A robust feature, like ears, outline or fur, cannot be altered by a tiny change. A non-robust feature, like faint pixel patterns, still predicts the label, but a tiny change flips it. Humans cannot see the second kind.</p>
-<p><span class="kt">Key takeaway:</span> Non-robust features predict the label but flip under tiny changes.</p>
-<div class="detail">
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1905.02175">Ilyas et al., "Adversarial Examples Are Not Bugs, They Are Features" (NeurIPS 2019)</a> — the non-robust-features perspective and the retraining experiments of §3.</li>
@@ -420,10 +490,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S30">
 <h2>30. Experiment 1: Keep the Features One Model Uses</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈28 min</p>
-<p>Their first experiment. Build training images that preserve the features a robust model uses. Build another set that preserves the features a standard model uses. Train a fresh model on each. Test both on the normal test set. Careful: the standard-model set keeps whatever that model uses; it is not a guaranteed pure non-robust subset.</p>
-<p>Make a guess before the next slide: these images look like other pictures with the wrong label attached. Surely they should teach nothing?</p>
-<p><span class="kt">Key takeaway:</span> Keep the features one model uses, then train on them.</p>
+<p class="msg"><span class="kt">Message:</span> Experiment 1 rebuilds two training sets, one keeping the features a robust model uses and one keeping those a standard model uses, trains a fresh model on each and tests on the normal test set.</p>
+<p><strong>Reading the slide.</strong> Four steps in order: build the robust-feature images, build the standard-model images, train a fresh model on each, test both on the normal test set. The last line invites a guess before the answer on S31. The standard-model set keeps whatever that model uses; it is not a guaranteed pure non-robust set.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Their first experiment. Build training images that preserve the features a robust model uses. Build another set that preserves the features a standard model uses. Train a fresh model on each. Test both on the normal test set. Careful: the standard-model set keeps whatever that model uses; it is not a guaranteed pure non-robust subset.</p>
+<p>Make a guess before slide S31: these images look like other pictures with the wrong label attached. Surely they should teach nothing?</p>
 <h3>Setup, model, date</h3>
 <p>Ilyas et al., §3.1.</p>
 <h3>Primary sources</h3>
@@ -436,10 +508,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S31">
 <h2>31. Both Rebuilt Training Sets Teach the Label</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈29 min</p>
+<p class="msg"><span class="kt">Message:</span> Fresh models trained on either rebuilt set reached good standard accuracy on the real test set, but only the robust-feature set gave good robust accuracy, so features we cannot see still teach the label.</p>
+<p><strong>Reading the slide.</strong> Ilyas et al. Fig. 1(a), a conceptual diagram. Left: a frog training image. Top branch: the robust dataset, still a frog. Bottom branch: the non-robust dataset, drawn as noise as shorthand for features we cannot see. Right: training outcomes on the unmodified test set. Robust set: good standard and robust accuracy. Non-robust set: good standard accuracy but bad robust accuracy. It is a diagram, not the experiment's images.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Panel (a) of their Fig. 1, a conceptual diagram. Top: the robust dataset, built from a robust model, still looks like a frog. Bottom: the non-robust dataset, built from a standard model. The diagram draws it as noise; that is shorthand for "features we cannot see".</p>
 <p>The surprise is on the right: a fresh model trained on either set gets good standard accuracy on the real test set. Only the model trained on the non-robust set has bad robust accuracy.</p>
-<p><span class="kt">Key takeaway:</span> Both rebuilt sets teach the label, including the one whose signal we cannot see.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Fig. 1(a) of Ilyas et al., a conceptual diagram: a training image split into robust and non-robust features, giving a robust dataset and a non-robust dataset, each with good standard accuracy on the original test set. The noise texture in the bottom row is a drawing convention, not real data.</p>
 <h3>Setup, model, date</h3>
@@ -458,11 +532,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S32">
 <h2>32. What Experiment 1 Means</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈30 min</p>
+<p class="msg"><span class="kt">Message:</span> A fresh model trained on the non-robust dataset, rebuilt from a standard model's features, reached 87.7% on real CIFAR-10 test images but 0.8% under a small ℓ2 attack (ε = 0.25): invisible patterns carry real, fragile signal.</p>
+<p><strong>Reading the slide.</strong> The first line defines the non-robust dataset; the second says what it looks like to us: another image with a wrong-looking label, not noise. Then two numbers for the same model: 87.7% on real test images, 0.8% under an ℓ2 attack with ε = 0.25. The citation gives CIFAR-10 and App. Table 7. The question at the bottom leads to Experiment 2 on S33.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Be precise about the bottom row. The non-robust dataset is rebuilt from a standard model's features. To us, each image looks like an ordinary picture, often of another class, with a label that looks wrong. Their Fig. 2 shows examples. It does not look like noise.</p>
 <p>Train a fresh model on it and test on real CIFAR-10 images: 87.7%. Attack that model with a small ℓ2 change, ε = 0.25: 0.8%. So the patterns we cannot see carry real signal about the label, and the model that learned them is fragile.</p>
 <p>Do non-robust features alone suffice? That is Experiment 2.</p>
-<p><span class="kt">Key takeaway:</span> Invisible patterns carry real, learnable signal.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Text slide; numbers from Ilyas et al. Appendix Table 7.</p>
 <h3>Setup, model, date</h3>
@@ -481,10 +557,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S33">
 <h2>33. Experiment 2: Train on "Mislabeled" Images</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈31 min</p>
+<p class="msg"><span class="kt">Message:</span> Experiment 2 attacks dog photos toward "cat", labels them "cat" though they still look like dogs, builds a whole training set this way and trains a fresh model, so every training label looks wrong to a person.</p>
+<p><strong>Reading the slide.</strong> Four steps: attack a dog photo toward cat, label it cat, build a whole training set that way, train a fresh model and test on real images. The last line states the puzzle the next slide (S34) answers.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The second experiment is stranger. Take a dog photo and attack it toward "cat". Label it "cat". To us it still looks like a dog. Build a whole training set this way, then train a fresh model and test it on real images.</p>
 <p>To a person, every training label looks wrong. What should the model learn?</p>
-<p><span class="kt">Key takeaway:</span> Train only on adversarially relabelled images.</p>
-<div class="detail">
 <h3>Setup, model, date</h3>
 <p>Ilyas et al., §3.2.</p>
 <h3>Primary sources</h3>
@@ -497,9 +575,11 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S34">
 <h2>34. "Mislabeled" Adversarial Images Still Teach</h2>
 <p class="pace">Why it happens · ≈0.5 min · elapsed ≈31.5 min</p>
-<p>The answer, panel (b). A model trained only on dogs labelled "cat", and similar pairs, still classifies real cats well on the original test set.</p>
-<p><span class="kt">Key takeaway:</span> Adversarial changes carry real, learnable signal.</p>
+<p class="msg"><span class="kt">Message:</span> A model trained only on adversarially relabelled images, dogs labelled "cat" and similar pairs, still classified the original test set well: the adversarial changes carried learnable signal.</p>
+<p><strong>Reading the slide.</strong> Ilyas et al. Fig. 1(b), a conceptual diagram. A dog image is pushed toward cat and relabelled cat, so robust features say dog and non-robust features say cat. A model trained on such images still gets good accuracy on the original test set, for example on a real cat. The diagram summarises the §3.2 result; it does not show the numbers.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>The answer, panel (b). A model trained only on dogs labelled "cat", and similar pairs, still classifies real cats well on the original test set.</p>
 <h3>The figure</h3>
 <p>Fig. 1(b) of Ilyas et al.: adversarial relabelling ("appears mislabeled to humans") still gives good accuracy on the original test set.</p>
 <h3>Setup, model, date</h3>
@@ -516,10 +596,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S35">
 <h2>35. The Point: The Attack Added Real "Cat" Features</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈32.5 min</p>
+<p class="msg"><span class="kt">Message:</span> The model learned "cat" from dog-looking images whose only cat signal was the pattern the attack added, so Ilyas and colleagues argue adversarial changes are real features, not random noise, and use this to explain transfer.</p>
+<p><strong>Reading the slide.</strong> Three lines tell the argument in order: learned cat from dog-like images, only the invisible cat patterns matched the label, still recognises real cats afterwards. The bottom line states the conclusion and links it to transfer, citing the paper's §3.2 and §4. The transfer explanation is the authors' interpretation of these experiments.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Why? The model learned "cat" from images that look like dogs. The only thing that matched the label was the invisible cat pattern the attack added. And that pattern was enough to recognize real cats afterwards.</p>
 <p>So adversarial changes are features, not random noise. That is also why they transfer: models trained on the same data learn the same non-robust features.</p>
-<p><span class="kt">Key takeaway:</span> Adversarial changes add real features; that explains transfer.</p>
-<div class="detail">
 <h3>Setup, model, date</h3>
 <p>Ilyas et al., §3.2 and §4 (transferability).</p>
 <h3>Primary sources</h3>
@@ -532,10 +614,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S36">
 <h2>36. Three Lenses, Not One Cause</h2>
 <p class="pace">Why it happens · ≈1 min · elapsed ≈33.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Three lenses each explain something and have evidence: off the data explains confident nonsense, small moves adding up explains one-step attacks, non-robust features explain transfer; they are compatible, and none is settled as the single cause.</p>
+<p><strong>Reading the slide.</strong> A table: one column per lens (off the data, too linear, non-robust features), one row each for core idea, what it explains well, and its evidence. Read down a column to get one lens; read across the evidence row to see each rests on different experiments. The bottom line says none is settled as the single cause.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Side by side. Off the data: unseen inputs are unconstrained; it explains confident nonsense, with fooling images as evidence. Too linear: small moves add up; it explains one-step attacks like FGSM, with linear models fooled by one step as evidence. Non-robust features: hidden patterns predict; it explains why attacks transfer, with the retraining experiments as evidence.</p>
 <p>These are useful lenses with evidence; none is settled as the single cause, and they are compatible.</p>
-<p><span class="kt">Key takeaway:</span> Three compatible lenses; the cause is not settled.</p>
-<div class="detail">
 <h3>Assumptions</h3>
 <p>A teaching summary. Other explanations exist (e.g. data concentration, boundary tilting); we do not cover them.</p>
 <h3>Primary sources</h3>
@@ -550,17 +634,22 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S37">
 <h2>37. 04 — Who Attacks, and Why</h2>
 <p class="pace">Who attacks · ≈0.5 min · elapsed ≈34 min</p>
+<p class="msg"><span class="kt">Message:</span> Section 04 starts with why attackers bother, then sets the threat model every robustness claim needs.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Motives first, then the threat model every claim needs.</p>
-<p><span class="kt">Key takeaway:</span> Why attackers bother, then the rules of the game.</p>
+</div>
 </article>
 
 <article data-slide-id="S38">
 <h2>38. Why Would Anyone Attack a Model?</h2>
 <p class="pace">Who attacks · ≈1 min · elapsed ≈35 min</p>
+<p class="msg"><span class="kt">Message:</span> Attackers evade filters, impersonate people to face ID, sabotage cars through road signs or hijack chatbots, all by controlling only the input; defenders also attack their own models, as red-teaming, to find failures before release.</p>
+<p><strong>Reading the slide.</strong> Four boxes, one per example motive, each with a concrete case. The bottom line adds that defenders attack too, and that each motive needs only control of the input. The motives are examples, not an exhaustive list.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Four example motives. Evade: spam or malware slips past a filter. Impersonate: pass as someone else to face ID. Sabotage: a car misreads a road sign. Hijack: a chatbot ignores its rules.</p>
 <p>Each needs only control of the input. And defenders attack too: red-teaming means attacking your own model to find failures before release.</p>
-<p><span class="kt">Key takeaway:</span> Evade, impersonate, sabotage, hijack: all through the input.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Four-box schematic drawn for this lecture; the motives are examples, not a taxonomy.</p>
 </div>
@@ -569,10 +658,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S39">
 <h2>39. Real Attackers Change Real Inputs</h2>
 <p class="pace">Who attacks · ≈1 min · elapsed ≈36 min</p>
+<p class="msg"><span class="kt">Message:</span> Research has attacked all three kinds of real input: stickers on a stop sign, images crafted offline against Amazon and Google ML services, and an odd suffix that pushed chatbots to answer harmful requests.</p>
+<p><strong>Reading the slide.</strong> A two-column table: what the attacker changes, and what research showed for that kind of input. Three rows: a physical object, queries to an API, a chat prompt. The citation line gives the three papers. Each case returns later with its limits: S88–S89, S50–S51 and S94.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>These are not only hypotheticals. Three cases from research, one per kind of input. A physical object: stickers made a stop sign read "Speed Limit 45". Queries to an API: images crafted offline fooled Amazon and Google machine-learning services. A chat prompt: an odd suffix pushed chatbots to answer harmful requests.</p>
 <p>All three appear later in this lecture, with their limits.</p>
-<p><span class="kt">Key takeaway:</span> Physical objects, API queries and prompts have all been attacked.</p>
-<div class="detail">
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1707.08945">Eykholt et al., "Robust Physical-World Attacks on Deep Learning Visual Classification" (CVPR 2018)</a> — the RP2 stop-sign attack, lab and drive-by tests, and the cropping pipeline.</li>
@@ -585,10 +676,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S40">
 <h2>40. Rare Errors Become Certain Under Attack</h2>
 <p class="pace">Who attacks · ≈1 min · elapsed ≈37 min</p>
+<p class="msg"><span class="kt">Message:</span> Under attack, a standard model's rare errors become every error: RobustBench's standard CIFAR-10 WRN-28-10 has 94.78% clean accuracy and 0.0% under AutoAttack at ε = 8/255, turning a 5% problem into a 100% problem for this model.</p>
+<p><strong>Reading the slide.</strong> Two 10×10 grids of test images. Left: ordinary test images, about 95 of 100 right. Right: the attacker picks a change for each image, 0 of 100 right. The source line gives the exact values (94.78% clean, 0.0% under AutoAttack, accessed 10 Oct 2026); the grids are rounded. This is one standard, undefended model.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Why does this matter so much? On ordinary test images, a standard model gets about 95 of 100 right. If an attacker picks a change for each image, it gets 0 of 100 right.</p>
 <p>An attacker turns a 5% problem into a 100% problem. These are real numbers: the standard WRN-28-10 on the RobustBench CIFAR-10 leaderboard has 94.78% clean accuracy and 0.0% under AutoAttack at ε = 8/255.</p>
-<p><span class="kt">Key takeaway:</span> Under attack, rare errors become every error.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Two 10×10 grids drawn for this lecture, rounded from the RobustBench entry.</p>
 <h3>Setup, model, date</h3>
@@ -603,11 +696,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S41">
 <h2>41. Every Claim Needs a Threat Model</h2>
 <p class="pace">Who attacks · ≈1.5 min · elapsed ≈38.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Every robustness claim needs a threat model: what the attacker controls, what it knows about the model, and what it wants; "robust" without these three is not yet a claim.</p>
+<p><strong>Reading the slide.</strong> Three columns: controls, knows, wants. Each column's top box says what to specify; the red box below gives one worked example from the stop-sign attack: stickers on the sign, everything (white box), read it as "Speed Limit 45". The bottom line states the rule. Slides S42–S52 take each box in turn: control S42–S45, knowledge S46–S51, wants S52.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Now the most important habit of this lecture. Before believing any statement like "this model is robust", ask three things. The red boxes carry one worked example: stickers on a stop sign, from Eykholt and colleagues.</p>
 <p>What does the attacker control? Which inputs, and how much change: the norm, the budget ε, digital pixels or the physical world. In the example: stickers on the sign itself. What does the attacker know? Full weights and gradients, only scores, only labels, or nothing. In the example: everything, a white box. What does the attacker want? Any wrong label, or a chosen one. In the example: the classifier should read the stop sign as "Speed Limit 45".</p>
-<p>"Robust" with no threat model is not yet a claim. It is a sentence missing its subject. The next slides take each box in turn.</p>
-<p><span class="kt">Key takeaway:</span> Controls, knows, wants: specify all three.</p>
-<div class="detail">
+<p>"Robust" with no threat model is not yet a claim. It is a sentence missing its subject. Slides S42–S52 take each box in turn: control S42–S45, knowledge S46–S51, wants S52.</p>
 <h3>The figure</h3>
 <p>Three-box schematic drawn for this lecture: controls (norm, ε, digital/physical), knows (weights, scores, labels, nothing), wants (any wrong label, chosen label); red boxes fill in the stop-sign example of Eykholt et al.</p>
 <h3>Setup, model, date</h3>
@@ -623,11 +718,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S42">
 <h2>42. The Budget ε Bounds the Change</h2>
 <p class="pace">Who attacks · ≈1 min · elapsed ≈39.5 min</p>
+<p class="msg"><span class="kt">Message:</span> The attacker's allowed changes form a ball of radius ε around the input; common budgets such as ε = 8/255 for CIFAR-10 ℓ∞ are conventions for comparing papers, and the right ε depends on the application.</p>
+<p><strong>Reading the slide.</strong> The formula defines the ball: every x + δ with ‖δ‖ ≤ ε. The table gives two common settings: CIFAR-10 ℓ∞ at 8/255, about ±3% per pixel; MNIST ℓ∞ at 0.3, ±30% per pixel. The source line attributes them to Madry et al. and RobustBench. The bottom line warns they are conventions, not laws of perception.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Control first. The allowed changes form a ball of radius ε around the input: every x + δ with the size of δ at most ε.</p>
 <p>Two common settings. On CIFAR-10 with the ℓ∞ norm, ε = 8/255: each pixel may change by about 3% of its range. On MNIST, ε = 0.3: each pixel by 30%, which is large but MNIST digits are nearly black-and-white.</p>
 <p>These are conventions that let papers compare numbers, not laws. The right ε depends on what changes would really be imperceptible, or harmless, in your application.</p>
-<p><span class="kt">Key takeaway:</span> ε is a convention for comparison, not a law of perception.</p>
-<div class="detail">
 <h3>Setup, model, date</h3>
 <p>Budgets as used in Madry et al. (Tables 1–2) and the RobustBench CIFAR-10 ℓ∞ leaderboard.</p>
 <h3>Primary sources</h3>
@@ -641,10 +738,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S43">
 <h2>43. ℓ∞ Ball: Each Coordinate Moves at Most ε</h2>
 <p class="pace">Who attacks · ≈1 min · elapsed ≈40.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Under the ℓ∞ norm each pixel may move up to ε on its own, so with two pixels the allowed changes form a square and the corner (ε, ε), where both pixels move fully, is allowed.</p>
+<p><strong>Reading the slide.</strong> The formula defines ‖δ‖∞ as the larger of |δ₁| and |δ₂|. The plot has δ₁ on the horizontal axis and δ₂ on the vertical, with ticks at ±ε. The shaded square is every allowed change; the corner (ε, ε) is marked as allowed. In a real image every pixel can move ε at once.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Which ruler measures the size of δ? Take an image with just two pixels, so δ is a point in a plane. The ℓ∞ norm is the larger of |δ₁| and |δ₂|. The ball ‖δ‖∞ ≤ ε is the shaded square: every allowed change.</p>
 <p>Each pixel moves up to ε, on its own. The corner (ε, ε) is allowed: both pixels move the full ε. In a real image, every pixel can move ε at once, which tends to look like faint noise everywhere.</p>
-<p><span class="kt">Key takeaway:</span> ℓ∞: each coordinate within ε; the ball is a square (a box).</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Diagram drawn for this lecture: axes δ₁, δ₂; square from −ε to ε; corner (ε, ε) marked.</p>
 </div>
@@ -653,10 +752,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S44">
 <h2>44. ℓ2 Ball: The Total Change Is at Most ε</h2>
 <p class="pace">Who attacks · ≈1 min · elapsed ≈41.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Under the ℓ2 norm all pixels share one length budget ε, so with two pixels the allowed changes form a disk, and the corner (ε, ε) falls outside because its length is √2·ε.</p>
+<p><strong>Reading the slide.</strong> The formula defines ‖δ‖₂ = √(δ₁² + δ₂²). Same axes as S43. The shaded disk has radius ε in every direction. The corner (ε, ε) is marked outside the disk. The caption states the shared budget: a big move on one pixel leaves less for the rest.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The ℓ2 norm is the length of δ: the square root of δ₁² + δ₂². The ball ‖δ‖₂ ≤ ε is the shaded disk, radius ε in every direction.</p>
 <p>There is one shared budget: a big move on one pixel leaves less for the rest. The corner (ε, ε) is now outside, because its length is √2·ε.</p>
-<p><span class="kt">Key takeaway:</span> ℓ2: one shared length budget; the ball is a disk.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Diagram drawn for this lecture: axes δ₁, δ₂; disk of radius ε; corner (ε, ε) outside.</p>
 </div>
@@ -665,10 +766,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S45">
 <h2>45. ℓ∞ vs ℓ2: Two Shapes of "Small"</h2>
 <p class="pace">Who attacks · ≈0.5 min · elapsed ≈42 min</p>
+<p class="msg"><span class="kt">Message:</span> ℓ∞ and ℓ2 define different sets of "small" changes: at the same ε the square contains the disk, each norm uses its own ε in practice, and a model robust under one norm need not be robust under the other.</p>
+<p><strong>Reading the slide.</strong> The two balls overlaid on the same axes: blue square is ℓ∞, red disk is ℓ2, both radius ε. The disk sits inside the square, so every ℓ2 change is also an ℓ∞ change at that ε. The text lines restate each norm's budget; the bottom line says the two sets differ and practice uses different ε for each.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Overlay the two at the same ε. The ℓ∞ square contains the ℓ2 disk. ℓ∞ gives each coordinate its own cap ε. ℓ2 makes the coordinates share one Euclidean-distance budget ε. At the same ε, every change in the disk is also in the square. Neither norm forces the change to be spread out or concentrated.</p>
 <p>Same ε, different sets. In practice each norm uses its own ε, and a model robust under one ruler need not be robust under the other.</p>
-<p><span class="kt">Key takeaway:</span> The norm defines what "small" means; no automatic guarantee outside the stated threat model.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Diagram drawn for this lecture: ℓ∞ square and ℓ2 disk of the same radius ε.</p>
 </div>
@@ -677,10 +780,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S46">
 <h2>46. What the Attacker Knows</h2>
 <p class="pace">Who attacks · ≈0.5 min · elapsed ≈42.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Attackers sit in one of three knowledge positions: white box with weights and gradients, query access that sees only scores or labels, or no access, attacking a model of their own and hoping it transfers.</p>
+<p><strong>Reading the slide.</strong> Three boxes, from most to least knowledge. White box: weights and gradients, e.g. an open-source model. Query access: sends inputs, sees scores or labels, e.g. a public API. No access: attacks its own model, e.g. against a hidden model. The bottom line says real attackers occupy all three.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Knowledge next. White box: the attacker has the weights and can compute gradients, as with an open-source model. Query access: the attacker can send inputs and see scores or labels, like a public API. No access: the attacker attacks a model of their own and hopes it transfers to the hidden one.</p>
 <p>Real attackers sit in any of these three positions.</p>
-<p><span class="kt">Key takeaway:</span> Evaluate defenses against the strongest attacker: white box.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Three-box schematic drawn for this lecture.</p>
 <h3>Primary sources</h3>
@@ -693,10 +798,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S47">
 <h2>47. Why Assume the Strongest Attacker?</h2>
 <p class="pace">Who attacks · ≈0.5 min · elapsed ≈43 min</p>
-<p>Defenses are evaluated against the white box. Why the strongest attacker? Weights leak, or are published openly. Attacks transfer from a look-alike model, as the next slides show. And a defense that needs secrecy fails once the secret is out.</p>
-<p>Robustness must not depend on keeping the model secret, so we test the white box.</p>
-<p><span class="kt">Key takeaway:</span> Security must not rely on secrecy: test against the white box.</p>
+<p class="msg"><span class="kt">Message:</span> Defenses are tested against the white-box attacker because weights leak or are published, attacks transfer from look-alike models, and a defense that needs secrecy fails once the secret is out.</p>
+<p><strong>Reading the slide.</strong> Three reasons, one per line, then the conclusion: robustness must not depend on keeping the model secret. The transfer reason is shown on S48–S51.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Defenses are evaluated against the white box. Why the strongest attacker? Weights leak, or are published openly. Attacks transfer from a look-alike model, as slides S48–S51 show. And a defense that needs secrecy fails once the secret is out.</p>
+<p>Robustness must not depend on keeping the model secret, so we test the white box.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1902.06705">Carlini et al., "On Evaluating Adversarial Robustness" (arXiv 2019)</a> — a practical checklist for evaluating a defense.</li>
@@ -707,11 +814,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S48">
 <h2>48. Attacks Transfer Between Models</h2>
 <p class="pace">Who attacks · ≈1 min · elapsed ≈44 min</p>
+<p class="msg"><span class="kt">Message:</span> Adversarial examples often transfer between models and even model types: crafted on logistic regression, 91.43% also fooled an SVM on MNIST, though some pairs transfer poorly.</p>
+<p><strong>Reading the slide.</strong> Papernot et al. Fig. 3, a heat map. Rows: the model the attack was crafted on. Columns: the model it was tested on. Cells: the percentage of examples that fooled the tested model. Find the logistic regression row and the SVM column: 91.43%. Some cells are low, for example crafted on a neural net, only 8.36% fool k-nearest-neighbours. MNIST only.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Why does the no-access attacker have a chance at all? Transfer. Papernot and colleagues crafted adversarial examples on one kind of model and tested them on another.</p>
 <p>Read the heat map like this. Each row is the model the attack was crafted on; each column is the model it was tested on; each cell is the percentage of examples that fooled the tested model. Crafted on logistic regression, 91.43% also fool an SVM. Some pairs transfer poorly: crafted on a neural net, only 8.36% fool k-nearest-neighbours.</p>
 <p>So an attacker can often build a substitute, attack it, and succeed against a model they never saw.</p>
-<p><span class="kt">Key takeaway:</span> Adversarial examples often transfer across models and even model types.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Fig. 3 of Papernot et al.: cross-technique transferability matrix. Rows (source): DNN, LR, SVM, DT, kNN; columns (target) add an ensemble. Cell (i, j) = % of examples crafted on i misclassified by j. E.g. LR→SVM 91.43%, LR→LR 91.64%, SVM→SVM 100%, LR→Ens 44.14%.</p>
 <h3>Setup, model, date</h3>
@@ -730,10 +839,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S49">
 <h2>49. A Hidden Model Can Still Be Attacked</h2>
 <p class="pace">Who attacks · ≈0.5 min · elapsed ≈44.5 min</p>
+<p class="msg"><span class="kt">Message:</span> A hidden model can still be attacked in four steps: ask it for answers, train a local copy on them, run a white-box attack on the copy, and send the result, which works because attacks transfer.</p>
+<p><strong>Reading the slide.</strong> A four-box pipeline, left to right: ask, copy, attack, send. The attacker never touches the hidden model's weights; only the copy is attacked with gradients. The citation gives the substitute-model attack and its evaluation on commercial services.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The substitute-model attack in four steps. Ask: send inputs to the hidden model and read its answers. Copy: train a local look-alike on those answers. Attack: run a white-box attack on the copy. Send: submit the result to the hidden model.</p>
 <p>The attacker never sees the hidden model's weights. It works because attacks transfer between models.</p>
-<p><span class="kt">Key takeaway:</span> Ask, copy, attack, send: transfer defeats hiding.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Four-box pipeline drawn for this lecture.</p>
 <h3>Primary sources</h3>
@@ -747,11 +858,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S50">
 <h2>50. Transfer to Real Services: The Setup</h2>
 <p class="pace">Who attacks · ≈1 min · elapsed ≈45.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Papernot and colleagues tested the substitute trick in 2016 on Amazon and Google cloud services trained on MNIST: with labels only from 800 queries, they trained a local copy and ran FGSM (ε = 0.3) on it.</p>
+<p><strong>Reading the slide.</strong> Two boxes. Target: a cloud service (Amazon ML, Google Prediction) that trains its own MNIST model, type and weights hidden, about 92% clean accuracy. Attacker: sees labels only, grows 100 seed digits to 800 queries, trains a local copy, then FGSM with ε = 0.3 on the copy. The score line defines the result on S51: the share of 10,000 attacked test digits the service gets wrong.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Does the substitute trick work against a real product? Papernot and colleagues tried it in 2016. The target: two cloud services, Amazon Machine Learning and Google Prediction. The authors uploaded MNIST, and each service trained its own digit model. Its type and weights stayed hidden; Amazon's was a multinomial logistic regression, Google's was not disclosed. Clean accuracy was about 92%.</p>
 <p>The attacker: send images and see labels only. Start from 100 seed digits, grow the set with three rounds of augmentation, 800 queries in all, and train a local copy on the answers. Then run FGSM with ε = 0.3, pixels in [0, 1], on the copy.</p>
-<p>The score on the next slide: the share of 10,000 attacked test digits that the service gets wrong. The attacker never sees the model, only its answers.</p>
-<p><span class="kt">Key takeaway:</span> Label-only queries, a local copy, then a white-box attack on the copy.</p>
-<div class="detail">
+<p>The score on slide S51: the share of 10,000 attacked test digits that the service gets wrong. The attacker never sees the model, only its answers.</p>
 <h3>The figure</h3>
 <p>Two-box setup schematic drawn for this lecture from Papernot et al. §5.</p>
 <h3>Setup, model, date</h3>
@@ -768,11 +881,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S51">
 <h2>51. Transfer Reached Real Services</h2>
 <p class="pace">Who attacks · ≈1 min · elapsed ≈46.5 min</p>
+<p class="msg"><span class="kt">Message:</span> With label-only queries and a local substitute, attacks transferred to the services' own MNIST models: 96.19% misclassified on Amazon and 88.94% on Google, against about 8% wrong before attack; this is 2016 MNIST, not evidence about today's APIs.</p>
+<p><strong>Reading the slide.</strong> The pipeline repeats the setup from S50: query, train a copy, attack the copy. The two result boxes give the misclassification rate on each service's model: Amazon 96.19%, Google 88.94%. Read them against the baseline in the caption: about 8% were already wrong before any attack. The scope line limits the result to 2016 services and MNIST.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The result. Query, train a copy, attack the copy, send. The services misclassified 96.19% (Amazon) and 88.94% (Google) of the attacked digits.</p>
 <p>Read the baseline and the limits. About 8% of digits were already wrong before any attack. And this was MNIST digits on 2016 services; it shows black-box transfer is practical, not anything about today's APIs.</p>
 <p>Hiding the model is not a defense.</p>
-<p><span class="kt">Key takeaway:</span> With labels only, a substitute model let attacks reach real services (MNIST, 2016).</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Pipeline schematic drawn for this lecture from §5 of Papernot et al.</p>
 <h3>Setup, model, date</h3>
@@ -791,10 +906,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S52">
 <h2>52. Any Wrong Label, or a Chosen One</h2>
 <p class="pace">Who attacks · ≈0.5 min · elapsed ≈47 min</p>
+<p class="msg"><span class="kt">Message:</span> Untargeted attacks want any wrong label and targeted attacks a chosen one, which is harder and often more harmful; robust accuracy is usually reported against untargeted attacks, so any wrong answer counts as a failure.</p>
+<p><strong>Reading the slide.</strong> Two boxes. Untargeted: stop sign to anything else, push the loss on the true label up, easier because any exit counts. Targeted: stop sign to "speed limit 45", push the loss on the target down, harder and often more harmful. The bottom line names the usual reporting convention.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Finally, what the attacker wants. Untargeted: turn a stop sign into anything else; push the loss on the true label up. Targeted: turn it into "speed limit 45" specifically; push the loss on the target down. Targeted is harder, and often more harmful.</p>
 <p>Robust accuracy is usually reported against untargeted attacks: the model counts as correct only if no allowed change makes it wrong in any way.</p>
-<p><span class="kt">Key takeaway:</span> Untargeted is the usual benchmark; targeted is harder and often worse.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Two-panel schematic drawn for this lecture.</p>
 </div>
@@ -803,17 +920,22 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S53">
 <h2>53. 05 — Finding the Worst Case</h2>
 <p class="pace">Worst case · ≈0.5 min · elapsed ≈47.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Section 05 treats an attack as a search for the worst case, and a weak search makes a model look more robust than it is.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>An attack is a search. The lesson of this section: a weak search makes a model look more robust than it is.</p>
-<p><span class="kt">Key takeaway:</span> Attacks are searches; weak searches mislead.</p>
+</div>
 </article>
 
 <article data-slide-id="S54">
 <h2>54. Start From One Test Image</h2>
 <p class="pace">Worst case · ≈0.5 min · elapsed ≈48 min</p>
+<p class="msg"><span class="kt">Message:</span> Every test image gets its own ball centred on it; an attack exists for an image only if its ball crosses the decision boundary, and robust accuracy counts the images whose balls do not.</p>
+<p><strong>Reading the slide.</strong> Three test images, each with its own ball, and a boundary between the panda and gibbon regions. Balls 1 and 2 stay on the panda side. Ball 3 crosses into gibbon, so an attack exists for image 3. The caption says each image is attacked separately and robust accuracy counts the survivors.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Which ball? A common confusion. Every test image gets its own ball, centred on it. Images 1 and 2 have balls entirely on the panda side; image 3's ball crosses into gibbon, so an attack exists for image 3.</p>
 <p>We attack each test image separately, and robust accuracy counts how many survive.</p>
-<p><span class="kt">Key takeaway:</span> One ball per test image; attack each separately.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Schematic drawn for this lecture: three test images with their own ε-balls; one crosses the boundary.</p>
 </div>
@@ -822,19 +944,25 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S55">
 <h2>55. The Attacker's Goal: One Wrong Point in the Ball</h2>
 <p class="pace">Worst case · ≈1 min · elapsed ≈49 min</p>
+<p class="msg"><span class="kt">Message:</span> The attacker wins by finding any single point in the ball around x that the model misclassifies; searching every point is hopeless in about 150,000 dimensions, so the loss is used to show where to look.</p>
+<p><strong>Reading the slide.</strong> Given a test image x with true label y, the formula asks for some x′ in the ball B_ε(x) with f(x′) ≠ y. One wrong point is enough. The last line explains why the search needs a guide: the ball has infinitely many points.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The exact intent of the attacker. Given a test image x with true label y, find any x′ in the ball around x with f(x′) ≠ y. One wrong point is enough: the attacker wins.</p>
 <p>Searching every point is hopeless: the ball has infinitely many points in about 150,000 dimensions. The loss shows where to look.</p>
-<p><span class="kt">Key takeaway:</span> Goal: find one misclassified point inside the ball around x.</p>
+</div>
 </article>
 
 <article data-slide-id="S56">
 <h2>56. An Attack Is a Search Inside the Ball</h2>
 <p class="pace">Worst case · ≈1 min · elapsed ≈50 min</p>
+<p class="msg"><span class="kt">Message:</span> An attack maximises the loss over all changes inside the ball, using the gradient with respect to the input; it mirrors training, which lowers the loss by changing the weights, while an attack raises it by changing the input.</p>
+<p><strong>Reading the slide.</strong> The formula: maximise L(f(x + δ), y) over ‖δ‖ ≤ ε. The three tags name its parts: the loss L is high when the model is wrong, the gradient ∇ₓL gives the direction in which the loss rises, and the constraint keeps δ in the ball. The bottom line contrasts training with attacking; the weights stay fixed during an attack.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Formally, the attacker solves: maximize the loss L of the model's output on x + δ, against the true label y, over all δ with size at most ε.</p>
 <p>Three ingredients. The loss, which is high when the model is wrong. The gradient of the loss with respect to the input, which says in which direction the loss rises. And the constraint: stay inside the ball.</p>
 <p>This mirrors training. Training lowers the loss by changing the weights; an attack raises it by changing the input, with the weights fixed.</p>
-<p><span class="kt">Key takeaway:</span> Attack = maximize the loss over the allowed ball.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Equation plus three boxes drawn for this lecture.</p>
 <h3>Going further</h3>
@@ -850,11 +978,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S57">
 <h2>57. FGSM: One Step Along the Gradient Sign</h2>
 <p class="pace">Worst case · ≈1.5 min · elapsed ≈51.5 min</p>
+<p class="msg"><span class="kt">Message:</span> FGSM takes one step of size ε along the sign of the loss gradient, which exactly maximises the linearised loss over the ℓ∞ box; on logistic regression for MNIST 3s versus 7s it raised error from 1.6% to 99% at ε = .25.</p>
+<p><strong>Reading the slide.</strong> The formula is FGSM from S28. Then Goodfellow et al. Fig. 2, four panels: (a) the model's weights, (b) their sign, which is exactly the attack direction, (c) clean 3s and 7s, (d) attacked digits at ε = .25, still easy for us to read. The result line gives the error before and after. This is a linear model; on curved deep networks one step is not exact (S58).</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The simplest attack: the Fast Gradient Sign Method. Compute the gradient of the loss with respect to the input once. Take its sign, plus or minus for each pixel. Move every pixel by ε in that direction. One step.</p>
 <p>Why the sign? Under the ℓ∞ budget, each pixel may move at most ε, and if we replace the loss by its linearization, the best move is to push every pixel the full ε in the direction that raises the loss. That is the sign.</p>
 <p>The figure shows it on a linear model, logistic regression distinguishing MNIST 3s from 7s. Panel (a) is the weights, (b) their sign, which is exactly the attack direction; (c) clean digits, (d) attacked digits at ε = .25. Error goes from 1.6% to 99%. The digits are still easy for us to read.</p>
-<p><span class="kt">Key takeaway:</span> FGSM: one step of size ε along the gradient sign; it exactly maximizes the linearized loss.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Fig. 2 of Goodfellow et al.: (a) weights of a logistic regression model on MNIST 3 vs 7; (b) the sign of the weights (the optimal ℓ∞ perturbation); (c) MNIST 3s and 7s (1.6% error); (d) FGSM examples at ε = .25 (99% error).</p>
 <h3>Setup, model, date</h3>
@@ -862,7 +992,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h3>What this establishes</h3>
 <p>FGSM exactly maximizes the linearized loss over the ℓ∞ box; for this linear score model that is the optimal ℓ∞ attack, and it is devastating.</p>
 <h3>What this does not establish</h3>
-<p>That FGSM is strong against deep networks, especially defended ones; see slides 58 and 61.</p>
+<p>That FGSM is strong against deep networks, especially defended ones; see slides S58 and S61.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1412.6572">Goodfellow, Shlens &amp; Szegedy, "Explaining and Harnessing Adversarial Examples" (ICLR 2015)</a> — the panda (Fig. 1), FGSM, the "too linear" argument (§3) and Figs. 2 and 4.</li>
@@ -873,10 +1003,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S58">
 <h2>58. FGSM's One Jump Can Miss the Peak</h2>
 <p class="pace">Worst case · ≈1 min · elapsed ≈52.5 min</p>
+<p class="msg"><span class="kt">Message:</span> On a curved loss, FGSM's one jump can miss: it trusts the slope at x and jumps to the edge of the allowed range, while the true loss may peak inside it, or keep rising past a bend.</p>
+<p><strong>Reading the slide.</strong> An illustrative one-dimensional loss, L(u) = sin u. The horizontal axis is the input along one direction; the vertical is the loss. The shaded band is the allowed interval [x − ε, x + ε]. The black curve is the true loss and the red dashed line is the tangent at x, FGSM's linear model. FGSM lands at the edge; the true worst point sits inside the interval with higher loss.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Where can FGSM go wrong? Here is a 1-D loss, L(u) = sin u, along one direction. The shaded interval is the allowed range around x. FGSM trusts the slope at x, the red dashed tangent, and jumps all the way to the edge. But the real loss curves: it peaks inside the interval, at the green point, and is lower where FGSM actually lands.</p>
 <p>So one jump can overshoot. It can also undershoot, if the loss keeps rising past a bend. Deep networks, and defended ones especially, have curved losses.</p>
-<p><span class="kt">Key takeaway:</span> One linear jump can overshoot or undershoot a curved loss.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Illustrative 1-D figure drawn for this lecture with exact geometry: L(u) = sin u, x at u = 0.6, ε = 1.6 (interval [−1, 2.2]); interior maximum at u = π/2; FGSM endpoint at u = 2.2; tangent prediction at the endpoint shown hollow.</p>
 <h3>Assumptions</h3>
@@ -887,11 +1019,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S59">
 <h2>59. PGD: Gradient Descent, Run Uphill</h2>
 <p class="pace">Worst case · ≈1.5 min · elapsed ≈54 min</p>
+<p class="msg"><span class="kt">Message:</span> PGD runs gradient steps on the input, uphill: take a small sign step from the current point, clip back into the ε-ball and valid pixel range, repeat K times; FGSM is the one-step case, and Madry and colleagues made PGD the default.</p>
+<p><strong>Reading the slide.</strong> Two cards. Training: change the weights to lower the loss, w ← w − η∇_wL. PGD: change the input to raise the loss, x′ ← clip(x′ + α·sign(∇_{x′}L)). The loop below reads: small step uphill, clip to the ball and [0, 1], repeat K times. Note the gradient is taken at the current x′, not the original x. The bottom line places FGSM as the special case.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The fix uses an idea you already know. Training runs gradient descent on the weights: a small step that lowers the loss, repeated. PGD, Projected Gradient Descent, runs the same loop on the input, uphill: a small step that raises the loss.</p>
 <p>Here is the ℓ∞ version. One step: move the current input x′ a little, α, along the sign of the gradient taken at x′ itself, not at the original x. Then clip: pull the result back into the ε-ball around x and into the valid pixel range [0, 1]. Repeat K times; PGD-7 or PGD-20 means 7 or 20 steps. In practice PGD also starts from a random point in the ball, and may restart several times and keep the worst point found.</p>
 <p>FGSM is the one-step case: start at the original input, no random start, one step of size ε. Madry and colleagues made PGD the default attack for evaluating and training robust models.</p>
-<p><span class="kt">Key takeaway:</span> PGD = gradient descent on the input, uphill, clipped back into the ball.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Two definition cards and a three-step loop schematic drawn for this lecture.</p>
 <h3>Setup, model, date</h3>
@@ -899,7 +1033,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h3>Assumptions</h3>
 <p>Madry et al. call PGD the strongest attack using only first-order information. That is an empirical claim, not a theorem.</p>
 <h3>Going further</h3>
-<p>Evidence for that claim, from Madry et al. Fig. 1: PGD run from 20 random starts on the same image climbs to similar loss values on MNIST and CIFAR-10, for both standard and adversarially trained models. That suggests many local maxima of similar height, which PGD finds reliably. It is not a proof that no worse point exists, and it says nothing about defenses that hide gradients (Section 06).</p>
+<p>Evidence for that claim, from Madry et al. Fig. 1: PGD run from 20 random starts on the same image climbs to similar loss values on MNIST and CIFAR-10, for both standard and adversarially trained models. That suggests many local maxima of similar height, which PGD finds reliably. It is not a proof that no worse point exists, and it says nothing about defenses that hide gradients (Section 06, slides S68–S69).</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1706.06083">Madry et al., "Towards Deep Learning Models Resistant to Adversarial Attacks" (ICLR 2018)</a> — the saddle-point view, PGD, adversarial training; Table 2 for CIFAR-10 numbers; Appendix on ℓ2 evaluation.</li>
@@ -910,10 +1044,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S60">
 <h2>60. PGD on the Same Curve: Small Steps Can Find a Higher-Loss Point</h2>
 <p class="pace">Worst case · ≈1 min · elapsed ≈55 min</p>
+<p class="msg"><span class="kt">Message:</span> On the same curve, PGD's small steps that re-check the slope find a higher-loss point than FGSM's single jump, and clipping keeps every step inside the allowed range; PGD is not guaranteed to reach the peak.</p>
+<p><strong>Reading the slide.</strong> The curve and shaded range from S58. Blue dots are PGD iterates with a fixed step α, the slope re-checked at each. The highlighted point is the best found; the hollow dot is the FGSM endpoint, lower on the curve. The caption explains clipping: every point visited stays a legal attack.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Back to the same curve. Start at x, take a small step of fixed size α, check the slope again, repeat. The blue iterates climb along the curve; the green one is the best point found, with higher loss than where FGSM lands, the hollow FGSM endpoint. PGD is not guaranteed to reach the peak; here, it finds a better point than one jump.</p>
 <p>If a step would leave the shaded range, it is clipped back. Every point PGD visits is a legal attack under the threat model; an attack that wanders outside the range is answering a different question.</p>
-<p><span class="kt">Key takeaway:</span> Small steps that re-check the slope can find a higher-loss point, and stay inside the range.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Illustrative 1-D figure drawn for this lecture: L(u) = sin u with small steps reaching the maximum at u = π/2.</p>
 <h3>Assumptions</h3>
@@ -924,11 +1060,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S61">
 <h2>61. Weaker Attacks Overstate Robustness</h2>
 <p class="pace">Worst case · ≈1.5 min · elapsed ≈56.5 min</p>
+<p class="msg"><span class="kt">Message:</span> For the same adversarially trained CIFAR-10 model at ℓ∞ ε = 8/255, accuracy fell from 56.1% under FGSM to 45.8% under PGD-20: robust accuracy is only as honest as the attack, and the strongest attack still gives an upper bound.</p>
+<p><strong>Reading the slide.</strong> Bar chart. Each bar is the percentage of test images still classified correctly under one attack; higher means more robust under that attack. Left to right: no attack 87.3, FGSM 56.1, PGD-7 50.0, CW-30 46.8, PGD-20 45.8. The model never changes; only the search does. The source is Madry et al. Table 2, white-box rows, redrawn.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Why the attack matters, in one chart. The same adversarially trained CIFAR-10 model, the same ℓ∞ budget of 8/255, white box. With no attack, 87.3% accuracy. Against FGSM, 56.1%. PGD with 7 steps, 50.0%. The C&amp;W-style margin loss with 30 steps, 46.8%. PGD with 20 steps, 45.8%.</p>
 <p>Same model. The only thing that changed is how hard we searched, and the number dropped by ten points from FGSM to PGD-20. If a paper had reported only FGSM, it would have overstated robustness.</p>
 <p>The rule: report the strongest attack you can find, and treat the number as an upper bound on true robust accuracy.</p>
-<p><span class="kt">Key takeaway:</span> Stronger search, lower number: robust accuracy is only as honest as the attack.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Bar chart redrawn for this lecture from Madry et al. Table 2 (white-box rows, source network A).</p>
 <h3>Setup, model, date</h3>
@@ -936,7 +1074,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h3>What this establishes</h3>
 <p>For this model, accuracy under attack falls as the attack strengthens.</p>
 <h3>What this does not establish</h3>
-<p>That PGD-20 gives the true robust accuracy; later attacks (AutoAttack, slides 71–72) report lower numbers for many models.</p>
+<p>That PGD-20 gives the true robust accuracy; later attacks (AutoAttack, slides S71–S72) report lower numbers for many models.</p>
 <h3>Going further</h3>
 <p>The C&amp;W loss used here replaces cross-entropy with the logit margin max_{i≠y} Zᵢ − Z_y, which keeps a useful gradient even when the softmax saturates. This is one reason margin-based losses often find more adversarial examples than cross-entropy.</p>
 <h3>Primary sources</h3>
@@ -950,17 +1088,22 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S62">
 <h2>62. 06 — Defenses and Honest Evaluation</h2>
 <p class="pace">Defenses + evaluation · ≈0.5 min · elapsed ≈57 min</p>
+<p class="msg"><span class="kt">Message:</span> Section 06 rests on one sentence: "the attacks we tried failed" is not the same as "no attack can succeed".</p>
+<div class="detail">
+<h3>Script</h3>
 <p>This section is about a single sentence: "the attacks we tried failed" is not the same as "no attack can succeed".</p>
-<p><span class="kt">Key takeaway:</span> Failed attacks are not a guarantee.</p>
+</div>
 </article>
 
 <article data-slide-id="S63">
 <h2>63. The Defender Needs the Whole Ball</h2>
 <p class="pace">Defenses + evaluation · ≈0.5 min · elapsed ≈57.5 min</p>
+<p class="msg"><span class="kt">Message:</span> A point is robust only if every point in its ball gets the right label: the attacker needs one bad point while the defender must cover them all, so attacks can search for failures but can never check every point.</p>
+<p><strong>Reading the slide.</strong> The definition box gives robust accuracy at ε. Two examples below, both correctly classified. Left: the whole ball stays on the right side, robust. Right: the ball crosses the boundary, not robust. The bottom line states the asymmetry.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Robust accuracy at ε: the fraction of test inputs where every point in the ball gets the right label. On the left, a correctly classified point whose whole ball stays on the right side: robust. On the right, also correctly classified, but its ball crosses the boundary: not robust.</p>
 <p>The asymmetry: the attacker needs one bad point; the defender must cover them all. That is why measuring robustness is hard: we can never check every point, only search.</p>
-<p><span class="kt">Key takeaway:</span> Robust = the whole ball is correct; attackers need just one bad point.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Two-panel schematic drawn for this lecture.</p>
 </div>
@@ -969,10 +1112,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S64">
 <h2>64. Adversarial Training: Train on the Worst Case</h2>
 <p class="pace">Defenses + evaluation · ≈2 min · elapsed ≈59.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Adversarial training plays a min–max game: for each training example, find the worst change in the ball with PGD, then update the weights to do well on those worst-case inputs; clearing every ball can need a more complex boundary.</p>
+<p><strong>Reading the slide.</strong> The saddle-point formula: an inner max over δ in the ball (found by PGD) inside an outer min over the weights θ (by SGD). Then Madry et al. Fig. 3, a conceptual illustration. Left: points a straight line separates. Middle: ℓ∞ boxes around each point cross that line; stars are adversarial examples. Right: a bent boundary clears every box. The figure illustrates the capacity argument; it is not data.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The defense that has held up best: adversarial training. Write training as a game. The inner max: for each training example, find the worst δ in the ball, using PGD. The outer min: update the weights to do well on those worst-case inputs.</p>
 <p>The figure gives the intuition. Left: points separable by a simple straight line. Middle: put an ℓ∞ box around each point; the line now cuts through boxes, and the stars are adversarial examples. Right: to clear every box, the model needs a more complicated, bent boundary. Robustness needs more capacity.</p>
-<p><span class="kt">Key takeaway:</span> Adversarial training: minimize the loss on the worst-case inputs.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Fig. 3 of Madry et al. (conceptual): separable points; ℓ∞ boxes crossing the linear boundary with adversarial examples (stars); a more complex boundary that separates the boxes.</p>
 <h3>Setup, model, date</h3>
@@ -989,9 +1134,11 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S65">
 <h2>65. Robust Training Costs Clean Accuracy</h2>
 <p class="pace">Defenses + evaluation · ≈0.5 min · elapsed ≈60 min</p>
-<p>Robustness is not free. Same CIFAR-10 wide ResNet, accuracy on unattacked test images: trained normally, 95.2%; adversarially trained, 87.3%. Robust training gives up about 8 points on ordinary images.</p>
-<p><span class="kt">Key takeaway:</span> Adversarial training cost about 8 points of clean accuracy here.</p>
+<p class="msg"><span class="kt">Message:</span> In Madry and colleagues' CIFAR-10 wide ResNet, adversarial training lowered accuracy on unattacked test images from 95.2% to 87.3%, about 8 points.</p>
+<p><strong>Reading the slide.</strong> Two bars, clean accuracy on unattacked test images, same architecture. Standard training 95.2%; adversarial training 87.3%. The source line takes the first number from §5 and the second from Table 2; the chart is redrawn. It is one model and one budget, not a general rate.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Robustness is not free. Same CIFAR-10 wide ResNet, accuracy on unattacked test images: trained normally, 95.2%; adversarially trained, 87.3%. Robust training gives up about 8 points on ordinary images.</p>
 <h3>The figure</h3>
 <p>Bar chart redrawn for this lecture from Madry et al.</p>
 <h3>Setup, model, date</h3>
@@ -1006,10 +1153,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S66">
 <h2>66. More Robust Training, Lower Clean Accuracy</h2>
 <p class="pace">Defenses + evaluation · <strong>optional</strong> · ≈1 min · elapsed ≈61 min</p>
+<p class="msg"><span class="kt">Message:</span> In Tsipras and colleagues' ℓ2 adversarial training on CIFAR-10, models trained with larger ε reach lower clean accuracy once there is enough data; their theory makes the trade-off unavoidable in a simple model, but in practice it is debated.</p>
+<p><strong>Reading the slide.</strong> Tsipras et al. Fig. 1(b), CIFAR-10 panel. y-axis: clean (standard) accuracy. x-axis: training-set size. Black is standard training (ε = 0); blue to green to red are larger training ε. Read the right end, where data is plentiful: larger ε sits lower. The MNIST and Restricted ImageNet panels are omitted from the slide. The bottom line calls it a perspective with evidence, not a universal law.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Robustness is not free. On the slide is the CIFAR-10 panel of their Fig. 1; the paper also has MNIST and Restricted ImageNet panels with the same pattern. Tsipras and colleagues plotted clean, standard accuracy against the number of training samples for models adversarially trained with different budgets ε, under the ℓ2 norm. ε = 0 is standard training.</p>
 <p>With enough data, the curves for larger ε sit lower: more robust models are less accurate on clean inputs. In their theoretical model, this trade-off is unavoidable. Whether it is unavoidable in practice is debated; it is a perspective with evidence, not a law.</p>
-<p><span class="kt">Key takeaway:</span> Robustness often costs clean accuracy and compute.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Fig. 1(b) of Tsipras et al. (CIFAR-10 panel shown; MNIST and Restricted ImageNet panels omitted): standard accuracy vs number of training samples for ℓ2 adversarially trained models; full figure has MNIST (ε_train 0, 0.5, 1.5, 2.5), CIFAR-10 (0, 20/255, 80/255, 320/255), Restricted ImageNet (0, 0.5).</p>
 <h3>Setup, model, date</h3>
@@ -1017,7 +1166,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h3>What this establishes</h3>
 <p>In these experiments, with enough data, larger training ε gives lower clean accuracy.</p>
 <h3>What this does not establish</h3>
-<p>That a trade-off is inevitable for every task; recent models (slide 76) narrow the gap with much more data and capacity.</p>
+<p>That a trade-off is inevitable for every task; recent models (slide S76) narrow the gap with much more data and capacity.</p>
 <h3>Assumptions</h3>
 <p>"Roughly eight times" counts 7 attack steps plus 1 training step, each a forward and backward pass; real cost varies.</p>
 <h3>Primary sources</h3>
@@ -1030,10 +1179,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S67">
 <h2>67. Why Robustness Can Cost Accuracy</h2>
 <p class="pace">Defenses + evaluation · <strong>optional</strong> · ≈0.5 min · elapsed ≈61.5 min</p>
-<p>One explanation ties back to the third lens. Standard models also lean on non-robust features. Those features help accuracy, but a tiny change flips them. Robust training must give them up, and some accuracy goes with them.</p>
-<p>There is also a compute cost. Every training step first runs an attack, so PGD-7 training costs roughly eight times a normal step.</p>
-<p><span class="kt">Key takeaway:</span> Giving up non-robust features costs accuracy; attacks in the loop cost compute.</p>
+<p class="msg"><span class="kt">Message:</span> One explanation for the accuracy cost: standard models lean on non-robust features that help accuracy but flip under tiny changes, and robust training gives them up; robust training also costs compute, since every step runs an attack first.</p>
+<p><strong>Reading the slide.</strong> Three lines build the argument, linking back to the non-robust features of S29–S35: standard models use them, they help accuracy, robust training must give them up. The fourth line adds the compute cost. The citation notes that the trade-off is provable only in a simple model (Theorem 2.1).</p>
 <div class="detail">
+<h3>Script</h3>
+<p>One explanation ties back to the third lens (slides S29–S35). Standard models also lean on non-robust features. Those features help accuracy, but a tiny change flips them. Robust training must give them up, and some accuracy goes with them.</p>
+<p>There is also a compute cost. Every training step first runs an attack, so PGD-7 training costs roughly eight times a normal step.</p>
 <h3>Setup, model, date</h3>
 <p>Tsipras et al., §2 (Theorem 2.1, a simple model where the trade-off is provable).</p>
 <h3>Assumptions</h3>
@@ -1049,10 +1200,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S68">
 <h2>68. Some Defenses Only Hide the Gradient</h2>
 <p class="pace">Defenses + evaluation · ≈1 min · elapsed ≈62.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Some defenses only hide the gradient, by a non-differentiable step, randomness, or a flat slope before a cliff: gradient attacks then fail, but adversarial examples still exist and a better search finds them.</p>
+<p><strong>Reading the slide.</strong> Three illustrative sketches, one per kind of obfuscated gradient named by Athalye, Carlini and Wagner: shattered (a non-differentiable step), stochastic (random each pass), vanishing (flat, then a cliff). The text explains that attacks follow the slope and these defenses break, randomise or flatten it. The bottom line separates hiding examples from removing them.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Many proposed defenses did something else: they broke the attacker's gradient without removing adversarial examples. Athalye, Carlini and Wagner call this obfuscated gradients, and name three kinds. Shattered: a non-differentiable step, so there is no useful slope. Stochastic: randomness, so each pass gives a different slope. Vanishing: the slope goes flat, then a cliff.</p>
 <p>In all three, gradient attacks fail, so the defense looks strong. But adversarial examples still exist; the attacker just needs a better way to find them.</p>
-<p><span class="kt">Key takeaway:</span> Obfuscated gradients hide adversarial examples from the attack; they do not remove them.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Three illustrative sketches drawn for this lecture.</p>
 <h3>Setup, model, date</h3>
@@ -1067,11 +1220,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S69">
 <h2>69. Adapted Attacks Rebuild the Missing Gradient</h2>
 <p class="pace">Defenses + evaluation · ≈1.5 min · elapsed ≈64 min</p>
+<p class="msg"><span class="kt">Message:</span> Adapted attacks rebuild hidden gradients with BPDA and EOT; of nine ICLR 2018 white-box defenses, seven hid gradients, six were fully broken and one partly, while the tested Madry model kept 47% accuracy.</p>
+<p><strong>Reading the slide.</strong> Two boxes, one fix each. A broken or flat step: use a smooth stand-in when computing the gradient (BPDA). A random step: average the gradient over many draws (EOT). The result line: 7 of 9 defenses hid gradients; 6 fully broken, 1 partly. The Madry model's 47% is from Table 1 (CIFAR-10, ℓ∞ 0.031). The conclusion: hiding delays the attacker but does not stop one.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>How do you attack a defense that hides its gradient? Rebuild the gradient. If a step is broken or flat, use a smooth stand-in for it when computing the gradient: BPDA, Backward Pass Differentiable Approximation. If the defense is random on each pass, average the gradient over many random draws: EOT, Expectation over Transformation.</p>
 <p>The result. Athalye and colleagues examined the nine white-box defenses accepted at ICLR 2018. Seven hid gradients. With adapted attacks, six were broken completely and one partially. The tested Madry et al. adversarially trained model retained 47% accuracy under the adapted attack.</p>
 <p>Hiding the gradient delays the attacker; it does not stop one. A conference-reviewed defense is not a verified defense.</p>
-<p><span class="kt">Key takeaway:</span> Adapted attacks broke the defenses that hid gradients; the tested Madry model retained 47%.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Two-box schematic drawn for this lecture.</p>
 <h3>Setup, model, date</h3>
@@ -1079,7 +1234,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h3>What this establishes</h3>
 <p>Seven of nine defenses relied on obfuscated gradients; their claimed robustness did not survive adapted attacks.</p>
 <h3>What this does not establish</h3>
-<p>That the surviving defenses are robust under every threat model (see slide 79).</p>
+<p>That the surviving defenses are robust under every threat model (see slide S79).</p>
 <h3>Going further</h3>
 <p>Three worked cases from the paper. Shattered: thermometer encoding turns each pixel into on/off steps; with BPDA, accuracy at ε = 0.031 fell from 50% to 0% (§5.2.1). Stochastic: random resizing and padding (Xie et al.), ImageNet; with EOT, accuracy at ε = 0.031 fell from 32.8% to 0% (§5.3.2). Vanishing: PixelDefend cleans each input with a generative model; skipping the cleaner via BPDA dropped accuracy from 46% to 9% (§5.4.1). In Table 1, one asterisk marks a defense proposed together with adversarial training and reported alone; two asterisks mark Samangouei et al. (55%), the partially circumvented one, where the optimal attack would give 0% but imperfections made it fail in practice (§5.4.2).</p>
 <h3>Primary sources</h3>
@@ -1093,10 +1248,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S70">
 <h2>70. How to Spot an Attack That Is Too Weak</h2>
 <p class="pace">Defenses + evaluation · ≈0.5 min · elapsed ≈64.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Evaluate a defense with an adaptive attack designed against it, and use two diagnostics: a huge ε should drive accuracy near zero, and a black-box attack beating a white-box one suggests masked gradients; passing these checks proves nothing.</p>
+<p><strong>Reading the slide.</strong> Three lines: read the defense and target its weak part, then the two diagnostics. The bottom line limits what the checks can do: they raise red flags but are not a proof of robustness. The citations add the evaluation guidance papers.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>How to evaluate a defense properly: an adaptive attack, designed for that specific defense. Read the defense and target its weak part; BPDA and EOT are two standard tools.</p>
 <p>And two diagnostics. With a huge ε, accuracy should go to about zero; if not, suspect the attack. If a black-box attack beats a white-box one, suspect masked gradients. These raise red flags; passing them proves nothing.</p>
-<p><span class="kt">Key takeaway:</span> Adapt the attack to the defense; diagnostics flag problems but prove nothing.</p>
-<div class="detail">
 <h3>Setup, model, date</h3>
 <p>Athalye et al. §4 (BPDA, EOT); Carlini et al. (2019) for the checklist; Tramèr et al. (2020) re-evaluated 13 further defenses with adaptive attacks.</p>
 <h3>Primary sources</h3>
@@ -1111,10 +1268,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S71">
 <h2>71. AutoAttack: Four Attacks, Nothing to Tune</h2>
 <p class="pace">Defenses + evaluation · ≈1 min · elapsed ≈65.5 min</p>
+<p class="msg"><span class="kt">Message:</span> AutoAttack, from Croce and Hein, bundles four diverse attacks with fixed settings, including a gradient-free one, and counts an input as robust only if all four fail, so a defense's authors cannot weaken the test by tuning it.</p>
+<p><strong>Reading the slide.</strong> Four boxes, one per attack: APGD-CE (PGD that tunes its own step), APGD-T (aimed at chosen wrong classes), FAB-T (searches for a small change that flips the answer, not guaranteed the smallest), and Square (no gradients, queries only, which catches gradient hiding). The rule below: robust only if all four fail. Same settings for every model.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Adaptive attacks need expertise, and each paper used to pick its own attack and settings. AutoAttack, from Croce and Hein, is a fixed test everyone can run. It bundles four attacks. A PGD that tunes its own step size, APGD-CE. The same, aimed at selected wrong classes, APGD-T. One that searches for a small change that flips the answer, FAB-T; it does not guarantee the smallest. And Square, which uses no gradients at all, only queries; that catches defenses that merely hide gradients.</p>
 <p>An input counts as robust only if all four fail. There are no settings to tune, and the same settings are used for every model, so a defense's authors cannot weaken the test by choosing them.</p>
-<p><span class="kt">Key takeaway:</span> A fixed bundle of diverse attacks, with nothing to tune.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Four-box schematic drawn for this lecture.</p>
 <h3>Setup, model, date</h3>
@@ -1129,10 +1288,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S72">
 <h2>72. What AutoAttack Changed: Reported Numbers Fell</h2>
 <p class="pace">Defenses + evaluation · ≈1 min · elapsed ≈66.5 min</p>
+<p class="msg"><span class="kt">Message:</span> When AutoAttack re-tested more than 50 published models, all but one scored lower than reported, 13 of 49 deterministic defenses by more than 10 points and 8 by more than 30; its number is still an upper bound.</p>
+<p><strong>Reading the slide.</strong> Four stat boxes, read left to right: more than 50 models re-tested; all but 1 lower than the paper reported; 13 of 49 lower by more than 10 points; 8 lower by more than 30 points. The 13 and 8 count the 49 deterministic models. The two lines below give the benefit (comparable numbers) and the limit (not adapted to each defense, so still an upper bound).</p>
+<div class="detail">
+<h3>Script</h3>
 <p>What happened when they ran it on published defenses. More than 50 models re-tested. For all but one, robust accuracy came out lower than the paper had reported. Among the 49 deterministic defenses, by more than 10 points for 13, and by more than 30 points for 8.</p>
 <p>The implications. One fixed test makes numbers comparable across papers, and it catches many evaluations that were too weak. But AutoAttack is not adapted to each defense, so its number is still an upper bound: a custom attack may go lower.</p>
-<p><span class="kt">Key takeaway:</span> A standard strong test lowered almost every reported number; it is still an upper bound.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Four stat boxes drawn for this lecture from Croce &amp; Hein.</p>
 <h3>Setup, model, date</h3>
@@ -1151,11 +1312,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S73">
 <h2>73. RobustBench: The Same Test for Every Model</h2>
 <p class="pace">Defenses + evaluation · ≈1 min · elapsed ≈67.5 min</p>
+<p class="msg"><span class="kt">Message:</span> RobustBench runs the same test, the same datasets, ε and AutoAttack, on every entry in one public leaderboard, with entry rules that exclude defenses AutoAttack cannot fairly test; it standardises measurement but covers only its listed threat models.</p>
+<p><strong>Reading the slide.</strong> Before and after boxes. Before: each paper picks its attack, so numbers are not comparable. RobustBench: same data, ε and AutoAttack, one public leaderboard. The entry rules: non-zero gradients, deterministic forward pass, no optimisation loop inside, which are the cases where masking could fool AutoAttack. Outside adaptive attacks are welcome and can lower an entry's best-known number.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>The point of RobustBench. Before it, each paper picked its own attack, so numbers were not comparable, and weak evaluations overstated robustness. RobustBench runs the same test on every entry: the same datasets, the same ε, AutoAttack. The results go on one public leaderboard. Outside adaptive attacks are welcome; if someone finds a stronger attack, the entry's "best known" number is lowered.</p>
 <p>Entry rules matter. Models must have non-zero gradients, a deterministic forward pass, and no optimization loop inside. Those are exactly the cases where AutoAttack could be fooled by masking, so the rules exclude defenses AutoAttack cannot fairly test.</p>
 <p>RobustBench is a standardized benchmark, not the universal standard for robustness, and it covers only its listed threat models.</p>
-<p><span class="kt">Key takeaway:</span> One test for every model makes progress measurable; explicit rules and explicit limits.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Before/after schematic drawn for this lecture.</p>
 <h3>Setup, model, date</h3>
@@ -1171,10 +1334,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S74">
 <h2>74. What Is "Accuracy Under Attack"?</h2>
 <p class="pace">Defenses + evaluation · ≈0.5 min · elapsed ≈68 min</p>
-<p>Before reading a scoreboard, the key term. Accuracy under attack: the share of test images the model still gets right after an attack tries to fool each one.</p>
-<p>The procedure: take each test image, one at a time; run the attack within budget ε; feed the result to the model; if the answer is still right, count it. The result is an empirical robust-accuracy estimate for this attack, not a guarantee against every allowed change; slide 77 returns to this. Higher is better for the defender.</p>
-<p><span class="kt">Key takeaway:</span> Empirical robust-accuracy estimate = share surviving the tested attack.</p>
+<p class="msg"><span class="kt">Message:</span> Accuracy under attack is the share of test images the model still gets right after an attack tries to fool each one: an empirical estimate for that attack, not a guarantee against every allowed change.</p>
+<p><strong>Reading the slide.</strong> The definition box first. Then the pipeline: take each test image, run the attack within budget ε, feed the result to the model, count it if still right. Higher is better for the defender. The bottom line separates this estimate from a guarantee; S77 explains why it is an upper bound.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Before reading a scoreboard, the key term. Accuracy under attack: the share of test images the model still gets right after an attack tries to fool each one.</p>
+<p>The procedure: take each test image, one at a time; run the attack within budget ε; feed the result to the model; if the answer is still right, count it. The result is an empirical robust-accuracy estimate for this attack, not a guarantee against every allowed change; slide S77 returns to this. Higher is better for the defender.</p>
 <h3>The figure</h3>
 <p>Pipeline schematic drawn for this lecture.</p>
 </div>
@@ -1183,9 +1348,11 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S75">
 <h2>75. Counting Survivors: About 74 of Every 100</h2>
 <p class="pace">Defenses + evaluation · ≈0.5 min · elapsed ≈68.5 min</p>
-<p>Read "73.71% under AutoAttack" as 100 test images. About 74 survive the attack: counted as robust. About 20 were right, then fooled: the attack broke them. About 6 were wrong already, even without attack.</p>
-<p><span class="kt">Key takeaway:</span> "73.71% under AutoAttack" ≈ 74 of 100 images survive.</p>
+<p class="msg"><span class="kt">Message:</span> "73.71% under AutoAttack" means about 74 of every 100 test images survive the attack, about 20 were right and then fooled, and about 6 were wrong even without attack.</p>
+<p><strong>Reading the slide.</strong> A 10×10 grid in three groups: 74 survive and count as robust, 20 were right then fooled, 6 were wrong already. The source line gives the exact values for RobustBench CIFAR-10 ℓ∞ #1 (Bartoldson et al. 2024), accessed 10 Oct 2026: clean 93.68%, AutoAttack 73.71%. The grid is rounded.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Read "73.71% under AutoAttack" as 100 test images. About 74 survive the attack: counted as robust. About 20 were right, then fooled: the attack broke them. About 6 were wrong already, even without attack.</p>
 <h3>The figure</h3>
 <p>10×10 grid drawn for this lecture, rounded from the RobustBench entry.</p>
 <h3>Setup, model, date</h3>
@@ -1200,11 +1367,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S76">
 <h2>76. Scoreboard Snapshot: Robust Models Exist</h2>
 <p class="pace">Defenses + evaluation · ≈1 min · elapsed ≈69.5 min</p>
-<p>A snapshot, because leaderboards change. CIFAR-10, ℓ∞ at 8/255, untargeted, 99 entries, accessed today, 10 October 2026.</p>
-<p>The table now shows a best-known column: the lowest robust accuracy any listed attack has achieved, which the leaderboard ranks by. Rank 1: Bartoldson et al. 2024, a very large wide ResNet: 93.68% clean, 73.71% under AutoAttack and best known, that is, 73.71% accuracy under AutoAttack in this setting. Rank 2: MeanSparse: 93.60% clean, 75.28% under AutoAttack, 73.10% best known; it ranks below #1 because of slide 78. Rank 99, last: standard training: 94.78% clean, 0.0% robust.</p>
-<p>The message: robustness under this threat model is achievable, with clean accuracy not far from a standard model. Careful: the clean column compares different models, sizes and training data, so the gap is not the isolated cost of robust training. The top entry also uses a very large model and 300 million extra synthetic images.</p>
-<p><span class="kt">Key takeaway:</span> In this setting, 73.71% accuracy under AutoAttack with high clean accuracy is achievable.</p>
+<p class="msg"><span class="kt">Message:</span> On the RobustBench CIFAR-10 ℓ∞ 8/255 leaderboard (accessed 10 Oct 2026), the top entry keeps 73.71% under AutoAttack with 93.68% clean accuracy, but it uses a very large model and 300 million extra synthetic images.</p>
+<p><strong>Reading the slide.</strong> Read the setting line first: CIFAR-10, ℓ∞ ε = 8/255, untargeted, 99 entries, accessed 10 Oct 2026. The table has one row per entry and four columns: rank, clean, AutoAttack, best known (the lowest any reported attack achieved, which sets rank). #1: 93.68 / 73.71 / 73.71. #2 MeanSparse: 93.60 / 75.28 / 73.10. #99 standard training: 94.78 / 0.0 / 0.0. The clean column compares different models and data, so it is not the isolated cost of robust training.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>A snapshot, because leaderboards change. CIFAR-10, ℓ∞ at 8/255, untargeted, 99 entries, accessed today, 10 October 2026.</p>
+<p>The table now shows a best-known column: the lowest robust accuracy any listed attack has achieved, which the leaderboard ranks by. Rank 1: Bartoldson et al. 2024, a very large wide ResNet: 93.68% clean, 73.71% under AutoAttack and best known, that is, 73.71% accuracy under AutoAttack in this setting. Rank 2: MeanSparse: 93.60% clean, 75.28% under AutoAttack, 73.10% best known; it ranks below #1 because of slide S78. Rank 99, last: standard training: 94.78% clean, 0.0% robust.</p>
+<p>The message: robustness under this threat model is achievable, with clean accuracy not far from a standard model. Careful: the clean column compares different models, sizes and training data, so the gap is not the isolated cost of robust training. The top entry also uses a very large model and 300 million extra synthetic images.</p>
 <h3>Setup, model, date</h3>
 <p>robustbench.github.io, CIFAR-10 L∞ leaderboard, fetched 10 Oct 2026 16:47 KST. Ranked by best known robust accuracy.</p>
 <h3>What this does not establish</h3>
@@ -1219,18 +1388,24 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S77">
 <h2>77. Why an Attack Score Is an Upper Bound</h2>
 <p class="pace">Defenses + evaluation · ≈0.5 min · elapsed ≈70 min</p>
+<p class="msg"><span class="kt">Message:</span> An attack-based score counts the images the attacks we ran failed to break, and a stronger attack may break some of them, so the true robust accuracy is at most this number: an upper bound.</p>
+<p><strong>Reading the slide.</strong> Four lines build the argument in order: what the score counts, what a stronger attack could do, the conclusion that the score is an upper bound, and the slogan contrasting "no attack we tried worked" with "no attack works". S78 gives a real case.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>A robust-accuracy score counts the images the attacks we ran failed to break. A stronger attack may break some of them. So the true robust accuracy is at most this number: an upper bound.</p>
 <p>"No attack we tried worked" is not "no attack works".</p>
-<p><span class="kt">Key takeaway:</span> Attack-based scores are upper bounds.</p>
+</div>
 </article>
 
 <article data-slide-id="S78">
 <h2>78. Example: A Newer Attack Lowered a Score</h2>
 <p class="pace">Defenses + evaluation · <strong>optional</strong> · ≈0.5 min · elapsed ≈70.5 min</p>
-<p>Why MeanSparse is not first. AutoAttack gave it 75.28%, which would rank first. An adaptive attack, APGD combined with BPDA, lowered it to 73.10%. The leaderboard ranks by the best known number.</p>
-<p>This is the general lesson from the last slide, in a real case: the next, better attack may lower a number again.</p>
-<p><span class="kt">Key takeaway:</span> Attack-based numbers are upper bounds; better attacks can lower them.</p>
+<p class="msg"><span class="kt">Message:</span> MeanSparse scored 75.28% under AutoAttack, enough for first place, but an adaptive attack, APGD with BPDA, lowered it to 73.10%, so it ranks second: a better attack can lower a published number.</p>
+<p><strong>Reading the slide.</strong> Three boxes left to right: AutoAttack says 75.28%; an adaptive attack (APGD + BPDA); best known 73.10%. Same CIFAR-10 ℓ∞ 8/255 setting as S76. The source line quotes the leaderboard's entry note. It is the upper-bound lesson of S77 in a real case.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>Why MeanSparse is not first. AutoAttack gave it 75.28%, which would rank first. An adaptive attack, APGD combined with BPDA, lowered it to 73.10%. The leaderboard ranks by the best known number.</p>
+<p>This is the general lesson from slide S77, in a real case: the next, better attack may lower a number again.</p>
 <h3>The figure</h3>
 <p>Schematic drawn for this lecture from the RobustBench entry.</p>
 <h3>Setup, model, date</h3>
@@ -1245,11 +1420,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S79">
 <h2>79. Robust Under One Ruler, Not Every Ruler</h2>
 <p class="pace">Defenses + evaluation · <strong>optional</strong> · ≈0.5 min · elapsed ≈71 min</p>
+<p class="msg"><span class="kt">Message:</span> A robustness score holds only under its own threat model: ℓ∞ training gives limited robustness under other norms, PGD overestimated a Madry MNIST model's ℓ2 robustness, and natural corruptions are a different question again.</p>
+<p><strong>Reading the slide.</strong> Four lines. Training on ℓ∞ gives limited robustness under other norms (Athalye et al.). Madry's MNIST model: PGD overestimated its ℓ2 robustness because of masked gradients. A gradient-free, decision-based attack found it more brittle, though still more robust than a standard model. Corruptions and viewpoints are a separate question, shown on S90.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>A score names its threat model, and outside it there is no automatic guarantee. Athalye and colleagues note that training only on ℓ∞ adversarial examples gives limited robustness under other distortion metrics.</p>
 <p>Madry and colleagues found this in their own appendix. Their MNIST model looked robust to ℓ2 attacks under PGD, but PGD was overestimating its ℓ2 robustness: the model masked gradients for ℓ2. A gradient-free, decision-based attack showed it was significantly more brittle, though still more robust than a standard model.</p>
-<p>And corruptions or new viewpoints are a different question again; we will see one on slide 90.</p>
-<p><span class="kt">Key takeaway:</span> Robust under one threat model says nothing about another.</p>
-<div class="detail">
+<p>And corruptions or new viewpoints are a different question again; we will see one on slide S90.</p>
 <h3>Setup, model, date</h3>
 <p>Athalye et al. §5.1.1; Madry et al. Appendix (ℓ2 on MNIST).</p>
 <h3>Primary sources</h3>
@@ -1263,10 +1440,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S80">
 <h2>80. Empirical vs Certified Robustness</h2>
 <p class="pace">Defenses + evaluation · ≈0.5 min · elapsed ≈71.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Empirical robustness says the attacks we tried failed and gives an upper bound that may fall; certified robustness proves no change in a stated region flips the prediction, and certified accuracy is a lower bound, but a certificate proves stability, not correctness.</p>
+<p><strong>Reading the slide.</strong> Two boxes. Empirical: "the attacks we tried failed", an upper bound that may fall. Certified: "no change in this region can flip the prediction", a proven lower bound. The bottom line separates stable from correct, and the footnote defines certified accuracy as inputs both correctly classified and certified.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Everything so far was empirical: the attacks we tried failed. That gives an upper bound, which may fall.</p>
 <p>The alternative is certified robustness: a proof that no change in a stated region can change the prediction. A certificate proves the prediction is stable, not that it is correct. Certified accuracy counts only examples that are both correct and certified, and that number is a lower bound on robust accuracy, whatever attack comes next.</p>
-<p><span class="kt">Key takeaway:</span> Empirical = upper bound that may fall; certified accuracy = lower bound (stable and correct).</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Two-panel schematic drawn for this lecture.</p>
 </div>
@@ -1275,10 +1454,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S81">
 <h2>81. What a Certificate Promises</h2>
 <p class="pace">Defenses + evaluation · ≈1 min · elapsed ≈72.5 min</p>
+<p class="msg"><span class="kt">Message:</span> A certificate is a proof, for one input, that every change smaller than radius R in ℓ2 leaves the prediction unchanged, including the attacker's best; outside that radius, or for another input, it promises nothing.</p>
+<p><strong>Reading the slide.</strong> The statement box defines the certificate for one input x. In the sketch, the green ball of radius R around x is certified: every point inside gets the same class. The red point is the worst-case change and still lies inside. Gray points are other changes outside the ball, with no promise. Another input needs its own proof and radius.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>What exactly is a certificate? It is about one input x. A certificate is a proof that every change δ with ℓ2 size smaller than R leaves the prediction unchanged.</p>
 <p>Every change, not an average one, within the certified ℓ2 radius: the green ball contains every point within R, including the attacker's best, the red worst case. So it holds against adversarial changes, not just random ones. Outside the ball there is no promise. And another input needs its own proof, with its own radius.</p>
-<p><span class="kt">Key takeaway:</span> A certificate is a worst-case guarantee, for one input, within a stated radius.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Ball schematic drawn for this lecture.</p>
 <h3>What this establishes</h3>
@@ -1291,11 +1472,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S82">
 <h2>82. Randomized Smoothing: Vote Under Noise</h2>
 <p class="pace">Defenses + evaluation · <strong>optional</strong> · ≈1 min · elapsed ≈73.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Randomized smoothing builds a new classifier g that returns the class the base classifier f picks most often under Gaussian noise; the noise only builds g, and g's certificate then holds against any attacker inside the radius.</p>
+<p><strong>Reading the slide.</strong> Cohen et al. Fig. 2: left, the input x; right, one noisy copy x + η, heavy noise but still recognisably a panda. The formula defines g(x) as the class c most likely to be f's answer when η ~ N(0, σ²I). In practice g is estimated by sampling (PREDICT and CERTIFY), which abstain when no class clearly leads.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>One practical certification method: randomized smoothing. Take any classifier f, the base classifier. Build a new one, g, the smoothed classifier: g returns the class f picks most often when Gaussian noise is added to x. In practice g cannot be computed exactly. The paper's PREDICT and CERTIFY procedures estimate it by sampling noisy copies, and they abstain when no class clearly leads.</p>
 <p>The figure shows one noisy copy of the panda. Heavy noise, still recognizably a panda. If f is trained on noisy images, it can still classify them.</p>
 <p>Note what the noise is for. It only builds g. The certificate for g is then worst case: it holds against any attacker inside the radius, not just against random noise.</p>
-<p><span class="kt">Key takeaway:</span> Smoothed classifier g = majority vote of f under Gaussian noise.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Fig. 2 of Cohen et al.: a panda image x and the same image with Gaussian noise.</p>
 <h3>Setup, model, date</h3>
@@ -1310,11 +1493,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S83">
 <h2>83. A Clear Vote Survives Any Small Shift</h2>
 <p class="pace">Defenses + evaluation · <strong>optional</strong> · ≈1 min · elapsed ≈74.5 min</p>
+<p class="msg"><span class="kt">Message:</span> If f's vote under noise is lopsided, a small shift of x cannot swing it, so Cohen and colleagues prove a certified ℓ2 radius for the smoothed classifier g; it is estimated by sampling with failure probability at most α, may abstain, and certifies stability, not correctness.</p>
+<p><strong>Reading the slide.</strong> Cohen et al. Fig. 3. Circles show the Gaussian noise around x and around x + δ; they overlap a lot when δ is small. Two example base classifiers colour the plane; the right one, a straight cut perpendicular to δ, is the worst case. The text lines: at fixed σ, a larger vote margin gives a larger radius R; it holds for every ‖δ‖₂ &lt; R; it certifies g, not f; per input, P(invalid certificate) ≤ α. Raising σ also changes the votes, so more noise does not automatically give a bigger radius. The formula is in lec08tech.html.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Why does voting give a certificate? Intuition: if the vote at x is lopsided, say 90% panda, then moving x a little only shifts the noise cloud a little; the vote cannot swing to another class until you move far enough.</p>
 <p>Cohen and colleagues make this exact in Theorem 1, and it is worst case: it holds for every shift with ℓ2 size below R, including the attacker's best. At a fixed noise level σ, a larger vote margin gives a larger certified ℓ2 radius R within which g cannot change its answer. The exact formula is in the technical supplement. The figure shows why: the worst-case base classifier is a straight cut perpendicular to the shift. Note that raising σ also changes the votes, so more noise does not automatically mean a bigger radius.</p>
 <p>Three careful points. It certifies g, the smoothed classifier, not the original f. The vote probabilities are estimated by sampling. For each fixed input, the probability, over CERTIFY's sampling, that it returns an invalid certificate is at most α; the paper uses α = 0.001. Equivalently, with probability at least 1 − α it either abstains or returns a valid certificate. This is not an error bound conditional on CERTIFY not abstaining. If no class clearly leads, CERTIFY abstains. And the certificate says the prediction is stable, not that it is correct.</p>
-<p><span class="kt">Key takeaway:</span> A clear vote gives a provable ℓ2 radius for g, with statistical confidence; stability, not correctness.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Fig. 3 of Cohen et al.: Gaussian noise around x and x + δ (circles), with blue/red regions of two base classifiers; right, the worst-case f*, a linear classifier whose boundary is normal to δ.</p>
 <h3>Setup, model, date</h3>
@@ -1333,12 +1518,14 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S84">
 <h2>84. Certificates Are Real, but Modest</h2>
 <p class="pace">Defenses + evaluation · <strong>optional</strong> · ≈1 min · elapsed ≈75.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Randomized smoothing gives real certificates at ImageNet scale but modest ones: approximate certified accuracy is 49% at ℓ2 radius 0.5, 37% at 1.0 and 19% at 2.0, at about 110 seconds per image.</p>
+<p><strong>Reading the slide.</strong> Grouped bars, one group per radius, each with the best σ for that radius. Grey bars: accuracy of the same smoothed model at radius 0. Blue bars: share of test images correct and provably stable within R. Values (grey / blue): R = 0.5, σ = 0.25: 67 / 49; R = 1.0, σ = 0.50: 57 / 37; R = 2.0, σ = 1.00: 44 / 19; R = 3.0, σ = 1.00: 44 / 12. Blue falls as R grows. Setting: ResNet-50 base, 500 test images, α = 0.001, ℓ2 only. The footnote flags the paper's Table 1 vs Table 2 discrepancy at R = 2.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>How big are the certificates? ImageNet, ResNet-50 base, 500 test images, α = 0.001. Grey bars: the accuracy of the same smoothed model at radius 0. Blue bars: approximate certified accuracy at radius R, meaning the share of test images that are both correct and provably stable within R, estimated by sampling.</p>
 <p>At R = 0.5: 49%. At 1.0: 37%. At 2.0: 19%, using σ = 1.0, whose radius-0 accuracy is 44%. And the cost: 100,000 noisy forward passes per image, about 110 seconds each on the paper's hardware.</p>
 <p>One honesty note: the paper's Table 1 lists σ = 0.50 for R = 2.0, but its appendix Table 2 gives 0.00 at R = 2 for σ = 0.50 and 0.19 for σ = 1.00. The slide uses the appendix value, which is consistent with the 19%.</p>
 <p>Certificates are real, but modest, and they cover only the stated ℓ2 region.</p>
-<p><span class="kt">Key takeaway:</span> Certified radii exist at ImageNet scale, but are small and expensive.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Grouped bar chart redrawn for this lecture from Cohen et al. Appendix Table 2 (σ per radius: 0.25, 0.50, 0.50, 1.00), with clean accuracy of the same smoothed model at R = 0.</p>
 <h3>Setup, model, date</h3>
@@ -1353,18 +1540,23 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S85">
 <h2>85. 07 — Off the Screen</h2>
 <p class="pace">Off the screen · ≈0.5 min · elapsed ≈76 min</p>
+<p class="msg"><span class="kt">Message:</span> Section 07 asks whether attacks survive the physical world: what printing and a camera do, how attackers adapt, one case read carefully, and natural shifts as a contrast.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Does the attack survive the real world? First what printing and a camera do to a digital attack, then how attackers adapt, then one case read carefully, and a reminder that attackers are not the only shift.</p>
-<p><span class="kt">Key takeaway:</span> From pixels to the world.</p>
+</div>
 </article>
 
 <article data-slide-id="S86">
 <h2>86. Printing and Photos Can Undo Faint Attacks</h2>
 <p class="pace">Off the screen · ≈1 min · elapsed ≈77 min</p>
+<p class="msg"><span class="kt">Message:</span> Printing and photographing undo many faint attacks but not all: after print and phone photo, Inception v3 was correct again on 12.5% of one-step attacks at ε = 16, but on 61.1% at ε = 2.</p>
+<p><strong>Reading the slide.</strong> Setup line: ImageNet, Inception v3, print then phone photo then classify; only images fooled digitally count. Each bar is the destruction rate, the share correct again after print and photo; higher means the print destroyed more attacks. Bars: one-step ε = 16, 12.5%; one-step ε = 2, 61.1%; iterative ε = 16, 40.4%; iterative targeted ε = 16, 72.2%. ε is on the 0–255 scale. Faint and iterative attacks are more fragile; most one-step attacks at ε = 16 survived.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Kurakin, Goodfellow and Bengio printed adversarial ImageNet images on an office printer, photographed them with a phone, and classified the photos with Inception v3. The bars show the destruction rate. The denominator is images the model got right before the attack and that the digital attack fooled; the bar is the share of those classified correctly again after print and photo. For the targeted method, that means the true label returns. ε is on the 0–255 scale.</p>
 <p>One-step attacks at ε = 16: only 12.5% correct again, so most survive. At ε = 2: 61.1%; faint patterns are fragile. Iterative attacks, which make finer changes, lose more: 40.4%, and 72.2% for the targeted version.</p>
 <p>So yes: resolution, colour and the camera can wash out a faint perturbation. In some tested settings, blur or JPEG alone undid 80 to 90% of iterative attacks. But not all: many attacked images still fooled the model.</p>
-<p><span class="kt">Key takeaway:</span> Print and camera undo many faint attacks, not all.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Bar chart redrawn for this lecture from Kurakin et al. Table 3 (average case, top-1 destruction rate).</p>
 <h3>Setup, model, date</h3>
@@ -1372,7 +1564,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h3>What this establishes</h3>
 <p>Physical transformations destroy a substantial share of digital attacks, more for fine-grained ones; a large share still survives.</p>
 <h3>What this does not establish</h3>
-<p>That printing is a defense: attacks optimized for the transformation survive it (next slide). Per §4, in some settings blur, noise and JPEG reach 80–90% destruction for iterative attacks, but none reaches 100%.</p>
+<p>That printing is a defense: attacks optimized for the transformation survive it (slide S87). Per §4, in some settings blur, noise and JPEG reach 80–90% destruction for iterative attacks, but none reaches 100%.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1607.02533">Kurakin, Goodfellow &amp; Bengio, "Adversarial Examples in the Physical World" (ICLR 2017 workshop)</a> — printed and photographed adversarial images, destruction rates, and blur/noise/JPEG.</li>
@@ -1383,10 +1575,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S87">
 <h2>87. Fix: Make the Attack Survive Print and Camera</h2>
 <p class="pace">Off the screen · ≈1 min · elapsed ≈78 min</p>
-<p>So a physical attack has to plan for that. Digital attacks control every pixel. A physical attack must be printed, placed in the world, and photographed. Printing changes colours and resolution; the camera sees it from different distances, angles, and light.</p>
-<p>The fix: Expectation over Transformation, the same EOT we met as an evaluation tool. Optimize the average loss over many sampled transformations: rotations, scales, lighting. This raises the average success over the sampled transformations, not success on each one, and not on every real condition.</p>
-<p><span class="kt">Key takeaway:</span> Physical attacks optimize over sampled transformations (EOT).</p>
+<p class="msg"><span class="kt">Message:</span> Physical attacks must survive printing, colour and resolution changes, and a camera at different distances, angles and light, so they optimise the average loss over sampled transformations (EOT), which raises average success, not success on each one.</p>
+<p><strong>Reading the slide.</strong> The pipeline left to right: a perturbation optimised digitally, print (colour, resolution), camera (distance, angle, light), classifier (fooled?). The fix line names Expectation over Transformation, the same EOT used as an evaluation tool on S69. The caveat line limits what EOT optimises.</p>
 <div class="detail">
+<h3>Script</h3>
+<p>So a physical attack has to plan for that. Digital attacks control every pixel. A physical attack must be printed, placed in the world, and photographed. Printing changes colours and resolution; the camera sees it from different distances, angles, and light.</p>
+<p>The fix: Expectation over Transformation, the same EOT we met as an evaluation tool on slide S69. Optimize the average loss over many sampled transformations: rotations, scales, lighting. This raises the average success over the sampled transformations, not success on each one, and not on every real condition.</p>
 <h3>The figure</h3>
 <p>Pipeline schematic drawn for this lecture.</p>
 <h3>Primary sources</h3>
@@ -1400,11 +1594,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S88">
 <h2>88. Stickers Made a Classifier Read "Speed Limit 45"</h2>
 <p class="pace">Off the screen · ≈1.5 min · elapsed ≈79.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Eykholt and colleagues' black-and-white stickers, designed to look like graffiti, made a white-box road-sign classifier read a stop sign as "Speed Limit 45" in 100% of lab images and 84.8% of drive-by video frames.</p>
+<p><strong>Reading the slide.</strong> Threat-model line first: the attacker adds stickers, knows LISA-CNN (white box), and wants Stop read as Speed Limit 45, a targeted attack. Then Eykholt et al. Fig. 1: left, real graffiti on a stop sign; right, the attack stickers. The caption gives the results: 100% targeted in lab tests and 84.8% of drive-by frames for the sticker version. S89 lists what this does not show.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>One strong case. Eykholt and colleagues attacked a road-sign classifier. Threat model: the attacker adds stickers to a real stop sign; knows the classifier, white box; wants it read as "Speed Limit 45", a targeted attack.</p>
 <p>On the left, real graffiti on a stop sign. On the right, their attack: black and white stickers designed to look like graffiti, to "hide in the human psyche".</p>
 <p>In lab tests across distances and angles, the classifier read the attacked sign as Speed Limit 45 in 100% of images, for both a subtle full-poster version and the sticker "camouflage art" version. In a drive-by test, 84.8% of video frames for the sticker version.</p>
-<p><span class="kt">Key takeaway:</span> Physical stickers fooled a road-sign classifier in lab and drive-by tests.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Fig. 1 of Eykholt et al.: left, real graffiti on a stop sign; right, their physical perturbation, designed to mimic graffiti.</p>
 <h3>Setup, model, date</h3>
@@ -1412,7 +1608,7 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <h3>What this establishes</h3>
 <p>Printed perturbations can survive real cameras, distances and angles for this classifier.</p>
 <h3>What this does not establish</h3>
-<p>See the next slide.</p>
+<p>See slide S89.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1707.08945">Eykholt et al., "Robust Physical-World Attacks on Deep Learning Visual Classification" (CVPR 2018)</a> — the RP2 stop-sign attack, lab and drive-by tests, and the cropping pipeline.</li>
@@ -1423,11 +1619,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S89">
 <h2>89. What the Stop-Sign Result Does Not Show</h2>
 <p class="pace">Off the screen · ≈1 min · elapsed ≈80.5 min</p>
+<p class="msg"><span class="kt">Message:</span> The stop-sign result is real but narrow: it fooled a classifier on hand-cropped signs in a slow straight drive-by, with targeted success falling to 70% under pseudo-random crops; it does not show detectors, full driving systems, speed or weather.</p>
+<p><strong>Reading the slide.</strong> A two-column table. Shown: printed stickers can fool a classifier, across tested angles and distances, on a slow straight drive-by. Not shown: detectors or full driving systems, results without hand-controlled cropping, driving at speed on any road in any weather. The footnote gives the numbers that set the scope: 70% targeted with constrained pseudo-random crops; drive-by at 0–20 mph from about 250 ft.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Now read the limits as carefully as the result. What is shown: printed stickers can fool a classifier, across the tested angles and distances, in a slow drive-by on a straight road.</p>
 <p>What is not shown. It attacks a classifier, not an object detector or a full driving system. The pipeline crops the sign by hand before classifying; with constrained pseudo-random crops instead, which keep most of the sign in view, targeted success fell to 70% (untargeted 90%). The drive-by went from about 250 feet at 0–20 mph on a straight road, not at speed, on any road, in any weather.</p>
 <p>This is how to read every physical-attack paper: the result is real, and its scope is exactly what was tested.</p>
-<p><span class="kt">Key takeaway:</span> Real result, narrow scope: classifier, controlled cropping, slow straight drive.</p>
-<div class="detail">
 <h3>Setup, model, date</h3>
 <p>Eykholt et al. §5–6. Detector attacks were out of scope of this paper.</p>
 <h3>Primary sources</h3>
@@ -1440,10 +1638,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S90">
 <h2>90. Attackers Are Not the Only Shift</h2>
 <p class="pace">Off the screen · <strong>optional</strong> · ≈1 min · elapsed ≈81.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Not every robustness failure needs an adversary: ImageNet-C applies 15 common corruptions at 5 severities to ImageNet test images, and robustness to these natural shifts is a separate question from worst-case robustness to attacks.</p>
+<p><strong>Reading the slide.</strong> Hendrycks and Dietterich Fig. 1: the same bird photo under 15 corruptions, including noise, blur, snow, frost, fog, brightness, contrast, pixelation and JPEG. The benchmark applies each at 5 severities. The caption says no adversary is involved and these shifts are frequent. The figure shows the corruptions, not model accuracy on them.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>A contrast. Not every robustness failure needs an adversary. ImageNet-C applies 15 common corruptions, noise, blur, weather, digital artifacts, each at 5 severities, 75 in total, to ImageNet test images. Standard models lose a lot of accuracy on them.</p>
 <p>This is a separate benchmark and a separate question: average-case robustness to natural shifts, not worst-case robustness to an attacker. Being robust to one does not guarantee the other.</p>
-<p><span class="kt">Key takeaway:</span> Natural corruptions are a different robustness question from attacks.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Fig. 1 of Hendrycks &amp; Dietterich: one image under 15 corruption types (Gaussian, shot and impulse noise; defocus, frosted-glass, motion and zoom blur; snow, frost, fog, brightness; contrast, elastic, pixelate, JPEG).</p>
 <h3>Setup, model, date</h3>
@@ -1458,17 +1658,22 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S91">
 <h2>91. 08 — The Same Problem in LLMs</h2>
 <p class="pace">LLMs · ≈0.5 min · elapsed ≈82 min</p>
+<p class="msg"><span class="kt">Message:</span> Section 08 carries the problem to large language models: the inputs are different, but the worst-case question is the same.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Do any of these problems carry over to large language models? Yes. The inputs are different, but the worst-case question is the same.</p>
-<p><span class="kt">Key takeaway:</span> Different inputs, the same worst-case question.</p>
+</div>
 </article>
 
 <article data-slide-id="S92">
 <h2>92. Swap Three Words, Flip the Answer</h2>
 <p class="pace">LLMs · ≈1 min · elapsed ≈83 min</p>
+<p class="msg"><span class="kt">Message:</span> Swapping three words for near-synonyms flipped a movie-review sentiment classifier from a correct "negative" to "positive"; in a separate experiment, BERT's SNLI accuracy fell from 89.4% to 4.0% with 18.5% of words changed.</p>
+<p><strong>Reading the slide.</strong> Header: a sentiment classifier on movie reviews, attacker swaps words for synonyms. The two sentences differ only in the highlighted words: "contrived situations" and "totally" become "engineered circumstances" and "fully". Model verdict under each: negative (correct), then positive (wrong). The bottom line is a separate experiment on a different model and dataset, from Table 4.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Start with text classifiers. A sentiment model reads a movie review: "The characters, cast in impossibly contrived situations, are totally estranged from reality." It says negative, correctly. Swap three words for near-synonyms: "engineered circumstances", "fully". To us the meaning is the same; the model now says positive.</p>
 <p>A separate experiment, not the movie-review model: against BERT on sentence pairs (SNLI), accuracy fell from 89.4% to 4.0% with 18.5% of words changed.</p>
-<p><span class="kt">Key takeaway:</span> A few synonym swaps can flip a text classifier.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Example from Jin et al. Table 6 (MR dataset, WordLSTM target).</p>
 <h3>Setup, model, date</h3>
@@ -1487,10 +1692,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S93">
 <h2>93. Text Is Discrete: "Small" Means Few Words</h2>
 <p class="pace">LLMs · ≈0.5 min · elapsed ≈83.5 min</p>
+<p class="msg"><span class="kt">Message:</span> For text, words cannot change by tiny amounts, so "small" means a few words swapped with meaning kept and the attack searches over word choices; human judges found meaning mostly, but not always, preserved.</p>
+<p><strong>Reading the slide.</strong> Five lines in order: why text differs (discrete words), what "small" means here, how the attack searches (word choices, not gradient steps), what the human check found, and the unchanged question. The citation points to §3 for the search and §5 for the human evaluation.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Text differs from images in one way that matters. Pixels change by tiny amounts; words cannot. So "small" means a few words swapped with the meaning kept, and the attack searches over word choices rather than taking gradient steps. Jin and colleagues checked with human judges: mostly preserved meaning, not always. Labels people gave the original and adversarial texts agreed 92% of the time on MR and 85% on SNLI; separately, judges rated meaning similarity 0.91 on MR and 0.86 on SNLI.</p>
 <p>The question is unchanged: does a change that should not matter flip the answer?</p>
-<p><span class="kt">Key takeaway:</span> For text, "small" means few words, meaning preserved.</p>
-<div class="detail">
 <h3>Setup, model, date</h3>
 <p>Jin et al., §3 (word-importance ranking and synonym search), §5 (human evaluation).</p>
 <h3>Primary sources</h3>
@@ -1503,11 +1710,13 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S94">
 <h2>94. A Nonsense Suffix Jailbreaks Chatbots</h2>
 <p class="pace">LLMs · ≈1.5 min · elapsed ≈85 min</p>
+<p class="msg"><span class="kt">Message:</span> Zou and colleagues used GCG to optimise an odd suffix on open Vicuna models that makes aligned models answer harmful requests instead of refusing; the same suffix transferred to closed chatbots (July 2023 versions), as image attacks transfer.</p>
+<p><strong>Reading the slide.</strong> Zou et al. Fig. 1, reproduced unmodified. Top: harmful requests with the suffix, optimised on Vicuna-7B and 13B. Bottom: the same suffix sent to closed chatbots, which begin harmful answers. The authors hide the suffix as "ADV PROMPT" and truncate the replies. The caption names the method, GCG. It is transfer again, open to closed, as for images on S48–S51.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Now chatbots. Zou and colleagues searched for a suffix: odd tokens appended to a harmful request that make an aligned model answer instead of refusing. The method is GCG, Greedy Coordinate Gradient.</p>
 <p>Top of the figure: the suffix is optimized on open models, Vicuna-7B and 13B. Bottom: the same suffix sent to closed chatbots, which began answering. The authors hide the actual suffix as "ADV PROMPT" and truncate the replies.</p>
-<p>This is transfer again: crafted on open models, effective on closed ones, as with images in Section 04.</p>
-<p><span class="kt">Key takeaway:</span> An optimized suffix unlocked harmful answers and transferred to closed chatbots.</p>
-<div class="detail">
+<p>This is transfer again: crafted on open models, effective on closed ones, as with images in Section 04 (slides S48–S51).</p>
 <h3>The figure</h3>
 <p>Fig. 1 of Zou et al., reproduced unmodified.</p>
 <h3>Setup, model, date</h3>
@@ -1524,10 +1733,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S95">
 <h2>95. Images Can Jailbreak Multimodal Models</h2>
 <p class="pace">LLMs · ≈1 min · elapsed ≈86 min</p>
+<p class="msg"><span class="kt">Message:</span> Multimodal models reopen the image attack: with white-box gradients, an optimised image made LLaVA, MiniGPT-4 and LLaMA-Adapter output chosen toxic text with 100% success in Carlini and colleagues' test, using changes not limited in size.</p>
+<p><strong>Reading the slide.</strong> Threat-model line first: the attacker edits an image, knows the model (white box), wants chosen toxic text. The pipeline: image plus an optimised change, into a chatbot that sees image and text, out comes the attacker's text. The result and scope lines: 100% success on three models in the paper's test; the changes were unbounded, so the point is reachability, not stealth.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Models that see images and text open the old image attack again. The attacker edits an image, with white-box gradients, to make the model output chosen toxic text.</p>
 <p>Carlini and colleagues report 100% success on LLaVA, MiniGPT-4 and LLaMA-Adapter in their test. Note that the image changes were not limited in size; the point is that the output is reachable, not that the attack is stealthy.</p>
-<p><span class="kt">Key takeaway:</span> An optimized image can make a multimodal model say chosen text.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Pipeline schematic drawn for this lecture.</p>
 <h3>Setup, model, date</h3>
@@ -1542,10 +1753,12 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S96">
 <h2>96. Prompt Injection: Instructions Hidden in Data</h2>
 <p class="pace">LLMs · ≈1 min · elapsed ≈87 min</p>
+<p class="msg"><span class="kt">Message:</span> For an LLM, the input is any text the model reads, including fetched data, so a web page can hide instructions the assistant follows instead of the user; this is not a tiny change but the same weak surface.</p>
+<p><strong>Reading the slide.</strong> Three boxes left to right: a web page that hides "ignore the user, do this instead"; an AI assistant asked to summarise the page; the assistant follows the page, not the user. The caption marks it as an illustrative example and cites Greshake et al. It shows a mechanism, not a measured success rate.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>A different LLM weak surface. An AI assistant is asked to summarize a web page. The page hides an instruction: "ignore the user, do this instead". The assistant follows the page, not the user.</p>
 <p>For an LLM, the "input" is any text the model reads, including data it fetches. This is an illustrative example; it is not a tiny change, but it is the same weak surface: the attacker controls an input the model trusts too much.</p>
-<p><span class="kt">Key takeaway:</span> Any text an LLM reads can carry an attacker's instructions.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Three-box schematic drawn for this lecture.</p>
 <h3>Setup, model, date</h3>
@@ -1560,18 +1773,24 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S97">
 <h2>97. Image World vs LLM World</h2>
 <p class="pace">LLMs · ≈0.5 min · elapsed ≈87.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Images and LLMs differ in what changes, what the attacker wants and how attacks transfer, but share one lesson: models that rely on cues unlike ours have weak spots.</p>
+<p><strong>Reading the slide.</strong> A table with two columns, images and LLMs, and three rows. Changed input: pixels within ε vs words, a suffix or hidden text. Attacker wants: a wrong label vs harmful or hijacked output. Transfer: across models vs open models to closed chatbots. The bottom line states the shared lesson.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Side by side. Changed input: pixels within ε, versus words, a suffix, or hidden text. Attacker wants: a wrong label, versus harmful or hijacked output. Transfer: across models, versus from open models to closed chatbots.</p>
 <p>Same lesson: models that rely on cues unlike ours have weak spots.</p>
-<p><span class="kt">Key takeaway:</span> Same lesson across images and LLMs.</p>
+</div>
 </article>
 
 <article data-slide-id="S98">
 <h2>98. Four Questions for Any Robustness Claim</h2>
 <p class="pace">Wrap-up · ≈1 min · elapsed ≈88.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Ask four questions of any robustness claim: robust to what changes, against which attacker, measured how, and at what cost; a claim missing an answer is incomplete, not necessarily wrong.</p>
+<p><strong>Reading the slide.</strong> Four boxes, numbered. 1: what changes (norm, ε, digital or physical). 2: which attacker (knowledge, goal, adaptive?). 3: measured how (empirical or certified, which date). 4: at what cost (clean accuracy, compute, abstentions). The bottom line says how to treat a claim with a missing answer.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Here is the checklist. One: robust to what changes? Norm, ε, digital or physical. Two: against which attacker? What they know, what they want, and was the attack adaptive. Three: measured how? Empirical or certified, and on which date. Four: at what cost? Clean accuracy, compute, abstentions.</p>
 <p>A claim missing any answer is incomplete, not necessarily wrong. Ask for the missing piece.</p>
-<p><span class="kt">Key takeaway:</span> What changes, which attacker, measured how, at what cost.</p>
-<div class="detail">
 <h3>The figure</h3>
 <p>Four-box schematic drawn for this lecture.</p>
 </div>
@@ -1580,24 +1799,34 @@ article h2 { color: var(--yonsei-blue); font-size: 1.4rem; margin-bottom: 6px; }
 <article data-slide-id="S99">
 <h2>99. Established vs Open</h2>
 <p class="pace">Wrap-up · ≈0.5 min · elapsed ≈89 min</p>
+<p class="msg"><span class="kt">Message:</span> Established: tiny changes fool accurate models, weak attacks overstate robustness, adversarial training partly helps, and certificates exist for small ℓ2 balls; open: one agreed cause, robustness across all threat models, large certified radii at scale, and no accuracy cost.</p>
+<p><strong>Reading the slide.</strong> Two lists side by side. Left, established, four items, each shown earlier in the lecture. Right, open, four questions the lecture leaves unresolved. Read the rows as pairs where they match, for example small certified balls now versus large certified radii at scale.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>What is established: tiny changes fool accurate models; weak attacks overstate robustness; adversarial training helps, partly; certificates exist for small ℓ2 balls.</p>
 <p>What is open: one agreed cause; robustness across all threat models at once; large certified radii at scale; and robustness with no accuracy cost.</p>
-<p><span class="kt">Key takeaway:</span> Real phenomena and partial defenses; open questions remain.</p>
+</div>
 </article>
 
 <article data-slide-id="S100">
 <h2>100. Takeaways</h2>
 <p class="pace">Wrap-up · ≈0.5 min · elapsed ≈89.5 min</p>
+<p class="msg"><span class="kt">Message:</span> Six takeaways: models rely on other cues, accuracy is average case, claims need a threat model, report the strongest adaptive attack, benchmarks standardise but do not guarantee, certificates cover small regions at a cost.</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Six points. Models rely on other cues than we do, so robustness is the goal. Accuracy is average case; attackers pick the worst. A robustness claim needs a threat model. Report the strongest, adaptive attack. Benchmarks standardize; they do not guarantee. Certificates prove small regions, at a cost.</p>
 <p>And the question to carry: robust to what, against whom, measured how, at what cost?</p>
-<p><span class="kt">Key takeaway:</span> Robust to what, against whom, measured how, at what cost?</p>
+</div>
 </article>
 
 <article data-slide-id="S101">
 <h2>101. ε</h2>
 <p class="pace">Wrap-up · ≈0.5 min · elapsed ≈90 min</p>
+<p class="msg"><span class="kt">Message:</span> Every robustness number needs its threat model: robust to what, against whom, measured how, at what cost?</p>
+<div class="detail">
+<h3>Script</h3>
 <p>Robust to what, against whom, measured how, at what cost?</p>
-<p><span class="kt">Key takeaway:</span> Every robustness number needs its threat model.</p>
+</div>
 </article>
 
 </body></html>

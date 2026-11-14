@@ -16,3 +16,11 @@ Albert, #claw-slides-review, 2026-11-15 00:34 KST (message 4). Original spelling
 - Concise opening AND detailed reference material: separate layers; do not shorten by deleting useful explanations, proofs, assumptions, references or provenance.
 - No contradictions between comments. Preserve English for these English companions; no translation requested.
 - Tracked lec07 Korean study backups are auxiliary explainers, not per-slide companions. Inspect their links/consistency but do not rewrite them or change their language in this job. Local .standalone.html copies are not tracked at the baseline: do not add, hand-edit or silently overwrite them. Report any stale derivative; regenerate only a deliverable that is actually needed using the existing tool, without changing scripts.
+
+## C04 — visual and original-source verification
+Albert, #claw-slides-review, 2026-11-15 01:08 KST (message 22):
+
+> render slides to see the plots if needed
+> and check the original paper or source if needed
+
+Review application: inspect rendered main-slide exhibits wherever source HTML or the revised explanation is insufficient to establish what the plot shows; consult the original paper/source for ambiguous, changed, numerical or disputed interpretations. Use the exact reviewed commit, not the working tree. This reinforces the existing source-first/visual review requirements; it does not authorize a deck-content change or a new literature survey.

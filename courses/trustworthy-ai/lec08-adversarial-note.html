@@ -930,12 +930,12 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <article data-slide-id="S54">
 <h2>54. Start From One Test Image</h2>
 <p class="pace">Worst case · ≈0.5 min · elapsed ≈48 min</p>
-<p class="msg"><span class="kt">Message:</span> Every test image gets its own ball centred on it; an attack exists for an image only if its ball crosses the decision boundary, and robust accuracy counts the images whose balls do not.</p>
-<p><strong>Reading the slide.</strong> Three test images, each with its own ball, and a boundary between the panda and gibbon regions. Balls 1 and 2 stay on the panda side. Ball 3 crosses into gibbon, so an attack exists for image 3. The caption says each image is attacked separately and robust accuracy counts the survivors.</p>
+<p class="msg"><span class="kt">Message:</span> Every test image gets its own ball centred on it. For a correctly classified image, a ball that crosses the boundary exposes an error; robust accuracy counts an image only if its whole ball, centre included, carries the true label.</p>
+<p><strong>Reading the slide.</strong> Three test images, each with its own ball, and a boundary between the panda and gibbon regions. Balls 1 and 2 stay on the panda side. Ball 3 crosses into gibbon, so an attack exists for image 3. All three centres are pandas, correctly classified, so here crossing is what exposes an error. The caption says each image is attacked separately and robust accuracy counts the survivors; precisely, an image counts only if every point of its ball, including the centre, gets the true label. A ball that sits wholly on the wrong side is stable but not robustly correct.</p>
 <div class="detail">
 <h3>Script</h3>
 <p>Which ball? A common confusion. Every test image gets its own ball, centred on it. Images 1 and 2 have balls entirely on the panda side; image 3's ball crosses into gibbon, so an attack exists for image 3.</p>
-<p>We attack each test image separately, and robust accuracy counts how many survive.</p>
+<p>We attack each test image separately, and robust accuracy counts how many survive. Careful with "survive": these three images are correctly classified to begin with. An image counts only if its whole ball, centre included, gets the true label. An image that was already wrong does not count, even if its ball never crosses the boundary.</p>
 <h3>The figure</h3>
 <p>Schematic drawn for this lecture: three test images with their own ε-balls; one crosses the boundary.</p>
 </div>
@@ -1112,16 +1112,16 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <article data-slide-id="S64">
 <h2>64. Adversarial Training: Train on the Worst Case</h2>
 <p class="pace">Defenses + evaluation · ≈2 min · elapsed ≈59.5 min</p>
-<p class="msg"><span class="kt">Message:</span> Adversarial training plays a min–max game: for each training example, find the worst change in the ball with PGD, then update the weights to do well on those worst-case inputs; clearing every ball can need a more complex boundary.</p>
-<p><strong>Reading the slide.</strong> The saddle-point formula: an inner max over δ in the ball (found by PGD) inside an outer min over the weights θ (by SGD). Then Madry et al. Fig. 3, a conceptual illustration. Left: points a straight line separates. Middle: ℓ∞ boxes around each point cross that line; stars are adversarial examples. Right: a bent boundary clears every box. The figure illustrates the capacity argument; it is not data.</p>
+<p class="msg"><span class="kt">Message:</span> Adversarial training targets a min–max objective: approximately solve the inner maximization with PGD, then train the weights on the high-loss examples found; clearing every ball can need a more complex boundary.</p>
+<p><strong>Reading the slide.</strong> The saddle-point formula: an inner max over δ in the ball inside an outer min over the weights θ. That exact min–max is the objective; in training, PGD approximately solves the inner max (it is not guaranteed to find the worst δ), and SGD does the outer min. The slide's caption "Inner max: PGD" is this shorthand. Then Madry et al. Fig. 3, a conceptual illustration. Left: points a straight line separates. Middle: ℓ∞ boxes around each point cross that line; stars are adversarial examples. Right: a bent boundary clears every box. The figure illustrates the capacity argument; it is not data.</p>
 <div class="detail">
 <h3>Script</h3>
-<p>The defense that has held up best: adversarial training. Write training as a game. The inner max: for each training example, find the worst δ in the ball, using PGD. The outer min: update the weights to do well on those worst-case inputs.</p>
+<p>The defense that has held up best: adversarial training. Write training as a game. The inner max: for each training example, the worst δ in the ball. We cannot compute that exactly, so we approximate it with PGD; it finds a high-loss δ, not necessarily the worst. The outer min: update the weights to do well on those high-loss inputs. This is why adversarial training gives empirical robustness, not a certificate.</p>
 <p>The figure gives the intuition. Left: points separable by a simple straight line. Middle: put an ℓ∞ box around each point; the line now cuts through boxes, and the stars are adversarial examples. Right: to clear every box, the model needs a more complicated, bent boundary. Robustness needs more capacity.</p>
 <h3>The figure</h3>
 <p>Fig. 3 of Madry et al. (conceptual): separable points; ℓ∞ boxes crossing the linear boundary with adversarial examples (stars); a more complex boundary that separates the boxes.</p>
 <h3>Setup, model, date</h3>
-<p>Madry et al., Eq. 2.1 (saddle point); inner maximization by PGD, outer minimization by SGD.</p>
+<p>Madry et al., Eq. 2.1 (saddle point); inner maximization approximately solved by PGD (§3.3: a heuristic inner maximizer, no global-optimum guarantee), outer minimization by SGD.</p>
 <h3>Assumptions</h3>
 <p>The figure is conceptual, not data. The capacity claim is supported in the paper by experiments over model widths.</p>
 <h3>Primary sources</h3>
@@ -1167,8 +1167,6 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <p>In these experiments, with enough data, larger training ε gives lower clean accuracy.</p>
 <h3>What this does not establish</h3>
 <p>That a trade-off is inevitable for every task; recent models (slide S76) narrow the gap with much more data and capacity.</p>
-<h3>Assumptions</h3>
-<p>"Roughly eight times" counts 7 attack steps plus 1 training step, each a forward and backward pass; real cost varies.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1805.12152">Tsipras et al., "Robustness May Be at Odds with Accuracy" (ICLR 2019)</a> — Fig. 1 and a theoretical model where robustness and accuracy conflict.</li>
@@ -1268,12 +1266,12 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <article data-slide-id="S71">
 <h2>71. AutoAttack: Four Attacks, Nothing to Tune</h2>
 <p class="pace">Defenses + evaluation · ≈1 min · elapsed ≈65.5 min</p>
-<p class="msg"><span class="kt">Message:</span> AutoAttack, from Croce and Hein, bundles four diverse attacks with fixed settings, including a gradient-free one, and counts an input as robust only if all four fail, so a defense's authors cannot weaken the test by tuning it.</p>
-<p><strong>Reading the slide.</strong> Four boxes, one per attack: APGD-CE (PGD that tunes its own step), APGD-T (aimed at chosen wrong classes), FAB-T (searches for a small change that flips the answer, not guaranteed the smallest), and Square (no gradients, queries only, which catches gradient hiding). The rule below: robust only if all four fail. Same settings for every model.</p>
+<p class="msg"><span class="kt">Message:</span> AutoAttack, from Croce and Hein, bundles four diverse attacks with fixed settings, including a gradient-free one, and counts an input as surviving AutoAttack, an upper-bound estimate of robust accuracy, only if all four fail; fixed settings stop a defense's authors weakening the test by tuning it.</p>
+<p><strong>Reading the slide.</strong> Four boxes, one per attack: APGD-CE (PGD that tunes its own step), APGD-T (aimed at chosen wrong classes), FAB-T (searches for a small change that flips the answer, not guaranteed the smallest), and Square (no gradients, queries only, which catches gradient hiding). The rule below: an input counts only if all four fail. The slide says "robust"; precisely, it survives AutoAttack, an empirical result, so AutoAttack accuracy is an upper bound on true robust accuracy, not a proof. Same settings for every model.</p>
 <div class="detail">
 <h3>Script</h3>
 <p>Adaptive attacks need expertise, and each paper used to pick its own attack and settings. AutoAttack, from Croce and Hein, is a fixed test everyone can run. It bundles four attacks. A PGD that tunes its own step size, APGD-CE. The same, aimed at selected wrong classes, APGD-T. One that searches for a small change that flips the answer, FAB-T; it does not guarantee the smallest. And Square, which uses no gradients at all, only queries; that catches defenses that merely hide gradients.</p>
-<p>An input counts as robust only if all four fail. There are no settings to tune, and the same settings are used for every model, so a defense's authors cannot weaken the test by choosing them.</p>
+<p>An input counts as surviving AutoAttack only if all four fail. That is still empirical: four failed attacks are not a proof that no attack exists, so the resulting accuracy is an upper-bound estimate of robust accuracy. There are no settings to tune, and the same settings are used for every model, so a defense's authors cannot weaken the test by choosing them.</p>
 <h3>The figure</h3>
 <p>Four-box schematic drawn for this lecture.</p>
 <h3>Setup, model, date</h3>

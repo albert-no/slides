@@ -27,7 +27,7 @@ Each package rewrote one note, `courses/trustworthy-ai/lecNN-*-note.html`. Every
 | P12 | lec12 | 80 | 7da04f9 | 17/43/54 |
 | | **total** | **902** | | |
 
-The short Messages (9–20 words) belong to title, divider and closer entries (plan rule 1). There are 11 Messages of 51–55 words, in lec01, lec03, lec04, lec07, lec09, lec11 and lec12. They are over the target only because they keep a qualifier.
+The short Messages (9–20 words) belong to title, divider and closer entries (plan rule 1). There are 39 of 902 Messages at 51–55 words: lec01 5, lec03 2, lec04 8, lec07 3, lec09 6, lec11 10, lec12 5. They are over the target only because they keep a qualifier.
 
 Shared surface: `courses/trustworthy-ai/OUTLINE.md`. The note-format paragraph now describes Message → Reading the slide → Script, says that lec13–lec14 notes keep the older Key-takeaway format, and records the stable IDs on lec01–lec11. No line pointers changed. No deck, tech supplement or `reference/` file was edited after the ID commit.
 
@@ -134,7 +134,7 @@ Unchanged. All 902 slide/article pairs keep their page, order, ID and title, and
 - `outline-lint.py`: 0 stale pointers, 5 warnings. All 5 predate this job (ambiguous basenames in `courses/infotheory` and `courses/privacy`).
 - `git diff 9ab4aa0..HEAD --stat` touches only the 12 notes, `courses/trustworthy-ai/OUTLINE.md` and `log/2026-11-15-lec01-lec12-notes/`.
 - Render: all 12 notes printed with headless Chromium and converted with `pdftoppm -r 60`.
-  - Each package read its first, middle, last and math-heavy pages: 6–10 pages per note, about 85 pages in total.
+  - Each package read its first, middle, last and math-heavy pages: 6–10 pages per note.
   - I re-read lec01 p2, lec02 p25 (theorem and definition math), lec08 p48 (S56 formula) and lec12 p33 (S41–S42).
   - Each page showed the Message first in larger type, KaTeX rendered and no clipping. `pdftotext` shows no raw `\frac` and no ParseError.
   - Raw `$` in the lec01, 02, 09 and 11 text is currency.

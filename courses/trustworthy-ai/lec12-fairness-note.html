@@ -235,16 +235,16 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <article data-slide-id="S10">
 <h2>13. Dropping a Column Can Leave Information</h2>
 <p class="pace">Where bias enters · ≈1 min · elapsed ≈10 min</p>
-<p class="msg"><span class="kt">Message:</span> Deleting the sensitive column need not remove a disparity, because correlated features such as ZIP area can still carry group information. It also removes the ability to measure the gap, and to use the mitigation methods that need the group label.</p>
+<p class="msg"><span class="kt">Message:</span> Deleting the sensitive column need not remove a disparity, because correlated features such as ZIP area can still carry group information. Auditing the gap and group-aware mitigation need group labels in the relevant data; dropping them from model inputs does not stop keeping them separately for an audit.</p>
 <p><strong>Reading the slide.</strong> The illustrative table lists four applicants with group, years employed and ZIP area. The group column is struck out as deleted; the ZIP area column is outlined, with an arrow to “ZIP area still separates A from B” and the stated assumption that ZIP correlates with group. Whether a real feature does this has to be checked in the data at hand.</p>
 <div class="detail">
 <h3>Script</h3>
 <p>The obvious fix is to delete the sensitive column. It need not remove disparities. In this illustrative table, the group column is deleted, but the ZIP area column still separates A from B, because here we assume ZIP area correlates with group. In real data, ZIP code, name and school can each be correlated with race, so the remaining features can still carry group information, and a model can use it. Whether a given feature does so has to be checked in the data at hand.</p>
-<p>Worse, once the column is gone, you can no longer measure the gap. Fairness needs more than blindness.</p>
+<p>And keep two things apart. Removing the column from the model's inputs is one decision; discarding the group label everywhere is another. To measure the gap you need group labels in the audit data, and you can keep them there, separately, even when the model never sees them. If the labels are discarded altogether, you can no longer measure the gap. Fairness needs more than blindness.</p>
 <h3>The figure</h3>
 <p>Illustrative feature table (group, years employed, ZIP area; four applicants). The group column is struck out and marked deleted; the ZIP area column is outlined, with an arrow to "ZIP area still separates A from B" and the stated assumption "ZIP correlates with group".</p>
 <h3>Going further</h3>
-<p>Several methods in Section 04 need the group label at training time (reweighing, reductions) or at decision time (group thresholds). Dropping it makes them impossible.</p>
+<p>Several methods in Section 04 need the group label at training time (reweighing, reductions) or at decision time (group thresholds). If the label is unavailable at that stage, they cannot be used; excluding it from the predictor's inputs alone does not prevent an audit on separately retained labels.</p>
 </div>
 </article>
 
@@ -479,7 +479,7 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <h2>27. Calibration Does Not Fix Cutoff Precision</h2>
 <p class="pace">Measuring fairness · ≈1.5 min · elapsed ≈25.5 min</p>
 <p class="msg"><span class="kt">Message:</span> Calibration does not fix precision at a cutoff. Selecting everyone above 0.5 picks 30 of 40 in each calibrated group, yet PPV is 24/30 = 0.8 in A and 21/30 = 0.7 in B, because A's selected are mostly 0.9s and B's mostly 0.6s.</p>
-<p><strong>Reading the slide.</strong> The S19a buckets reappear with a cutoff line at 0.5. The 0.9 and 0.6 buckets are boxed as selected and shaded as the PPV denominator; count the filled circles inside to get 24/30 and 21/30. Calibration speaks about every score, predictive parity about one cutoff. With only two score values, the same top score selected in both groups and someone at that score in each, the two would coincide; three values break that.</p>
+<p><strong>Reading the slide.</strong> The S19a buckets reappear with a cutoff line at 0.5. The 0.9 and 0.6 buckets are boxed as selected and shaded as the PPV denominator; count the filled circles inside to get 24/30 and 21/30. Calibration speaks about every score, predictive parity about one cutoff. With only two shared score values and only the top bucket selected in both groups, with someone at that score in each, calibration implies equal PPV; the converse need not hold, since equal PPV does not calibrate every bucket. Three values break the implication.</p>
 <div class="detail">
 <h3>Script</h3>
 <p>Now make a decision: select everyone scored above 0.5. Both groups select 30 of 40. Predictive parity asks for equal PPV, the share of the selected who repaid. In group A, 24 of 30, or 0.8. In group B, 21 of 30, or 0.7.</p>
@@ -491,7 +491,7 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <p>The identity $\mathrm{PPV}_a = \mathbb{E}[S \mid S \gt t, A = a]$ for a calibrated score is in lec12tech.html, slide 9.</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2.2 (predictive parity), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
+<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2 (predictive parity, Eq. 2.2), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
 </ul>
 </div>
 </article>
@@ -531,7 +531,7 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1609.05807">Kleinberg, Mullainathan &amp; Raghavan, "Inherent Trade-Offs in the Fair Determination of Risk Scores", ITCS 2017</a> — condition (A) calibration.</li>
-<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2.2 (predictive parity).</li>
+<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2 (predictive parity, Eq. 2.2).</li>
 </ul>
 </div>
 </article>
@@ -600,7 +600,7 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <p>Diagram (illustrative, no data): score → informs → decision → later → outcome, with a bracket marking that the audit compares score and outcome. COMPAS stands for Correctional Offender Management Profiling for Alternative Sanctions.</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2.2 (predictive parity), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
+<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2 (predictive parity, Eq. 2.2), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
 <li><a href="https://www.propublica.org/article/how-we-analyzed-the-compas-recidivism-algorithm">Larson, Mattu, Kirchner &amp; Angwin, "How We Analyzed the COMPAS Recidivism Algorithm", ProPublica (2016)</a> — Broward County data, 7,214 defendants; false-positive and false-negative rates by race.</li>
 </ul>
 </div>
@@ -670,7 +670,7 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <p>A causal effect of race or of the score; the high-count bins are small, so their intervals are wide.</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2.2 (predictive parity), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
+<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2 (predictive parity, Eq. 2.2), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
 </ul>
 </div>
 </article>
@@ -691,7 +691,7 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <p>Exact equality, or that a decile can be read as a probability.</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2.2 (predictive parity), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
+<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2 (predictive parity, Eq. 2.2), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
 </ul>
 </div>
 </article>
@@ -713,7 +713,7 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://www.documentcloud.org/documents/2998391-ProPublicaCommentary-Final070616/">Dieterich, Mendoza &amp; Brennan, "COMPAS Risk Scales: Demonstrating Accuracy Equity and Predictive Parity", Northpointe (2016)</a> — the vendor’s technical reply: argues accuracy equity and predictive parity.</li>
-<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2.2 (predictive parity), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
+<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2 (predictive parity, Eq. 2.2), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
 </ul>
 </div>
 </article>
@@ -783,7 +783,7 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <p>Derivation in lec12tech.html, slides 11–12, "Chouldechova's Identity" (Eq. 2.6).</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2.2 (predictive parity), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
+<li><a href="https://arxiv.org/abs/1703.00056">Chouldechova, "Fair prediction with disparate impact: A study of bias in recidivism prediction instruments", Big Data 5(2), 2017</a> — Definition 2 (predictive parity, Eq. 2.2), Eq. (2.6) identity; Fig. 1 calibration plot, Fig. 2(b) FPR by prior count, Fig. 3 score distributions.</li>
 </ul>
 </div>
 </article>
@@ -958,14 +958,14 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <article data-slide-id="S39a">
 <h2>52. Reweighing Moves Data Parity Difference Toward 0</h2>
 <p class="pace">Mitigation · ≈0.75 min · elapsed ≈50.25 min</p>
-<p class="msg"><span class="kt">Message:</span> On the AI Fairness 360 benchmarks, reweighing moves the training data's statistical parity difference (unprivileged minus privileged favorable rate) from clearly negative values to near its ideal of 0, though not exactly onto it. This measures the data, not a trained model.</p>
-<p><strong>Reading the slide.</strong> Each row is a dataset and protected attribute (Adult, German, COMPAS). Blue bars are the training data before reweighing, orange after, with ±1 SD bars; the ideal is 0, and negative means the unprivileged group gets fewer favorable outcomes. Before reweighing the bars lie between about −0.09 and −0.19; after, every bar sits near 0. The panel's top label and rightmost tick are cut in the source. Source: Bellamy et al. 2018, Fig. 4(a).</p>
+<p class="msg"><span class="kt">Message:</span> On the AI Fairness 360 benchmarks, reweighing moves the statistical parity difference (unprivileged minus privileged favorable rate) of the transformed evaluation data from clearly negative values to near its ideal of 0, not exactly onto it. This measures data, not model predictions.</p>
+<p><strong>Reading the slide.</strong> Each row is a dataset and protected attribute (Adult, German, COMPAS). Blue bars are the data before reweighing, orange the transformed data after, with ±1 SD bars; the ideal is 0, and negative means the unprivileged group gets fewer favorable outcomes. Before reweighing the bars lie between about −0.09 and −0.19; after, every bar sits near 0. The paper's protocol (§10) reports results on test partitions: weights fitted on the training split equalize the weighted training table, while applying them to held-out data can leave the small residuals seen here (Appendix B.4–5). The slide's "Training data" label is inherited shorthand; precisely, transformed evaluation data. The panel's top label and rightmost tick are cut in the source. Source: Bellamy et al. 2018, Fig. 4(a).</p>
 <div class="detail">
 <h3>Script</h3>
 <p>From the AI Fairness 360 paper. Statistical parity difference, SPD, is the favorable-outcome rate of the unprivileged group minus that of the privileged group; ideal 0, negative means the unprivileged group gets fewer favorable outcomes. Privileged groups: male and white for Adult, male and older for German, female and Caucasian for COMPAS, where the favorable outcome is no recidivism.</p>
-<p>Each row is a dataset and protected attribute. Blue is the training data before reweighing, orange after; the dark bars are ±1 SD. Every orange bar sits near 0, not exactly on it. This is the data, not a trained model.</p>
+<p>Each row is a dataset and protected attribute. Blue is the data before reweighing, orange the transformed data after; the dark bars are ±1 SD. Every orange bar sits near 0, not exactly on it. Why not exactly, when the worked example balanced its table exactly? The paper reports these on test partitions: weights fitted on the training split balance that table, but applied to held-out data they leave a small residual. This is data, not a trained model's predictions.</p>
 <h3>The figure</h3>
-<p>Bellamy et al. 2018, Fig. 4(a): statistical parity difference before and after reweighing; bars ±1 SD. The panel image is extracted unmodified from the arXiv v1 PDF; its top label and rightmost tick are already cut in the source.</p>
+<p>Bellamy et al. 2018, Fig. 4(a): statistical parity difference of the transformed data before and after reweighing; bars ±1 SD. Per §10 (25 random 50/20/30 train/validation/test splits) and Appendix B.4–5, the plotted values are interpreted as test-partition data; the exact script that generated Fig. 4 has not been recovered. The panel image is extracted unmodified from the arXiv v1 PDF; its top label and rightmost tick are already cut in the source.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/1810.01943">Bellamy et al., "AI Fairness 360: An Extensible Toolkit for Detecting, Understanding, and Mitigating Unwanted Algorithmic Bias" (arXiv 1810.01943, 2018)</a> — Fig. 4(a): reweighing on the training data.</li>
@@ -977,15 +977,15 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <h2>53. Disparate Impact of the Same Data Moves Toward 1</h2>
 <p class="pace">Mitigation · ≈0.75 min · elapsed ≈51 min</p>
 <p class="msg"><span class="kt">Message:</span> The same reweighing moves disparate impact (unprivileged over privileged favorable rate) toward its ideal of 1 on all six rows, with the least improvement on German Credit, the smallest dataset. A model trained on the reweighted data must be checked separately.</p>
-<p><strong>Reading the slide.</strong> Same six rows and colours as S39a: blue before reweighing, orange after, ±1 SD bars, now on a ratio scale whose ideal is 1. Before reweighing the bars range from about 0.36 to 0.87. The plot measures the training data, not a trained model or its accuracy. Source: Bellamy et al. 2018, Fig. 4(c).</p>
+<p><strong>Reading the slide.</strong> Same six rows and colours as S39a: blue before reweighing, orange after, ±1 SD bars, now on a ratio scale whose ideal is 1. Before reweighing the bars range from about 0.36 to 0.87. The plot measures transformed evaluation data (test partitions, §10), not a trained model's predictions or its accuracy; the slide's "Training data" label is inherited shorthand. Source: Bellamy et al. 2018, Fig. 4(c).</p>
 <div class="detail">
 <h3>Script</h3>
 <p>Disparate impact, DI, uses the same two rates as a ratio, unprivileged over privileged; ideal 1. Same six rows, same colours. Both metrics move toward their ideal values after reweighing; the paper says the least improvement is on German Credit, the smallest dataset.</p>
-<p>Be careful about what is measured: this is the data, not a trained model. A model trained on reweighted data need not be fair by the same metric.</p>
+<p>Be careful about what is measured: this is transformed held-out data, not a trained model's predictions. On the training split the fitted weights equalize the weighted table; carried to held-out data, some disparity remains. A model trained on reweighted data need not be fair by the same metric.</p>
 <h3>The figure</h3>
-<p>Bellamy et al. 2018, Fig. 4(c): disparate impact before and after reweighing; bars ±1 SD. Panel image extracted unmodified from the arXiv v1 PDF; it replaces the earlier side-by-side crop, which cut the row labels.</p>
+<p>Bellamy et al. 2018, Fig. 4(c): disparate impact of the transformed data before and after reweighing; bars ±1 SD; test-partition interpretation per §10 and Appendix B.4–5 (exact Fig. 4 generator not recovered). Panel image extracted unmodified from the arXiv v1 PDF; it replaces the earlier side-by-side crop, which cut the row labels.</p>
 <h3>What this establishes</h3>
-<p>Reweighing achieves parity in the weighted training data.</p>
+<p>Fitted reweighing equalizes the weighted training table by construction; applied to held-out data, it moves both metrics toward their ideals with residual disparity.</p>
 <h3>What this does not establish</h3>
 <p>Parity of a model trained on it, or its accuracy.</p>
 <h3>Primary sources</h3>

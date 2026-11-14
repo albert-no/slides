@@ -30,7 +30,7 @@ Frozen-file SHA-256 checksums:
 - review-r1.md: `db2731daebef1d459d78a20daa0c708c844a18a08d6cac85d81ede8df5b34dd1`
 - plan-v2.md: `346dab3395bda889a83b12a7cce73364e7aabecce946b3e50282aa4e4bdc8f94`
 
-State **in-work** for the revision handoff to slides. Await exact work-r2 pointer; slides copies frozen files unchanged and refreshes living records on push. No capacity hold, no routine Albert post, no PDF, no PR before approval/pushed records, and no merge authorization. Earlier checkpoints below are historical and superseded by this disposition.
+State **in-work**; frozen review/plan pointers delivered together to slides (message id 3) at 2026-11-14T17:43:16Z. Await exact work-r2 pointer; slides copies frozen files unchanged and refreshes living records on push. No capacity hold, no routine Albert post, no PDF, no PR before approval/pushed records, and no merge authorization. Earlier checkpoints below are historical and superseded by this disposition.
 
 ## Sizing and scope decision
 Medium: twelve existing companions, no change to the deck argument, slide sequence, teaching time or research scope. Volume alone does not make this a new-deck/restructure/literature-survey job. No stage-approval gate; Albert explicitly said to start all. Two full review rounds maximum, then escalate unresolved blockers.

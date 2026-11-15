@@ -54,7 +54,7 @@ entry opens with a short **Message** (`p.msg`, the slide's point with its qualif
 **Reading the slide** (what the slide, plot or diagram shows), then the details under
 **Script** (script, figure, sources, minor points). Decks and notes lec01–lec14 carry stable slide IDs in
 `data-slide-id`. lec01–lec11, lec13 and lec14 use sequential `S01…SNN` (as of 2026-11-15). lec12 uses `S01–S78` with lettered splits such as `S39a/S39b`.
-The same revision corrected 84 main slides across lec01–lec14 so slide and note agree (qualifiers, scoped claims, source setups). No slide was added, removed or split. Three titles changed: lec07 S70 "One Shape, Four Faces", lec10 S06 "…Shared and Stay Online for Months", lec11 S34 "Small Full-Text Distribution Distance Limits Detection".
+The same revision corrected 84 main slides across lec01–lec14 so slide and note agree (qualifiers, scoped claims, source setups). No slide was added, removed or split. Three titles changed: lec07 S70 "One Shape, Four Faces", lec10 S06 "…Shared and Stay Online for Months", lec11 S34 "Small Full-Text Distribution Distance Limits Detection". A follow-up accuracy pass on the same date (job round 4) corrected 31 further main slides in lec01–lec06, lec08, lec13 and lec14 (DP δ qualifiers, evaluation scopes, source locators, label placement); again no slide was added, removed or split, and one title changed: lec06 S08 "A Fluent Medical Term Was Wrong".
 Every lecture also has an optional **technical supplement** `lecNNtech.html` — see below.
 
 ## Technical supplements (optional sub-decks)
@@ -185,7 +185,7 @@ robocall FCC orders 2024 · Arup deepfake, HK police Feb 2024 · Bartz v. Anthro
 Cal. 2025 (settlement final approval 20 Jul 2026) · Brynjolfsson, Chandar & Chen, "Canaries" 2025–26 · Regulation (EU) 2024/1689 as amended by
 Regulation (EU) 2026/1744 (Digital Omnibus; high-risk → Dec 2027 / Aug 2028) · Korea AI Basic Act (eff. 2026-01-22).
 
-**2026-era facts (re-verified 2026-09-13 against primary sources; note carries as-of dates):** July 2026 OpenAI/Hugging Face incident `:503`–`:549` — 4 Jul Artifactory compromise → rebuilt 6 Jul → re-entry 8 Jul via WebDAV; 9–13 Jul 4.5-day forensic window inside HF (~17,600 actions, 4 exposed third-party accounts); HF disclosed 16 Jul, OpenAI attributed 21 Jul (slide 24 chronology corrected: the bypassed fix was OpenAI's, not HF's); scheming arXiv 2603.01608 v2 (59%/3% from model organisms; realistic settings minimal) `:551`; Charlotin figures recomputed from the CSV export of 2026-09-12 (2,039 decisions; 1,111 in 2026; ≈$320k across 30 US decisions in Q1 2026 — replaces 1,598 / $145k / 15) `:352`; Korea AI Basic Act eff. 22 Jan 2026, fines ≤ KRW 30M with ≥1-year grace `:670`; EU high-risk dates deferred by the Digital Omnibus (in force 27 Jul 2026) `:670`; Canaries rev. 12 Aug 2026 (data through Jun 2026; gap ≈19%, was ≈13% in Aug 2025) `:656`; Bartz settlement final approval 20 Jul 2026 `:626`. Refresh Charlotin and Canaries before each term.
+**2026-era facts (re-verified 2026-09-13 against primary sources; note carries as-of dates):** July 2026 OpenAI/Hugging Face incident `:503`–`:549` — 4 Jul Artifactory compromise → rebuilt 6 Jul → re-entry 8 Jul via WebDAV; 9–13 Jul 4.5-day reconstructed campaign, including external staging; roughly 2.5 days inside HF (~17,600 actions across the campaign, 4 exposed third-party accounts); HF disclosed 16 Jul, OpenAI attributed 21 Jul (slide 24 chronology corrected: the bypassed fix was OpenAI's, not HF's); scheming arXiv 2603.01608 v2 (59%/3% from model organisms; realistic settings minimal) `:551`; Charlotin figures recomputed from the CSV export of 2026-09-12 (2,039 decisions; 1,111 in 2026; ≈$320k across 30 US decisions in Q1 2026 — replaces 1,598 / $145k / 15) `:352`; Korea AI Basic Act eff. 22 Jan 2026, fines ≤ KRW 30M with ≥1-year grace `:670`; EU high-risk dates deferred by the Digital Omnibus (in force 27 Jul 2026) `:670`; Canaries rev. 12 Aug 2026 (data through Jun 2026; gap ≈19%, was ≈13% in Aug 2025) `:656`; Bartz settlement final approval 20 Jul 2026 `:626`. Refresh Charlotin and Canaries before each term.
 
 **Key framing:** threat model = *who* / *what they know* (white/black-box) / *what they
 can do* (train/inference-time); "a safety number describes a deployment, not a model"
@@ -692,11 +692,11 @@ checks it?". Governance only in context; full treatment in `backup-governance.ht
 | **06 — Synthesis** | 46–51 | `:806` | established vs not `:814` · course checklist `:836` · open problems `:852` · takeaways `:866` · closer "Who checks it?" `:880` |
 
 **Key citations on slides (checked against saved papers, 2026-10-10):** Shevlane et al. arXiv 2305.15324 (Table 1);
-Kwa et al. (METR) arXiv 2503.14499 (Fig. 1, §2–§4, §7); Black et al. RepliBench arXiv 2504.18565v2 (Fig. 1, §5.1, §6);
+Kwa et al. (METR) arXiv 2503.14499 v4 (Fig. 1, §2–§3, §3.2.1, §5–6, App. B.2/E.3–E.4; 207-day doubling, o3); Black et al. RepliBench arXiv 2504.18565v2 (Fig. 1, §5.1, §6);
 Meinke et al. (Apollo) arXiv 2412.04984v2 (Tables 1, 2, 4, 6, §3.6); van der Weij et al. ICLR 2025 (Table 1, Fig. 5);
 Hammond et al. arXiv 2502.14143 (Fig. 1); Cemri et al. MAST, NeurIPS 2025 D&amp;B (Fig. 1, §5–§6); Lee &amp; Tiwari
-Prompt Infection arXiv 2410.07283v1, preprint (§3–§6, Fig. 6); Motwani et al. arXiv 2402.07510v5 (Table 3);
-Greenblatt et al. AI Control, ICML 2024 (Figs. 1–2, Table 2, §2–§3, §6); Ge-Wang, Crosse et al. arXiv 2606.06529v1
+Prompt Infection arXiv 2410.07283v1, preprint (§3–§6, Figs. 4–6); Motwani et al. arXiv 2402.07510v5 (Table 3);
+Greenblatt et al. AI Control, ICML 2024 (Figs. 1–2, Tables 2 and 7, §2–§3, §2.4 no split, §5.1 limitations); Ge-Wang, Crosse et al. arXiv 2606.06529v1
 (Table 2, §4.4, App. A); Terekhov et al. arXiv 2510.09462v2. Notes only: Lynch et al. (agentic misalignment), METR
 modelling-assumptions note (20 Mar 2026), Cohen et al. Morris-II, Terekhov Defer-to-Resample; goal misgeneralisation
 as a notes cross-reference only.

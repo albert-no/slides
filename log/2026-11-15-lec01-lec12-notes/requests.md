@@ -46,3 +46,10 @@ Albert, #claw-slides-review, 2026-11-15 12:33 (message 8):
 The explicit lec01–lec14 range means the remaining taught lectures are lec13 and lec14, not backup decks or a new lec15. Continue job/branch `2026-11-15-lec01-lec12-notes`; do not rename, rebase, start another branch or open a second PR. A fresh GitHub REST query found no PR for this head branch (open or closed) on 2026-11-15; retain one eventual PR, checking again before creating it. This is not a claim that an existing PR was opened.
 Albert's direct continuation after the six-group escalation authorizes carrying those corrections into this expanded work. It is not approval of the current content or a merge order. Main-slide accuracy and consistency fixes are now allowed; earlier notes-only exclusions are superseded only to that extent. No new argument, literature survey, activities or teaching-time expansion. The canonical notes rule is edited by slides in DESIGN_SYSTEM.md, not in either agent's standing instructions. C03 actual-limit pause/resume remains active.
 The two ordinary reviews remain exhausted. This author-requested continuation receives one supplemental final review (work-r3/review-r3); unresolved blockers then return to Albert, not an automatic fourth round. This is not a reset of the original medium-job allowance.
+
+
+## C09 — continue after supplemental r3 escalation
+Albert, #claw-slides-review, 2026-11-15 15:24 KST (message 8; supplied timestamp):
+> go ahead
+
+Resolution: direct authorization for the next bounded correction pass after the finalized r3 escalation. Continue the same job/branch and one eventual PR under plan-v4; resolve the 13 blocking groups, with nonblocking items retaining their status. One additional work-r4/review-r4 is authorized; ordinary rounds and previous supplemental allowance are not reset. No wholesale 1,006-entry rewrite, unlimited rounds, content approval or merge order. Prior format/design-rule work stays accepted; C03 actual-limit handling remains active.

@@ -6,25 +6,31 @@ baseline: 99450923b41e94f10d0c557a4fc0f46b42a9c91d
 id commit: 853024d8077bc8faa290873d91019d108996d558 — independently verified ID-only; lec12 unchanged
 branch: 2026-11-15-lec01-lec12-notes
 pr: not open — REST branch query 2026-11-15 returned none; retain one eventual PR, recheck before creation
-state: in-review
+state: in-work
 round: 2 of 2
-supplemental review: 1 of 1 — author-requested continuation; next work/review files r3; ordinary allowance not reset
+supplemental review: prior 1 of 1 complete; C09 authorizes one additional work-r4/review-r4, not yet received; ordinary allowance not reset
 extension baseline: 6dc56441c8294d20e53976aa25393ea38d408d08
 extension id commit: 594ebea1203aabe3b3edc56443b37dd29950e411 — independently verified ID-only,208 added attributes in four files
-reviewed commit: ef453a8abd3d04449e71de1d61d9d9071e16f632 — in review, no verdict
-last verdict: revise — review-r2.md (final ordinary round; escalated)
-current plan: plan-v3.md
-next review: review-r3, one supplemental final pass for Albert-requested scope extension; unresolved blockers escalate, no automatic r4
-albert decisions: 2026-11-15 messages6/8 — extend throughlec14, correct mains as needed acrosslec01–14, update notes design rule, same branch and PR; author-requested continuation includes six open groups and one supplemental final review, not content/merge approval; 2026-11-15 00:34 KST — authorized checking and revising all lec01–lec12 companion notes; brief slide message first, details second; pause if either provider reaches its five-hour limit and resume after reset; 2026-11-15 01:08 KST — C04: render slides to inspect plots and consult original papers/sources as needed during review
-last checkpoint UTC: 2026-11-15T04:19:43.261754+00:00
+reviewed commit: ef453a8abd3d04449e71de1d61d9d9071e16f632 — final review-r3, verdict revise
+last verdict: revise — frozen review-r3.md; Albert authorized correction continuation, not content approval
+current plan: plan-v4.md
+next review: review-r4 only — C09 authorizes one additional bounded pass; no automatic r5
+albert decisions: 2026-11-15 15:24 KST message8 “go ahead” (C09) — continue after r3 escalation under plan-v4, same branch/single eventual PR, one additional pass; no approval or merge; 2026-11-15 messages6/8 — extend throughlec14, correct mains as needed acrosslec01–14, update notes design rule, same branch and PR; author-requested continuation includes six open groups and one supplemental final review, not content/merge approval; 2026-11-15 00:34 KST — authorized checking and revising all lec01–lec12 companion notes; brief slide message first, details second; pause if either provider reaches its five-hour limit and resume after reset; 2026-11-15 01:08 KST — C04: render slides to inspect plots and consult original papers/sources as needed during review
+last checkpoint UTC: 2026-11-15T06:31:00.594119+00:00
 capacity hold: no
 capacity provider: none reported
 capacity reset UTC: unknown; never infer from a five-hour elapsed timer
-recovery task: lec01-12-notes-recovery-e923 — gated every 30 minutes; wakes for a due recorded hold or 90 minutes without a durable checkpoint; cancel after final approval/closure
+recovery task: lec01-12-notes-recovery-e923 remains cancelled; await exact work-r4 pointer, no reported quota hold
 
-## Current review — supplemental final r3 received, 2026-11-15
-Exact work pointer `ef453a8abd3d04449e71de1d61d9d9071e16f632`, work-r3 read. One supplemental final review now active; no approval, no automatic fourth round. Reported84 changed mains and104 new notes plus older note corrections; independent inventory, ID-only verification, all changed/neighbor visual checks and source/content review in progress. Plan issues and inherited render defects are not accepted or dismissed yet. Snapshot/archive only; original902 note review not restarted. No capacity limit reported.
+## Current disposition — C09 additional correction pass, 2026-11-15
+Albert's direct “go ahead” at15:24 KST authorizes one additional work-r4/review-r4 after r3 escalation. Plan-v4 completes the bounded order for13 blockers over22 distinct main/note pairs, plus necessary outline synchronization;21 nonblocking groups retain that status. Preserve completed1,006-entry work and the notes design rule. Samebranch/single eventualPR, no content approval or merge authority. Incremental baseline is exactef453a8abd3d04449e71de1d61d9d9071e16f632.
 
+Plan-v4 SHA256 `d7ea62b3f312736b2198a5183beb57a9833d30f058aca85aa4b1aef066b5162f`. Frozen review-r3 hash independently rechecked unchanged: `bcc3ac9b61f73ec14eb7227b2eac0f909f9cde08e1d2111a65a25bef078a1d80`. No new research claim or evidence entry; sources are the existing E100–E146 findings and source register. F74 chooses the bounded heuristic repair, not a new theorem project; F73 explicitly corrects the planner's omitted pure-DP condition. Slides owns implementation and tracked copies. Work-order handoff freezes plan-v4 and sets in-work; review-r3 is already frozen and must be copied unchanged. Review-r4 only, changed entries and neighbours, then escalate remaining blockers rather than automaticr5. No actual quota hold, scheduled recovery or PDF.
+
+## Previous review — supplemental final r3 COMPLETE
+Exact reviewed commit `ef453a8abd3d04449e71de1d61d9d9071e16f632`. Final `review-r3.md` verdict **revise**; state **escalated** after exhausted ordinary2of2 and supplemental1of1. Final SHA256 `bcc3ac9b61f73ec14eb7227b2eac0f909f9cde08e1d2111a65a25bef078a1d80`; frozen by escalation announcement to Albert in claw-slides-review, message11 on2026-11-15. No new plan, implementation order, automaticr4 or PR. Albert must decide any further correction pass on the same branch/single eventual PR.
+
+All197 changed articles fully reviewed (93old+104new), matching mains/alt/neighbours,212 scheduled main images+71extras and197 desktop openings inspected. Finalsource/local-link/shared-doc/title/pacing checks complete; all32 reviewedsource/shared-doc files byte-match exactgit, all390localreferences resolve. FinalHF shared-doc tracing also read unchangedlec01S23 fully and found the earlier-missed campaign/internal-duration repetition. Thirteen blocking groups remain: F34/F69/F70/F73/F74/F78/F79/F80/F81/F85/F93/F97/F101;21nonblocking. F19/F56/F66/F67/F68closed. F101 adds lec01S23 and leafOUTLINE L188;F94 includes inheritedKwa/Greenblatt locators. Allsevenworkissues adjudicated. E143–E146 record finalaudits and correctedHF locators. OriginalFig4generator unrecovered; no wholearticlevisual/allcitationfresh-audit claim. No source edits, commits, quota hold, PDF or merge authority. Earlier checkpoints below are historical, not instructions to continue.
 
 ## Current disposition — Albert-requested scope extension, 2026-11-15
 C05–C08 supersede the prior notes-only exclusion and escalation hold for this continued work. Plan-v3 is complete:104 new notes, required consistency audit of all1006 main/note pairs,57 numbered known main/cross-layer correction specifications, six residual groups and canonical notes-rule update. Exact M item count is the numbered plan, not an expected change count. Original medium sizing remains appropriate; no argument or literature survey change. One supplemental final review only; unresolved issues escalate again. Original r1/r2 findings and frozen files remain unchanged. Branch and eventual PR stay the same; no PR currently found by the REST branch query.
@@ -138,3 +144,70 @@ Exact ef453a8abd3d04449e71de1d61d9d9071e16f632 unchanged. Full work report read,
 
 Supplemental r3 continuation requested for explicit UTC2026-11-15T04:21:11.459558+00:00; nextlec02–04.
 Continuation task: `notes-r3-lec02-04-a066` (pending).
+
+
+### Supplemental r3 checkpoint B — lec02–04, 2026-11-15T04:36:24.249939+00:00
+Exact ef453a8abd3d04449e71de1d61d9d9071e16f632 unchanged; state in-review, supplemental1of1 after ordinary2of2 exhausted. All32 additional changed articles, matching mains, immediate main/article-opening neighbours and targeted unchanged work-issue notes reviewed. All six lec02–04 source files byte-match git. Existing native sheets76main images and32desktop note openings inspected; cumulative42/197changed articles,99/212main images,36/197desktop note openings. Three narrow openings also inspected; whole-article metrics and formula/source checks closeF67, not a claim to have visually inspected lower formulas. F19/F66 closed; F34/F56/F68 pending.
+E103–E108 appended. UNANNOUNCED mutable draftreview-r3 now records F73 pure/approximate-DP scope and F74 invalid unrestricted DP-SGD calibration, plus optionalF75–F77. M11's missing pure-DP qualification is a planner omission, not evidence against the source; frozen plan unchanged. Workissue3 adjudicated, issues1/2/4/5/6 pending. No verdict, final pointer, work order, PR or automaticr4; unresolved blockers at completion escalate to Albert. No content edits/commits or capacityhold. Remaining155changed articles,113main images,161desktop note openings (including6lec01) and final audits. Next bounded passlec05–06 prioritizesF68/F34 and workissues1/2; no routine Albert message.
+
+Continuation task: `notes-r3-lec05-06-446a` (pending; requested explicit UTC2026-11-15T04:38:40.670616+00:00). Next bounded scopelec05–06; recovery watcher unchanged.
+
+
+### Supplemental r3 checkpoint C — lec05–06
+Exactef453a8 unchanged; statein-review, supplemental1of1 after exhausted ordinary2of2. All23changedarticles, matchingmaintext, neighbourmains/openings andchangedalt reviewed; fourfilesbyte-matchgit. Extra unchangedfullnoteslec05S14/S52/S54/S55/S57,lec06S08/S20read. Inspected46existingmainimages/23desktopnoteopenings/1narrowopening;2targetedextramainimageslec06S08/S20. Cumulative65/197changedarticles,145/212scheduledmainimages(+2extras),59/197desktopnoteopenings. Lec06S56oldcaptureleftclipnotreproducedat1100px; freshopeningcomplete. No new visualregression; inheritedlec05S03/S43/S52issuesoptional.
+F68closed; F34partial due retainedS57finite-sample=>populationcertaintydefinition. F19/F66/F67stayclosed;F56pending. Workissues1/2adjudicated: S20isSimpleQA(notPersonQA), causaltakeawayunsupported; S08exampleexistsinYang2405.03162Fig9andblog, butwrongpaperlinkedanddiscoverydelay/mechanismoverstated. DraftblockingF78–F81,optionalF82–F84; evidenceE109–E114appended. Preservegoodcertification/Hessian/quantization/retain-set/TruthfulQAcorrections. Frozenplan-v3/review-r2hashesunchanged. No source edits,commits,verdict,PR,workorder,finalpointer orcapacityhold.
+Remaining132changedarticles(28old+104new),67scheduledmainimages,138desktopnoteopenings(including6lec01),plusfinalaudits. Nextboundedpasslec07–10:24changedarticles,51mainimages,24openings; finish6lec01openingvisualsonlyifconvenient, neverrestarttheircontent. Issues4/5/6remainforlec13/14; unresolvedfinalblockersescalate, noautomaticr4. Samebranch/singleeventualPR. No routineAlbertpost.
+
+Continuation task: `notes-r3-lec07-10-7e09` (pending; requested explicit UTC `2026-11-15T04:52:04.363454+00:00`). Next bounded scope lec07–10; recovery watcher unchanged. No notification, verdict, PR or capacity hold.
+
+
+### Supplemental r3 checkpoint D — lec07–10
+Exact ef453a8 unchanged; state in-review, supplemental1of1 after exhausted ordinary2of2. All24 changed articles, matching mains, main/article-opening neighbours and changed alt text reviewed; eight files byte-match git. Extra unchanged lec09 S90 read fully. Inspected51 scheduled main images and24 desktop note openings, plus six pending lec01 opening visuals only. Targeted fresh native captures resolve old missing title/blue-label glyphs as capture artifacts; no new visual regression confirmed. Cumulative89/197 changed articles (89/93old,0/104new),196/212 scheduled main images (+2 earlier extras),89/197 desktop note openings.
+E115–E119 appended. Draft F85 blocks: Qi Table2/AppendixA.4 did optimize GCG against each evaluated model, contrary to retained lec10 S25 wording. Optional F86 corrects Ilyas transferability locator. F19/F66/F67/F68 remain closed; F34 partial, F56 pending lec12; work issues1/2/3/7 adjudicated,4/5/6 pending. UNANNOUNCED review-r3 remains mutable/incomplete, with no verdict or revision order. Frozen plan-v3/review-r2 unchanged. No source edits, commits, PR, automatic r4 or capacity hold.
+Remaining108 changed articles (4old+104new),16 scheduled main images,108 desktop note openings and final audits. Next bounded continuation: lec11–12 (four changed articles and seven scheduled main images), then lec13 S01–S27 full new notes and matching-main/source/visual checks as needed. Do not bulk-recapture or restart902/lec01–10. Leaf OUTLINE inherited incident-duration wording awaits final shared-doc reconciliation. Same branch/single eventual PR; unresolved final blockers escalate to Albert. No routine notification.
+
+
+Continuation task: `notes-r3-lec11-13a-8b10` (pending; requested explicit UTC `2026-11-15T05:08:30.391430+00:00`). Next scope lec11–12 plus lec13 S01–S27; recovery watcher unchanged. No outbound notification, verdict, PR or capacity hold.
+
+
+### Supplemental r3 checkpoint E — lec11–12 and lec13 S01–S27
+Exact ef453a8 unchanged; state in-review, supplemental1of1 after exhausted ordinary2of2. Full31 additional articles, matching mains and immediate main/article-opening neighbours reviewed; six files byte-match git. Inspected seven scheduled main images,31 desktop openings and15 extra lec13 mains. Cumulative120/197 changed articles (93/93old+27/104new),203/212 scheduled main images (+17 extras total),120/197 openings. Targeted fresh captures resolve old missing-glyph artifacts, including S26 Script checked separately; no confirmed new visual regression. No restart902/lec01–10 or bulk recapture.
+F56 closes with repaired source labels, preserved test-partition interpretation and unrecovered Fig4-generator caveat. F19/F66/F67/F68 remain closed; F34 partial. Workissue5 adjudicated: OWASP date verified, “today's main case” lecture scope, current-model resistance assertion optional F87. OptionalF88 conditional InjecAgent denominator andF89 two figure-reading details added; E120–E125 appended. No new blocking candidate this pass. Frozen plan-v3/review-r2 hashes unchanged. Draft review-r3 stays mutable/UNANNOUNCED with no verdict or work order.
+Remaining77 new articles (lec13S28–S53+lec14S01–S51), nine scheduled main images and77 openings plus final audits. Next bounded pass lec13S28–S53, matching mains/neighbours/source checks, existing26 openings and scheduled S35–S37; prioritize workissue4 CaMeL/AgentDojo and adaptive-evaluation limits. Issue6 awaitslec14. Final shared-doc audit must reconcile leafOUTLINE's inherited HF campaign/inside-duration wording with repaired S08. No source edits, commits, PR, automaticr4 or capacityhold; unresolved final blockers escalate after complete review. Same branch/single eventual PR, no routine notification.
+
+
+Continuation task: `notes-r3-lec13b-fc56` (pending; requested explicit UTC `2026-11-15T05:24:20.189415+00:00`). Next scope lec13 S28–S53; recovery watcher unchanged. No outbound notification, verdict, PR or capacity hold.
+
+
+### Supplemental r3 checkpoint F — lec13 S28–S53 complete
+Exact ef453a8 unchanged; in-review, supplemental1of1 after exhausted ordinary2of2. Full26 new articles, matching main/alt/neighbour text reviewed; both files byte-match git. Three scheduled mains,26 desktop openings and16 targeted extra mains inspected. Cumulative146/197 articles (93/93old+53/104new),206/212 scheduled mains (+33 extras),146/197 openings. Targeted fresh captures resolve primary missing-glyph artifacts; native S41f4 and S45f3 plus S30/S38/S42 Script-f2 checks complete. No CSS/source edits or confirmed new visual regression; not a full lower-article visual audit.
+Workissue4 adjudicated against direct AgentDojo/CaMeL/Nasr sources; issue6 remains. E126–E130 appended; optional F90–F92 (source attribution/section heading, subsidiary ProtectAI denominator, unsupported EchoLeak test history). No new blocker this pass; earlier draft blockers and residual F34 remain. F19/F56/F66/F67/F68 stay closed; exact historical Fig4 generator remains unrecovered. Frozen plan-v3/review-r2 hashes unchanged. Mutable review-r3 remains UNANNOUNCED and incomplete, no verdict or work order.
+Remaining51 lec14 articles, six scheduled mains,51 openings and final audits. Next bounded continuation lec14S01–S26 (including S11/S26 workissue6), then S27–S51 and final source/local-link/shared-doc/title/pacing checks. LeafOUTLINE HF campaign/inside-duration reconciliation remains pending. Same branch/single eventual PR; no automatic r4 or capacityhold. Final unresolved blockers escalate only after review completion. No routine notification.
+
+
+Continuation task: `notes-r3-lec14a-9ca4` (pending; requested explicit UTC `2026-11-15T05:40:15.233656+00:00`). Next scope lec14 S01–S26; recovery watcher unchanged. No outbound notification, verdict, PR or capacity hold.
+
+
+### Supplemental r3 checkpoint G — lec14 S01–S26 complete
+Exact target ef453a8abd3d04449e71de1d61d9d9071e16f632 unchanged; in-review, ordinary2of2 exhausted, supplemental1of1, no verdict. Full26 new articles with matching mains/alt/neighbours and S27 boundary opening reviewed. Main/note and read-only tech byte-match git. E131–E136 append direct source/math/version and visual decisions. All workissues1–7 now adjudicated: S11's explicit task-suite key is optionalF96; S26 is lecture scope; requested techp6 all-steps-right calculation does not contradict recovery caveats and remains unedited/out of scope.
+Inspected26 existing desktop openings, three scheduled mainsS05–S07 and18 extra native mainsS04/08/09/10/11/12/13/14/15/17/18/19/20/21/22/23/25/26. Cumulative172/197 full articles (93old+79new),209/212 scheduled mains (+51extras),172/197 openings. Targeted note recaptures resolve earlier glyph/cut artifacts without CSS/source edits; some alternate captures retain artifacts, not a source defect. No confirmed new visual regression; no all-lower-paragraph visual claim.
+New blocking candidateF93: Meinke's >85% follow-up summary is not the oversight-only population (Fig3≈80%). OptionalF94 source/version locators, F95 MMLU biology comparator/refusal-subject qualification, F96 chart scope. Earlier blockers and residualF34 unchanged; F19/F56/F66/F67/F68 stay closed. Preserve METR169/170 count distinction, version4 provenance, RepliBench9/20-vs10/20 discrepancy/pass@10/component-vs-chain distinction, Meinke300-caption-vs100-text discrepancy and constructed-incentive limits. Frozenplan-v3/review-r2 checksums unchanged.
+Remaining25 full newarticleslec14S27–S51, three scheduledmainsS49–S51 and25openings, then finalsource/local-link/shared-doc/title/pacing audits including leafOUTLINE L188HF campaign/inside-duration wording. Do not restart902 orlec01–13, bulkrecapture, announce draft, open PR or order automaticr4. Only after completeness can unresolved final blockers escalate to Albert. Normal bounded continuation; no providerquota/hold or routineAlbertpost.
+
+Continuation task: `notes-r3-lec14b-d42b` pending, explicit UTC `2026-11-15T05:53:04.308644+00:00` — lec14S27–S51 then finalaudits, bounded checkpoint if needed. Recovery watcher unchanged; no hold/outbound notification.
+
+
+### Supplemental r3 checkpoint H — all changed articles reviewed
+- Read all25 full new lec14 articles S27–S51, matching mains/alt and neighbours, including the S26 boundary. Both files byte-match exact ef453a8. Sources E137–E141 checked; published figures inspected directly. This completes93/93 changed old articles and104/104 new articles, not a restart of902.
+- Inspected all25 remaining desktop openings, scheduled mainsS49–S51 and20 additional native mains. Cumulative197/197 full articles,212/212 scheduled mains (+71extras),197/197 openings. Fresh targeted repaints restore missing headings/labels in several captures; some alternative captures retain glyph artifacts. No CSS/source edits or confirmed new visual regression; not whole-article visual coverage.
+- New blocking candidateF97: Prompt Infection's failure-reason breakdown is not an established all-attempt resistance rate, and self-replication superiority has a documented data-theft exception. OptionalF98–F100 clarify handcrafted/adaptive testing, a subsidiary MAST rank, and decisive-attempt denominator; F94 adds Greenblatt locators. Preserve source ambiguity rather than inventing a corrected denominator. All earlier blockers/residualF34 remain; F19/F56/F66/F67/F68 stay closed. All workissues1–7 are adjudicated.
+- Remaining ONLY finalsource/local-link/shared-doc/title/pacing and finding/coverage consolidation. Include leafOUTLINE L188 HF campaign/inside-duration wording and stalelec14 source locators. Do not bulkrecapture or rereview902. Draft remains UNANNOUNCED/no verdict; final blockers escalate to Albert after completion, no automaticr4, PR or capacityhold.
+
+
+Continuation task: `notes-r3-final-audits-a24b` pending; explicit UTC `2026-11-15T06:04:42.779888+00:00`. Scope finalaudits/consolidation ONLY; all197 articles/212 scheduled mains/197 openings complete. Recovery watcher unchanged; no quota hold, outbound notification, verdict, PR or automaticr4.
+
+
+### Supplemental final r3 — final audits complete
+- Final request/source/design/plan reconciliation completed. Review-r3 finalized with13blocking/21nonblockinggroups; source-first corrections supersede erroneous baseline/plan shorthand without editing frozenplan-v3/review-r2.
+- Count/title/pacing/local-link/changed-URL checks complete; doc lint limitations accurately distinguished from executor reports. All source files remain read-only. No new visual regression confirmed, no bulkrecapture or restart902.
+- Job escalated for Albert's decision. No automaticr4, workorder, PR or merge. One concise owner-channel escalation announced/froze finalreview (claw-slides-review message11); recoverywatcher cancelled at this terminal review state.

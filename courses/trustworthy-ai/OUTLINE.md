@@ -54,6 +54,7 @@ entry opens with a short **Message** (`p.msg`, the slide's point with its qualif
 **Reading the slide** (what the slide, plot or diagram shows), then the details under
 **Script** (script, figure, sources, minor points). Decks and notes lec01–lec14 carry stable slide IDs in
 `data-slide-id`. lec01–lec11, lec13 and lec14 use sequential `S01…SNN` (as of 2026-11-15). lec12 uses `S01–S78` with lettered splits such as `S39a/S39b`.
+The same revision corrected 84 main slides across lec01–lec14 so slide and note agree (qualifiers, scoped claims, source setups). No slide was added, removed or split. Three titles changed: lec07 S70 "One Shape, Four Faces", lec10 S06 "…Shared and Stay Online for Months", lec11 S34 "Small Full-Text Distribution Distance Limits Detection".
 Every lecture also has an optional **technical supplement** `lecNNtech.html` — see below.
 
 ## Technical supplements (optional sub-decks)

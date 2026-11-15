@@ -1,25 +1,43 @@
 job: 2026-11-15-lec01-lec12-notes
 size: medium
-deck: courses/trustworthy-ai/lec01-introduction.html through lec12-fairness.html; the 12 canonical paired -note.html files
+deck: courses/trustworthy-ai/lec01-introduction.html through lec14-agentic-threats.html; 14 canonical notes, source-backed main corrections, DESIGN_SYSTEM.md notes rule
 audience / mode / duration: existing mixed-major undergraduate course; concept-first; preserve every existing timing/core-path choice
 baseline: 99450923b41e94f10d0c557a4fc0f46b42a9c91d
 id commit: 853024d8077bc8faa290873d91019d108996d558 — independently verified ID-only; lec12 unchanged
 branch: 2026-11-15-lec01-lec12-notes
-pr: not open
+pr: not open — REST branch query 2026-11-15 returned none; retain one eventual PR, recheck before creation
 state: in-work
-round: 1 of 2
-reviewed commit: 3150ed4ae9bc70f96da43e5cc68837b38d646ef6
-last verdict: revise — review-r1.md
-current plan: plan-v2.md
-next review: round 2 of 2; unresolved blockers then escalate to Albert
-albert decisions: 2026-11-15 00:34 KST — authorized checking and revising all lec01–lec12 companion notes; brief slide message first, details second; pause if either provider reaches its five-hour limit and resume after reset; 2026-11-15 01:08 KST — C04: render slides to inspect plots and consult original papers/sources as needed during review
-last checkpoint UTC: 2026-11-14T17:42:29Z
+round: 2 of 2
+supplemental review: 0 of 1 — author-requested continuation; next work/review files r3; ordinary allowance not reset
+extension baseline: 6dc56441c8294d20e53976aa25393ea38d408d08
+extension id commit: pending — lec13/14 IDs only
+reviewed commit: 6dc56441c8294d20e53976aa25393ea38d408d08
+last verdict: revise — review-r2.md (final ordinary round; escalated)
+current plan: plan-v3.md
+next review: review-r3, one supplemental final pass for Albert-requested scope extension; unresolved blockers escalate, no automatic r4
+albert decisions: 2026-11-15 messages6/8 — extend throughlec14, correct mains as needed acrosslec01–14, update notes design rule, same branch and PR; author-requested continuation includes six open groups and one supplemental final review, not content/merge approval; 2026-11-15 00:34 KST — authorized checking and revising all lec01–lec12 companion notes; brief slide message first, details second; pause if either provider reaches its five-hour limit and resume after reset; 2026-11-15 01:08 KST — C04: render slides to inspect plots and consult original papers/sources as needed during review
+last checkpoint UTC: 2026-11-15T03:40:58.466666+00:00
 capacity hold: no
 capacity provider: none reported
 capacity reset UTC: unknown; never infer from a five-hour elapsed timer
 recovery task: lec01-12-notes-recovery-e923 — gated every 30 minutes; wakes for a due recorded hold or 90 minutes without a durable checkpoint; cancel after final approval/closure
 
-## Current disposition — first review finalized 2026-11-14T17:42:29Z
+## Current disposition — Albert-requested scope extension, 2026-11-15
+C05–C08 supersede the prior notes-only exclusion and escalation hold for this continued work. Plan-v3 is complete:104 new notes, all1006 main/note pairs checked for consistency,57 numbered known main/cross-layer correction specifications, six residual groups and canonical notes-rule update. Exact M item count is the numbered plan, not an expected change count. Original medium sizing remains appropriate; no argument or literature survey change. One supplemental final review only; unresolved issues escalate again. Original r1/r2 findings and frozen files remain unchanged. Branch and eventual PR stay the same; no PR currently found by the REST branch query.
+
+Plan-v3 is frozen on work-order handoff; state in-work. Its SHA256 is `c29408ebe6f7c3b6a62ce7ef251c28236f1ec74a386cbecc04ccca6f28f4a2db`. slides copies frozen review-r2 first and adds lec13/14 IDs in a separate ID-only commit. No capacity hold reported. Reviewer edits only own job files; no deck/notes/reference/script edits, commits or merges.
+
+
+## Historical dispositions (superseded where stated above)
+## Current disposition — final round2 completed 2026-11-14T18:14:50Z
+Exact reviewed target `6dc56441c8294d20e53976aa25393ea38d408d08`. **Verdict revise; state escalated; round2 of2 exhausted.** All112 changed articles and opening neighbours read; all23desktop+3narrow screenshots inspected; exact-tree and49local-reference/fragment checks complete. E90–E92 appended. Final `review-r2.md` reconciles every F01–F65:58/61 original blockers closed; F19/F34/F56 partially open; newF66/F67/F68 blocking. Six open groups total. Four optional items disposed; F65.4 withdrawn as reviewer error, F64 historical correction verified.
+
+Review-r2 SHA256: `2037ecb8f9ff209d982e5683600fb48199005eafe3a900c191fc687d64683d06`. Final review announced/frozen with escalation to Albert in claw-slides-review (message5) at2026-11-14T18:15:15Z; awaiting his authorization/decision. No automatic round3 or new plan/work order. No slides pointer sent yet; record copy/push can follow Albert's decision. No PR, PDF, deck/notes/reference/script edits or merge. Capacity hold no; recovery watcher unchanged. Earlier continuation task is completing this run; no new continuation scheduled because review is complete and a human decision is required.
+
+## Previous disposition — round 2 received 2026-11-14T17:56:26Z
+Exact work-r2 target `6dc56441c8294d20e53976aa25393ea38d408d08`, received 2026-11-15 02:55 KST. Final ordinary review round active. Recheck changed articles and neighbours against frozen review-r1/plan-v2 and sources; no approval yet. No capacity hold.
+
+## Previous disposition — first review finalized 2026-11-14T17:42:29Z
 First review of exact `3150ed4ae9bc70f96da43e5cc68837b38d646ef6` is **revise**. All 902 new Message/Reading layers reviewed; targeted retained/source/math/legal checks complete. `review-r1.md` has 61 blocking findings and 4 nonblocking items (F55/F57/F64/F65), C01–C04 coverage, three leading themes, exact repo-relative paths and verified article lines. F65's seven Definition 2/Eq. 2.2 locators are mapped to exact split IDs/pages.
 
 `plan-v2.md` is the incremental correction order: 61 must-specs, affected-entry map across 112 unique articles (including optional cleanup), P1–P12 ownership, all 12 work-r1 issue decisions and source-flag dispositions. No rewrite of all 902 entries; no main/tech/reference/script edits or teaching-time changes. Only changed articles and neighbours are rechecked next. One ordinary review remains; any unresolved blockers at round 2 escalate to Albert.
@@ -103,3 +121,9 @@ Exact3150ed4 unchanged. All pending targeted source/math/legal checks now have d
 Continuation requested UTC 2026-11-14T17:34:47+00:00 for final review/plan consolidation.
 
 Continuation task: `notes-review-finalize-fc51` (pending; explicit UTC2026-11-14T17:34:47+00:00).
+
+
+### Round2 checkpoint A — 2026-11-14T18:05:30Z
+Exact6dc56441c8294d20e53976aa25393ea38d408d08; final round2/2 in-review. Full changed articles and opening neighbours read throughlec04 (48/112); lec05–12 remain64. E87–89 appended; mutable UNANNOUNCED review-r2 records F19 retained contradiction, F66 audit-source attribution, F67 new narrow formula overflows and remaining checks. All12 structural/lint/browser metrics complete;8desktop+3narrow screenshots inspected,15desktop captured only. No verdict or pointer, no PR. Normal runtime continuation, capacityholdno.
+
+Round2 continuation requested for explicit UTC 2026-11-14T18:06:30+00:00. Continuation task `notes-r2-lec05-08-1a2b` is pending.

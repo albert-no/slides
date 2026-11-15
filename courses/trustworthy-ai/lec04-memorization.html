@@ -329,7 +329,7 @@
     <h3>Example canary</h3>
     <p>"My credit card number is <strong>5512&nbsp;3098&nbsp;1741&nbsp;6629</strong>."</p>
   </div>
-  <p class="muted">Unique, so any reappearance must be memorization, not chance.</p>
+  <p class="muted">Random and unique, so a match is unlikely by chance, given the queries tried.</p>
 </div>
 
 <!-- 14. Watch It Leak (SVG) -->
@@ -530,7 +530,7 @@
   <div class="facts">
     <div><div class="lbl">What happened</div><p>Nov 2023, Nasr et al. The repeat prompt made ChatGPT (gpt-3.5-turbo) <strong>diverge</strong> from chat behavior into raw training text.</p></div>
     <div><div class="lbl">How it was verified</div><p>Counted only if it matched a ~10 TB web index <strong>verbatim over 50 tokens</strong>: 10,000+ unique strings for about US&#36;200.</p></div>
-    <div><div class="lbl">Why it matters</div><p>An aligned production chatbot, no weights, no training data. Disclosed Aug 2023; the prompt was later blocked, the weights unchanged.</p></div>
+    <div><div class="lbl">Why it matters</div><p>An aligned production chatbot, no weights, no training data. Disclosed Aug 2023; the prompt was later blocked, removal not shown.</p></div>
   </div>
   <div class="cite cite-left">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023 — Fig. 5; verification and disclosure per Secs. 3 and 8.</div>
 </div>
@@ -580,7 +580,7 @@
   <p>The specific prompt was <strong>blocked</strong> after disclosure.</p>
   <div class="grid-2" style="grid-template-columns:1fr auto;gap:40px;align-items:center;">
     <div><div class="highlight"><p>Blocking one prompt is not the same as removing the memorized data.</p></div>
-    <p class="muted">Still in the weights: extrapolate the attack and the unique-string count keeps climbing.</p></div>
+    <p class="muted">The block does not establish removal. Before it, the extrapolated unique-string count kept climbing.</p></div>
     <div style="display:flex;justify-content:center;"><img src="figs/nasr-extrapolation.png" alt="Unique extracted 50-grams vs total extracted 50-grams for ChatGPT: the measured curve keeps rising and the extrapolation passes 1M unique memorized sequences" style="max-height:330px;width:auto;display:block;"></div>
   </div>
   <div class="cite cite-left">Nasr et al., "Scalable Extraction of Training Data from (Production) Language Models", 2023 — Fig. 9 (left).</div>
@@ -734,7 +734,7 @@
   <h2>The Uncomfortable Trend</h2>
   <div class="divider"></div>
   <div class="highlight"><p>The models we build are getting <strong>bigger</strong> and trained on <strong>more</strong> data.</p></div>
-  <p>Both of those push memorization the <em>wrong</em> way.</p>
+  <p>Size and repetition push memorization up; more <em>unique</em> data is a different question.</p>
 </div>
 
 <!-- ============ SECTION 04 ============ -->
@@ -819,8 +819,8 @@
     <div style="width:860px;height:252px;overflow:hidden;"><img src="figs/somepalli_histograms.png" alt="Histograms of top-1 similarity between generations and training data for diffusion models trained on 300, 3000, and all points: the small-data model has a spike near similarity 0.9-1.0" style="width:860px;display:block;"></div>
   </div>
   <ul>
-    <li>Match each generation to training data; similarity near 1 = copy</li>
-    <li>Small training sets: most generations are copies. Full set: about 1.9% near-duplicates</li>
+    <li>Score each generation against its nearest training image: a copy-detection proxy</li>
+    <li>Smallest training set here: mostly copies. Stable Diffusion vs a 12M LAION subset: 1.88% above 0.5</li>
   </ul>
   <div class="cite cite-left">Somepalli et al., "Diffusion Art or Digital Forgery?", CVPR 2023 — Fig. 5.</div>
 </div>
@@ -921,11 +921,11 @@
   <p>Remove repeats <strong>before</strong> training.</p>
   <div class="grid-2" style="gap:24px;align-items:center;">
     <img src="figs/lee-dedup-memorization.png" alt="Fraction of LM continuations matching the true continuation: on duplicated training prompts it falls from 0.4 (original data) to under 0.1 after NearDup or ExactSubstr deduplication" style="width:100%;max-width:560px;display:block;">
-    <img src="figs/lee-dedup-perplexity.png" alt="Validation perplexity for models trained on original vs deduplicated C4, LM1B and Wiki40B: deduplicated training is equal or lower everywhere" style="width:100%;max-width:560px;display:block;">
+    <img src="figs/lee-dedup-perplexity.png" alt="Validation perplexity for models trained on original vs deduplicated C4, LM1B and Wiki40B: equal or lower on the clean evaluation sets, but roughly doubled on C4 Duplicates, the validation text that overlaps training" style="width:100%;max-width:560px;display:block;">
   </div>
   <ul>
-    <li>Left: memorized continuations drop ~10$\times$ · Right: perplexity no worse</li>
-    <li>Safer <strong>and</strong> better: the cheapest win available</li>
+    <li>Left: train-dup continuations drop ~5$\times$ · Right: clean sets no worse; C4 Duplicates worse</li>
+    <li>Dedup reduced extraction here; utility effects depend on the dataset</li>
   </ul>
   <div class="cite cite-left">Lee et al., "Deduplicating Training Data Makes Language Models Better", ACL 2022 — Fig. 3 (left) and Fig. 2 (right).</div>
 </div>
@@ -992,10 +992,10 @@
   <div class="grid-2" style="grid-template-columns:1fr auto;gap:40px;align-items:center;">
     <div><div class="def-card">
       <h3>The promise</h3>
-      <p>If no single record changes the output much, no single record can be memorized.</p>
+      <p>Adding or removing one record changes the probability of any output by at most a bounded factor.</p>
     </div>
-    <p class="muted">A DP-trained model (left bar) shows no detectable memorization; its non-private siblings do.</p></div>
-    <div style="display:flex;justify-content:center;"><img src="figs/vaultgemma-memorization.png" alt="Bar chart of exact and approximate memorization rates: DP-trained Gemma 2 1B shows none, while non-private Gemma models memorize 0.01-1% of sampled sequences" style="max-height:340px;width:auto;display:block;"></div>
+    <p class="muted">Left bar, DP-trained: no memorization detected in this test; non-private Gemma models show detected rates.</p></div>
+    <div style="display:flex;justify-content:center;"><img src="figs/vaultgemma-memorization.png" alt="Bar chart of exact and approximate memorization rates: DP-trained Gemma 2 1B has none detected, while non-private Gemma models memorize 0.01-1% of sampled sequences" style="max-height:340px;width:auto;display:block;"></div>
   </div>
   <div class="cite cite-left">VaultGemma Team, Google, "VaultGemma: A Differentially Private Gemma Model", 2025 (arXiv:2510.15001) — Fig. 1.</div>
 </div>
@@ -1074,8 +1074,8 @@
     <img src="figs/cooper-kcbs-fig3.png" alt="Extraction rate versus allowed Levenshtein distance 0 to 5 for OLMo 2 7B, 13B and 32B on Wikipedia training data: greedy and k-CBS probabilistic rates both rise with epsilon, while held-out post-cutoff controls stay near zero" style="width:100%;max-width:1000px;display:block;">
   </div>
   <ul class="arrow">
-    <li>Allow $\varepsilon$ token edits: OLMo 2 32B goes from 1.4% verbatim to 2.6% at $\varepsilon = 5$</li>
-    <li>Constrained beam search (k-CBS) gives a deterministic lower bound at ~20× greedy cost</li>
+    <li>OLMo 2 32B, k-CBS: 1.4% verbatim, 2.6% at $\varepsilon = 5$ edits (greedy: ~0.6% verbatim)</li>
+    <li>k-CBS: a deterministic lower bound; budget of ~20 samples, ~10× greedy token evaluations</li>
     <li>Held-out text written after the cutoff stays near zero</li>
   </ul>
   <div class="cite cite-left">Cooper, Lemley, De Sa, Duesterwald, Casasola, Hayes, Lee, Ho, and Liang, "Estimating near-verbatim extraction risk in language models with decoding-constrained beam search", COLM 2026 — Fig. 3.</div>
@@ -1091,7 +1091,7 @@
   </div>
   <ul class="arrow">
     <li>Compare members with <strong>matched non-members</strong>: Wikipedia written after the cutoff</li>
-    <li>10-token suffixes: 7.5% vs 1.8%, so a quarter of the "hits" are noise</li>
+    <li>10-token suffixes: 7.5% members vs 1.8% non-members, a measured false-positive rate</li>
     <li>50-token suffixes: the floor is near zero</li>
   </ul>
   <div class="cite cite-left">Cooper, Swanberg, Hayes, Duesterwald, De Sa, Ho, Lemley, and Liang, "Extractable Memorization From First Principles", 2026 — Fig. 3. Cooper, "Playing Whack-a-Mole with misconceptions about memorization, extraction, and copyright", 2026.</div>
@@ -1107,9 +1107,9 @@
     <div><ul class="arrow">
       <li>Train on random bits, count how many the model retains</li>
       <li>Each size plateaus: GPT-family models store about 3.6 bits per parameter</li>
-      <li>Models memorize until capacity fills, then start generalizing</li>
+      <li>That plateau is measured on random data, where nothing generalizes</li>
     </ul>
-    <p class="muted">Memorization and generalization share one budget.</p></div>
+    <p class="muted">Separate natural-text runs: memorization gives way to generalization.</p></div>
   </div>
   <div class="cite cite-left">Morris et al., "How Much Do Language Models Memorize?", 2025 — Fig. 1.</div>
 </div>

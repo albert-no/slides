@@ -147,8 +147,8 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | Reversal curse in MDMs | `talks/kics260521dllm/kics260521dllm.html:720` |
 | Threat-model framing (knowledge × timing), trust dimensions | `courses/trustworthy-ai/lec01-introduction.html:887, :698` |
 | $(\varepsilon,\delta)$-DP intuition (undergrad) / formal | `lec02-privacy-dp.html:656` · formal in `lec02tech.html` |
-| Statistical indistinguishability (heights example, intuition) | `courses/trustworthy-ai/lec02-privacy-dp.html:802` |
-| DP-SGD intuition (clip + noise) / formal algorithm | `lec02-privacy-dp.html:1058` · formal in `lec02tech.html` |
+| Statistical indistinguishability (heights example, intuition) | `courses/trustworthy-ai/lec02-privacy-dp.html:803` |
+| DP-SGD intuition (clip + noise) / formal algorithm | `lec02-privacy-dp.html:1059` · formal in `lec02tech.html` |
 | Formal math per lecture (definitions, derivations, algorithms) | `courses/trustworthy-ai/lecNNtech.html` (15 supplements) |
 | AI governance & regulation (EU AI Act + Omnibus timeline, US EOs, Korea AI Basic Act, NIST RMF/GenAI Profile, frontier-lab safety frameworks, summits/AISIs) | `courses/trustworthy-ai/backup-governance.html` (optional backup, former Wk 15; see leaf OUTLINE §03–04) |
 

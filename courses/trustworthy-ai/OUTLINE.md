@@ -47,13 +47,13 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 13 | `lec13-prompt-injection.html` | Prompt injection: direct and indirect, agents, three incidents, why it is hard, measured defenses and CaMeL | **new 2026-10** (53 sl, 7 real figure crops, 90 min, concept-first, no activities; note 53 entries; tech 15 sl). Replaces `backup-prompt-injection.html` (deleted) |
 | 14 | `lec14-agentic-threats.html` | Emerging agentic threats: autonomy, deception and multi-agent risks; course finale | **new 2026-10** (51 sl, 5 real figure crops, 90 min, concept-first, no activities; note 51 entries; tech 14 sl). Replaces `backup-agentic-autonomy.html` (deleted); former Wk 15 governance deck → `backup-governance.html` |
 
-Every deck has a companion **speaker script** `lecNN-…-note.html` (one `<article>` per slide,
-keyed by the same `data-slide-id`). Since the 2026-11-15 notes revision (lec01–lec12) each
-entry opens with a short **Message** (`p.msg`, the slide's point in 1–2 plain sentences), then
+Every deck has a companion **instructor note** `lecNN-…-note.html` (one `<article>` per slide,
+keyed by the same `data-slide-id`), following the DESIGN_SYSTEM §9 instructor-note contract.
+Since the 2026-11-15 notes revision, all 14 lectures (lec01–lec14) use the same structure. Each
+entry opens with a short **Message** (`p.msg`, the slide's point with its qualifiers), then
 **Reading the slide** (what the slide, plot or diagram shows), then the details under
-**Script** (script, figure, sources, minor points). lec13–lec14 notes keep the older
-script + **Key takeaway** format. Decks lec01–lec11 carry stable slide IDs `S01…SNN` in
-`data-slide-id` (sequential as of 2026-11-15).
+**Script** (script, figure, sources, minor points). Decks and notes lec01–lec14 carry stable slide IDs in
+`data-slide-id`. lec01–lec11, lec13 and lec14 use sequential `S01…SNN` (as of 2026-11-15). lec12 uses `S01–S78` with lettered splits such as `S39a/S39b`.
 Every lecture also has an optional **technical supplement** `lecNNtech.html` — see below.
 
 ## Technical supplements (optional sub-decks)
@@ -653,8 +653,7 @@ file and 10 figures used only by it: `agentdojo-defenses`, `agentdojo-overview`,
 duplicate of the backup-prompt-injection and lec12 sections, and a copy of the lec11 rebuild text misplaced in the lec12
 section, were removed from this file in the same edit.
 
-**Note:** `lec13-prompt-injection-note.html` — 53 entries with minute budget and elapsed time, script, key
-takeaway; content slides add figure, setup/model/date, establishes / does not establish, assumptions and
+**Note:** `lec13-prompt-injection-note.html` — 53 entries (IDs S01–S53) with minute budget and elapsed time, Message, Reading the slide, script; content slides add figure, setup/model/date, establishes / does not establish, assumptions and
 primary-source links (23 sources). Entry 13 carries a worked toy-agent trace; entry 27 the extra incidents
 (CamoLeak, SpAIware, Sydney); entry 41 Nasr Fig. 1 and human red-teaming. Data inconsistencies in AgentDojo
 (Table 3 vs 5) and CaMeL (Table 4 vs §6.2.1) are flagged on slides 40 and 45 and in their entries.
@@ -712,7 +711,7 @@ only by it (`coinrun-misgeneralization`); the reference check found no other lin
 `log/`. Built to the slides-review brief (#150). The former Wk 15 governance deck, note and tech file moved to
 `backup-governance*` in the same PR; `lec01-introduction-note.html` pointers to "Lecture 15" updated.
 
-**Note:** `lec14-agentic-threats-note.html` — 51 entries with minute budget and elapsed time, script, key takeaway;
+**Note:** `lec14-agentic-threats-note.html` — 51 entries (IDs S01–S51) with minute budget and elapsed time, Message, Reading the slide, script;
 content slides add figure, setup/model/date, establishes / does not establish, assumptions and primary-source links
 (15 sources). Source inconsistencies are flagged in the entries: Meinke rollouts (Table 2 caption 300 vs text 100),
 RepliBench 9/20 vs 10/20, Cemri Fig. 2 vs Fig. 4 splits, Kwa 169 vs 170 tasks.

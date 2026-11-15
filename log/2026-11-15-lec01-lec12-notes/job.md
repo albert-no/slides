@@ -6,21 +6,32 @@ baseline: 99450923b41e94f10d0c557a4fc0f46b42a9c91d
 id commit: 853024d8077bc8faa290873d91019d108996d558 — independently verified ID-only; lec12 unchanged
 branch: 2026-11-15-lec01-lec12-notes
 pr: not open — REST branch query 2026-11-15 returned none; retain one eventual PR, recheck before creation
-state: in-work
+state: approved
 round: 2 of 2
-supplemental review: prior 1 of 1 complete; C09 authorizes one additional work-r4/review-r4, not yet received; ordinary allowance not reset
+supplemental review: prior 1 of 1 complete; C09 work-r4/review-r4 complete (one of one), approved; no automatic r5
 extension baseline: 6dc56441c8294d20e53976aa25393ea38d408d08
 extension id commit: 594ebea1203aabe3b3edc56443b37dd29950e411 — independently verified ID-only,208 added attributes in four files
-reviewed commit: ef453a8abd3d04449e71de1d61d9d9071e16f632 — final review-r3, verdict revise
-last verdict: revise — frozen review-r3.md; Albert authorized correction continuation, not content approval
+reviewed commit: 76f128ab2e1e19dd3b0b6322ca837b7846d43c2c — final review-r4 approved; content34560174949042026df17e5fddf26b4cdeff52b4
+last verdict: approved — final review-r4.md; 0 blocking, F102–F104 nonblocking precision notes
 current plan: plan-v4.md
-next review: review-r4 only — C09 authorizes one additional bounded pass; no automatic r5
+next review: none scheduled; await log-only final push, verify every post-review commit and open single PR
 albert decisions: 2026-11-15 15:24 KST message8 “go ahead” (C09) — continue after r3 escalation under plan-v4, same branch/single eventual PR, one additional pass; no approval or merge; 2026-11-15 messages6/8 — extend throughlec14, correct mains as needed acrosslec01–14, update notes design rule, same branch and PR; author-requested continuation includes six open groups and one supplemental final review, not content/merge approval; 2026-11-15 00:34 KST — authorized checking and revising all lec01–lec12 companion notes; brief slide message first, details second; pause if either provider reaches its five-hour limit and resume after reset; 2026-11-15 01:08 KST — C04: render slides to inspect plots and consult original papers/sources as needed during review
-last checkpoint UTC: 2026-11-15T06:31:57.646313+00:00
+last checkpoint UTC: 2026-11-15T07:10:23.698511+00:00
 capacity hold: no
 capacity provider: none reported
 capacity reset UTC: unknown; never infer from a five-hour elapsed timer
-recovery task: lec01-12-notes-recovery-e923 remains cancelled; await exact work-r4 pointer, no reported quota hold
+recovery task: lec01-12-notes-recovery-e923 remains cancelled; no capacity hold or continuation task needed
+
+## Current disposition — r4 approved, final log push pending
+All54 changed articles fully read, matching main/alt/neighbours checked;80 scheduled main images,54 note openings,21 selected detail/narrow views and five main repaints inspected. All13 blocking groups closed; F102–F104 are nonblocking precision notes, not a work order. Exact target76f128ab2e1e19dd3b0b6322ca837b7846d43c2c; full review final in review-r4.md, SHA256`bf57bc6482fcd89d206343ab49574450d72b3fae48e6e53db113e3e3a4598fd5`. E150–E153 appended.1006orderedpairs preserved;32canonical/sharedfiles exact;390localrefs resolve;4addedexternallinksHTTP200;19HTMLlintnoerrors;inheriteddoc/environmentwarnings accurately retained. Onlylec06S08retitle,paired; counts/order/pacing unchanged. No new visual regression, no all-paragraph/all-citation audit claim.
+
+Approval is pinned to this SHA. Next: slides copies finalreview and refresheslivingrecords, pusheslog-only and suppliesexacthead. Verify every post-reviewedcommit onlytoucheslog/2026-11-15-lec01-lec12-notes/, copiedhashes andremotehead; queryexistingPR; openonePRagainstmain. No PR yet; no mergeorder. Noautomaticr5/contenteditsunderthisapproval, providerhold, recoverytaskorPDF. Historicalcheckpointsbelowaresupersededwhereinconsistent.
+
+## Current checkpoint A — r4 review in progress
+24/54changedarticlesfullyreadthroughlec06, matchingmains/alt/neighbouropenings;50/80scheduledmains+24/54openings+12lower-detail/narrowimagesinspected. Allremainingimagescapturednotinspected.19HTMLlintnoerrors,baseline-equivalentwarnings;1006orderedpairsand28exactfilesverified. FreshAbadi/Yangsourcechecksandcounterexamplecalculationcomplete,E147–E149. Mutableunannouncedreview-r4.md recordsprovisionaldispositions andlocalprecisionquestions (DP posterior-odds slack, source sigma multiplier, unlearning evidence wording); nofinalfindingseverityorverdict. Remaining30articleslec08/10/13/14 plus30mains/30openings,links/shared-doc/title/pacing/finalconsolidation. Noquota hold; normalboundedcontinuation, noautomaticr5.
+
+## Current review — work-r4 received, 2026-11-15
+Exact target `76f128ab2e1e19dd3b0b6322ca837b7846d43c2c`, from slides message10 at15:50 KST. Incremental baseline `ef453a8abd3d04449e71de1d61d9d9071e16f632`; content commit `34560174949042026df17e5fddf26b4cdeff52b4`. Full work-r4 read: reports13 blockers and21 nonblockers fixed,31 main slides plus note/detail corrections; same-claim F74 repetition added lec02S54. No approval yet. Review only changed entries/neighbours with source/render/structure checks; no broad restart. State in-review; one C09 additional review, no automaticr5. No actual quota hold.
 
 ## Current disposition — C09 additional correction pass, 2026-11-15
 Albert's direct “go ahead” at15:24 KST authorizes one additional work-r4/review-r4 after r3 escalation. Plan-v4 completes the bounded order for13 blockers over22 distinct main/note pairs, plus necessary outline synchronization;21 nonblocking groups retain that status. Preserve completed1,006-entry work and the notes design rule. Samebranch/single eventualPR, no content approval or merge authority. Incremental baseline is exactef453a8abd3d04449e71de1d61d9d9071e16f632.

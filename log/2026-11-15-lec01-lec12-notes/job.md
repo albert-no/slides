@@ -16,7 +16,7 @@ last verdict: revise — frozen review-r3.md; Albert authorized correction conti
 current plan: plan-v4.md
 next review: review-r4 only — C09 authorizes one additional bounded pass; no automatic r5
 albert decisions: 2026-11-15 15:24 KST message8 “go ahead” (C09) — continue after r3 escalation under plan-v4, same branch/single eventual PR, one additional pass; no approval or merge; 2026-11-15 messages6/8 — extend throughlec14, correct mains as needed acrosslec01–14, update notes design rule, same branch and PR; author-requested continuation includes six open groups and one supplemental final review, not content/merge approval; 2026-11-15 00:34 KST — authorized checking and revising all lec01–lec12 companion notes; brief slide message first, details second; pause if either provider reaches its five-hour limit and resume after reset; 2026-11-15 01:08 KST — C04: render slides to inspect plots and consult original papers/sources as needed during review
-last checkpoint UTC: 2026-11-15T06:31:00.594119+00:00
+last checkpoint UTC: 2026-11-15T06:31:57.646313+00:00
 capacity hold: no
 capacity provider: none reported
 capacity reset UTC: unknown; never infer from a five-hour elapsed timer
@@ -26,6 +26,8 @@ recovery task: lec01-12-notes-recovery-e923 remains cancelled; await exact work-
 Albert's direct “go ahead” at15:24 KST authorizes one additional work-r4/review-r4 after r3 escalation. Plan-v4 completes the bounded order for13 blockers over22 distinct main/note pairs, plus necessary outline synchronization;21 nonblocking groups retain that status. Preserve completed1,006-entry work and the notes design rule. Samebranch/single eventualPR, no content approval or merge authority. Incremental baseline is exactef453a8abd3d04449e71de1d61d9d9071e16f632.
 
 Plan-v4 SHA256 `d7ea62b3f312736b2198a5183beb57a9833d30f058aca85aa4b1aef066b5162f`. Frozen review-r3 hash independently rechecked unchanged: `bcc3ac9b61f73ec14eb7227b2eac0f909f9cde08e1d2111a65a25bef078a1d80`. No new research claim or evidence entry; sources are the existing E100–E146 findings and source register. F74 chooses the bounded heuristic repair, not a new theorem project; F73 explicitly corrects the planner's omitted pure-DP condition. Slides owns implementation and tracked copies. Work-order handoff freezes plan-v4 and sets in-work; review-r3 is already frozen and must be copied unchanged. Review-r4 only, changed entries and neighbours, then escalate remaining blockers rather than automaticr5. No actual quota hold, scheduled recovery or PDF.
+
+Pointers for frozen review-r3.md and plan-v4.md delivered to slides in message9 at 2026-11-15T06:31:57.646313+00:00. Plan-v4 is now frozen; awaiting exact pushed work-r4 pointer. Path/ID/count and prior frozen-hash checks passed before handoff.
 
 ## Previous review — supplemental final r3 COMPLETE
 Exact reviewed commit `ef453a8abd3d04449e71de1d61d9d9071e16f632`. Final `review-r3.md` verdict **revise**; state **escalated** after exhausted ordinary2of2 and supplemental1of1. Final SHA256 `bcc3ac9b61f73ec14eb7227b2eac0f909f9cde08e1d2111a65a25bef078a1d80`; frozen by escalation announcement to Albert in claw-slides-review, message11 on2026-11-15. No new plan, implementation order, automaticr4 or PR. Albert must decide any further correction pass on the same branch/single eventual PR.

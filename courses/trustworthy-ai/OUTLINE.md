@@ -47,8 +47,14 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 13 | `lec13-prompt-injection.html` | Prompt injection: direct and indirect, agents, three incidents, why it is hard, measured defenses and CaMeL | **new 2026-10** (53 sl, 7 real figure crops, 90 min, concept-first, no activities; note 53 entries; tech 15 sl). Replaces `backup-prompt-injection.html` (deleted) |
 | 14 | `lec14-agentic-threats.html` | Emerging agentic threats: autonomy, deception and multi-agent risks; course finale | **new 2026-10** (51 sl, 5 real figure crops, 90 min, concept-first, no activities; note 51 entries; tech 14 sl). Replaces `backup-agentic-autonomy.html` (deleted); former Wk 15 governance deck → `backup-governance.html` |
 
-Every deck has a companion **speaker script** `lecNN-…-note.html` (one entry per slide:
-title + 1–2 sentence script + **Key takeaway**). Scripts also exist for lec 1–2.
+Every deck has a companion **instructor note** `lecNN-…-note.html` (one `<article>` per slide,
+keyed by the same `data-slide-id`), following the DESIGN_SYSTEM §9 instructor-note contract.
+Since the 2026-11-15 notes revision, all 14 lectures (lec01–lec14) use the same structure. Each
+entry opens with a short **Message** (`p.msg`, the slide's point with its qualifiers), then
+**Reading the slide** (what the slide, plot or diagram shows), then the details under
+**Script** (script, figure, sources, minor points). Decks and notes lec01–lec14 carry stable slide IDs in
+`data-slide-id`. lec01–lec11, lec13 and lec14 use sequential `S01…SNN` (as of 2026-11-15). lec12 uses `S01–S78` with lettered splits such as `S39a/S39b`.
+The same revision corrected 84 main slides across lec01–lec14 so slide and note agree (qualifiers, scoped claims, source setups). No slide was added, removed or split. Three titles changed: lec07 S70 "One Shape, Four Faces", lec10 S06 "…Shared and Stay Online for Months", lec11 S34 "Small Full-Text Distribution Distance Limits Detection". A follow-up accuracy pass on the same date (job round 4) corrected 31 further main slides in lec01–lec06, lec08, lec13 and lec14 (DP δ qualifiers, evaluation scopes, source locators, label placement); again no slide was added, removed or split, and one title changed: lec06 S08 "A Fluent Medical Term Was Wrong".
 Every lecture also has an optional **technical supplement** `lecNNtech.html` — see below.
 
 ## Technical supplements (optional sub-decks)
@@ -179,7 +185,7 @@ robocall FCC orders 2024 · Arup deepfake, HK police Feb 2024 · Bartz v. Anthro
 Cal. 2025 (settlement final approval 20 Jul 2026) · Brynjolfsson, Chandar & Chen, "Canaries" 2025–26 · Regulation (EU) 2024/1689 as amended by
 Regulation (EU) 2026/1744 (Digital Omnibus; high-risk → Dec 2027 / Aug 2028) · Korea AI Basic Act (eff. 2026-01-22).
 
-**2026-era facts (re-verified 2026-09-13 against primary sources; note carries as-of dates):** July 2026 OpenAI/Hugging Face incident `:503`–`:549` — 4 Jul Artifactory compromise → rebuilt 6 Jul → re-entry 8 Jul via WebDAV; 9–13 Jul 4.5-day forensic window inside HF (~17,600 actions, 4 exposed third-party accounts); HF disclosed 16 Jul, OpenAI attributed 21 Jul (slide 24 chronology corrected: the bypassed fix was OpenAI's, not HF's); scheming arXiv 2603.01608 v2 (59%/3% from model organisms; realistic settings minimal) `:551`; Charlotin figures recomputed from the CSV export of 2026-09-12 (2,039 decisions; 1,111 in 2026; ≈$320k across 30 US decisions in Q1 2026 — replaces 1,598 / $145k / 15) `:352`; Korea AI Basic Act eff. 22 Jan 2026, fines ≤ KRW 30M with ≥1-year grace `:670`; EU high-risk dates deferred by the Digital Omnibus (in force 27 Jul 2026) `:670`; Canaries rev. 12 Aug 2026 (data through Jun 2026; gap ≈19%, was ≈13% in Aug 2025) `:656`; Bartz settlement final approval 20 Jul 2026 `:626`. Refresh Charlotin and Canaries before each term.
+**2026-era facts (re-verified 2026-09-13 against primary sources; note carries as-of dates):** July 2026 OpenAI/Hugging Face incident `:503`–`:549` — 4 Jul Artifactory compromise → rebuilt 6 Jul → re-entry 8 Jul via WebDAV; 9–13 Jul 4.5-day reconstructed campaign, including external staging; roughly 2.5 days inside HF (~17,600 actions across the campaign, 4 exposed third-party accounts); HF disclosed 16 Jul, OpenAI attributed 21 Jul (slide 24 chronology corrected: the bypassed fix was OpenAI's, not HF's); scheming arXiv 2603.01608 v2 (59%/3% from model organisms; realistic settings minimal) `:551`; Charlotin figures recomputed from the CSV export of 2026-09-12 (2,039 decisions; 1,111 in 2026; ≈$320k across 30 US decisions in Q1 2026 — replaces 1,598 / $145k / 15) `:352`; Korea AI Basic Act eff. 22 Jan 2026, fines ≤ KRW 30M with ≥1-year grace `:670`; EU high-risk dates deferred by the Digital Omnibus (in force 27 Jul 2026) `:670`; Canaries rev. 12 Aug 2026 (data through Jun 2026; gap ≈19%, was ≈13% in Aug 2025) `:656`; Bartz settlement final approval 20 Jul 2026 `:626`. Refresh Charlotin and Canaries before each term.
 
 **Key framing:** threat model = *who* / *what they know* (white/black-box) / *what they
 can do* (train/inference-time); "a safety number describes a deployment, not a model"
@@ -648,8 +654,7 @@ file and 10 figures used only by it: `agentdojo-defenses`, `agentdojo-overview`,
 duplicate of the backup-prompt-injection and lec12 sections, and a copy of the lec11 rebuild text misplaced in the lec12
 section, were removed from this file in the same edit.
 
-**Note:** `lec13-prompt-injection-note.html` — 53 entries with minute budget and elapsed time, script, key
-takeaway; content slides add figure, setup/model/date, establishes / does not establish, assumptions and
+**Note:** `lec13-prompt-injection-note.html` — 53 entries (IDs S01–S53) with minute budget and elapsed time, Message, Reading the slide, script; content slides add figure, setup/model/date, establishes / does not establish, assumptions and
 primary-source links (23 sources). Entry 13 carries a worked toy-agent trace; entry 27 the extra incidents
 (CamoLeak, SpAIware, Sydney); entry 41 Nasr Fig. 1 and human red-teaming. Data inconsistencies in AgentDojo
 (Table 3 vs 5) and CaMeL (Table 4 vs §6.2.1) are flagged on slides 40 and 45 and in their entries.
@@ -687,11 +692,11 @@ checks it?". Governance only in context; full treatment in `backup-governance.ht
 | **06 — Synthesis** | 46–51 | `:806` | established vs not `:814` · course checklist `:836` · open problems `:852` · takeaways `:866` · closer "Who checks it?" `:880` |
 
 **Key citations on slides (checked against saved papers, 2026-10-10):** Shevlane et al. arXiv 2305.15324 (Table 1);
-Kwa et al. (METR) arXiv 2503.14499 (Fig. 1, §2–§4, §7); Black et al. RepliBench arXiv 2504.18565v2 (Fig. 1, §5.1, §6);
+Kwa et al. (METR) arXiv 2503.14499 v4 (Fig. 1, §2–§3, §3.2.1, §5–6, App. B.2/E.3–E.4; 207-day doubling, o3); Black et al. RepliBench arXiv 2504.18565v2 (Fig. 1, §5.1, §6);
 Meinke et al. (Apollo) arXiv 2412.04984v2 (Tables 1, 2, 4, 6, §3.6); van der Weij et al. ICLR 2025 (Table 1, Fig. 5);
 Hammond et al. arXiv 2502.14143 (Fig. 1); Cemri et al. MAST, NeurIPS 2025 D&amp;B (Fig. 1, §5–§6); Lee &amp; Tiwari
-Prompt Infection arXiv 2410.07283v1, preprint (§3–§6, Fig. 6); Motwani et al. arXiv 2402.07510v5 (Table 3);
-Greenblatt et al. AI Control, ICML 2024 (Figs. 1–2, Table 2, §2–§3, §6); Ge-Wang, Crosse et al. arXiv 2606.06529v1
+Prompt Infection arXiv 2410.07283v1, preprint (§3–§6, Figs. 4–6); Motwani et al. arXiv 2402.07510v5 (Table 3);
+Greenblatt et al. AI Control, ICML 2024 (Figs. 1–2, Tables 2 and 7, §2–§3, §2.4 no split, §5.1 limitations); Ge-Wang, Crosse et al. arXiv 2606.06529v1
 (Table 2, §4.4, App. A); Terekhov et al. arXiv 2510.09462v2. Notes only: Lynch et al. (agentic misalignment), METR
 modelling-assumptions note (20 Mar 2026), Cohen et al. Morris-II, Terekhov Defer-to-Resample; goal misgeneralisation
 as a notes cross-reference only.
@@ -707,7 +712,7 @@ only by it (`coinrun-misgeneralization`); the reference check found no other lin
 `log/`. Built to the slides-review brief (#150). The former Wk 15 governance deck, note and tech file moved to
 `backup-governance*` in the same PR; `lec01-introduction-note.html` pointers to "Lecture 15" updated.
 
-**Note:** `lec14-agentic-threats-note.html` — 51 entries with minute budget and elapsed time, script, key takeaway;
+**Note:** `lec14-agentic-threats-note.html` — 51 entries (IDs S01–S51) with minute budget and elapsed time, Message, Reading the slide, script;
 content slides add figure, setup/model/date, establishes / does not establish, assumptions and primary-source links
 (15 sources). Source inconsistencies are flagged in the entries: Meinke rollouts (Table 2 caption 300 vs text 100),
 RepliBench 9/20 vs 10/20, Cemri Fig. 2 vs Fig. 4 splits, Kwa 169 vs 170 tasks.

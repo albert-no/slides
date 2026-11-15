@@ -48,7 +48,7 @@ When reading the figure is the task, it gets the whole slide, a takeaway title, 
 
 **Citations (DS §6).** Venue author order, one line per citation, `Author et al., Venue YYYY — Figure N.` for figures. How a source was handled (cropped, redrawn, truncated) goes in the cite line. Sections are named by their exact heading.
 
-**Companions (DS §9).** Anything moved off a slide must land in `<deck>-note.html` (one article per slide) or `<deck>tech.html`. The plan says which.
+**Companions (DS §9).** Anything moved off a slide must land in `<deck>-note.html` (one article per slide) or `<deck>tech.html`. The plan says which. Note articles follow the DS §9 instructor-note contract: message, then explanation, then details and sources. Accept a note article when every layer agrees with its slide and source.
 
 **Continuity (DS §10).** Check the leaf `OUTLINE.md` for what earlier decks defined. For each prerequisite, decide explicitly: reuse via a Recall card, adapt, or defer. Don't redefine.
 

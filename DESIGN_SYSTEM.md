@@ -22,10 +22,10 @@ Normative authoring rules for slide decks. Academic conference talks and master-
 | 6 | Conventions | Page numbers, citations | 268–295 | `offset=268, limit=28` |
 | 7 | Patterns | Markup for a slide type → copy the exemplar | 297–344 | `offset=297, limit=48` |
 | 8 | Visual richness | Figures, diagrams, TODO-marks; figure size, labels, chart keys, crops | 346–416 | `offset=346, limit=71` |
-| 9 | Companion decks | Note files, technical supplements | 418–433 | `offset=418, limit=16` |
-| 10 | Outlines | OUTLINE.md read/write rules | 435–455 | `offset=435, limit=21` |
-| 11 | No-toolchain fallback | Chrome / poppler / python3 all missing | 457–474 | `offset=457, limit=18` |
-| 12 | Extension checklist | Adding a new component | 476–478 | `offset=476, limit=3` |
+| 9 | Companion decks | Note files, technical supplements | 418–440 | `offset=418, limit=23` |
+| 10 | Outlines | OUTLINE.md read/write rules | 442–462 | `offset=442, limit=21` |
+| 11 | No-toolchain fallback | Chrome / poppler / python3 all missing | 464–481 | `offset=464, limit=18` |
+| 12 | Extension checklist | Adding a new component | 483–485 | `offset=483, limit=3` |
 
 <!-- doc-index:end -->
 
@@ -421,7 +421,14 @@ Applies to every figure whose labels the audience must read — captured paper f
 
 > **Migration check.** Whenever you trim slide detail on the grounds that "it belongs in the note", open the paired `-note.html` in the **same edit** and confirm it's there or move it in. Trimming on the assumption it was already covered silently destroys content.
 
-*Speaker-script variant*: one `<article>` per slide, `<h2>` = slide title, 1–2 sentences of what to say, a `Key takeaway:` line (blue `.kt` span). ≤~50 words each. A reading companion, not a transcript.
+**Instructor-note contract** (lecture notes). Each article is ordered for a quick read:
+1. **Message.** A short, specific statement of the slide's point, in a `.msg` paragraph with a blue `.kt` label. It carries the assumptions and distinctions the claim depends on. A qualifier must never disappear from the short version.
+2. **Explanation.** Enough for the lecturer to understand and teach the slide without reconstructing the paper. For a plot, name the axes, the encodings, the comparison being made and its limits.
+3. **Details.** Sources with precise citations and figure provenance, secondary points, derivations, and optional speaking cues. The cues stay subordinate: the note is not a transcript.
+
+Do not add a repeated `Key takeaway:` line, and do not cap the whole article at a word count. Notes may be long and scroll; the main-slide density rules (§1) don't apply to them. Structural entries (title, divider, recap) may be brief. Skip any template section that would only be filler.
+
+Consistency holds across **every layer**: message, explanation, details, the slide's title, body, key and alt text, and the cited source. A correction lands in all of them. If IDs are assigned, matching `data-slide-id` values pair each article with its slide. Math must render legibly, and links must be valid. At a narrow (~430px) viewport, no article may overflow horizontally: break long display math into steps and move conditions into prose. Never shrink to fit.
 
 **Technical supplements** (`<deck>tech.html`) — for a concept-first course (§5 audience modes). Main deck stays concept-first with at most **one glanceable formula per concept**; the supplement holds the formal version. Established across `courses/trustworthy-ai/`.
 

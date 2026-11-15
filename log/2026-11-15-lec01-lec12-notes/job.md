@@ -6,24 +6,28 @@ baseline: 99450923b41e94f10d0c557a4fc0f46b42a9c91d
 id commit: 853024d8077bc8faa290873d91019d108996d558 — independently verified ID-only; lec12 unchanged
 branch: 2026-11-15-lec01-lec12-notes
 pr: not open — REST branch query 2026-11-15 returned none; retain one eventual PR, recheck before creation
-state: in-work
+state: in-review
 round: 2 of 2
-supplemental review: 0 of 1 — author-requested continuation; next work/review files r3; ordinary allowance not reset
+supplemental review: 1 of 1 — author-requested continuation; next work/review files r3; ordinary allowance not reset
 extension baseline: 6dc56441c8294d20e53976aa25393ea38d408d08
-extension id commit: pending — lec13/14 IDs only
-reviewed commit: 6dc56441c8294d20e53976aa25393ea38d408d08
+extension id commit: 594ebea1203aabe3b3edc56443b37dd29950e411 — independently verified ID-only,208 added attributes in four files
+reviewed commit: ef453a8abd3d04449e71de1d61d9d9071e16f632 — in review, no verdict
 last verdict: revise — review-r2.md (final ordinary round; escalated)
 current plan: plan-v3.md
 next review: review-r3, one supplemental final pass for Albert-requested scope extension; unresolved blockers escalate, no automatic r4
 albert decisions: 2026-11-15 messages6/8 — extend throughlec14, correct mains as needed acrosslec01–14, update notes design rule, same branch and PR; author-requested continuation includes six open groups and one supplemental final review, not content/merge approval; 2026-11-15 00:34 KST — authorized checking and revising all lec01–lec12 companion notes; brief slide message first, details second; pause if either provider reaches its five-hour limit and resume after reset; 2026-11-15 01:08 KST — C04: render slides to inspect plots and consult original papers/sources as needed during review
-last checkpoint UTC: 2026-11-15T03:40:58.466666+00:00
+last checkpoint UTC: 2026-11-15T04:19:43.261754+00:00
 capacity hold: no
 capacity provider: none reported
 capacity reset UTC: unknown; never infer from a five-hour elapsed timer
 recovery task: lec01-12-notes-recovery-e923 — gated every 30 minutes; wakes for a due recorded hold or 90 minutes without a durable checkpoint; cancel after final approval/closure
 
+## Current review — supplemental final r3 received, 2026-11-15
+Exact work pointer `ef453a8abd3d04449e71de1d61d9d9071e16f632`, work-r3 read. One supplemental final review now active; no approval, no automatic fourth round. Reported84 changed mains and104 new notes plus older note corrections; independent inventory, ID-only verification, all changed/neighbor visual checks and source/content review in progress. Plan issues and inherited render defects are not accepted or dismissed yet. Snapshot/archive only; original902 note review not restarted. No capacity limit reported.
+
+
 ## Current disposition — Albert-requested scope extension, 2026-11-15
-C05–C08 supersede the prior notes-only exclusion and escalation hold for this continued work. Plan-v3 is complete:104 new notes, all1006 main/note pairs checked for consistency,57 numbered known main/cross-layer correction specifications, six residual groups and canonical notes-rule update. Exact M item count is the numbered plan, not an expected change count. Original medium sizing remains appropriate; no argument or literature survey change. One supplemental final review only; unresolved issues escalate again. Original r1/r2 findings and frozen files remain unchanged. Branch and eventual PR stay the same; no PR currently found by the REST branch query.
+C05–C08 supersede the prior notes-only exclusion and escalation hold for this continued work. Plan-v3 is complete:104 new notes, required consistency audit of all1006 main/note pairs,57 numbered known main/cross-layer correction specifications, six residual groups and canonical notes-rule update. Exact M item count is the numbered plan, not an expected change count. Original medium sizing remains appropriate; no argument or literature survey change. One supplemental final review only; unresolved issues escalate again. Original r1/r2 findings and frozen files remain unchanged. Branch and eventual PR stay the same; no PR currently found by the REST branch query.
 
 Plan-v3 is frozen on work-order handoff; state in-work. Its SHA256 is `c29408ebe6f7c3b6a62ce7ef251c28236f1ec74a386cbecc04ccca6f28f4a2db`. slides copies frozen review-r2 first and adds lec13/14 IDs in a separate ID-only commit. No capacity hold reported. Reviewer edits only own job files; no deck/notes/reference/script edits, commits or merges.
 
@@ -127,3 +131,10 @@ Continuation task: `notes-review-finalize-fc51` (pending; explicit UTC2026-11-14
 Exact6dc56441c8294d20e53976aa25393ea38d408d08; final round2/2 in-review. Full changed articles and opening neighbours read throughlec04 (48/112); lec05–12 remain64. E87–89 appended; mutable UNANNOUNCED review-r2 records F19 retained contradiction, F66 audit-source attribution, F67 new narrow formula overflows and remaining checks. All12 structural/lint/browser metrics complete;8desktop+3narrow screenshots inspected,15desktop captured only. No verdict or pointer, no PR. Normal runtime continuation, capacityholdno.
 
 Round2 continuation requested for explicit UTC 2026-11-14T18:06:30+00:00. Continuation task `notes-r2-lec05-08-1a2b` is pending.
+
+
+### Supplemental r3 checkpoint A — lec01 and global QA
+Exact ef453a8abd3d04449e71de1d61d9d9071e16f632 unchanged. Full work report read, ID-only594ebea verified, structural diff84 main/197note changes. Ten of93 changed lec01–12 articles read fully, matching main text and neighbour openings; all23 lec01 main captures and four note openings visually inspected. All14 note files independently lint clean, all28deck/note browser metrics checked; no new/worsened note overflow. Remaining189main captures/193note openings are captured only. E99–E102 appended; mutable UNANNOUNCED review-r3 draft records F69/F70 factual candidates and optional F71/F72, no verdict. Workissue7 course count resolved; issues1–6, six residual groups, remaining83 old+104new note articles and final audits pending. No original902-entry restart. No capacity hold; normal bounded-turn continuation. Same branch and eventual PR; no implementation order or automaticr4.
+
+Supplemental r3 continuation requested for explicit UTC2026-11-15T04:21:11.459558+00:00; nextlec02–04.
+Continuation task: `notes-r3-lec02-04-a066` (pending).

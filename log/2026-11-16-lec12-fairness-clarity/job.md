@@ -6,8 +6,8 @@ baseline: 6f5088cdfc7877ea7965b972df91c8447562b5f4
 id commit: existing stable IDs; no ID-only commit needed
 branch: 2026-11-16-lec12-fairness-clarity
 pr: not open
-state: in-work
-round: 1 of 2
+state: approved
+round: 2 of 2
 albert decisions:
 - 2026-11-16, message 10 in claw-slides-review: revise lec12 and accompanying notes against all comments; open PR. No merge or PDF authorized.
 
@@ -36,3 +36,10 @@ Baseline local HEAD and GitHub main independently agree at the SHA above on 2026
 - Round 1 verdict: revise (review-r1.md). Seven localized findings F01–F07: rate numerators, impossibility scope, calibrated equalized-odds method, BBQ attribution/zero-score qualifications, balanced-accuracy label, and pre-existing S38 narrow-note table overflow.
 - E19–E22 appended. Work-r1's approximate plot readings and timing adjustments accepted. Plan-v1 argument/scope unchanged; review-r1 is the round-2 work order.
 - State in-work on review-r1 handoff; round remains 1 of 2 until work-r2 arrives. Next review is final normal round; no PR/content approval/merge authorization.
+
+## Review round 2
+- Work pointer received 2026-11-16 16:41 KST. Exact review target: 4be105b2f1765f493a615b659fc853b73044a75e. State in-review, round 2 of 2; targeted check of F01–F07, changes and neighbours.
+
+- Round 2 verdict: approved in review-r2.md, pinned to 4be105b2f1765f493a615b659fc853b73044a75e. F01–F07 closed; 87 main/notes, 90 minutes, tech unchanged.
+- Independent targeted render pp71–73 and desktop/430px notes checks pass; narrow document client/scroll width both415px. Additional code-wrapping fix accepted.
+- Await slides copying review-r2 and refreshing/pushing the living record. Verify every post-approved commit is job-log-only before opening PR against main. No merge authorization.

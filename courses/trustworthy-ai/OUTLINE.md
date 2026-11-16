@@ -43,7 +43,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 9 | `lec09-poisoning.html` | Data poisoning & backdoors | **rebuilt 2026-10**, motivation revision 2026-10-25 (91 sl, 90 min, concept-first, no activities; note 91 entries). Blocks: integrity 3–14 · who poisons 15–18 · poisoning 19–32 · backdoors 33–47 · web-scale data 48–57 · language models 58–75 (in the wild 68–71) · defenses 76–91 |
 | 10 | `lec10-jailbreak.html` | Jailbreaks: safety training, fragility, search, budget, evaluation & defenses, self-assessment monitoring | **rebuilt 2026-10**, Albert feedback round 2026-11-02 (88 sl, 90 min, concept-first, no activities; note 88 entries; tech 21 sl). Blocks: what safety training adds 3–13 (motivation 4–6, Wei example 7, safety and refusal 9–10) · fragility 14–30 · search 31–41 · attack budget 42–59 (test-time scaling 43–45, in-context learning 47) · evaluation & defenses 60–76 · self-assessment 77–85 · wrap-up 86–88 |
 | 11 | `lec11-synthetic-media.html` | Synthetic media: text watermarks, robustness, detection without a watermark, provenance (C2PA) & labelling law | **new 2026-10** (74 sl after Albert r1 2026-11, 16 cited image files + 5 tables/figures redrawn, 90 min, concept-first, no activities; note 74 entries; tech 14 sl). Former Wk 11 prompt injection → rebuilt as Wk 13; former Wk 12 watermark deck replaced |
-| 12 | `lec12-fairness.html` | Fairness: where bias enters, criteria, COMPAS and impossibility, mitigation, audits beyond classifiers | **new 2026-10; visual revision 2026-11** (80 sl, 26 cited figure crops + 1 published generated image + 1 CC0 photo, 90 min, concept-first, no activities; note 80 entries; tech 23 sl; stable slide IDs S01–S78 in `data-slide-id`, splits lettered; plot-interpretation revision 2026-11-13). Merges the former Wk 13–14 fairness decks → `backup-fairness-defs.html`, `backup-fairness-mitigation.html` |
+| 12 | `lec12-fairness.html` | Fairness: where bias enters, criteria, COMPAS and impossibility, mitigation, audits beyond classifiers | **new 2026-10; visual revision 2026-11** (87 sl, 26 cited figure crops, 90 min, concept-first, no activities; note 87 entries; tech 23 sl; stable slide IDs S01–S84 in `data-slide-id`, splits lettered; plot-interpretation revision 2026-11-13; clarity revision 2026-11-16). Merges the former Wk 13–14 fairness decks → `backup-fairness-defs.html`, `backup-fairness-mitigation.html` |
 | 13 | `lec13-prompt-injection.html` | Prompt injection: direct and indirect, agents, three incidents, why it is hard, measured defenses and CaMeL | **new 2026-10** (53 sl, 7 real figure crops, 90 min, concept-first, no activities; note 53 entries; tech 15 sl). Replaces `backup-prompt-injection.html` (deleted) |
 | 14 | `lec14-agentic-threats.html` | Emerging agentic threats: autonomy, deception and multi-agent risks; course finale | **new 2026-10** (51 sl, 5 real figure crops, 90 min, concept-first, no activities; note 51 entries; tech 14 sl). Replaces `backup-agentic-autonomy.html` (deleted); former Wk 15 governance deck → `backup-governance.html` |
 
@@ -53,7 +53,7 @@ Since the 2026-11-15 notes revision, all 14 lectures (lec01–lec14) use the sam
 entry opens with a short **Message** (`p.msg`, the slide's point with its qualifiers), then
 **Reading the slide** (what the slide, plot or diagram shows), then the details under
 **Script** (script, figure, sources, minor points). Decks and notes lec01–lec14 carry stable slide IDs in
-`data-slide-id`. lec01–lec11, lec13 and lec14 use sequential `S01…SNN` (as of 2026-11-15). lec12 uses `S01–S78` with lettered splits such as `S39a/S39b`.
+`data-slide-id`. lec01–lec11, lec13 and lec14 use sequential `S01…SNN` (as of 2026-11-15). lec12 uses `S01–S84` (S04, S12, S77 retired) with lettered splits such as `S39a/S39b`.
 The same revision corrected 84 main slides across lec01–lec14 so slide and note agree (qualifiers, scoped claims, source setups). No slide was added, removed or split. Three titles changed: lec07 S70 "One Shape, Four Faces", lec10 S06 "…Shared and Stay Online for Months", lec11 S34 "Small Full-Text Distribution Distance Limits Detection". A follow-up accuracy pass on the same date (job round 4) corrected 31 further main slides in lec01–lec06, lec08, lec13 and lec14 (DP δ qualifiers, evaluation scopes, source locators, label placement); again no slide was added, removed or split, and one title changed: lec06 S08 "A Fluent Medical Term Was Wrong".
 Every lecture also has an optional **technical supplement** `lecNNtech.html` — see below.
 
@@ -533,9 +533,9 @@ text / applies from / who / form / exceptions / enforcement). Entry 37 carries t
 ## lec12-fairness.html
 
 **Topic:** Fairness (90 min; mixed-major sophomores/juniors; concept-first, light math, no proofs on the
-slides; **no activities**). Where bias enters (opens with the Obermeyer cost-as-proxy case; sampling, labels, feedback;
-Gender Shades benchmark composition; why dropping the protected attribute fails). Measuring fairness: four rates and
-their denominators, demographic parity, equalized odds (Hardt ROC plane), calibration within groups vs predictive
+slides; **no activities**). Where bias enters (opens with a lending decision, Bianchi occupation images and "correlation is not a fairness verdict", then the Obermeyer cost-as-proxy case; sampling, labels, feedback;
+Gender Shades benchmark composition; why dropping the protected attribute fails). Measuring fairness: whom to compare, selected = approved, four rates and
+their denominators with a summary table, demographic parity, equal opportunity and equalized odds each with a one-line summary and a comparison table, Hardt ROC plane, calibration within groups vs predictive
 parity, five criteria on the same FICO data. COMPAS: ProPublica vs Northpointe as different criteria, rearrest
 ≠ offending, base rates, Chouldechova identity, Kleinberg et al. conditions, a calibrated worked example with
 unequal errors, choosing by context. Mitigation at three points (reweighing, reductions, group thresholds), each
@@ -543,19 +543,19 @@ measured result shown with criterion, population, utility and assumptions; an em
 optimal frontier; method cards. Beyond classifiers: Gender Shades and the Actionable Auditing follow-up, BBQ,
 Bianchi text-to-image stereotypes; governance obligations and limits (~3.5 min). Math in `lec12tech.html`.
 
-### Sections (80 slides, 90 min: where bias enters 10 · measuring 20 · COMPAS + impossibility 15 · mitigation 20 · beyond classifiers 15 · synthesis 10)
+### Sections (87 slides, 90 min: where bias enters 10 · measuring 25 · COMPAS + impossibility 15 · mitigation 20 · beyond classifiers 13 · synthesis 7)
 
-Slide IDs (`data-slide-id`, note `<article data-slide-id>`) are stable across revisions; splits carry letters (S13a–d), new slides S74–S78 (S77: opening photo; S78: published CEO image; 2026-11-13).
+Slide IDs (`data-slide-id`, note `<article data-slide-id>`) are stable across revisions; splits carry letters (S13a–d), new slides take the next free number (S74–S78 2026-11-13; S79–S84 2026-11-16). Retired: S04 (→ S04a/b), S12 (→ S12a/b), S77 (opening photo, removed 2026-11-16).
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:30`, `:42` | |
-| **01 — Where Bias Enters** | 3–13 | `:74` | who is most important? (S77, CC0 photo) `:82` · CEO prompt, published DALL-E 3 image (S78) `:98` · who gets the opportunity (S74) `:126` · Obermeyer cost proxy (Fig. 1a crop) `:163` · past records shape decisions `:180` · three places `:211` · benchmark composition (Gender Shades) `:260` · proxy label `:292` · missing outcomes `:322` · dropping a column `:354` |
-| **02 — Measuring Fairness** | 14–31 | `:395` | one decision, two outcomes `:422` · four rates as counts (S13a–d) `:433`–`:463` · demographic parity `:473` · equal opportunity `:484` · equalized odds `:495` · Hardt Fig. 1 (S17a/b) `:506`, `:524` · calibration `:541`, `:552`, `:562` · population compared `:572`, `:582` · Hardt Fig. 9 FICO cutoffs (S21a/b: parity rows, error-rate rows) `:609`, `:629` |
-| **03 — COMPAS and Impossibility** | 32–47 | `:650` | what COMPAS scores do, audit flag 5–10 (S23a/b) `:671`, `:705` · FPR by group `:746` · FPR gap at zero priors (Fig. 2(b)) `:774` · Chouldechova Fig. 1(a) decile 6 / 1(b) cutoff 4 (S26a/b) `:791`, `:807` · different denominators `:823` · rearrest ≠ offending `:857` · base rates `:890` · three equalities `:1031` · Kleinberg conditions `:1063` · calibrated worked example (S32a/b, S33) `:1096`, `:1245`, `:1289` · choose the harm `:1319` |
-| **04 — Mitigation** | 48–65 | `:1357` | three places `:1385` · reweighing `:1418`, `:1480` · AIF360 Fig. 4 SPD / DI (S39a/b) `:1527`, `:1546` · reductions loop and mixture (S40a/b, S75) `:1565`, `:1597`, `:1631` · Agarwal Fig. 1 Adult / COMPAS `:1683`, `:1702` · group thresholds `:1721` · FICO profit (S43a/b) `:1739`, `:1758` · AIF360 Fig. 5 method key (S76) `:1788` · AIF360 DI before/after (S44a/b) `:1817`, `:1834` · method summary `:1852` |
-| **05 — Beyond Classifiers** | 66–75 | `:1877` | Gender Shades Table 4 (SVG) `:1899` · re-audit `:1909` · BBQ examples (S49a/b) `:1919`, `:1939` · BBQ bias score `:1959`, `:1983` · Bianchi Fig. 3 (S51a/b) `:1992`, `:2003` · governance (NYC rules example) `:2029` |
-| **06 — Synthesis** | 76–80 | `:2048` | care case: label (S54a) `:2056` · fix (S54b) `:2094` · decision, denominator, tradeoff `:2110` · closer "Which rate?" `:2124` |
+| **01 — Where Bias Enters** | 3–14 | `:74` | who gets the opportunity (S74) `:82` · occupation prompts, Bianchi Fig. 3 (S51a) `:119` · correlation is not a fairness verdict (S78, SVG) `:144` · Obermeyer Fig. 1A crop (S04a) `:170` · lower spending understates need (S04b) `:188` · past records shape decisions `:222` · three places `:253` · face benchmark composition and task (Gender Shades) `:302` · proxy label `:336` · missing outcomes `:366` · dropping a column `:398` |
+| **02 — Measuring Fairness** | 15–36 | `:439` | whom to compare (S20a) `:477` · selected = approved (S12a) `:487` · denied applicants' missing outcomes (S12b) `:497` · four rates as counts (S13a–d) `:508`–`:538` · four-rate summary table (S79) `:548` · demographic parity `:562` · equal opportunity `:573` · equalized odds `:584` · three-rule comparison table (S80) `:596` · Hardt Fig. 1 (S17a/b) `:610`, `:629` · calibration `:647`, `:659`, `:669` · precision averages the approved mix (S81) `:679` · same score vs same decision `:690` · Hardt Fig. 9 FICO cutoffs (S21a/b; "most profitable equalized-odds" explained) `:717`, `:737` |
+| **03 — COMPAS and Impossibility** | 37–53 | `:758` | what COMPAS scores do, audit flag 5–10 (S23a/b) `:779`, `:813` · FPR by group `:854` · FPR gap at zero priors (Fig. 2(b)) `:882` · Chouldechova Fig. 1(a) / 1(b) (S26a/b) `:899`, `:915` · different denominators, Northpointe `:931` · rearrest ≠ offending `:966` · base rate = recorded rearrest share `:999` · rates linked, not ranked `:1141` · Kleinberg conditions `:1179` · calibrated worked example (S32a/b, S33) `:1212`, `:1361`, `:1454` · equal base rates permit all three (S82) `:1405` · choose the harm `:1484` |
+| **04 — Mitigation** | 54–73 | `:1522` | three places `:1550` · reweighing `:1583`, `:1645` · AIF360 Fig. 4 SPD / DI (S39a/b) `:1692`, `:1711` · reductions loop and mixture (S40a/b, S75) `:1737`, `:1772`, `:1802` · same-direction gaps cannot cancel (S83) `:1855` · reduction protocol (S84) `:1898` · Agarwal Fig. 1 Adult / COMPAS `:1936`, `:1957` · group thresholds `:1978` · FICO profit (S43a/b) `:1996`, `:2016` · AIF360 Fig. 5 nine alternatives (S76) `:2046` · AIF360 DI before/after (S44a/b) `:2075`, `:2093` · a biased label stays biased `:2112` |
+| **05 — Beyond Classifiers** | 74–82 | `:2138` | Gender Shades Table 4 (SVG) `:2160` · re-audit `:2170` · BBQ ambiguous / disambiguated examples (S49a/b) `:2189`, `:2210` · BBQ bias score `:2230`, `:2264` · CLIP developer images (S51b) `:2274` · governance (NYC rules example) `:2302` |
+| **06 — Synthesis** | 83–87 | `:2321` | care case: label (S54a) `:2329` · fix (S54b) `:2368` · decision, denominator, tradeoff `:2384` · closer "Which rate?" `:2398` |
 
 **Key citations (checked against saved PDFs / pages, 2026-10-10):** Obermeyer et al. Science 2019; Buolamwini
 &amp; Gebru FAT* 2018 (Table 4); Raji &amp; Buolamwini AIES 2019; Dwork et al. ITCS 2012; Hardt, Price &amp; Srebro
@@ -566,18 +566,16 @@ Northpointe 2016; Kamiran &amp; Calders KAIS 2012; Bellamy et al. AIF360 2018 (F
 NYC DCWP rules, NY State Comptroller audit (Dec 2025), Reg. (EU) 2024/1689 and 2026/1744, Colorado SB26-189, Korea
 AI Basic Act.
 
-**Figures (28 image files: 26 cited figure crops + 1 published generated image + 1 CC0 photo):** In `figs/lec12-plot-interpretation/` (2026-11, crops of Hardt Fig. 9 left panel and of Chouldechova Figs. 1(a), 1(b), 2(b) plot panels, coordinates in `crops.sh`): `hardt-fig9-raw-profit-single.png` `:614` · `hardt-fig9-raw-demography.png` `:619` · `hardt-fig9-raw-opp-odds.png` `:633` · `hardt-fig9-raw-axis.png` `:638` · `s77-group-photo.jpg` `:86` (Wikimedia Commons, CC0; provenance in the S77 note) · `s78-wan-chang-ceo.jpg` `:102` (Wan &amp; Chang ACL 2025 Fig. 1 CEO panel, DALL-E 3; extraction in the S78 note) · `chouldechova-fig2b-panel.png` `:779` · `chouldechova-fig1a-panel.png` `:795` · `chouldechova-fig1b-panel.png` `:811` (SVG `<image>` with tick labels set as slide text). In `figs/lec12-visual-motivation/` (2026-11): `p1-obermeyer-fig1a.png` `:167` · `p2-hardt-fig1-eqodds.png`
-`:510` · `p2-hardt-fig1-eqopp.png` `:528` ·
-`p4-aif360-fig4a-spd.png` `:1532` · `p4-aif360-fig4c-di.png` `:1551` ·
-`p4-reductions-adult.png` `:1688` · `p4-reductions-compas.png` `:1707` ·
-`p4-hardt-eo-panel.png` `:1726` · `p4-hardt-fico-profit.png` `:1743` · `p4-aif360-di-before.png` `:1822` ·
-`p4-aif360-di-after.png` `:1839` · five `p56-bbq-*` example crops `:1924`–`:1949` · `p56-bbq-fig3-scores.png` `:1986` ·
-`p56-bianchi-fig3-rows1-2.png` `:1996` · `p56-bianchi-fig3-row6.png` `:1997`. Gender Shades (S47) is an SVG redrawn from
-Table 4. Computed diagrams are inline SVG from `criteria_examples.py`, `calibrated_errors.py`, `reweighing.py`,
-`reductions_mix.py`, `p56_plot_values_audits.py` (same folder). The 2026-10 crops (`hardt-eqodds-roc.png`,
+**Figures (26 cited figure crops):** In `figs/lec12-plot-interpretation/` (2026-11, crops of Hardt Fig. 9 left panel and of Chouldechova Figs. 1(a), 1(b), 2(b) plot panels, coordinates in `crops.sh`): `hardt-fig9-raw-profit-single.png` `:722` · `hardt-fig9-raw-demography.png` `:727` · `hardt-fig9-raw-opp-odds.png` `:741` · `hardt-fig9-raw-axis.png` `:746` · `chouldechova-fig2b-panel.png` `:887` · `chouldechova-fig1a-panel.png` `:903` · `chouldechova-fig1b-panel.png` `:919` (SVG `<image>` with tick labels set as slide text). In `figs/lec12-visual-motivation/` (2026-11): `p56-bianchi-fig3-rows1-2.png` `:123` · `p56-bianchi-fig3-row6.png` `:124` · `p1-obermeyer-fig1a.png` `:174` · `p2-hardt-fig1-eqodds.png` `:614` · `p2-hardt-fig1-eqopp.png` `:633` ·
+`p4-aif360-fig4a-spd.png` `:1697` · `p4-aif360-fig4c-di.png` `:1716` ·
+`p4-reductions-adult.png` `:1941` · `p4-reductions-compas.png` `:1962` ·
+`p4-hardt-eo-panel.png` `:1983` · `p4-hardt-fico-profit.png` `:2001` · `p4-aif360-di-before.png` `:2080` ·
+`p4-aif360-di-after.png` `:2098` · five `p56-bbq-*` example crops `:2194`–`:2220` · `p56-bbq-fig3-scores.png` `:2267`. Gender Shades (S47) is an SVG redrawn from
+Table 4. Computed diagrams are inline SVG from `criteria_examples.py` (S79, S80, S14–S16 exhibits), `calibrated_errors.py`, `reweighing.py`,
+`reductions_mix.py`, `p56_plot_values_audits.py` (all in `figs/lec12-visual-motivation/`). The 2026-10 crops (`hardt-eqodds-roc.png`,
 `hardt-fico-thresholds.png`, `chouldechova-deciles.png`, `chouldechova-calib-pp.png`, `reductions-*.png`,
 `hardt-eo-threshold.png`, `hardt-fico-profit.png`, `aif360-di-panel.png`, `reweighing-aif360.png`, `bbq-*-hi.png`, `bianchi-occupations.png`)
-are no longer on lec12 slides and stay in `figs/` for the backups; `figs/lec12-visual-motivation/p2-hardt-fig9-raw.png` is replaced by the row crops (2026-11-13) and kept in place.
+are no longer on lec12 slides and stay in `figs/` for the backups; `figs/lec12-visual-motivation/p2-hardt-fig9-raw.png` is replaced by the row crops (2026-11-13) and kept in place; `s77-group-photo.jpg` and `s78-wan-chang-ceo.jpg` left the slides on 2026-11-16 and stay in `figs/lec12-plot-interpretation/`.
 
 **2026-11 visual revision** (job `2026-11-10-lec12-visual-motivation`, record in `log/`): larger diagram labels,
 rebuilt arrows, motivating lending example (S74) and worked counts, original-figure crops, splits (S13a–d, S17a/b,
@@ -586,6 +584,8 @@ to 23 pages.
 
 **2026-11-13 plot interpretation** (job `2026-11-13-lec12-plot-interpretation`, record in `log/`): Hardt Fig. 9 split into row crops over two slides (S21a parity, S21b error-rate rules, segment rule explained); COMPAS setup split (S23a score → decision → outcome, S23b audit flag 5–10); axis keys and outlined readings on Chouldechova Fig. 2(b) (zero priors), Fig. 1(a) (decile 6) and Fig. 1(b) (cutoff 4). Opening photo slide S77 after S03 (plan-v2 P0; S04 and S05 scripts shortened to keep section 01 at 10 min); S01 note scoped to the quantitative comparisons. 76 → 79 slides; note renumbered, section budgets unchanged. Round 2 (review-r1, plan-v3): S78 after S77, a published CEO image (Wan &amp; Chang ACL 2025 Fig. 1, DALL-E 3, prompt "Generate a picture of one CEO."; published example, not a new run), S06/S08/S09 at 0.75 min to keep section 01 at 10 min; S21b scoped to the profit-optimal equalized-odds rule; S25/S26a/S26b rebuilt figure-first from plot-panel crops with tick labels set as slide text. 79 → 80 slides.
 
+**2026-11-16 clarity revision** (job `2026-11-16-lec12-fairness-clarity`, record in `log/`): answers Albert's C01–C25 on slides and in notes. Opening is now lending (S74) → occupation images (S51a) → correlation vs fairness verdict (S78) → care case split into figure and mechanism (S04a/b); S77 photo and the CEO image removed. Section 02 rebuilt: whom to compare (S20a) first, selected = approved and missing outcomes (S12a/b), four-rate table (S79), one-line rule summaries and a comparison table (S80), precision vs approved mix (S81). New S82 (equal base rates permit all three), S83 (same-direction gaps cannot cancel), S84 (reduction protocol). 80 → 87 slides; section minutes 10/25/15/20/13/7.
+
 **2026-10 rebuild:** merges the former Wk 13 and Wk 14 fairness decks, moved unchanged (with notes and tech files)
 to `backup-fairness-defs*.html` and `backup-fairness-mitigation*.html`. Built to the slides-review decisions (#134):
 Amazon, adversarial debiasing, Gemini, Tamkin and Wilson &amp; Caliskan only in the notes; EO 14319 cut from the deck;
@@ -593,7 +593,7 @@ governance ≈ 3 min; Dwork and Kusner formal in the tech supplement and notes. 
 rules in the deck with formulas in notes/tech, scoped COMPAS and figure readings, enlarged figures, governance dates
 checked 10 Oct 2026; Wilson &amp; Caliskan removed.
 
-**Note:** `lec12-fairness-note.html` — 80 entries (one per slide ID) with minute budget and elapsed time, script, key takeaway;
+**Note:** `lec12-fairness-note.html` — 87 entries (one per slide ID) with minute budget and elapsed time, script, key takeaway;
 content slides add figure, setup/date, establishes / does not establish, assumptions and primary-source links
 (28 sources). "Going further" blocks hold the notes-only material (Dwork/Kusner, Zhang, Amazon, Tamkin, Eloundou,
 Gemini, EO 14319).

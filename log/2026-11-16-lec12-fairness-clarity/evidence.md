@@ -121,3 +121,28 @@ Append-only. Verified 2026-11-16 against primary texts except entries explicitly
 - s_DIS=2(n_stereotype/n_nonunknown)−1; s_AMB=(1−accuracy)s_DIS, reported ×100. Compute within the appropriate condition, not by borrowing the disambiguated panel's numeric score for the ambiguous panel. Handle all-Unknown as zero ambiguous bias; other undefined ratios explicitly.
 - Limit: scores describe directional response patterns, not real-world harm rates or interchangeable scales. Zero directional bias does not establish accuracy.
 - Label: published definitions and example.
+
+## E19 — Calibrated equalized-odds is a relaxation, not the same LP
+- Sources: Pleiss, Raghavan, Wu, Kleinberg and Weinberger, “On Fairness and Calibration”, NeurIPS 2017, arXiv 1709.02012v2, https://arxiv.org/pdf/1709.02012v2, §3 Definition 1, §4, Eq. (3), Algorithm 1, Theorem 1; Bellamy E16 §8.2; AIF360 official documentation https://aif360.readthedocs.io/en/stable/modules/generated/aif360.algorithms.postprocessing.CalibratedEqOddsPostprocessing.html (0.6.1, read 2026-11-16).
+- Pleiss's construction replaces randomly chosen scores in the lower-cost group by that group's base rate. Under its feasibility/calibration assumptions, this preserves calibration and equalizes one chosen cost built from generalized false-positive/false-negative errors. These generalized quantities use scores, not thresholded predictions. This is not simply Hardt's equalized-odds label-flipping LP with calibrated input.
+- Limit: do not promise simultaneous equality of both thresholded FPR and FNR while preserving calibration. The calibrated relaxation does not generally provide that. AIF360's cost choices are fpr, fnr, weighted; its short introductory wording must not override the underlying paper's distinctions.
+- Label: published method; corrects the over-compressed S76 note in work-r1, not the nine-alternative inventory in E16.
+
+## E20 — Work-r1's approximate plot readings accepted
+- Sources: Agarwal E13 official PDF Fig. 1, page 8, top-row Adult and COMPAS panels; Bellamy E16 arXiv v1 Fig. 5(b), page 9. Primary PDF pages independently rendered and inspected 2026-11-16.
+- Adult: the gold envelope's error changes roughly from 0.15 to 0.16–0.17 as violation approaches zero. “Roughly one percentage point” is a coarse visual reading, not an exact reported estimate. COMPAS: left end of the gold envelope is near 0.02 violation and its error changes little relative to the uncertainty band.
+- AIF360 reweighing: before DI around 0.5, after around 0.9, with balanced accuracy around 0.745. Approximation signs are necessary; these are visual readings of LR/RF points, not exact tabulated measurements. Use the name **balanced accuracy**, not unqualified accuracy.
+- Limit: curves are measured tradeoffs, not certified optimal test frontiers; the AIF360 marks are separate methods, not a sequence. Retain the differing outcomes/groups, splits and uncertainty definitions from E13/E16.
+- Label: our approximate readings of published figures, not new experiments. No generated figure or generator required.
+
+## E21 — The three summary-table rules are not the later impossibility triple
+- Sources: Hardt E07 Definitions 2.1–2.2 and demographic-parity definition; Chouldechova E10 Eq. (2.6).
+- Counterexample: let the decision approve each person with probability 1/2 independently of group and outcome. Selection rate, TPR and FPR are all 1/2 in every group, even with unequal nondegenerate base rates. Demographic parity, equal opportunity and equalized odds therefore hold together. PPV instead equals each group's base rate.
+- Section 03's cutoff identity adds equal PPV to equal FPR/FNR, with the stated nondegeneracy conditions. The separate score-balance theorem is also not a theorem that the three rows of S80 cannot coexist.
+- Label: our elementary calculation from published definitions; no empirical claim. S80 note must not point to Section 03 as proving incompatibility of its three rows.
+
+## E22 — BBQ: unsupported answers and zero scores require separate qualifications
+- Source: Parrish E18, Figure 1, §3 and §5, https://aclanthology.org/2022.findings-acl.165.pdf.
+- An ambiguous item's named answer is unsupported by the supplied evidence. One such answer alone does not establish that religious identity caused it; the benchmark measures systematic stereotype-aligned answer patterns across controlled items.
+- Under the all-Unknown ambiguous-score convention already stated in E18 and S50a, zero can mean either balanced non-Unknown answer directions or no non-Unknown answers. It does not universally mean balanced non-Unknown answers, and it does not by itself establish accuracy. Do not change the disambiguated all-Unknown undefined-score qualification.
+- Label: source-grounded interpretation plus elementary boundary calculation; not an additional model finding.

@@ -7,7 +7,7 @@ id commit: existing stable IDs; no ID-only commit needed
 branch: 2026-11-16-lec12-fairness-clarity
 pr: not open
 state: in-work
-round: 0 of 2
+round: 1 of 2
 albert decisions:
 - 2026-11-16, message 10 in claw-slides-review: revise lec12 and accompanying notes against all comments; open PR. No merge or PDF authorized.
 
@@ -29,3 +29,10 @@ Baseline local HEAD and GitHub main independently agree at the SHA above on 2026
 - Frozen plan SHA256: 703c064488d36acd3db3e0c7cc8c96c417142c7c426d23f18c8a7c757a98b816
 - Next: slides builds/pushes this job branch and returns work-r1.md plus exact commit; no content approval yet.
 - 2026-11-16 16:06 KST: slides acknowledged matching plan-v1 SHA256 and reports the job branch created from baseline 6f5088c, with P1–P5 running in parallel. Await work-r1 and exact pushed commit; state remains in-work, round 0 of 2.
+
+## Review round 1
+- Work pointer received 2026-11-16 16:23 KST. Exact review target: f6c0205ff9ebff33b52e205c87765ba3a3a674e8. State in-review, round 1 of 2.
+
+- Round 1 verdict: revise (review-r1.md). Seven localized findings F01–F07: rate numerators, impossibility scope, calibrated equalized-odds method, BBQ attribution/zero-score qualifications, balanced-accuracy label, and pre-existing S38 narrow-note table overflow.
+- E19–E22 appended. Work-r1's approximate plot readings and timing adjustments accepted. Plan-v1 argument/scope unchanged; review-r1 is the round-2 work order.
+- State in-work on review-r1 handoff; round remains 1 of 2 until work-r2 arrives. Next review is final normal round; no PR/content approval/merge authorization.

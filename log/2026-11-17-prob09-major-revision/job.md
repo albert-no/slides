@@ -7,13 +7,13 @@ id commit: c47b198f8e8d0153fee6923ce2dafe8b13f4fe77
 setup wrapper commit: 08e7f8638176cebdfcf0702fe92021df8337a4d2
 branch: 2026-11-17-prob09-major-revision (created from baseline; planning record head 7e07e81235f89357f7546343186bd8f461a8e0f2)
 pr: none
-state: in-work
+state: approved
 round: 3 of 3
-reviewed content candidate: 79b3163b79487e35b4b46963cee232b231f50941
+reviewed content candidate: 839fdc4708624a9838804f2f45a6ef5fb87be52a
 current plan: plan-v2.md (complete stage-4 work order; 85 slide targets, 150 minutes, five packages plus integration)
-current action: review-r2 revise; narrow final round-3 work order: F01 synthesis capacity, F09 clipped note math, F15 generic rare-event qualifiers/alt text; F16 nonblocking reference cleanup; no PR
+current action: review-r3 approved at 839fdc4708624a9838804f2f45a6ef5fb87be52a; awaiting slides final review/living-record copy and push, then owner log-only-tail verification and PR; no merge authorization
 setup decision: work-r0 at 7e07e81235f89357f7546343186bd8f461a8e0f2 accepted; mechanical note wrappers, then joint attribute-only ID commit; Markdown untouched during setup; details in plan-v2
-validation: round-2 candidate has 86 paired unique IDs; all changed slide renders and neighbours checked; 430px mobile scale fixed and S94 repaired, but math clipping remains under new overflow rule; deck/HTML lint and Markdown ERROR checks pass; reviewed source candidate 79b3163; 150-minute pacing unchanged
+validation: all findings closed; 86 paired unique IDs; changed slides and neighbours rendered; S109a divider/capacity restored; true-mobile430 and narrow/full desktop note checks pass with no clipped math; deck/HTML lint and Markdown ERROR checks pass; 150-minute pacing unchanged
 albert decisions:
 - 2026-11-17: requested a major revision of prob09 slides and notes after a content, continuity and redundancy audit against prob01-prob08.
 - 2026-11-17 12:27 KST: Albert said “go ahead” in response to the scope/outline proposal; stages 1-3 and proposed pacing approved. Full build plan being completed; no merge authorization.

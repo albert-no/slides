@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Deep Learning Math 9 — Monte Carlo &amp; Importance Sampling · Notes</title>
 <link rel="stylesheet" href="../../../reference/colors_and_type.css">
 <link rel="stylesheet" href="../../../reference/katex/katex.min.css">
@@ -18,6 +19,7 @@
   code { background: var(--light); padding: 1px 6px; border-radius: 4px; font-size: 0.92em; }
   strong { color: var(--yonsei-blue); font-weight: 600; }
   .deriv { background: var(--light); border-left: 3px solid var(--yonsei-blue); padding: 12px 18px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+  .katex-display { overflow-x: auto; overflow-y: hidden; }
   table { border-collapse: collapse; margin: 14px 0; }
   th, td { border: 1px solid var(--slate); padding: 6px 12px; font-size: 0.95rem; text-align: left; }
   th { background: var(--light); color: var(--yonsei-blue); font-weight: 600; }
@@ -62,7 +64,7 @@
 <article data-slide-id="S02">
 <h2>2. Contents</h2>
 <p class="msg"><span class="kt">Message.</span> Six decisions organize the lecture.</p>
-<p>Part 01 builds the ordinary Monte Carlo estimator and separates what it targets from how far one run can land from it. Part 02 changes the sampling distribution and corrects with importance weights. Part 03 asks when such a proposal helps and when it can make the error infinite. Part 04 removes the need to know the target's normalizing constant, at the price of a small bias. Part 05 moves from estimating a number to estimating a gradient, along a sampling path or through the score. Part 06 applies the same ratio and gradient tools when the data were collected under a different policy.</p>
+<p>Part 01 builds the ordinary Monte Carlo estimator and separates what it targets from how far one run can land from it. Part 02 changes the sampling distribution and corrects with importance weights. Part 03 asks when such a proposal helps and when it can make the error infinite. Part 04 removes the need to know the target's normalizing constant, with possible finite-sample bias. Part 05 moves from estimating a number to estimating a gradient, along a sampling path or through the score. Part 06 applies the same ratio and gradient tools when the data were collected under a different policy.</p>
 <p class="pace">Pacing cue: two 75-minute blocks with the break after Part 03.</p>
 </article>
 
@@ -104,7 +106,7 @@
 </article>
 
 <article data-slide-id="S26">
-<h2>6. Six Draws Give a Noisy Estimate</h2>
+<h2>6. Six Points Illustrate the Recipe</h2>
 <p class="msg"><span class="kt">Message.</span> With six points the recipe gives a number, but nothing yet about how close it is.</p>
 <p>The figure shows the square $[-1,1]^2$ with the unit disk inside it. Four points sit inside the disk (filled blue) and two outside (hollow grey). Take $X$ uniform on the square and $f(X) = 4 \cdot \mathbf 1\{X \text{ in disk}\}$. The disk covers $\pi/4$ of the square, so $\mu = 4 \cdot \pi/4 = \pi$. Four hits out of six give $\hat\mu_6 = 4 \cdot 4/6 = 8/3 \approx 2.67$.</p>
 <p>The six points are hand-chosen to show the recipe. They are not a random run, and one estimate of $8/3$ against a true $\pi$ says nothing about how often the recipe is that far off. That needs the distribution of the estimator, which comes next.</p>
@@ -220,7 +222,7 @@
 <p><strong>Rescaling.</strong> $W_i \in [0,1]$ and $\bar W_n - \mathbb E W_1 = (\bar Y_n - \mu)/(b - a)$, so the event $|\bar Y_n - \mu| \ge \epsilon$ is the event $|\bar W_n - \mathbb E W_1| \ge \epsilon/(b-a)$.</p>
 <p><strong>Inverting for $n$.</strong> Set $2\exp(-2n\epsilon^2/(b-a)^2) \le \delta$:</p>
 <div class="deriv">$$n \ge \frac{(b-a)^2 \ln(2/\delta)}{2\epsilon^2}.$$</div>
-<p>Darts: $(b-a)^2 = 16$, $\ln 40 = 3.688879$, so $n \ge 295{,}110.36$, rounded up to $295{,}111$. At that $n$ the bound equals $0.05$.</p>
+<p>Darts: $(b-a)^2 = 16$, $\ln 40 = 3.688879$, so $n \ge 295{,}110.36$, rounded up to $295{,}111$. At that $n$ the bound is at most $0.05$.</p>
 <p><strong>Comparison.</strong> Chebyshev with the known variance needed $539{,}354$ (slide 11), about $1.83$ times as many. Both are sufficient sample sizes from upper bounds, not minimal ones, and neither says how a particular run behaves. For scale, the RMSE at $n = 295{,}111$ is about $0.0030$.</p>
 <p><strong>Edge case.</strong> If $Y$ is constant, $a = b$ is not allowed, but no bound is needed: $\bar Y_n = \mu$ exactly.</p>
 <p><strong>Fixed versus data-selected $f$.</strong> The bound holds for one $f$ chosen before sampling. If $f$ is picked among many candidates using the same sample, the bound no longer applies to the picked one.</p>
@@ -261,19 +263,17 @@
 
 <article data-slide-id="S116">
 <h2>15. Rare Events Need Relative Error</h2>
-<p class="msg"><span class="kt">Message.</span> For a rare event the absolute error is small, but the error relative to the answer is huge.</p>
-<p>The running rare event: $X \sim \mathrm{Exp}(1)$ and $Y = \mathbf 1\{X \gt 10\}$, so $\mu = \rho = \Pr(X \gt 10) = e^{-10} \approx 4.5 \times 10^{-5}$. One indicator has variance $\rho(1-\rho)$, which is tiny. The useful scale is relative: $\mathrm{RMSE}/|\mu| = \sqrt{(1-\rho)/(n\rho)}$, which is large unless $n$ is far above $1/\rho$.</p>
-<p>The plot shows per-draw spreads against the event probability $\rho$, both axes logarithmic: $\rho$ from $10^{-6}$ to $0.5$ across, values from $10^{-3}$ to $10^3$ up, with a grey dashed reference line at 1. The dashed blue curve is the absolute SD $\sigma_f = \sqrt{\rho(1-\rho)}$; it falls as the event gets rarer. The solid red curve is the relative SD $\sigma_f/\rho$; it rises. A vertical dotted line marks $\rho = e^{-10}$, where the absolute SD is about $0.0067$ and the relative SD about $148$. Dividing either by $\sqrt n$ gives the RMSE. For a relative RMSE of at most $0.1$, ordinary Monte Carlo needs $n \ge 2{,}202{,}547$.</p>
+<p class="msg"><span class="kt">Message.</span> For a rare event the absolute error can be small while the error relative to the answer is large.</p>
+<p>Let $Y$ indicate an event of probability $\rho$, so $Y \sim \mathrm{Bernoulli}(\rho)$ and $\mu = \rho$. One indicator has variance $\rho(1-\rho)$, which is small when $\rho$ is small. The useful scale is relative: $\mathrm{RMSE}/|\mu| = \sqrt{(1-\rho)/(n\rho)}$, which is large unless $n$ is far above $1/\rho$. At fixed $n$, a smaller $\rho$ can mean a smaller absolute error but a larger relative error.</p>
+<p>The plot shows per-draw spreads against the event probability $\rho$, both axes logarithmic: $\rho$ from $10^{-6}$ to $0.5$ across, values from $10^{-3}$ to $10^3$ up, with a grey dashed reference line at 1. The dashed blue curve is the absolute SD $\sigma_f = \sqrt{\rho(1-\rho)}$; it falls as the event gets rarer. The solid red curve is the relative SD $\sigma_f/\rho$; it rises. Dividing either by $\sqrt n$ gives the RMSE.</p>
 <div class="detail">
 <h3>Details</h3>
 <p><strong>Calculation.</strong> $Y$ is Bernoulli$(\rho)$, so $\mathrm{Var}(Y) = \rho(1-\rho)$ and</p>
 <div class="deriv">$$\frac{\mathrm{RMSE}(\hat\mu_n)}{\rho} = \sqrt{\frac{\rho(1-\rho)}{n\rho^2}} = \sqrt{\frac{1-\rho}{n\rho}}.$$</div>
-<p>At $\rho = e^{-10}$: $\rho = 4.539993 \times 10^{-5}$, $\rho(1-\rho) = 4.539787 \times 10^{-5}$, absolute SD $0.006738$. The per-draw relative variance is $(1-\rho)/\rho = e^{10} - 1 = 22025.4657948$, relative SD $148.41$.</p>
-<p><strong>Sample size.</strong> Relative RMSE $\le 0.1$ means $(e^{10}-1)/n \le 0.01$, so $n \ge 2{,}202{,}546.58$, rounded up to $2{,}202{,}547$. For scale, $1/\rho \approx 22{,}026$ draws produce one hit on average.</p>
-<p><strong>Two errors, two scales.</strong> An absolute RMSE of $0.0067/\sqrt n$ looks small next to 1, but $\mu$ itself is about $4.5 \times 10^{-5}$. A run of $10^4$ draws sees no hit with probability $0.635$, and then reports $\hat\mu = 0$: a tiny absolute error and a 100% relative error. Relative error is defined only for $\mu \ne 0$.</p>
-<p>Changing the sampler so that the event is no longer rare is the subject of Part 02, which reuses this exact setup.</p>
+<p><strong>Two errors, two scales.</strong> An absolute RMSE of $\sqrt{\rho(1-\rho)/n}$ looks small next to 1, but $\mu = \rho$ may be smaller still. A run of $n$ draws sees no hit with probability $(1-\rho)^n$, and then reports $\hat\mu = 0$: a small absolute error and a 100% relative error. Relative error is defined only for $\mu \ne 0$.</p>
+<p>Part 02 puts numbers on this with a concrete rare event and then changes the sampler so that the event is no longer rare.</p>
 <h3>Sources</h3>
-<p>E11: running rare event $p = \mathrm{Exp}(1)$, $f = \mathbf 1\{x \gt 10\}$, $\mu = e^{-10}$; ordinary relative variance $e^{10} - 1 = 22025.4657948$ and $n \ge 2{,}202{,}547$ (our calculation). Figure: inline SVG; curve points, marker values and sample size printed by <code>gen/p9a_part01.py</code>.</p>
+<p>Our calculation (Bernoulli variance). Figure: inline SVG; curve points printed by <code>gen/p9a_part01.py</code>.</p>
 </div>
 </article>
 
@@ -287,7 +287,7 @@
 <article data-slide-id="S43">
 <h2>17. Most Draws Miss the Tail</h2>
 <p class="msg"><span class="kt">Message.</span> A rare-event probability with a known answer shows why plain sampling wastes almost every draw.</p>
-<p>The running example takes the target $p$ to be the exponential distribution with rate $1$, so $p(x) = e^{-x}$ for $x \geq 0$. The quantity we want is the probability that $X$ exceeds $10$. Write it as an expectation with the indicator integrand $f(x) = \mathbf{1}\{x \gt 10\}$, so $\mu = \mathbb{E}_p[f(X)] = \Pr_p(X \gt 10)$. The figure plots the exact density on $[0, 14]$. Past $x = 10$ the curve is indistinguishable from zero at this scale, so the inset magnifies the tail: there the density is below $5 \times 10^{-5}$, and the shaded area is $\mu$ itself.</p>
+<p>The running example takes the target $p$ to be the exponential distribution with rate $1$, so $p(x) = e^{-x}$ for $x \geq 0$. The quantity we want is the probability that $X$ exceeds $10$. Write it as an expectation with the indicator integrand $f(x) = \mathbf{1}\{x \gt 10\}$, so $\mu = \mathbb{E}_p[f(X)] = \Pr_p(X \gt 10)$. The figure plots the exact density on $[0, 14]$. Past $x = 10$ the curve is indistinguishable from zero at this scale, so the inset magnifies the tail: there the density is below $5 \times 10^{-5}$. The plot stops at $x = 14$, but the tail continues beyond the displayed range: $\mu$ is the area of the whole tail past $10$, of which the shaded patch shows only the part up to $14$.</p>
 <p>Because the answer is known in closed form, we can measure every estimator against it. Ordinary sampling lands in the event about once in $22{,}026$ draws on average, since $1/\mu = e^{10} \approx 22{,}026.47$.</p>
 <div class="detail">
 <h3>Details</h3>
@@ -408,7 +408,7 @@ $$\begin{aligned}
 
 <article data-slide-id="S48">
 <h2>24. Missing Support Cannot Be Repaired</h2>
-<p class="msg"><span class="kt">Message.</span> If $q$ never visits a region where $fp \neq 0$, the estimator is wrong for every sample size.</p>
+<p class="msg"><span class="kt">Message.</span> In this four-state example, missing the only contributing state makes every estimate zero instead of $1/4$.</p>
 <p>The target is uniform on four states, $p(x) = 1/4$, and the integrand picks out state $4$, so $\mu = 1/4$. The proposal is uniform on states $1, 2, 3$ only, so $q(4) = 0$. The bar chart shows the target bars on all four states and the dashed proposal bars missing on state $4$, the only state where $f = 1$.</p>
 <p>Every draw lands in $\{1,2,3\}$, gets weight $(1/4)/(1/3) = 3/4$, and has $f = 0$. So $\hat{\mu}_{\mathrm{IS}} = 0$ for every $n$. The weights look perfectly balanced, yet the estimate is exactly wrong, and more draws cannot help because state $4$ is never visited.</p>
 <div class="detail">
@@ -452,7 +452,7 @@ $$\begin{aligned}
 <article data-slide-id="S118">
 <h2>27. More Tail Visits, Corrected Weights</h2>
 <p class="msg"><span class="kt">Message.</span> The proposal hits the event about $37\%$ of the time, and each hit carries a weight that corrects for the oversampling.</p>
-<p>Under $q$, $\Pr_q(X \gt 10) = e^{-1} \approx 0.37$, against $e^{-10}$ under $p$: about $8{,}100$ times more hits. The weight is $w(x) = 10\,e^{-0.9x}$. The figure plots each draw's contribution $f\,w$ on a log scale. Below $10$ the contribution is zero. At $x = 10$ it is about $1.2 \times 10^{-3}$, roughly $27$ times $\mu$, and it falls steadily, crossing the dashed line $\mu = e^{-10}$ near $x \approx 13.7$.</p>
+<p>Under $q$, $\Pr_q(X \gt 10) = e^{-1} \approx 0.37$, against $e^{-10}$ under $p$: about $8{,}100$ times more hits. The weight is $w(x) = 10\,e^{-0.9x}$. The figure plots each draw's contribution $f\,w$ on a log scale. Up to $x = 10$ the contribution is zero. Just above $x = 10$ it is about $1.2 \times 10^{-3}$, roughly $27$ times $\mu$, and it falls steadily, crossing the dashed line $\mu = e^{-10}$ near $x \approx 13.7$.</p>
 <p>So the hits are not all worth the same. More hits do not by themselves prove lower variance; that needs the second-moment calculation that follows.</p>
 <div class="detail">
 <h3>Details</h3>
@@ -460,7 +460,7 @@ $$\begin{aligned}
 w(x) &= \frac{e^{-x}}{0.1\,e^{-0.1x}} \\
 &= 10\,e^{-0.9x}.
 \end{aligned}$$
-<p>Ratio of hit rates: $e^{-1}/e^{-10} = e^{9} \approx 8{,}103$. Sample values of $fw$: $1.234 \times 10^{-3}$ at $x = 10$, $2.04 \times 10^{-4}$ at $12$, $1.37 \times 10^{-5}$ at $15$, $1.52 \times 10^{-7}$ at $20$. Check: $\mathbb{E}_q[fw] = e^{-10}$.</p>
+<p>Ratio of hit rates: $e^{-1}/e^{-10} = e^{9} \approx 8{,}103$. Sample values of $fw$: $1.234 \times 10^{-3}$ just above $x = 10$, $2.04 \times 10^{-4}$ at $12$, $1.37 \times 10^{-5}$ at $15$, $1.52 \times 10^{-7}$ at $20$. Check: $\mathbb{E}_q[fw] = e^{-10}$.</p>
 <h3>Sources</h3>
 <p>E11 (our calculation). Numbers: <code>gen/p9b_calc.py</code>. Figure: <code>gen/p9b_figs.py</code> → <code>fig/p9b-contrib.svg</code>, exact curve.</p>
 </div>
@@ -501,11 +501,11 @@ $$\begin{aligned}
 <article data-slide-id="S54">
 <h2>30. Coverage and Variance Are Different</h2>
 <p class="msg"><span class="kt">Message.</span> A proposal must pass two separate checks: coverage for correctness, a small second moment for precision.</p>
-<p>The left box is validity: $q \gt 0$ wherever $fp \neq 0$. It buys unbiasedness, the same $\mu$ on average. The right box is precision: the second moment $\int f^2p^2/q$ must be finite and small. It buys a small RMSE per draw. The exponential proposal passes both: it is positive on all of $x \geq 0$, and its relative variance per draw is $13.3$ against $22{,}025$.</p>
+<p>The left box is validity: $q \gt 0$ wherever $fp \neq 0$, for an integrable $f$. It buys unbiasedness, the same $\mu$ on average. The right box is precision: the second moment $\int f^2p^2/q$ must be finite and small. It buys a small RMSE per draw. The exponential proposal passes both: it is positive on all of $x \geq 0$, and its relative variance per draw is $13.3$ against $22{,}025$.</p>
 <p>The checks are independent. A proposal that covers everything can still have a larger variance than ordinary sampling, or an infinite one; Part 03 builds such an example.</p>
 <div class="detail">
 <h3>Details</h3>
-<p>Failing the first check gives a biased estimator (the four-state example). Failing the second leaves the estimator unbiased and consistent when $\mathbb{E}_q|fw|$ is finite, but with no finite RMSE.</p>
+<p>Unbiasedness needs both coverage and integrability, $\mathbb{E}_p|f(X)|\lt\infty$. Missing coverage can bias the estimator, as in the four-state example. The second check has two different failures. An infinite second moment $\int f^2p^2/q$ leaves the estimator unbiased and consistent (given coverage and integrability) but with no finite RMSE. A large but finite second moment gives a finite RMSE that is large.</p>
 <h3>Sources</h3>
 <p>E04 (Owen, Ch. 9, §9.1); E11 (our calculation).</p>
 </div>
@@ -596,7 +596,7 @@ $$\begin{aligned}
 <article data-slide-id="S63">
 <h2>37. One-Sign Integrands Permit Zero Variance</h2>
 <p class="msg"><span class="kt">Message.</span> For the nonnegative rare-event indicator, the optimal proposal gives every draw the exact answer.</p>
-<p>The indicator is nonnegative, so $c = \mathbb{E}_p|f| = \mu = e^{-10}$. Then $q^*$ is the target restricted to $x \gt 10$ and renormalized: $q^*(x) = e^{-(x-10)}$ for $x \gt 10$. The figure shows it starting at height $1$ at $x = 10$ and decaying; the strip below marks schematic draws, all past $10$. Each draw contributes $fw^* = e^{-10}$ exactly, so the variance is zero.</p>
+<p>The indicator is nonnegative, so $c = \mathbb{E}_p|f| = \mu = e^{-10}$. Then $q^*$ is the target restricted to $x \gt 10$ and renormalized: $q^*(x) = \mathbf{1}\{x \gt 10\}\,e^{-(x-10)}$, zero for $x \le 10$. The figure shows it starting at height $1$ at $x = 10$ and decaying; the strip below marks schematic draws, all past $10$. Each draw contributes $fw^* = e^{-10}$ exactly, so the variance is zero.</p>
 <p>This is an oracle benchmark: we built it from the known answer. For integrands that change sign, $c \gt |\mu|$ in general and the optimal variance $c^2 - \mu^2$ is positive.</p>
 <div class="detail">
 <h3>Details</h3>
@@ -608,7 +608,7 @@ $$\begin{aligned}
 
 <article data-slide-id="S64">
 <h2>38. The Oracle Needs a Normalizer</h2>
-<p class="msg"><span class="kt">Message.</span> Evaluating the optimal weight requires $c$, which for a one-sign integrand is the answer itself.</p>
+<p class="msg"><span class="kt">Message.</span> Evaluating the optimal weight requires $c$, which is $|\mu|$ for a one-sign integrand and $\mu$ for this nonnegative indicator.</p>
 <p>Follow the boxes. To evaluate $q^* = fp/c$ we need $c$, which here equals $\mu$. To compute the weight $w^* = p/q^* = c$ we again need $c$. Only then can we estimate $\mu$. The loop closes: the weight requires the number we are trying to estimate.</p>
 <p>Two capabilities should be kept apart. Being able to draw from $q^*$ is one. Being able to evaluate its normalized density, and hence the weight, is another. In the running example both are easy: $10 + \mathrm{Exp}(1)$ has density $q^*$, and $c = e^{-10}$ is known. In harder problems one may know $|f|p$ only up to the constant $c$, and then $w^*$ cannot be evaluated.</p>
 <div class="detail">
@@ -656,7 +656,7 @@ $$\begin{aligned}
 
 <article data-slide-id="S121">
 <h2>41. Consistency Is Not an Error Bar</h2>
-<p class="msg"><span class="kt">Message.</span> A finite first moment gives convergence; only a finite second moment gives variance, RMSE and CLT error bars.</p>
+<p class="msg"><span class="kt">Message.</span> This integrable example converges, but its infinite second moment rules out finite RMSE and the usual finite-variance CLT error bar.</p>
 <p>Continue with $Y_i = X_i\,w(X_i)$ under $q = \mathrm{Exp}(2)$. The top row: $\mathbb{E}_q|Y| = 1$ is finite, so the law of large numbers applies and $\hat{\mu}_{\mathrm{IS}} \to \mu$. The bottom row: $\mathbb{E}_q[Y^2] = \infty$, so the variance, the RMSE and the usual CLT-based error bars are all unavailable.</p>
 <p>The estimator converges, but we cannot attach a standard error to it. A batch that looks calm, or a modest sample variance, does not prove the second moment is finite: the sample variance is always finite, even when the population variance is not.</p>
 <div class="detail">
@@ -688,7 +688,7 @@ $$\begin{aligned}
 <h2>43. 04 · Remove the Normalizer</h2>
 <p class="pace">Part 04 · &asymp;20 min · elapsed &asymp;75 min · break before this part</p>
 <p class="msg"><span class="kt">Message.</span> An unknown normalizing constant changes the estimator and its guarantees.</p>
-<p>Ordinary importance sampling needs the normalized ratio $p/q$. Often the target is known only up to a constant, $p = \tilde p / Z$ with $Z$ unknown. Dividing by the total weight removes $Z$, but the result is a ratio of two averages: consistent, yet biased at any finite sample size, and its weight diagnostics have blind spots.</p>
+<p>Ordinary importance sampling needs the normalized ratio $p/q$. Often the target is known only up to a constant, $p = \tilde p / Z$ with $Z$ unknown. Dividing by the total weight removes $Z$, but the result is a ratio of two averages: consistent, yet generally biased at finite sample sizes, and its weight diagnostics have blind spots.</p>
 </article>
 
 <article data-slide-id="S73">
@@ -738,7 +738,7 @@ $$E_q[\tilde w]=\int\tilde p\,dx=Z.$$
 <p>So $E[A_n]=Z\mu$, $E[B_n]=Z$, and the ratio of the two means is exactly $\mu$.</p>
 <div class="detail"><h3>Details</h3>
 <p>Full support is used in the integrals: the integral over $\{q\gt 0\}$ must include every point where $\tilde p\gt 0$, or the integrals miss target mass. Integrability: $E_q|\tilde w f|=Z\,E_p|f|\lt\infty$.</p>
-<p>The ratio of means is not the mean of the ratio. Division is nonlinear, and $A_n$ and $B_n$ are built from the same draws, so they are dependent. In general $E[A_n/B_n]\ne E[A_n]/E[B_n]$; the two-state example on slide 49 gives an exact case.</p>
+<p>The ratio of means is not the mean of the ratio. Expectation does not commute with taking a ratio: division is nonlinear, and $A_n$ and $B_n$, built from the same draws, are generally dependent. In general $E[A_n/B_n]\ne E[A_n]/E[B_n]$; the two-state example on slide 49 gives an exact case.</p>
 <h3>Sources</h3><p>E05: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.2, Theorem&nbsp;9.2, eqs (9.6)&ndash;(9.10), pp.&nbsp;8&ndash;10. Figure: our flow diagram, no data.</p></div>
 </article>
 
@@ -790,7 +790,7 @@ $$\operatorname{Bias}\approx-\frac{E_q[w^2(f-\mu)]}{n}.$$
 
 <article data-slide-id="S70">
 <h2>51. One Draw Can Dominate the Weights</h2>
-<p class="msg"><span class="kt">Message.</span> When one weight dwarfs the rest, a batch of five draws behaves almost like one draw.</p>
+<p class="msg"><span class="kt">Message.</span> One draw holds $95\%$ of the normalized weight; its contribution still depends on $f$.</p>
 <p>In the illustrative batch $\tilde w=(.1,.2,.1,.1,9.5)$ the total is $10$, so the shares are $\bar w=(.01,.02,.01,.01,.95)$. The estimate is $\sum_i\bar w_i f(X_i)$, and $95\%$ of the normalized weight sits on $X_5$. The other four draws together carry $5\%$.</p>
 <div class="detail"><h3>Details</h3>
 <p>The share is not the contribution. Draw $i$ contributes $\bar w_i f(X_i)$, which depends on $f$: if $f(X_5)=0$, sample 5 contributes nothing, and contributions of opposite sign can cancel. So the slide says &ldquo;95% of the normalized weight&rdquo;, not &ldquo;95% of the estimate&rdquo;.</p>
@@ -807,7 +807,7 @@ $$\mathrm{ESS}=\frac{(\sum_i\tilde w_i)^2}{\sum_i\tilde w_i^2}=\frac{1}{\sum_i\b
 <div class="detail"><h3>Details</h3>
 <p><strong>Bounds.</strong> The shares satisfy $\bar w_i\ge 0$ and $\sum_i\bar w_i=1$. Cauchy&ndash;Schwarz gives $1=(\sum_i\bar w_i\cdot 1)^2\le n\sum_i\bar w_i^2$, so $\mathrm{ESS}\le n$, with equality exactly when all shares equal $1/n$. Since $0\le\bar w_i\le 1$, $\bar w_i^2\le\bar w_i$, so $\sum_i\bar w_i^2\le 1$ and $\mathrm{ESS}\ge 1$, with equality exactly when one share is $1$.</p>
 <p><strong>Checks by hand.</strong> Zero weights drop out of both sums, so ESS is at most the number of positive weights. For the batch, $\sum_i\bar w_i^2=.0001+.0004+.0001+.0001+.9025=.9032$.</p>
-<p><strong>Empirical vs population.</strong> Dividing top and bottom by $n^2Z^2$ gives $\mathrm{ESS}/n=(\frac1n\sum w_i)^2/(\frac1n\sum w_i^2)$. If $E_q[w^2]\lt\infty$, the strong law sends this to $1/E_q[w^2]$, so $n/E_q[w^2]$ is the population quantity the batch number estimates. The two are different objects; one batch can be far from the population value.</p>
+<p><strong>Empirical vs population.</strong> Dividing top and bottom by $n^2Z^2$ gives $\mathrm{ESS}/n=(\frac1n\sum w_i)^2/(\frac1n\sum w_i^2)$. If $E_q[w^2]\lt\infty$, the strong law sends this to $(E_q[w])^2/E_q[w^2]$. Only when $w=p/q$ and $q$ covers all of $p$ is $E_q[w]=1$, so the limit becomes $1/E_q[w^2]$ and $n/E_q[w^2]$ is the population quantity the batch number estimates. Without full coverage the general form is needed: in the four-state example ($p$ uniform on $\{1,2,3,4\}$, $q$ uniform on $\{1,2,3\}$), $w=3/4$ on the support of $q$, so $E_q[w]=3/4$ and $E_q[w^2]=9/16$; the limit is $1$, not $16/9$. The two are different objects; one batch can be far from the population value.</p>
 <p><strong>Not an error bar.</strong> ESS uses only the weights. It never looks at $f$, so it does not measure the error for a given integrand, and it is not the number of independent draws.</p>
 <h3>Sources</h3><p>E06: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.3, eqs (9.13)&ndash;(9.14), pp.&nbsp;11&ndash;12. E19: our calculation, <code>gen/p9c_snis_examples.py</code> (exact fractions, no randomness).</p></div>
 </article>
@@ -826,13 +826,13 @@ $$\hat\mu_{\mathrm{IS}}=\hat\mu_{\mathrm{SN}}=0\ne\tfrac14$$
 </article>
 
 <article data-slide-id="S82">
-<h2>54. Choose the Estimator by What Is Known</h2>
-<p class="msg"><span class="kt">Message.</span> Choose the simplest estimator whose requirements you can actually meet.</p>
-<p>If you can sample $p$ and evaluate $f$, use the ordinary Monte Carlo average. If not, but you can sample $q$ and evaluate the normalized ratio $p/q$, use importance sampling; it is unbiased when $q$ covers $fp$. If only $\tilde p/q$ is available, use SNIS; it needs full support and a positive sampled total, and it is consistent but generally biased.</p>
+<h2>54. What You Can Compute Decides What Is Available</h2>
+<p class="msg"><span class="kt">Message.</span> What you can compute decides which estimators are available; it does not decide which is best.</p>
+<p>The slide is a capability map, not a decision tree. Each row lists inputs that are sufficient for one estimator, and several rows can hold at once. If you can sample $p$ and evaluate $f$, the ordinary Monte Carlo average is available. If you can sample $q$ and evaluate the normalized ratio $p/q$, with $q\gt 0$ wherever $fp\neq 0$, importance sampling is available and unbiased. If you can sample $q$ and evaluate $\tilde p/q$, with $q\gt 0$ wherever $p\gt 0$ and a positive sampled total, SNIS is available; it is consistent but generally biased at finite $n$. The closing line is the point: these requirements tell us which estimators are available, not which is best. A well-chosen $q$ can beat ordinary Monte Carlo even when sampling $p$ is possible, as the rare-event example showed.</p>
 <div class="detail"><h3>Details</h3>
-<p><strong>Bayesian posteriors.</strong> The posterior density is proportional to prior times likelihood; the normalizer is the evidence integral, usually not computable. Posterior expectations estimated with a proposal $q$ therefore fall in the third branch, provided the posterior is proper ($0\lt Z\lt\infty$) and $q$ covers its support.</p>
-<p><strong>Available is not efficient.</strong> Each branch only says which estimator can be computed. Its error still depends on $q$ and $f$; for ordinary IS the second moment is $\int f^2p^2/q$. Weight diagnostics (slides 51&ndash;53) help detect some failures but certify none.</p>
-<h3>Sources</h3><p>E02: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;1&ndash;2 (posted PDF), &sect;&sect;2.1&ndash;2.2, 2.7&ndash;2.8, <a href="https://artowen.su.domains/mc/Ch-intro.pdf">artowen.su.domains/mc/Ch-intro.pdf</a> (accessed 2026-11-17). E04: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.1, Theorem&nbsp;9.1, pp.&nbsp;4&ndash;6. E05: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.2, Theorem&nbsp;9.2, eqs (9.6)&ndash;(9.10), pp.&nbsp;8&ndash;10. Figure: our decision diagram, no data.</p></div>
+<p><strong>Bayesian posteriors.</strong> The posterior density is proportional to prior times likelihood; the normalizer is the evidence integral, usually not computable. Posterior expectations estimated with a proposal $q$ therefore fall in the third row, provided the posterior is proper ($0\lt Z\lt\infty$) and $q$ covers its support.</p>
+<p><strong>Available is not efficient.</strong> Each row only says which estimator can be computed. Its error still depends on $q$ and $f$; for ordinary IS the second moment is $\int f^2p^2/q$. Weight diagnostics (slides 51&ndash;53) help detect some failures but certify none.</p>
+<h3>Sources</h3><p>E02: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;1&ndash;2 (posted PDF), &sect;&sect;2.1&ndash;2.2, 2.7&ndash;2.8, <a href="https://artowen.su.domains/mc/Ch-intro.pdf">artowen.su.domains/mc/Ch-intro.pdf</a> (accessed 2026-11-17). E04: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.1, Theorem&nbsp;9.1, pp.&nbsp;4&ndash;6. E05: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.2, Theorem&nbsp;9.2, eqs (9.6)&ndash;(9.10), pp.&nbsp;8&ndash;10. Figure: our capability map, no data.</p></div>
 </article>
 
 <article data-slide-id="S83">
@@ -913,7 +913,7 @@ $$\hat\mu_{\mathrm{IS}}=\hat\mu_{\mathrm{SN}}=0\ne\tfrac14$$
 <div class="detail"><h3>Details</h3>
 <p>The generator also checks the identity numerically at $\theta = 1$ by quadrature over $\varepsilon$: $J = 2$, $\mathbb{E}[2X] = 2$, $\operatorname{Var}(2X) = 4$.</p>
 <h3>Sources</h3>
-<p>Our calculation (E13), <code>gen/p9d_gradient_checks.py</code> (Simpson quadrature on $[-12, 12]$; seed 20261117 for the five draws).</p>
+<p>Gaussian reparameterization example (E15); our calculation in <code>gen/p9d_gradient_checks.py</code> (E24: Simpson quadrature on $[-12, 12]$; seed 20261117 for the five draws).</p>
 </div>
 </article>
 
@@ -1045,7 +1045,8 @@ $$\hat\mu_{\mathrm{IS}}=\hat\mu_{\mathrm{SN}}=0\ne\tfrac14$$
 <p class="msg"><span class="kt">Message.</span> On the two-action toy, reward times score has mean $\sigma(1 - \sigma)$, exactly the direct derivative, although each single contribution is $0$ or $\tfrac12$ at $\theta = 0$.</p>
 <p>The scores are $s_\theta(a_1) = \frac{d}{d\theta}\ln\sigma(\theta) = 1 - \sigma$ and $s_\theta(a_0) = \frac{d}{d\theta}\ln(1 - \sigma(\theta)) = -\sigma$. Then</p>
 <div class="deriv">
-<p>$$\mathbb{E}[R\, s_\theta] = \sigma \cdot 1 \cdot (1 - \sigma) + (1 - \sigma)\cdot 0 \cdot(-\sigma)$$</p>
+<p>$$\mathbb{E}[R\, s_\theta] = \sigma \cdot 1 \cdot (1 - \sigma)$$</p>
+<p>$$\qquad + (1 - \sigma)\cdot 0 \cdot(-\sigma)$$</p>
 <p>$$= \sigma(1 - \sigma),$$</p>
 </div>
 <p>which matches $J'(\theta)$ from the previous slide.</p>
@@ -1087,11 +1088,11 @@ $$\hat\mu_{\mathrm{IS}}=\hat\mu_{\mathrm{SN}}=0\ne\tfrac14$$
 <p>$$= \mathbb{E}\big[R(X)\, s_\theta(X)\big] - b\,\mathbb{E}\big[s_\theta(X)\big]$$</p>
 <p>$$= \nabla_\theta J(\theta) - b \cdot 0.$$</p>
 </div>
-<p>The step that pulls $b$ out of the expectation needs $b$ to be fixed before the draw: it must not be a function of the sampled $X$. If the baseline depends on the action, $b(X)$, then $\mathbb{E}[b(X)s_\theta(X)]$ is in general not zero and the cancellation fails.</p>
+<p>The step that pulls $b$ out of the expectation needs $b$ to be fixed before the draw: it must not be a function of the sampled $X$. If the baseline depends on the action, $b(X)$, the cancellation need not happen: the mean is preserved exactly when $\mathbb{E}[b(X)s_\theta(X)]=0$, which a general action-dependent baseline does not satisfy.</p>
 <p>The mean is preserved for every constant $b$. The variance is not: some baselines lower it, others raise it, as the next two slides show.</p>
 <div class="detail"><h3>Details</h3>
 <p>A baseline may depend on anything fixed before the draw, for example a state on which the distribution is conditioned: the same argument applied to the conditional distribution gives $\mathbb{E}[s_\theta(X) \mid \text{state}] = 0$.</p>
-<p>For scalar $\theta$, write $g_b = (R - b)s_\theta$. Then $\operatorname{Var}(g_b) - \operatorname{Var}(g_0) = \mathbb{E}[s_\theta^2]\; b\,(b - 2b^*)$ with $b^* = \mathbb{E}[R s_\theta^2]/\mathbb{E}[s_\theta^2]$. So $b^*$ minimizes the variance, and a constant $b$ strictly lowers it exactly when $b(b - 2b^*) \lt 0$. For a vector $\theta$ with one shared scalar baseline, the same calculation for the total variance (the trace) uses $\|s_\theta\|^2$ in place of $s_\theta^2$.</p>
+<p>For scalar $\theta$, write $g_b = (R - b)s_\theta$ and assume $\mathbb{E}[R^2s_\theta^2]\lt\infty$ (so every $g_b$ has finite variance) and $0\lt\mathbb{E}[s_\theta^2]\lt\infty$. If $\mathbb{E}[s_\theta^2]=0$, the score is zero almost surely and every $b$ gives the same estimator, so there is nothing to choose. Otherwise $\operatorname{Var}(g_b) - \operatorname{Var}(g_0) = \mathbb{E}[s_\theta^2]\; b\,(b - 2b^*)$ with $b^* = \mathbb{E}[R s_\theta^2]/\mathbb{E}[s_\theta^2]$. So $b^*$ minimizes the variance, and a constant $b$ strictly lowers it exactly when $b(b - 2b^*) \lt 0$. For a vector $\theta$ with one shared scalar baseline, the same calculation for the total variance (the trace) uses $\|s_\theta\|^2$ in place of $s_\theta^2$, under the analogous conditions $\mathbb{E}[R^2\|s_\theta\|^2]\lt\infty$ and $0\lt\mathbb{E}[\|s_\theta\|^2]\lt\infty$; then $b^*=\mathbb{E}[R\|s_\theta\|^2]/\mathbb{E}[\|s_\theta\|^2]$.</p>
 <h3>Sources</h3>
 <p>Mohamed et al., JMLR 2020, &sect;7.4.3 &ldquo;Baselines,&rdquo; eq. (61) (E08). Variance formula: our calculation, checked on the toy in <code>gen/p9d_gradient_checks.py</code> (E13).</p>
 </div>
@@ -1139,7 +1140,7 @@ $$\hat\mu_{\mathrm{IS}}=\hat\mu_{\mathrm{SN}}=0\ne\tfrac14$$
 </ul>
 <p>Neither route is a universal winner on variance; which one is lower depends on the problem.</p>
 <div class="detail"><h3>Details</h3>
-<p>The score-function estimator can be combined with a baseline; the pathwise estimator is unavailable when outcomes are discrete or $R$ is not differentiable.</p>
+<p>The score-function estimator can be combined with a baseline; the ordinary pathwise formula shown here cannot be used unless its chain-rule and interchange conditions hold; sampled discrete actions do not provide a naive differentiable path.</p>
 <h3>Sources</h3>
 <p>Mohamed et al., JMLR 2020, &sect;&sect;4.2&ndash;4.3 and 5.2&ndash;5.3 (E07). Figure: drawn for this note.</p>
 </div>
@@ -1155,7 +1156,7 @@ $$\hat\mu_{\mathrm{IS}}=\hat\mu_{\mathrm{SN}}=0\ne\tfrac14$$
 <article data-slide-id="S100">
 <h2>76. Old Samples, a New Target</h2>
 <p class="msg"><span class="kt">Message.</span> Logged responses were drawn from a behavior policy $\pi_b$, while the quantity we want is an expectation under the current policy $\pi_\theta$.</p>
-<p>Fix a prompt $c$ and a reward $R(c,x)$ that does not change during the update. The left box is the policy that actually generated the stored responses $x_1,\dots,x_n$; the middle box is the policy we are now training. The solid arrow carries samples, the dashed arrow carries only the target: there are no fresh draws from $\pi_\theta$. The estimate box asks for $\mathbb{E}_{X\sim\pi_\theta(\cdot\mid c)}[R(c,X)]$, so the samples and the expectation disagree about the distribution. That mismatch is exactly the setting of importance sampling from earlier in the lecture.</p>
+<p>Fix a prompt $c$ and a reward $R(c,x)$ that does not change during the update. On the left, the upper box is the behavior policy that actually generated the stored responses $x_1,\dots,x_n$, and the lower box is the current policy we are now training; the estimate box is on the right. The solid arrow carries samples, the dashed arrow carries only the target: there are no fresh draws from $\pi_\theta$. The estimate box asks for $\mathbb{E}_{X\sim\pi_\theta(\cdot\mid c)}[R(c,X)]$, so the samples and the expectation disagree about the distribution. That mismatch is exactly the setting of importance sampling from earlier in the lecture.</p>
 <div class="detail">
   <h3>Details</h3>
   <p>The behavior policy is a <em>data-collection</em> distribution. It is not automatically the reference policy that a regularizer compares against; slide 80 separates those roles. Later slides drop $c$ from the notation by convention: every policy is then read as conditional on the same fixed prompt. The example is response-level (one prompt, one response, one reward), like a bandit; how a policy change alters which states or prompts are visited in a multi-step environment is outside this example.</p>
@@ -1167,7 +1168,7 @@ $$\hat\mu_{\mathrm{IS}}=\hat\mu_{\mathrm{SN}}=0\ne\tfrac14$$
 <article data-slide-id="S101">
 <h2>77. Importance Weights Correct the Mismatch</h2>
 <p class="msg"><span class="kt">Message.</span> Weighting each logged response by $w=\pi_\theta/\pi_b$ recovers the current-policy expectation, provided $\pi_b$ covers every response $\pi_\theta$ can produce.</p>
-<p>The gray row is the importance-sampling identity from earlier in the lecture: $\mathbb{E}_p[f]$ equals $\mathbb{E}_q[(p/q)f]$. Relabel the target $p$ as $\pi_\theta$ and the proposal $q$ as $\pi_b$, and the identity reads
+<p>The lead line names the importance-sampling identity from earlier in the lecture: $\mathbb{E}_p[f]$ equals $\mathbb{E}_q[(p/q)f]$. Relabel the target $p$ as $\pi_\theta$ and the proposal $q$ as $\pi_b$, and the identity reads
 $$\mathbb{E}_{\pi_\theta}[R(c,X)]$$
 $$=\mathbb{E}_{\pi_b}[w(X)\,R(c,X)].$$
 The ratio puts the current policy on top and the policy that generated the data underneath, and both are evaluated at the logged response. Coverage, $\pi_b(x\mid c)>0$ wherever $\pi_\theta(x\mid c)>0$, is what makes the identity valid for every reward. The estimator is the sample average $\frac1n\sum_i w(x_i)R(c,x_i)$ over the logged responses. Nothing new is proved here; it is the same theorem with policy names.</p>
@@ -1202,7 +1203,7 @@ while the importance weight is a <em>product</em> of token ratios. A product of 
 <article data-slide-id="S103">
 <h2>79. Compounding Mismatch Can Destroy Efficiency</h2>
 <p class="msg"><span class="kt">Message.</span> In an explicit independent-token toy, a per-token weight second moment of only 1.1 compounds to $1.1^T$, about 13,781 at $T=100$.</p>
-<p>The left column states the assumptions: tokens are independent under $\pi_b$, each token weight has mean 1 and second moment 1.1. Independence turns the second moment of the product into the product of second moments, $\mathbb{E}[w^2]=1.1^T$. The plot shows that exact formula against length on a log vertical axis, so it is a straight line; the red points mark $T=50$ ($\approx117$) and $T=100$ ($\approx13{,}781$). Nothing here is a measurement on a language model: it is a formula for a deliberately simple toy.</p>
+<p>The left column states the assumptions: the weight factors $w_t$ are independent under $\pi_b$ (here because both policies factor position by position), each token weight has mean 1 and second moment 1.1. Independence turns the second moment of the product into the product of second moments, $\mathbb{E}[w^2]=1.1^T$. The plot shows that exact formula against length on a log vertical axis, so it is a straight line; the red points mark $T=50$ ($\approx117$) and $T=100$ ($\approx13{,}781$). Nothing here is a measurement on a language model: it is a formula for a deliberately simple toy.</p>
 <div class="detail">
   <h3>Details</h3>
   <p>The toy: each behavior token is a binary draw with $\pi_b=(\tfrac12,\tfrac12)$, and the target token has $\pi_\theta=\big(\tfrac{1+a}2,\tfrac{1-a}2\big)$ with $a=0.1^{1/2}$, independently across positions under both. Then $w_t$ is $1+a$ or $1-a$ with probability $\tfrac12$ each, so $\mathbb{E}[w_t]=1$ and $\mathbb{E}[w_t^2]=1+a^2=1.1$. Because the factors are independent under $\pi_b$,

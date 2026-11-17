@@ -45,7 +45,9 @@
 <body>
 
 <h1>Deep Learning Math 9 · Monte Carlo &amp; Importance Sampling &mdash; Notes</h1>
-<p class="meta">Companion to <code>prob09-monte-carlo.html</code>. Full formal statements of everything the deck abbreviates &mdash; the Monte Carlo estimator with its exact existence and moment conditions, the importance-sampling identity with the support condition stated as a precise absolute-continuity requirement (and the subtle gap between &ldquo;$q \gt 0$ wherever $fp \neq 0$&rdquo; and &ldquo;$q \gt 0$ wherever $p \gt 0$&rdquo; made explicit in Section 5.5, with a computed example where $\mathbb{E}_q[w] = e^{-10} \neq 1$), self-normalized IS, effective sample size, and the policy-gradient objective &mdash; and every proof expanded: unbiasedness and the $O(1/n)$ variance of plain MC with the covariance bookkeeping restored; Theorem 3 in both the continuous and discrete cases with the &ldquo;patch&rdquo; step spelled out; Theorem 4 (optimal proposal $q^* \propto |f|\,p$) via Jensen with the equality case analyzed and <em>uniqueness</em> of $q^*$ proved (Section 6.4); the infinite-variance $\mathrm{Exp}(2)$ counterexample computed in full and generalized to every rate $\lambda$ (finite second moment iff $\lambda \lt 2$, Section 6.6); SNIS bias proved and quantified &mdash; the exact ratio-estimator argument, the deck&rsquo;s $2/3 \neq 1/2$ mini-example, and a second-order expansion giving bias $\approx -\mathbb{E}_q[w^2(f-\mu)]/n$ (flagged as a formal expansion); the ESS formula <em>derived</em> from the delta-method variance plus one honestly-flagged decoupling step, with the bounds $1 \leq n_{\mathrm{eff}} \leq n$ proved and a sharp illustration of what ESS cannot see (the deck&rsquo;s own support counterexample has $n_{\mathrm{eff}} = n$ while converging to the wrong answer); the log-derivative trick and Theorem 5 with the continuous-case interchange condition stated precisely; REINFORCE unbiasedness; the baseline lemma with the variance computation the deck omits, including the optimal constant baseline $b^* = \mathbb{E}[R\,s^2]/\mathbb{E}[s^2]$ &mdash; which turns out to equal the deck&rsquo;s chosen $b = \tfrac12$ in the toy, explaining why the variance drops to exactly $0$; and the off-policy correction as importance sampling, with the per-token weight factorization proved from prob04&rsquo;s chain rule and the two-line bound $\mathbb{E}_q[w^2] \geq e^{D(p \| q)}$ (Jensen + KL) that turns the deck&rsquo;s degeneracy caricature into a theorem (Section 10.1). Every worked number on the slides has been re-derived from scratch; <strong>all check out</strong>, with one rounding note: the Chebyshev sample count on the &ldquo;guarantee two ways&rdquo; slide is computed from the exact variance $\sigma^2 = \pi(4-\pi) = 2.69677$, giving $539{,}354$; the rounded variances $2.696$ and $2.70$ that appear earlier in the deck would give $539{,}200$ and $540{,}000$, and all three agree to the two significant figures the estimate deserves (Section 3.8). Background from earlier lectures &mdash; LOTUS, variance rules and Jensen (prob01), KL (prob02), the chain rule of probability (prob04), LLN/Chebyshev/MGFs (prob05), Hoeffding (prob06), the MSE decomposition and conditional expectation (prob07) &mdash; is cited from those companion notes rather than re-proved; the imported black boxes (strong LLN, dominated convergence for the continuous-case interchange) are flagged where used. <strong>Conventions:</strong> $p$ is the target distribution (mass function or density as context dictates; integrals silently become sums in the discrete case), $q$ the proposal, $w = p/q$ the importance weight, $\mu = \mathbb{E}_p[f(X)]$, $\log$ natural.</p>
+<p class="meta">Companion to <code>prob09-monte-carlo.html</code> (85 slides, 150 minutes in two 75-minute blocks, break after Part 03). Audience: junior undergraduate AI majors who have seen expectation, variance, the law of large numbers and concentration in prob01&ndash;prob08.</p>
+<p class="meta"><strong>How to use it.</strong> There is one article per slide, in slide order, headed by the slide number and title. Each article opens with a one-sentence <em>Message</em>, then explains the slide well enough to teach it, then gives <em>Details</em> (derivations, numbers, figure provenance) and <em>Sources</em>. Pace lines on the part dividers give the target time for each part and the time elapsed at its start; they are targets, not auto-advance intervals. A text-only Markdown edition, <code>prob09-monte-carlo-note.md</code>, carries the same articles with every figure described in words.</p>
+<p class="meta"><strong>Conventions.</strong> $X$ is a random outcome; $f$ a fixed integration function with target $\mu=\mathbb E_p[f(X)]$; $R$ the reward in the gradient examples and $r$ the learned reward in the RLHF example (the PPO slide uses $r$ for its ratio, as in the cited figure, and says so). $p$ is the target and $q$ the proposal; $w=p/q$ is the normalized density ratio, $\tilde w=\tilde p/q$ the unnormalized one, and $\bar w_i$ the normalized share of draw $i$. $\sigma_f$ is the population standard deviation and $s_Y$ the observed sample standard deviation. $\theta$ denotes model parameters; the behavior policy $\pi_b$ and the reference policy $\pi_{\mathrm{ref}}$ are never interchanged. Exponential distributions use the rate parameter. $\ln$ is the natural logarithm and KL is measured in nats. Results proved in earlier lectures are cited, not re-proved.</p>
 
 <article data-slide-id="S01">
 <h2>1. Monte Carlo & Importance Sampling</h2>
@@ -66,6 +68,7 @@
 
 <article data-slide-id="S03">
 <h2>3. 01 · Estimate an Expectation</h2>
+<p class="pace">Part 01 · &asymp;25 min · elapsed &asymp;0 min</p>
 <p class="msg"><span class="kt">Message.</span> First separate the number we want from the randomness of its estimate.</p>
 <p>This part does not re-teach probability. It takes the expectation, the sample mean and its variance as known, and asks what an estimate built from random draws promises: what it targets, how its error shrinks, how to report that error from the data, and what the cost of a target accuracy depends on.</p>
 </article>
@@ -94,7 +97,7 @@
 <h3>Details</h3>
 <p><strong>IID in plain words.</strong> "Independent and identically distributed": each draw comes from the same $p$, and no draw influences another. Re-using one draw twice, or changing the sampler mid-run, breaks it.</p>
 <p><strong>Hold $f$ fixed.</strong> The function $f$ must be chosen before the draws are made and kept the same for every draw. If $f$ is tuned after looking at the sample, the average estimates something else, and the error guarantees below do not apply.</p>
-<p><strong>Integrability.</strong> The target exists only if $\mathbb E_p|f(X)| \lt \infty$. The slide states this as an assumption; S16 makes it part of the formal estimator.</p>
+<p><strong>Integrability.</strong> The target exists only if $\mathbb E_p|f(X)| \lt \infty$. The slide states this as an assumption; slide 7 makes it part of the formal estimator.</p>
 <h3>Sources</h3>
 <p>E01: sample-mean facts from prob05 (pp. 39, 46, 93), course repository at commit b20ab73. E02: Owen, Ch. 1&ndash;2, &sect;2.1.</p>
 </div>
@@ -117,7 +120,7 @@
 <li>$(0.3, 0.9)$: $0.90$, in</li>
 </ul>
 <p>Four hits, so $\hat\mu_6 = 4 \cdot \tfrac46 = \tfrac83$.</p>
-<p><strong>No inference from this run.</strong> A hand-picked sample does not support an error bar or a confidence statement. For genuinely IID uniform draws, $Y = 4\cdot\mathbf 1\{\text{hit}\}$ has $\mathbb E[Y] = \pi$ and $\mathrm{Var}(Y) = \pi(4 - \pi) \approx 2.6968$; S19 and S22 use these exact values.</p>
+<p><strong>No inference from this run.</strong> A hand-picked sample does not support an error bar or a confidence statement. For genuinely IID uniform draws, $Y = 4\cdot\mathbf 1\{\text{hit}\}$ has $\mathbb E[Y] = \pi$ and $\mathrm{Var}(Y) = \pi(4 - \pi) \approx 2.6968$; slides 8 and 9 use these exact values.</p>
 <h3>Sources</h3>
 <p>E17: six hand-chosen points and their hit count, recomputed from exact disk geometry. Figure: inline SVG; coordinates and the ledger printed by <code>gen/p9a_part01.py</code> (deterministic, no random draws).</p>
 </div>
@@ -134,7 +137,7 @@
 <div class="deriv">$$\hat\mu_n = \frac1n \sum_{i=1}^n f(X_i).$$</div>
 <p><strong>Why $Y_i$ are IID.</strong> A fixed function of independent, identically distributed inputs gives independent, identically distributed outputs. This is why $f$ must not depend on the sample.</p>
 <p><strong>Consistency.</strong> Under $\mathbb E|Y_1| \lt \infty$ alone, the strong law of large numbers gives $\hat\mu_n \to \mu$ with probability 1. It is imported from prob05, not reproved, and it says nothing about how fast.</p>
-<p><strong>Notation.</strong> $\sigma_f^2$ is the population variance of $f(X)$ under $p$, a fixed unknown number. The observed sample spread $s_Y$ appears only on S114.</p>
+<p><strong>Notation.</strong> $\sigma_f^2$ is the population variance of $f(X)$ under $p$, a fixed unknown number. The observed sample spread $s_Y$ appears only on slide 10.</p>
 <h3>Sources</h3>
 <p>E01: sample-mean expectation, variance, LLN and CLT in prob05 (pp. 39, 46, 93), commit b20ab73. E02: Owen, Ch. 1&ndash;2, &sect;&sect;2.1&ndash;2.2 (first absolute moment for the mean and LLN, finite variance for RMSE and CLT).</p>
 </div>
@@ -149,7 +152,7 @@
 <h3>Details</h3>
 <p><strong>Proof of unbiasedness.</strong> Each $X_i \sim p$, so $\mathbb E[f(X_i)] = \mu$. Linearity gives</p>
 <div class="deriv">$$\mathbb E[\hat\mu_n] = \frac1n\sum_{i=1}^n \mathbb E[f(X_i)] = \frac1n \cdot n\mu = \mu.$$</div>
-<p>Independence is not used: identically distributed draws with $\mathbb E|f(X)| \lt \infty$ suffice for this identity. Independence matters for the variance on S22.</p>
+<p>Independence is not used: identically distributed draws with $\mathbb E|f(X)| \lt \infty$ suffice for this identity. Independence matters for the variance on slide 9.</p>
 <p><strong>Bias and variance.</strong> In prob07's decomposition, mean squared error is squared bias plus variance. Here the bias is zero, so all of the error is variance. That is the quantity averaging must shrink.</p>
 <p><strong>Exact numbers.</strong> $\Pr(|\hat\mu_6 - \pi| \ge 0.5) = 0.3523$ and the RMSE at $n = 6$ is $0.6704$, both from the Binomial$(6, \pi/4)$ law.</p>
 <h3>Sources</h3>
@@ -168,7 +171,7 @@
 <div class="deriv">$$\mathrm{Var}(\bar Y_n) = \frac{1}{n^2}\sum_{i=1}^n \mathrm{Var}(Y_i) = \frac{\sigma_f^2}{n}.$$</div>
 <p>Unbiasedness makes the squared bias zero, so $\mathrm{RMSE}^2 = \mathrm{Var}(\hat\mu_n) = \sigma_f^2/n$.</p>
 <p><strong>Darts numbers.</strong> $\sigma_f^2 = \pi(4 - \pi) \approx 2.6968$, $\sigma_f \approx 1.642$. RMSE: $0.519$ at $n = 10$, $0.164$ at $10^2$, $0.0164$ at $10^4$, $0.00164$ at $10^6$.</p>
-<p><strong>What RMSE is not.</strong> RMSE describes the spread over many repeated runs. It is not a bound on the error of the run in hand: a single run can miss by several RMSEs. Bounds that hold with stated probability come on S115 and S24.</p>
+<p><strong>What RMSE is not.</strong> RMSE describes the spread over many repeated runs. It is not a bound on the error of the run in hand: a single run can miss by several RMSEs. Bounds that hold with stated probability come on slides 11 and 12.</p>
 <h3>Sources</h3>
 <p>E02: Owen, Ch. 1&ndash;2, &sect;&sect;2.1&ndash;2.2 (variance $\sigma_f^2/n$ under finite variance). E01: prob05 sample-mean variance (p. 39), prob07 MSE decomposition (pp. 98, 102), commit b20ab73. E17: $\pi(4-\pi)$. Figure: inline SVG; RMSE values and coordinates printed by <code>gen/p9a_part01.py</code>.</p>
 </div>
@@ -183,7 +186,7 @@
 <h3>Details</h3>
 <p><strong>Units.</strong> $s_Y$ and $\widehat{\mathrm{SE}}$ have the units of $f$; $s_Y^2$ has squared units. Report the SE, not the variance, next to the estimate.</p>
 <p><strong>Why $n - 1$.</strong> With divisor $n - 1$, $\mathbb E[s_Y^2] = \sigma_f^2$ for IID data with finite variance. That needs $n \ge 2$.</p>
-<p><strong>Example of the right data.</strong> The formula applies to genuinely IID evaluations, for instance a fixed scoring rule applied to independently sampled model replies. It does not apply to the six hand-chosen darts on S26.</p>
+<p><strong>Example of the right data.</strong> The formula applies to genuinely IID evaluations, for instance a fixed scoring rule applied to independently sampled model replies. It does not apply to the six hand-chosen darts on slide 6.</p>
 <p><strong>Unseen tails.</strong> $s_Y$ is always finite, because it is computed from finitely many numbers. It cannot show that $\sigma_f$ is finite. If rare draws carry very large values that the sample never hit, $s_Y$ will understate the spread.</p>
 <h3>Sources</h3>
 <p>E02: Owen, Ch. 1&ndash;2, &sect;&sect;2.1&ndash;2.2 and 2.7&ndash;2.8 (estimated standard error, its assumptions). E01: prob05 sample-mean variance (p. 39), commit b20ab73.</p>
@@ -218,7 +221,7 @@
 <p><strong>Inverting for $n$.</strong> Set $2\exp(-2n\epsilon^2/(b-a)^2) \le \delta$:</p>
 <div class="deriv">$$n \ge \frac{(b-a)^2 \ln(2/\delta)}{2\epsilon^2}.$$</div>
 <p>Darts: $(b-a)^2 = 16$, $\ln 40 = 3.688879$, so $n \ge 295{,}110.36$, rounded up to $295{,}111$. At that $n$ the bound equals $0.05$.</p>
-<p><strong>Comparison.</strong> Chebyshev with the known variance needed $539{,}354$ (S115), about $1.83$ times as many. Both are sufficient sample sizes from upper bounds, not minimal ones, and neither says how a particular run behaves. For scale, the RMSE at $n = 295{,}111$ is about $0.0030$.</p>
+<p><strong>Comparison.</strong> Chebyshev with the known variance needed $539{,}354$ (slide 11), about $1.83$ times as many. Both are sufficient sample sizes from upper bounds, not minimal ones, and neither says how a particular run behaves. For scale, the RMSE at $n = 295{,}111$ is about $0.0030$.</p>
 <p><strong>Edge case.</strong> If $Y$ is constant, $a = b$ is not allowed, but no bound is needed: $\bar Y_n = \mu$ exactly.</p>
 <p><strong>Fixed versus data-selected $f$.</strong> The bound holds for one $f$ chosen before sampling. If $f$ is picked among many candidates using the same sample, the bound no longer applies to the picked one.</p>
 <h3>Sources</h3>
@@ -229,7 +232,7 @@
 <article data-slide-id="S33">
 <h2>13. The Rate Is Not the Cost</h2>
 <p class="msg"><span class="kt">Message.</span> Dimension is absent from the $1/\sqrt n$ exponent, but not from the constant or the cost.</p>
-<p>For $X \in \mathbb R^d$, the display splits the budget in two. The error is $\mathrm{RMSE} = \sigma_f(d)/\sqrt n$, where the overbrace warns that $\sigma_f(d)$ may grow with $d$. The work is $n \times c(d)$, where $c(d)$ is the cost of one draw plus one evaluation. The bullet explains why $d$ is missing from the exponent: the proof on S22 only used the scalars $Y_i = f(X_i)$, never the space $X$ lives in.</p>
+<p>For $X \in \mathbb R^d$, the display splits the budget in two. The error is $\mathrm{RMSE} = \sigma_f(d)/\sqrt n$, where the overbrace warns that $\sigma_f(d)$ may grow with $d$. The work is $n \times c(d)$, where $c(d)$ is the cost of one draw plus one evaluation. The bullet explains why $d$ is missing from the exponent: the proof on slide 9 only used the scalars $Y_i = f(X_i)$, never the space $X$ lives in.</p>
 <p>The highlight is the takeaway: a dimension-free rate is not a dimension-free budget.</p>
 <div class="detail">
 <h3>Details</h3>
@@ -276,6 +279,7 @@
 
 <article data-slide-id="S41">
 <h2>16. 02 · Change the Sampler</h2>
+<p class="pace">Part 02 · &asymp;25 min · elapsed &asymp;25 min</p>
 <p class="msg"><span class="kt">Message.</span> Visit useful outcomes more often without changing the target.</p>
 <p>Part 01 ended with a rare event whose relative error ordinary sampling cannot control at a reasonable sample size. The fix is to draw from a different distribution that visits the important region more often, and to correct each draw by a weight so that the average still targets the original expectation.</p>
 </article>
@@ -509,6 +513,7 @@ $$\begin{aligned}
 
 <article data-slide-id="S55">
 <h2>31. 03 · Control Proposal Risk</h2>
+<p class="pace">Part 03 · &asymp;25 min · elapsed &asymp;50 min</p>
 <p class="msg"><span class="kt">Message.</span> A correct mean is not enough for reliable Monte Carlo.</p>
 <p>Part 02 showed a practical proposal that keeps the target and cuts the relative error. This part asks why it works and how another proposal can fail: the second moment of the weighted integrand decides the error, the best proposal follows the integrand, and a proposal with lighter tails than the target can leave the estimate unbiased but with infinite variance.</p>
 </article>
@@ -681,6 +686,7 @@ $$\begin{aligned}
 
 <article data-slide-id="S72">
 <h2>43. 04 · Remove the Normalizer</h2>
+<p class="pace">Part 04 · &asymp;20 min · elapsed &asymp;75 min · break before this part</p>
 <p class="msg"><span class="kt">Message.</span> An unknown normalizing constant changes the estimator and its guarantees.</p>
 <p>Ordinary importance sampling needs the normalized ratio $p/q$. Often the target is known only up to a constant, $p = \tilde p / Z$ with $Z$ unknown. Dividing by the total weight removes $Z$, but the result is a ratio of two averages: consistent, yet biased at any finite sample size, and its weight diagnostics have blind spots.</p>
 </article>
@@ -831,6 +837,7 @@ $$\hat\mu_{\mathrm{IS}}=\hat\mu_{\mathrm{SN}}=0\ne\tfrac14$$
 
 <article data-slide-id="S83">
 <h2>55. 05 · Differentiate Expectations</h2>
+<p class="pace">Part 05 · &asymp;35 min · elapsed &asymp;95 min</p>
 <p class="msg"><span class="kt">Message.</span> Learning changes the distribution whose average we want.</p>
 <p>Up to now the distribution was fixed and we estimated one number. In learning, the parameters $\theta$ move the distribution itself, and we need the gradient of an expectation with respect to $\theta$. Two estimators follow: differentiate along a sampling path, or differentiate the log-probability (the score). The estimator results from Part 01 carry over and are not re-proved.</p>
 </article>
@@ -1140,6 +1147,7 @@ $$\hat\mu_{\mathrm{IS}}=\hat\mu_{\mathrm{SN}}=0\ne\tfrac14$$
 
 <article data-slide-id="S99">
 <h2>75. 06 · Reuse Samples Responsibly</h2>
+<p class="pace">Part 06 · &asymp;15 min · elapsed &asymp;130 min</p>
 <p class="msg"><span class="kt">Message.</span> Reusing data introduces a second distribution, not a new target.</p>
 <p>Samples collected under one policy are reused to evaluate or improve another. The correction is the importance ratio of Part 02, now a product over the steps of a sequence, and the gradient tools of Part 05 apply on top. This part applies that toolkit to a scoped, historical RLHF example; it is not a survey of reinforcement-learning methods.</p>
 </article>
@@ -1276,6 +1284,7 @@ with the example value $\epsilon=0.2$. The ratio $r_t(\theta)=\pi_\theta(a_t\mid
 
 <article data-slide-id="S109">
 <h2>84. One Target, Different Estimators</h2>
+<p class="pace">Synthesis and closer · &asymp;5 min · elapsed &asymp;145 min</p>
 <p class="msg"><span class="kt">Message.</span> Choose an estimator by the ingredients you can compute and the error claims you can justify.</p>
 <p>The table lines up the five estimators of the lecture. The middle column is what each one needs to be computable; the right column is the strongest claim it supports in general. Ask the room which row fits an example from earlier: the darts estimate of $\pi$ (ordinary MC), the rare event $\mathbb P(X\gt 10)$ for $X\sim\mathrm{Exp}(1)$ (importance sampling), a target known only up to its normalizer (self-normalized IS), the Gaussian with $R=X^2$ (pathwise), the two-action policy (score). The highlight is the lecture's warning: unbiased or consistent does not mean low error; the second moment decides that.</p>
 <div class="detail">
@@ -1301,15 +1310,15 @@ with the example value $\epsilon=0.2$. The ratio $r_t(\theta)=\pi_\theta(a_t\mid
 <section>
   <h2>References</h2>
   <ol>
-    <li>A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, 2013&ndash; (in progress, free online) &mdash; the canonical modern reference: ch. 2 for plain MC and error analysis, ch. 9 for importance sampling (Theorem 4&rsquo;s optimal proposal, SNIS, the delta-method variance and bias expansions of Sections 7.5&ndash;7.6), ch. 15&ndash;17 for quasi&ndash;Monte Carlo. <a href="https://artowen.su.domains/mc/">artowen.su.domains/mc</a>.</li>
-    <li>C. P. Robert, G. Casella, <em>Monte Carlo Statistical Methods</em>, 2nd ed., Springer, 2004 &mdash; ch. 3 for Monte Carlo integration and importance sampling, including infinite-variance pathologies; later chapters for the MCMC and particle methods this deck stops short of. <a href="https://doi.org/10.1007/978-1-4757-4145-2">doi:10.1007/978-1-4757-4145-2</a>.</li>
-    <li>R. J. Williams, &ldquo;Simple statistical gradient-following algorithms for connectionist reinforcement learning,&rdquo; <em>Machine Learning</em> 8:229&ndash;256, 1992 &mdash; the REINFORCE paper: Theorem 5&rsquo;s estimator, the baseline, and the name. <a href="https://doi.org/10.1007/BF00992696">doi:10.1007/BF00992696</a>.</li>
-    <li>A. Kong, &ldquo;A note on importance sampling using standardized weights,&rdquo; Technical Report 348, Department of Statistics, University of Chicago, 1992 &mdash; the origin of the effective-sample-size formula of Section 7.6. (Technical report; no stable link, cited as commonly referenced in the IS literature, e.g. by Owen [1, ch. 9].)</li>
-    <li>J. Schulman, F. Wolski, P. Dhariwal, A. Radford, O. Klimov, &ldquo;Proximal Policy Optimization Algorithms,&rdquo; 2017 &mdash; the ratio-clipping surrogate behind Section 9.4&rsquo;s &ldquo;keep the ratio near one.&rdquo; <a href="https://arxiv.org/abs/1707.06347">arXiv:1707.06347</a>.</li>
-    <li>L. Ouyang et al., &ldquo;Training language models to follow instructions with human feedback,&rdquo; NeurIPS 2022 &mdash; InstructGPT: the RLHF pipeline whose schematic objective Section 9.6 states, with the KL-to-reference term. <a href="https://arxiv.org/abs/2203.02155">arXiv:2203.02155</a>.</li>
-    <li>D. P. Kingma, M. Welling, &ldquo;Auto-Encoding Variational Bayes,&rdquo; ICLR 2014 &mdash; the reparameterization trick of Section 10.2. <a href="https://arxiv.org/abs/1312.6114">arXiv:1312.6114</a>.</li>
-    <li>R. S. Sutton, A. G. Barto, <em>Reinforcement Learning: An Introduction</em>, 2nd ed., MIT Press, 2018 &mdash; ch. 13 for policy-gradient methods and baselines in their native RL setting. <a href="http://incompleteideas.net/book/the-book.html">incompleteideas.net/book/the-book.html</a>.</li>
-    <li>Companion notes in this series: <code>prob01</code> (LOTUS, variance, Jensen with equality case), <code>prob02</code> (KL, additivity, nonnegativity via Jensen), <code>prob04</code> (chain rule of probability), <code>prob05</code> (LLN, Chebyshev, CLT, MGFs), <code>prob06</code> (Hoeffding), <code>prob07</code> (MSE decomposition, estimator bias), <code>prob08</code> (Gaussian machinery, reparameterization substrate) &mdash; <code>../prob0N-&lt;topic&gt;/prob0N-&lt;topic&gt;-note.html</code>.</li>
+    <li>A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, chapters posted online (accessed 2026-11-17): Ch.&nbsp;1&ndash;2 for the Monte Carlo estimator and its error, <a href="https://artowen.su.domains/mc/Ch-intro.pdf">artowen.su.domains/mc/Ch-intro.pdf</a>; Ch.&nbsp;7 (&sect;&sect;7.1, 7.4) for tensor-grid quadrature, <a href="https://artowen.su.domains/mc/Ch-quadrature.pdf">artowen.su.domains/mc/Ch-quadrature.pdf</a>; Ch.&nbsp;9 for importance sampling (&sect;9.1, Theorem&nbsp;9.1 and the optimal density), self-normalized importance sampling (&sect;9.2, Theorem&nbsp;9.2) and weight diagnostics (&sect;9.3, eqs. 9.13&ndash;9.14), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>.</li>
+    <li>C. P. Robert, G. Casella, <em>Monte Carlo Statistical Methods</em>, 2nd ed., Springer, 2004 &mdash; further reading on Monte Carlo integration and importance sampling, and on the MCMC methods this lecture does not cover. <a href="https://doi.org/10.1007/978-1-4757-4145-2">doi:10.1007/978-1-4757-4145-2</a>.</li>
+    <li>S. Mohamed, M. Rosca, M. Figurnov, A. Mnih, &ldquo;Monte Carlo Gradient Estimation in Machine Learning,&rdquo; <em>JMLR</em> 21(132), 2020 &mdash; pathwise and score-function estimators and their assumptions (&sect;&sect;4.2&ndash;4.3, 5.2&ndash;5.3), baselines (&sect;7.4.3). <a href="https://jmlr.org/papers/volume21/19-346/19-346.pdf">jmlr.org/papers/volume21/19-346</a>.</li>
+    <li>D. P. Kingma, M. Welling, &ldquo;Auto-Encoding Variational Bayes,&rdquo; ICLR 2014, &sect;2.3 &mdash; the reparameterization trick. <a href="https://arxiv.org/abs/1312.6114">arXiv:1312.6114</a>.</li>
+    <li>R. J. Williams, &ldquo;Simple statistical gradient-following algorithms for connectionist reinforcement learning,&rdquo; <em>Machine Learning</em> 8:229&ndash;256, 1992 &mdash; the REINFORCE estimator, for historical background. <a href="https://doi.org/10.1007/BF00992696">doi:10.1007/BF00992696</a>.</li>
+    <li>J. Schulman, F. Wolski, P. Dhariwal, A. Radford, O. Klimov, &ldquo;Proximal Policy Optimization Algorithms,&rdquo; arXiv:1707.06347v2, 2017 &mdash; &sect;3 clipped surrogate objective, eq.&nbsp;(7) and Figure&nbsp;1; &sect;4 KL-penalty variant. <a href="https://arxiv.org/abs/1707.06347">arXiv:1707.06347</a>.</li>
+    <li>L. Ouyang et al., &ldquo;Training language models to follow instructions with human feedback,&rdquo; NeurIPS 2022 &mdash; the reward-plus-KL RL objective, arXiv:2203.02155v1 &sect;3.5, eq.&nbsp;(2). <a href="https://arxiv.org/abs/2203.02155">arXiv:2203.02155</a>.</li>
+    <li>R. S. Sutton, A. G. Barto, <em>Reinforcement Learning: An Introduction</em>, 2nd ed., MIT Press, 2018 &mdash; further reading on policy-gradient methods and baselines. <a href="http://incompleteideas.net/book/the-book.html">incompleteideas.net/book/the-book.html</a>.</li>
+    <li>Companion notes in this series, read at commit <code>b20ab73</code>: <code>prob01</code> (LOTUS, variance, Jensen), <code>prob02</code> (KL divergence), <code>prob04</code> (chain rule of probability), <code>prob05</code> (LLN, Chebyshev, CLT), <code>prob06</code> (Hoeffding), <code>prob07</code> (MSE decomposition, estimator bias), <code>prob08</code> (Gaussian machinery) &mdash; <code>../prob0N-&lt;topic&gt;/prob0N-&lt;topic&gt;-note.html</code>.</li>
   </ol>
 </section>
 

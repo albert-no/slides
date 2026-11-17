@@ -129,72 +129,229 @@
 
 <article data-slide-id="S43">
 <h2>17. Most Draws Miss the Tail</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> A rare-event probability with a known answer shows why plain sampling wastes almost every draw.</p>
+<p>The running example takes the target $p$ to be the exponential distribution with rate $1$, so $p(x) = e^{-x}$ for $x \geq 0$. The quantity we want is the probability that $X$ exceeds $10$. Write it as an expectation with the indicator integrand $f(x) = \mathbf{1}\{x \gt 10\}$, so $\mu = \mathbb{E}_p[f(X)] = \Pr_p(X \gt 10)$. The figure plots the exact density on $[0, 14]$. Past $x = 10$ the curve is indistinguishable from zero at this scale, so the inset magnifies the tail: there the density is below $5 \times 10^{-5}$, and the shaded area is $\mu$ itself.</p>
+<p>Because the answer is known in closed form, we can measure every estimator against it. Ordinary sampling lands in the event about once in $22{,}026$ draws on average, since $1/\mu = e^{10} \approx 22{,}026.47$.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>The integral is elementary:</p>
+$$\begin{aligned}
+\mu &= \int_{10}^{\infty} e^{-x}\,dx \\
+&= e^{-10} \approx 4.5400 \times 10^{-5}.
+\end{aligned}$$
+<p>"Rate $1$" fixes the parametrization used throughout the lecture: $\mathrm{Exp}(\lambda)$ has density $\lambda e^{-\lambda x}$ on $x \geq 0$. The figure is the exact density, not a simulation; the inset's vertical axis runs from $0$ to $5 \times 10^{-5}$.</p>
+<h3>Sources</h3>
+<p>Our calculation (E11 setup: $p = \mathrm{Exp}(1)$, $f = \mathbf{1}\{x \gt 10\}$, $\mu = e^{-10}$). Numbers: <code>gen/p9b_calc.py</code>. Figure: <code>gen/p9b_figs.py</code> → <code>fig/p9b-tail.svg</code> (deterministic, no random draws).</p>
+</div>
 </article>
 
 <article data-slide-id="S44">
 <h2>18. A Rare Event Needs Many Samples</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> For $10\%$ relative RMSE on $\mu = e^{-10}$, ordinary Monte Carlo needs about $2.2$ million draws.</p>
+<p>Each ordinary draw gives $f(X_i) \in \{0, 1\}$, a Bernoulli variable with mean $\mu$ and variance $\mu(1-\mu)$. The sample mean of $n$ draws therefore has RMSE $\sqrt{\mu(1-\mu)/n}$. Dividing by $\mu$ gives the relative RMSE on the slide. Asking for relative RMSE at most $0.1$ and solving for $n$ gives $n \geq 100\,(1-\mu)/\mu$. The braced factor $(1-\mu)/\mu = e^{10} - 1 \approx 22{,}025$ is the relative variance of a single draw: one indicator draw is very noisy compared with the tiny number it estimates.</p>
+<p>The result is $n \geq 2{,}202{,}547$ after rounding up. This is a statement about the spread of the estimator. It is not a $95\%$ confidence guarantee, and it says nothing about wall-clock time.</p>
+<div class="detail">
+<h3>Details</h3>
+$$\begin{aligned}
+\frac{\mathrm{RMSE}}{\mu}
+&= \frac{\sqrt{\mu(1-\mu)/n}}{\mu} \\
+&= \sqrt{\frac{1-\mu}{n\,\mu}}.
+\end{aligned}$$
+<p>Setting this $\leq 0.1$ and squaring:</p>
+$$\begin{aligned}
+n &\geq 100 \cdot \frac{1-\mu}{\mu} \\
+&= 100\,(e^{10} - 1) \\
+&\approx 2{,}202{,}546.58,
+\end{aligned}$$
+<p>so the smallest integer is $2{,}202{,}547$. The estimator is unbiased, so RMSE equals its standard deviation.</p>
+<h3>Sources</h3>
+<p>E02: sample-mean variance $\sigma_f^2/n$ (Owen, Ch. 2, §§2.1–2.2). Numbers: E11, recomputed in <code>gen/p9b_calc.py</code>.</p>
+</div>
 </article>
 
 <article data-slide-id="S45">
 <h2>19. Visit Useful Outcomes More Often</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> Importance sampling draws from a different distribution $q$ that visits the event more often, while the target $\mu$ stays fixed.</p>
+<p>The schematic shows a number line with the event $x \gt 10$ shaded. The top row is a set of draws from the target $p$: they crowd near zero and none reaches $10$. The bottom row is a set of draws from a proposal $q$ that spreads its mass further out, so several land in the event.</p>
+<p>The proposal changes only where we sample. The target density $p$, the integrand $f$ and the number $\mu$ do not change. That creates a problem: a plain average of $f(X_i)$ with $X_i \sim q$ estimates $\mathbb{E}_q[f(X)] = \Pr_q(X \gt 10)$, which is a different number. The next step corrects each draw.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>The dots are hand-placed to show the idea; they are not simulated draws and their counts mean nothing. The proposal used later in the lecture is $q = \mathrm{Exp}(0.1)$, for which $\Pr_q(X \gt 10) = e^{-1} \approx 0.37$.</p>
+<h3>Sources</h3>
+<p>E04 (Owen, Ch. 9, §9.1). Figure: <code>gen/p9b_figs.py</code> → <code>fig/p9b-visits.svg</code>, schematic.</p>
+</div>
 </article>
 
 <article data-slide-id="S50">
 <h2>20. Correct Each Visit's Weight</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> The weight $w = p/q$ scales each draw by how much the proposal over- or under-visits its location.</p>
+<p>The weight is the target density divided by the proposal density, defined wherever $q(x) \gt 0$. If $q$ visits a point less often than $p$ would, the weight is above $1$ and boosts that draw. If $q$ visits it more often, the weight is below $1$ and shrinks it.</p>
+<p>The bar chart uses three outcomes $a, b, c$ with hand-picked values. The target puts $0.5, 0.3, 0.2$ on them; the proposal puts $0.25, 0.25, 0.5$. The ratios are $w = 2, 1.2, 0.4$: outcome $c$ is over-visited and down-weighted, outcome $a$ is under-visited and up-weighted. For continuous $x$ the weight is a ratio of densities, so it can exceed $1$; it is not a probability.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>The average weight under $q$ is</p>
+$$\begin{aligned}
+\mathbb{E}_q[w(X)] &= \int_{\{q \gt 0\}} p(x)\,dx \\
+&= \Pr_p\big(q(X) \gt 0\big) \;\leq\; 1,
+\end{aligned}$$
+<p>with equality when $q$ is positive wherever $p$ is. In the bar example $0.25 \cdot 2 + 0.25 \cdot 1.2 + 0.5 \cdot 0.4 = 1$.</p>
+<p>Notation for the rest of the lecture: $w = p/q$ is the normalized ratio; $\tilde{w}$ will denote an unnormalized ratio and $\bar{w}$ a normalized sampled share.</p>
+<h3>Sources</h3>
+<p>E04 (Owen, Ch. 9, §9.1). Figure: <code>gen/p9b_figs.py</code> → <code>fig/p9b-ratio.svg</code>; illustrative values chosen by hand.</p>
+</div>
 </article>
 
 <article data-slide-id="S46">
 <h2>21. Importance Sampling Preserves the Target</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> Under integrability and a coverage condition, the weighted integrand has the same mean under $q$ as $f$ has under $p$.</p>
+<p>The theorem has two assumptions. First, $\mathbb{E}_p|f(X)| \lt \infty$, so $\mu$ exists. Second, $q$ must be positive wherever $f(x)\,p(x) \neq 0$, up to a set of probability zero. Then the expectation of $f$ under $p$ equals the expectation of $f\,w$ under $q$. The braces under each side name the distribution the expectation is taken under: the left side samples from $p$, the right side from $q$.</p>
+<p>Two limits. To use the right side we must compute $p(x)/q(x)$ at every draw, so both densities must be evaluable, including their normalizing constants. And the theorem equates means only. It says nothing about variance; whether $q$ helps is a separate question.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>The coverage condition involves $fp$, not $p$: $q$ may vanish where $f = 0$ even if $p \gt 0$ there. The identity makes $\hat{\mu}_{\mathrm{IS}}$ unbiased, and the integrable law of large numbers then gives consistency.</p>
+<h3>Sources</h3>
+<p>E04: Art B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch. 9, §9.1, Theorem 9.1.</p>
+</div>
 </article>
 
 <article data-slide-id="S47a">
 <h2>22. Proof: Cancel the Proposal</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> Writing the $q$-expectation as an integral cancels $q$, leaving $\int fp$ over the region where $q \gt 0$.</p>
+<p>A draw from $q$ lands in $\{q \gt 0\}$ with probability one, so the expectation of $f\,w$ under $q$ is an integral over that region (LOTUS). Inside it, $w = p/q$ and the factor $q$ cancels. What remains is $\int f\,p$, but still only over $\{q \gt 0\}$. The region where $q = 0$ has not been accounted for; that is the job of the next step.</p>
+<div class="detail">
+<h3>Details</h3>
+$$\begin{aligned}
+\mathbb{E}_q[f w]
+&= \int_{\{q \gt 0\}} f\,\frac{p}{q}\,q\,dx \\
+&= \int_{\{q \gt 0\}} f\,p\,dx.
+\end{aligned}$$
+<p>The assumption $\mathbb{E}_p|f| \lt \infty$ makes $\int |f|p$ finite, so every integral here converges absolutely and the cancellation is legitimate. For a discrete $X$ replace integrals by sums over states.</p>
+<h3>Sources</h3>
+<p>E04 (Owen, Ch. 9, §9.1, Theorem 9.1). LOTUS: E01 (course prerequisite, prob01).</p>
+</div>
 </article>
 
 <article data-slide-id="S47b">
 <h2>23. Proof (continued): Check the Missing Region</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> The unsampled region contributes nothing because $fp = 0$ there, so the two expectations agree.</p>
+<p>The strip splits the line into the region $\{q \gt 0\}$, which the proposal samples, and the region $\{q = 0\}$, which it never visits. The full target integral $\int fp$ is the sum of the two pieces. The first piece is $\mathbb{E}_q[fw]$ by the previous step. The second piece is zero because the coverage assumption says $fp = 0$ wherever $q = 0$. That completes the proof.</p>
+<p>Only the product $fp$ must vanish there. The target $p$ itself may be positive on $\{q = 0\}$, as long as $f$ is zero there.</p>
+<div class="detail">
+<h3>Details</h3>
+$$\begin{aligned}
+\mathbb{E}_p[f]
+&= \int_{\{q \gt 0\}} fp\,dx + \int_{\{q = 0\}} fp\,dx \\
+&= \mathbb{E}_q[fw] + 0.
+\end{aligned}$$
+<p>"Up to a null set" is enough: if $fp \neq 0$ only on a set of $p$-probability zero inside $\{q = 0\}$, that piece still integrates to zero.</p>
+<h3>Sources</h3>
+<p>E04 (Owen, Ch. 9, §9.1, Theorem 9.1).</p>
+</div>
 </article>
 
 <article data-slide-id="S48">
 <h2>24. Missing Support Cannot Be Repaired</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> If $q$ never visits a region where $fp \neq 0$, the estimator is wrong for every sample size.</p>
+<p>The target is uniform on four states, $p(x) = 1/4$, and the integrand picks out state $4$, so $\mu = 1/4$. The proposal is uniform on states $1, 2, 3$ only, so $q(4) = 0$. The bar chart shows the target bars on all four states and the dashed proposal bars missing on state $4$, the only state where $f = 1$.</p>
+<p>Every draw lands in $\{1,2,3\}$, gets weight $(1/4)/(1/3) = 3/4$, and has $f = 0$. So $\hat{\mu}_{\mathrm{IS}} = 0$ for every $n$. The weights look perfectly balanced, yet the estimate is exactly wrong, and more draws cannot help because state $4$ is never visited.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>Here $\mathbb{E}_q[fw] = 0 \neq 1/4$ and $\mathbb{E}_q[w] = 3/4$, matching $\Pr_p(q(X) \gt 0) = 3/4$. The coverage assumption fails, so the theorem does not apply; this is not a counterexample to it. Equal weights mean a self-normalized version also returns $0$.</p>
+<h3>Sources</h3>
+<p>E19 (our calculation, direct enumeration). Numbers: <code>gen/p9b_calc.py</code>. Figure: <code>gen/p9b_figs.py</code> → <code>fig/p9b-support.svg</code>.</p>
+</div>
 </article>
 
 <article data-slide-id="S49">
 <h2>25. Average the Weighted Integrand</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> The importance-sampling estimator draws from $q$, weights each value of $f$ by $p/q$, and divides by $n$.</p>
+<p>The flow reads left to right: draw $X_i$ from $q$; evaluate $f$, $p$ and $q$ at that point; form $Y_i = f(X_i)\,w(X_i)$; average the $n$ values. The formula is the same recipe. Under the conditions of the identity, each $Y_i$ has mean $\mu$, so the average is unbiased.</p>
+<p>Divide by $n$, not by the sum of the weights; dividing by the weight sum is a different estimator. Compared with ordinary Monte Carlo, each draw also costs one evaluation of $p$ and of $q$.</p>
+<div class="detail">
+<h3>Details</h3>
+$$\begin{aligned}
+\hat{\mu}_{\mathrm{IS}} &= \frac{1}{n}\sum_{i=1}^{n} f(X_i)\,w(X_i), \\
+\mathbb{E}\big[\hat{\mu}_{\mathrm{IS}}\big] &= \mathbb{E}_q[fw] = \mu.
+\end{aligned}$$
+<p>If $\mathbb{E}_q[(fw)^2]$ is finite, the variance is $\mathrm{Var}_q(fw)/n$; this is the subject of Part 03.</p>
+<h3>Sources</h3>
+<p>E04 (Owen, Ch. 9, §9.1).</p>
+</div>
 </article>
 
 <article data-slide-id="S117">
 <h2>26. A Practical Exponential Proposal</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> A heavier-tailed exponential, $q = \mathrm{Exp}(0.1)$, is a simple valid proposal for the rare event.</p>
+<p>The proposal keeps the exponential family but lowers the rate from $1$ to $0.1$, so its tail decays ten times more slowly. The figure plots both exact densities on a log scale: the target falls to about $10^{-6}$ by $x = 14$, while the proposal stays between $10^{-1}$ and $10^{-2}$ and lies far above the target throughout the event.</p>
+<p>Both densities are positive on all of $x \geq 0$, so coverage holds. The proposal's normalizer is $0.1$, a known number, so the weight $p/q$ can be computed without knowing $\mu$. The rate $0.1$ is an illustrative choice, not an optimum.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>$q(x) = 0.1\,e^{-0.1x}$ on $x \geq 0$. Sampling it is as easy as sampling $p$: if $E \sim \mathrm{Exp}(1)$ then $10E \sim \mathrm{Exp}(0.1)$.</p>
+<h3>Sources</h3>
+<p>E11 (our calculation; illustrative choice, not an empirical optimum). Figure: <code>gen/p9b_figs.py</code> → <code>fig/p9b-proposal.svg</code>, exact densities.</p>
+</div>
 </article>
 
 <article data-slide-id="S118">
 <h2>27. More Tail Visits, Corrected Weights</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> The proposal hits the event about $37\%$ of the time, and each hit carries a weight that corrects for the oversampling.</p>
+<p>Under $q$, $\Pr_q(X \gt 10) = e^{-1} \approx 0.37$, against $e^{-10}$ under $p$: about $8{,}100$ times more hits. The weight is $w(x) = 10\,e^{-0.9x}$. The figure plots each draw's contribution $f\,w$ on a log scale. Below $10$ the contribution is zero. At $x = 10$ it is about $1.2 \times 10^{-3}$, roughly $27$ times $\mu$, and it falls steadily, crossing the dashed line $\mu = e^{-10}$ near $x \approx 13.7$.</p>
+<p>So the hits are not all worth the same. More hits do not by themselves prove lower variance; that needs the second-moment calculation that follows.</p>
+<div class="detail">
+<h3>Details</h3>
+$$\begin{aligned}
+w(x) &= \frac{e^{-x}}{0.1\,e^{-0.1x}} \\
+&= 10\,e^{-0.9x}.
+\end{aligned}$$
+<p>Ratio of hit rates: $e^{-1}/e^{-10} = e^{9} \approx 8{,}103$. Sample values of $fw$: $1.234 \times 10^{-3}$ at $x = 10$, $2.04 \times 10^{-4}$ at $12$, $1.37 \times 10^{-5}$ at $15$, $1.52 \times 10^{-7}$ at $20$. Check: $\mathbb{E}_q[fw] = e^{-10}$.</p>
+<h3>Sources</h3>
+<p>E11 (our calculation). Numbers: <code>gen/p9b_calc.py</code>. Figure: <code>gen/p9b_figs.py</code> → <code>fig/p9b-contrib.svg</code>, exact curve.</p>
+</div>
 </article>
 
 <article data-slide-id="S119">
 <h2>28. Compute the Proposal's Error</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> For the exponential proposal the second moment has a closed form; at rate $0.1$ the relative variance per draw is about $13.3$.</p>
+<p>For a general rate $\lambda$, the second moment of one draw is $\int_{10}^\infty p^2/q$. The integrand is $e^{-(2-\lambda)x}/\lambda$, which is integrable only when $\lambda \lt 2$. Dividing by $\mu^2 = e^{-20}$ gives the ratio $e^{10\lambda}/(\lambda(2-\lambda))$. At $\lambda = 0.1$ this is $e/0.19 \approx 14.3067$. Subtracting $1$ gives the relative variance of one draw, about $13.3067$, compared with $22{,}025$ for an ordinary draw.</p>
+<div class="detail">
+<h3>Details</h3>
+$$\begin{aligned}
+\frac{p(x)^2}{q(x)} &= \frac{e^{-2x}}{\lambda e^{-\lambda x}} \\
+&= \tfrac{1}{\lambda}\,e^{-(2-\lambda)x}, \\
+\int_{10}^{\infty} \tfrac{1}{\lambda}\,e^{-(2-\lambda)x}\,dx
+&= \frac{e^{-10(2-\lambda)}}{\lambda(2-\lambda)}.
+\end{aligned}$$
+<p>At $\lambda = 0.1$: $e^{1}/(0.1 \cdot 1.9)$. A numerical integral in the generator agrees to six digits ($14.30674$). For $\lambda \geq 2$ the integral is infinite.</p>
+<h3>Sources</h3>
+<p>E11 (our calculation using E04's second-moment identity). Numbers: <code>gen/p9b_calc.py</code>.</p>
+</div>
 </article>
 
 <article data-slide-id="S120">
 <h2>29. Same Target, Less Relative Error</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> At the same accuracy target, the exponential proposal needs $1{,}331$ draws against $2{,}202{,}547$.</p>
+<p>Both estimators are unbiased for the same $\mu$, so relative RMSE is $\sqrt{\text{relative variance}/n}$. Requiring it to be at most $0.1$ gives $n \geq \text{relative variance}/0.01$, rounded up. The bars show the two answers on a log scale: shorter is fewer draws.</p>
+<p>These are exact-formula calculations, not timed runs. They count draws, assuming equal work per draw; importance sampling also evaluates $p$ and $q$. Neither number is a $95\%$ coverage guarantee.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>Ordinary: $22{,}025.4658/0.01 = 2{,}202{,}546.58$, so $n = 2{,}202{,}547$.<br>Importance sampling: $13.30675/0.01 = 1{,}330.67$, so $n = 1{,}331$.</p>
+<p>The ratio of the two counts is about $1{,}655$; we do not call it a speedup, because cost per draw differs and the proposal was not tuned.</p>
+<h3>Sources</h3>
+<p>E11 (our calculation). Numbers: <code>gen/p9b_calc.py</code>. Figure: <code>gen/p9b_figs.py</code> → <code>fig/p9b-budget.svg</code>.</p>
+</div>
 </article>
 
 <article data-slide-id="S54">
 <h2>30. Coverage and Variance Are Different</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> A proposal must pass two separate checks: coverage for correctness, a small second moment for precision.</p>
+<p>The left box is validity: $q \gt 0$ wherever $fp \neq 0$. It buys unbiasedness, the same $\mu$ on average. The right box is precision: the second moment $\int f^2p^2/q$ must be finite and small. It buys a small RMSE per draw. The exponential proposal passes both: it is positive on all of $x \geq 0$, and its relative variance per draw is $13.3$ against $22{,}025$.</p>
+<p>The checks are independent. A proposal that covers everything can still have a larger variance than ordinary sampling, or an infinite one; Part 03 builds such an example.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>Failing the first check gives a biased estimator (the four-state example). Failing the second leaves the estimator unbiased and consistent when $\mathbb{E}_q|fw|$ is finite, but with no finite RMSE.</p>
+<h3>Sources</h3>
+<p>E04 (Owen, Ch. 9, §9.1); E11 (our calculation).</p>
+</div>
 </article>
 
 <article data-slide-id="S55">
@@ -204,57 +361,168 @@
 
 <article data-slide-id="S56">
 <h2>32. The Second Moment Decides</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> The variance of importance sampling is set by one integral, $\int f^2p^2/q$, which the choice of $q$ controls.</p>
+<p>The estimator is a sample mean of iid copies of $Y = f(X)\,w(X)$ with $X \sim q$. Its variance is $\mathrm{Var}_q(Y)/n$, and $\mathrm{Var}_q(Y) = \mathbb{E}_q[Y^2] - \mu^2$. The first term, read through LOTUS, is the integral of $f^2p^2/q$; the second is fixed by the problem. So choosing $q$ means choosing this integral.</p>
+<p>The formula is valid when the integral is finite. If it is infinite, the variance is infinite and there is no finite RMSE at any $n$. The criterion contains $f^2$: the weights alone do not decide it.</p>
+<div class="detail">
+<h3>Details</h3>
+$$\begin{aligned}
+\mathbb{E}_q[(fw)^2]
+&= \int \frac{f^2 p^2}{q^2}\,q\,dx \\
+&= \int \frac{f^2 p^2}{q}\,dx,
+\end{aligned}$$
+<p>over $\{q \gt 0\}$. Then $\mathrm{Var}(\hat{\mu}_{\mathrm{IS}}) = (\mathbb{E}_q[(fw)^2] - \mu^2)/n$.</p>
+<h3>Sources</h3>
+<p>E04 (Owen, Ch. 9, §9.1); sample-mean variance E02 (Owen, Ch. 2, §§2.1–2.2).</p>
+</div>
 </article>
 
 <article data-slide-id="S57">
 <h2>33. Follow the Weighted Integrand</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> To keep $\int f^2p^2/q$ small, place proposal mass where $|f|\,p$ is large, not where $p$ is large.</p>
+<p>The integrand $f^2p^2/q$ blows up where $|f|p$ is big but $q$ is small. That suggests shaping $q$ like $|f|\,p$. The figure illustrates this with $p = \mathcal{N}(0,1)$ and $f(x) = x$. The grey curve is $p$, peaked at $0$. The dashed red curve is the signed product $fp$, negative on the left. The shaded blue curve is $|f|p$: two lobes, near $x = \pm 1$, and zero at $x = 0$, exactly where $p$ peaks.</p>
+<p>The absolute value is needed because a density cannot be negative. This is intuition; the theorem that follows makes it precise.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>For this illustration $|f|p = |x|\,e^{-x^2/2}/\sqrt{2\pi}$, maximized at $x = \pm 1$. Sampling from $p$ would concentrate draws where $f$ is near zero and contributes little.</p>
+<h3>Sources</h3>
+<p>E04 (Owen, Ch. 9, §9.1). Figure: <code>gen/p9b_figs.py</code> → <code>fig/p9b-weighted.svg</code>, exact curves for the illustration.</p>
+</div>
 </article>
 
 <article data-slide-id="S59">
 <h2>34. The Optimal Proposal</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> The proposal proportional to $|f|\,p$ minimizes the variance, and the minimum is $c^2 - \mu^2$ with $c = \mathbb{E}_p|f|$.</p>
+<p>Let $c = \mathbb{E}_p|f(X)|$, assumed positive and finite. Among all proposals that cover the region where $fp \neq 0$, the one-draw variance $\mathrm{Var}_q(fw)$ is smallest for $q^* = |f|p/c$, and the minimum value is $c^2 - \mu^2$. With $n$ draws, divide by $n$. The statement holds for integrands of any sign.</p>
+<p>It is a formula, not yet a usable sampler: $q^*$ contains the constant $c$, which is an integral of the same kind as the one we want.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>$c \geq |\mu|$ by the triangle inequality, so the minimum is nonnegative. It is zero exactly when $c = |\mu|$, that is, when $f$ has one sign wherever $p \gt 0$ (up to null sets).</p>
+<h3>Sources</h3>
+<p>E04: Art B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch. 9, §9.1, optimal-density discussion, printed pp. 4–6.</p>
+</div>
 </article>
 
 <article data-slide-id="S60">
 <h2>35. Proof: A Common Lower Bound</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> Jensen's inequality gives every admissible proposal the same floor, $\mathbb{E}_q[(fw)^2] \geq c^2$.</p>
+<p>Recall that $\mathbb{E}[Z^2] \geq (\mathbb{E}Z)^2$, with equality exactly when $Z$ is almost surely constant. Apply it to $Z = |f(X)|\,w(X)$ with $X \sim q$. Its square is $(fw)^2$. Its mean is $\mathbb{E}_q[|f|w]$, which by the importance-sampling identity applied to $|f|$ equals $\mathbb{E}_p|f| = c$. So the second moment is at least $c^2$.</p>
+<p>The identity applies to $|f|$ because $|f|p \neq 0$ exactly where $fp \neq 0$, so the coverage condition is the same. The bound does not depend on $q$.</p>
+<div class="detail">
+<h3>Details</h3>
+$$\begin{aligned}
+\mathbb{E}_q[(fw)^2] &= \mathbb{E}_q[Z^2] \\
+&\geq (\mathbb{E}_q Z)^2 \\
+&= c^2.
+\end{aligned}$$
+<p>If $\mathbb{E}_q[Z^2] = \infty$ the bound holds trivially. Subtracting $\mu^2$ gives $\mathrm{Var}_q(fw) \geq c^2 - \mu^2$. Equality iff $|f|w$ is constant $q$-almost surely. The equality case of Jensen follows from $\mathrm{Var}(Z) = \mathbb{E}(Z - \mathbb{E}Z)^2 = 0$.</p>
+<h3>Sources</h3>
+<p>E04 (Owen, Ch. 9, §9.1, pp. 4–6). Jensen: E01 (course prerequisite, prob01).</p>
+</div>
 </article>
 
 <article data-slide-id="S61">
 <h2>36. Proof (continued): Attain the Bound</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> Under $q^*$ the quantity $|f|w^*$ equals $c$ at every draw, so the floor is reached.</p>
+<p>Recall the floor: every admissible $q$ has $\mathbb{E}_q[(fw)^2] \geq c^2$. Plug in $q^* = |f|p/c$. Wherever $q^* \gt 0$, the ratio $|f|p/q^*$ is exactly $c$. So $(fw^*)^2 = c^2$ at every draw, the second moment is $c^2$, and the variance is $c^2 - \mu^2$. That finishes the proof.</p>
+<p>The sign of $f$ can still change from draw to draw, so $fw^*$ is $\pm c$; only its magnitude is fixed. That is why the minimum is $c^2 - \mu^2$ and not zero in general.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>$q^*$ is a density: it is nonnegative and $\int |f|p/c = c/c = 1$. It is zero exactly where $fp = 0$, so it is admissible. Since the equality case of Jensen requires $|f|w$ constant, $q^*$ is the unique minimizer up to null sets.</p>
+<h3>Sources</h3>
+<p>E04 (Owen, Ch. 9, §9.1, pp. 4–6).</p>
+</div>
 </article>
 
 <article data-slide-id="S63">
 <h2>37. One-Sign Integrands Permit Zero Variance</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> For the nonnegative rare-event indicator, the optimal proposal gives every draw the exact answer.</p>
+<p>The indicator is nonnegative, so $c = \mathbb{E}_p|f| = \mu = e^{-10}$. Then $q^*$ is the target restricted to $x \gt 10$ and renormalized: $q^*(x) = e^{-(x-10)}$ for $x \gt 10$. The figure shows it starting at height $1$ at $x = 10$ and decaying; the strip below marks schematic draws, all past $10$. Each draw contributes $fw^* = e^{-10}$ exactly, so the variance is zero.</p>
+<p>This is an oracle benchmark: we built it from the known answer. For integrands that change sign, $c \gt |\mu|$ in general and the optimal variance $c^2 - \mu^2$ is positive.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>For $x \gt 10$: $w^*(x) = e^{-x}/e^{-(x-10)} = e^{-10}$ and $f(x) = 1$.</p>
+<h3>Sources</h3>
+<p>E04 (Owen, Ch. 9, §9.1). Our calculation. Figure: <code>gen/p9b_figs.py</code> → <code>fig/p9b-oracle.svg</code>; exact $q^*$, schematic draw ticks.</p>
+</div>
 </article>
 
 <article data-slide-id="S64">
 <h2>38. The Oracle Needs a Normalizer</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> Evaluating the optimal weight requires $c$, which for a one-sign integrand is the answer itself.</p>
+<p>Follow the boxes. To evaluate $q^* = fp/c$ we need $c$, which here equals $\mu$. To compute the weight $w^* = p/q^* = c$ we again need $c$. Only then can we estimate $\mu$. The loop closes: the weight requires the number we are trying to estimate.</p>
+<p>Two capabilities should be kept apart. Being able to draw from $q^*$ is one. Being able to evaluate its normalized density, and hence the weight, is another. In the running example both are easy: $10 + \mathrm{Exp}(1)$ has density $q^*$, and $c = e^{-10}$ is known. In harder problems one may know $|f|p$ only up to the constant $c$, and then $w^*$ cannot be evaluated.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>The obstacle is evaluating the normalized optimal weight, not a universal impossibility of sampling $q^*$. Practical proposals aim to resemble $|f|p$ while keeping a known normalizer.</p>
+<h3>Sources</h3>
+<p>E04: Owen, Ch. 9, §9.1, optimal-density discussion, pp. 4–6.</p>
+</div>
 </article>
 
 <article data-slide-id="S66">
 <h2>39. Light Tails Can Destroy Variance</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> A proposal with a lighter tail than the target produces weights that grow without bound.</p>
+<p>This is a new example: integrand $f(x) = x$, target $p = \mathrm{Exp}(1)$, so $\mu = 1$. The proposal is $q = \mathrm{Exp}(2)$, which decays twice as fast. The weight is $w(x) = e^x/2$. The figure plots both exact densities: they cross at $x = \ln 2$, and beyond that point $q$ lies below $p$, so the tail is under-visited and gets large weights.</p>
+<p>Both densities are positive on $x \geq 0$, so the identity holds and the estimator is unbiased. Growing weights are a warning sign, not a proof that the variance is bad; the next slide does the calculation.</p>
+<div class="detail">
+<h3>Details</h3>
+$$\begin{aligned}
+w(x) &= \frac{e^{-x}}{2e^{-2x}} = \frac{e^x}{2}.
+\end{aligned}$$
+<p>$w \gt 1$ exactly when $x \gt \ln 2 \approx 0.693$; $w(5) \approx 74.2$.</p>
+<h3>Sources</h3>
+<p>E18 (our calculation; baseline prob09 supplies the example). Figure: <code>gen/p9b_figs.py</code> → <code>fig/p9b-light.svg</code>, exact densities.</p>
+</div>
 </article>
 
 <article data-slide-id="S68">
 <h2>40. A Finite Mean, an Infinite Second Moment</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> With $q = \mathrm{Exp}(2)$ the estimator is unbiased, but its variance is infinite, so its RMSE is infinite at every $n$.</p>
+<p>The first integral is the mean of one draw. The weight $e^x/2$ times the proposal $2e^{-2x}$ leaves $e^{-x}$, and $\int x e^{-x} = 1 = \mu$, as the identity promises. The second integral is the second moment. Now the weight is squared, $e^{2x}/4$, and it exactly cancels the proposal's decay, leaving $\int x^2/2$, which diverges.</p>
+<p>So the variance of one draw is infinite, and so is the variance of the average for every $n$. The estimator is unbiased, yet it has no finite RMSE.</p>
+<div class="detail">
+<h3>Details</h3>
+$$\begin{aligned}
+\mathbb{E}_q[Xw] &= \int_0^\infty x\,\tfrac{e^x}{2}\,2e^{-2x}\,dx \\
+&= \int_0^\infty x e^{-x}\,dx = 1, \\
+\mathbb{E}_q[(Xw)^2] &= \int_0^\infty x^2\,\tfrac{e^{2x}}{4}\,2e^{-2x}\,dx \\
+&= \int_0^\infty \tfrac{x^2}{2}\,dx = \infty.
+\end{aligned}$$
+<p>The bare weights also have $\mathbb{E}_q[w^2] = \int_0^\infty \tfrac{1}{2}\,dx = \infty$, but the criterion that matters is the one with $f^2$.</p>
+<h3>Sources</h3>
+<p>E18 (our calculation by direct integration; baseline prob09 supplies the example).</p>
+</div>
 </article>
 
 <article data-slide-id="S121">
 <h2>41. Consistency Is Not an Error Bar</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> A finite first moment gives convergence; only a finite second moment gives variance, RMSE and CLT error bars.</p>
+<p>Continue with $Y_i = X_i\,w(X_i)$ under $q = \mathrm{Exp}(2)$. The top row: $\mathbb{E}_q|Y| = 1$ is finite, so the law of large numbers applies and $\hat{\mu}_{\mathrm{IS}} \to \mu$. The bottom row: $\mathbb{E}_q[Y^2] = \infty$, so the variance, the RMSE and the usual CLT-based error bars are all unavailable.</p>
+<p>The estimator converges, but we cannot attach a standard error to it. A batch that looks calm, or a modest sample variance, does not prove the second moment is finite: the sample variance is always finite, even when the population variance is not.</p>
+<div class="detail">
+<h3>Details</h3>
+<p>$Y \geq 0$ here, so $\mathbb{E}_q|Y| = \mathbb{E}_q[Y] = 1$. The integrable law of large numbers needs only a finite first absolute moment. The usual CLT and the formula $\mathrm{RMSE} = \sigma/\sqrt{n}$ need finite variance.</p>
+<h3>Sources</h3>
+<p>E02: Owen, Ch. 2, §§2.1–2.2 (finite first moment for the LLN; finite variance for RMSE and the CLT). E18 (our calculation).</p>
+</div>
 </article>
 
 <article data-slide-id="S69">
 <h2>42. Check the Integrand, Not Just Weights</h2>
-<!-- PLACEHOLDER (P2) -->
+<p class="msg"><span class="kt">Message.</span> A heavier proposal, $\mathrm{Exp}(1/2)$, gives a finite variance; the deciding integral includes $f^2$, not just the weights.</p>
+<p>Keep $f(x) = x$ and $p = \mathrm{Exp}(1)$, and use the heavier-tailed $q = \mathrm{Exp}(1/2)$. The second moment is $\int x^2 p^2/q$, which simplifies to $2\int x^2 e^{-3x/2}$, equal to $32/27$. The variance per draw is $32/27 - 1 = 5/27 \approx 0.19$, against $1$ for an ordinary draw of $X$.</p>
+<p>The criterion is $\int f^2p^2/q \lt \infty$. The second moment of the bare weights, $\mathbb{E}_q[w^2] = 4/3$, is a different number and does not decide variance by itself. "Use a heavier tail" is a useful heuristic, but not a guarantee for every integrand.</p>
+<div class="detail">
+<h3>Details</h3>
+$$\begin{aligned}
+\frac{p^2}{q} &= \frac{e^{-2x}}{\tfrac12 e^{-x/2}} = 2e^{-3x/2}, \\
+\int_0^\infty x^2\,2e^{-3x/2}\,dx &= 2 \cdot \frac{2}{(3/2)^3} = \frac{32}{27}.
+\end{aligned}$$
+<p>Using $\int_0^\infty x^2 e^{-ax}\,dx = 2/a^3$. Bare weights: $\int_0^\infty 2e^{-3x/2}\,dx = 4/3$. Ordinary sampling: $\mathrm{Var}_p(X) = 1$.</p>
+<h3>Sources</h3>
+<p>E18 (our calculation; checked with $\int x^2 e^{-ax} = 2/a^3$). Numbers: <code>gen/p9b_calc.py</code>.</p>
+</div>
 </article>
 
 <article data-slide-id="S72">

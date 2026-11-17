@@ -55,6 +55,22 @@ table.p9c-cmp tr:not(:has(td)) > th { vertical-align: bottom; }
 table.p9c-cmp td.p9c-span { text-align: center; color: var(--gray-text); }
 /* --- end P3 --- */
 /* --- P4 scoped CSS (p9d-) --- */
+.p9d-fig { margin: 6px auto; }
+.p9d-recall { padding: 10px 18px; margin-bottom: 10px; }
+.p9d-recall p { margin: 0; }
+.p9d-tight { margin-top: 14px; }
+.p9d-tight .math-block { margin: 8px 0; }
+.p9d-tight h3 { margin-bottom: 4px; }
+.p9d-thm { padding: 18px 28px; }
+.p9d-thm h3 { margin-bottom: 6px; }
+.p9d-split { display: grid; grid-template-columns: 420px 1fr; gap: 36px; align-items: start; }
+.p9d-root { margin: 4px auto 0; width: max-content; background: #f4f7fb; border: 2px solid #003876;
+  border-radius: 12px; padding: 10px 26px; font-size: 1.55rem; }
+.p9d-fork { display: block; width: 100%; height: 44px; }
+.p9d-routes { gap: 28px; }
+.p9d-route { background: #f7f8fa; border: 2px solid #8796a8; border-radius: 12px; padding: 12px 22px; }
+.p9d-route h3 { margin-bottom: 6px; color: #003876; }
+.p9d-route p { margin: 4px 0; }
 /* --- end P4 --- */
 /* --- P5 scoped CSS (p9e-) --- */
 /* --- end P5 --- */
@@ -1067,196 +1083,502 @@ table.p9c-cmp td.p9c-span { text-align: center; color: var(--gray-text); }
   <p class="subtitle">Learning moves the distribution we average</p>
 </div>
 
-<!-- New kind of problem -->
+<!-- ===== P4 · Part 05 slides (S84–S128) ===== -->
+<!-- S84: dependency theta -> distribution -> draw -> reward; bracket = expectation -->
 <div class="slide" data-slide-id="S84">
-  <h2>A New Kind of Problem</h2>
+  <h2>The Distribution Now Changes</h2>
   <div class="divider"></div>
-  <p>Policy / generator $\pi_\theta$: a distribution <strong>we control</strong> through $\theta$</p>
-  <div class="math-block" style="margin:8px 0">$$J(\theta) = \mathbb{E}_{X \sim \pi_\theta}\big[ R(X) \big]
-    \qquad \longrightarrow \; \max_\theta$$</div>
-  <ul>
-    <li>RL: $X$ = trajectory, $R$ = return</li>
-    <li>LM: $X$ = generated text, $R$ = reward score</li>
-  </ul>
-  <p class="muted">To climb, we need $\nabla_\theta J$ &mdash; and $J$ is already un-computable</p>
+  <p>Now $\theta$ moves the <strong>distribution</strong> that generates $X$</p>
+  <div class="p9-fig p9d-fig" style="max-width:1000px; aspect-ratio:1000/200;">
+    <svg viewBox="0 0 1000 200" aria-label="Dependency diagram: parameters theta set the distribution p theta, which generates a random draw X, which receives a fixed reward R of X; averaging the reward over X drawn from p theta gives J of theta.">
+      <defs><marker id="p9d-ah84" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#003876"/></marker></defs>
+      <rect x="30" y="20" width="160" height="72" rx="10" fill="#003876"/>
+      <rect x="280" y="20" width="180" height="72" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+      <rect x="550" y="20" width="160" height="72" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+      <rect x="800" y="20" width="180" height="72" rx="10" fill="#e9f4ec" stroke="#1a7a3d" stroke-width="2"/>
+      <line x1="192" y1="56" x2="276" y2="56" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah84)"/>
+      <line x1="462" y1="56" x2="546" y2="56" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah84)"/>
+      <line x1="712" y1="56" x2="796" y2="56" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah84)"/>
+      <path d="M290,150 v12 H970 v-12" fill="none" stroke="#666" stroke-width="2"/>
+    </svg>
+    <span class="fl fl-white" style="left:11%; top:28%;">$\theta$</span>
+    <span class="fl fl-blue" style="left:37%; top:28%;">$p_\theta$</span>
+    <span class="fl fl-blue" style="left:63%; top:28%;">$X$</span>
+    <span class="fl fl-green" style="left:89%; top:28%;">$R(X)$</span>
+    <span class="fl fl-sub fl-grey" style="left:11%; top:60%;">parameters</span>
+    <span class="fl fl-sub fl-grey" style="left:37%; top:60%;">distribution</span>
+    <span class="fl fl-sub fl-grey" style="left:63%; top:60%;">random draw</span>
+    <span class="fl fl-sub fl-grey" style="left:89%; top:60%;">fixed reward</span>
+    <span class="fl" style="left:63%; top:91%;">average over $X \sim p_\theta$ gives $J(\theta)$</span>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$J(\theta) = \mathbb{E}_{X \sim p_\theta}\big[ R(X) \big],
+    \qquad \text{goal: } \nabla_\theta J(\theta)$$</div>
+  <p class="muted">$R$ fixed: $\theta$ enters only through the draw</p>
 </div>
 
-<!-- Why naive fails -->
+<!-- S85: cut path (frozen numbers) vs live sampler -->
 <div class="slide" data-slide-id="S85">
-  <h2>Why Plain MC Doesn't Give a Gradient</h2>
+  <h2>Frozen Samples Hide the Derivative</h2>
   <div class="divider"></div>
-  <ul>
-    <li>$\theta$ lives <strong>inside the sampler</strong>, not inside $R$</li>
-    <li>MC on samples estimates $J(\theta)$ at one $\theta$ &mdash; a number</li>
-    <li>$R(X_i)$ carries no $\tfrac{\partial}{\partial \theta}$ to average</li>
-  </ul>
+  <p>Differentiating stored rewards misses the sampler</p>
+  <div class="p9-fig p9d-fig" style="max-width:1000px; aspect-ratio:1000/240;">
+    <svg viewBox="0 0 1000 240" aria-label="Top row, frozen: theta is cut off from stored numbers x 1 to x n, whose reward average contains no theta. Bottom row, live: theta sets p theta, which generates the draws X i and their rewards.">
+      <defs>
+        <marker id="p9d-ah85" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#003876"/></marker>
+        <marker id="p9d-ah85g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#666"/></marker>
+      </defs>
+      <rect x="130" y="20" width="90" height="62" rx="10" fill="#003876"/>
+      <line x1="222" y1="51" x2="326" y2="51" stroke="#c0392b" stroke-width="3" stroke-dasharray="8 6"/>
+      <path d="M262,35 l20,32 M282,35 l-20,32" stroke="#c0392b" stroke-width="4"/>
+      <rect x="330" y="20" width="230" height="62" rx="10" fill="#f2f2f2" stroke="#666" stroke-width="2"/>
+      <line x1="562" y1="51" x2="636" y2="51" stroke="#666" stroke-width="3" marker-end="url(#p9d-ah85g)"/>
+      <rect x="640" y="14" width="330" height="74" rx="10" fill="#f2f2f2" stroke="#666" stroke-width="2"/>
+      <rect x="130" y="142" width="90" height="62" rx="10" fill="#003876"/>
+      <line x1="222" y1="173" x2="296" y2="173" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah85)"/>
+      <rect x="300" y="142" width="140" height="62" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+      <line x1="442" y1="173" x2="506" y2="173" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah85)"/>
+      <rect x="510" y="142" width="220" height="62" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+      <line x1="732" y1="173" x2="786" y2="173" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah85)"/>
+      <rect x="790" y="142" width="180" height="62" rx="10" fill="#e9f4ec" stroke="#1a7a3d" stroke-width="2"/>
+    </svg>
+    <span class="fl fl-sub fl-red" style="left:6%; top:21%;">frozen</span>
+    <span class="fl fl-sub fl-blue" style="left:6%; top:72%;">live</span>
+    <span class="fl fl-white" style="left:17.5%; top:21%;">$\theta$</span>
+    <span class="fl fl-grey" style="left:44.5%; top:21%;">$x_1, \dots, x_n$</span>
+    <span class="fl fl-grey" style="left:80.5%; top:21%;">$\tfrac{1}{n}\sum_i R(x_i)$</span>
+    <span class="fl fl-sub fl-red" style="left:60%; top:46%;">stored numbers: no $\theta$ left inside</span>
+    <span class="fl fl-white" style="left:17.5%; top:72%;">$\theta$</span>
+    <span class="fl fl-blue" style="left:37%; top:72%;">$p_\theta$</span>
+    <span class="fl fl-blue" style="left:62%; top:72%;">$X_i \sim p_\theta$</span>
+    <span class="fl fl-green" style="left:88%; top:72%;">$R(X_i)$</span>
+    <span class="fl fl-sub fl-blue" style="left:60%; top:95%;">$\theta$ changes which $X_i$ appear</span>
+  </div>
   <div class="highlight">
-    <p>Needed: rewrite $\nabla_\theta\, \mathbb{E}_{\pi_\theta}[\cdot]$ as $\mathbb{E}_{\pi_\theta}[\,\cdot\,]$ of something &mdash; then sample it.</p>
+    <p>Can Monte Carlo estimate $\nabla_\theta J$? Yes: write it as an expectation, then sample</p>
   </div>
 </div>
 
-<!-- SLIDE S123 — placeholder (P4) -->
+<!-- S123: Gaussian sampling recipe; derivative through the addition -->
 <div class="slide" data-slide-id="S123">
-  <h2>[S123 placeholder] A Gaussian Sample Is a Recipe</h2>
+  <h2>A Gaussian Sample Is a Recipe</h2>
+  <div class="divider"></div>
+  <div class="card p9d-recall">
+    <p><strong>Recall (Gaussian by construction).</strong> $X = DW + \mu$, with $W$ independent $\mathcal{N}(0,1)$ entries, is Gaussian with mean $\mu$</p>
+  </div>
+  <div class="p9-fig p9d-fig" style="max-width:1000px; aspect-ratio:1000/230;">
+    <svg viewBox="0 0 1000 230" aria-label="Noise epsilon from N(0,1), whose law does not depend on theta, is added to theta; the result X theta equals theta plus epsilon and has distribution N(theta, 1). The derivative of X theta with respect to theta along the addition is 1.">
+      <defs><marker id="p9d-ah123" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#003876"/></marker>
+            <marker id="p9d-ah123g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#666"/></marker></defs>
+      <rect x="420" y="6" width="100" height="58" rx="10" fill="#003876"/>
+      <line x1="470" y1="66" x2="470" y2="100" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah123)"/>
+      <rect x="30" y="108" width="270" height="64" rx="10" fill="#f2f2f2" stroke="#666" stroke-width="2"/>
+      <line x1="302" y1="140" x2="430" y2="140" stroke="#666" stroke-width="3" marker-end="url(#p9d-ah123g)"/>
+      <circle cx="470" cy="140" r="36" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+      <line x1="508" y1="140" x2="616" y2="140" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah123)"/>
+      <rect x="620" y="108" width="350" height="64" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+    </svg>
+    <span class="fl fl-white" style="left:47%; top:15%;">$\theta$</span>
+    <span class="fl fl-blue" style="left:66%; top:21%;">$\partial X_\theta / \partial\theta = 1$</span>
+    <span class="fl fl-grey" style="left:16.5%; top:61%;">$\varepsilon \sim \mathcal{N}(0,1)$</span>
+    <span class="fl fl-big fl-blue" style="left:47%; top:60%;">$+$</span>
+    <span class="fl fl-blue" style="left:79.5%; top:61%;">$X_\theta = \theta + \varepsilon$</span>
+    <span class="fl fl-sub fl-grey" style="left:16.5%; top:90%;">law free of $\theta$</span>
+    <span class="fl fl-sub fl-blue" style="left:79.5%; top:90%;">distribution $\mathcal{N}(\theta, 1)$</span>
+  </div>
+  <p>Randomness sits in $\varepsilon$; $\theta$ enters by a smooth addition</p>
+  <p class="muted">Differentiate in $\theta$ with the noise $\varepsilon$ held fixed</p>
 </div>
 
-<!-- SLIDE S124 — placeholder (P4) -->
+<!-- S124: pathwise identity, chain rule along the sampling path -->
 <div class="slide" data-slide-id="S124">
-  <h2>[S124 placeholder] Differentiate Along the Sampling Path</h2>
-</div>
-
-<!-- SLIDE S125 — placeholder (P4) -->
-<div class="slide" data-slide-id="S125">
-  <h2>[S125 placeholder] Check the Gaussian Gradient</h2>
-</div>
-
-<!-- SLIDE S126 — placeholder (P4) -->
-<div class="slide" data-slide-id="S126">
-  <h2>[S126 placeholder] Discrete Draws Need Another Route</h2>
-</div>
-
-<!-- Log-derivative trick -->
-<div class="slide" data-slide-id="S86">
-  <h2>Technique Review &mdash; the Log-Derivative Trick</h2>
+  <h2>Differentiate Along the Sampling Path</h2>
   <div class="divider"></div>
-  <p>Chain rule on $\log$, read <strong>backwards</strong>:</p>
-  <div class="math-block" style="margin:8px 0">$$\nabla_\theta \log g(\theta) = \frac{\nabla_\theta\, g(\theta)}{g(\theta)}
-    \qquad \Longleftrightarrow \qquad
-    \nabla_\theta\, g(\theta) = g(\theta)\, \nabla_\theta \log g(\theta)$$</div>
-  <ul>
-    <li>Turns a bare $\nabla \pi_\theta$ into $\pi_\theta \times (\text{something})$</li>
-    <li>A $\pi_\theta$ factor is exactly what an expectation needs</li>
-  </ul>
-</div>
-
-<!-- Thm 5 statement -->
-<div class="slide" data-slide-id="S87">
-  <h2>Theorem 5 &mdash; the Score-Function Identity</h2>
-  <div class="divider"></div>
-  <div class="card">
-    <h3>Theorem 5 (score-function / REINFORCE identity).</h3>
-    <p>Finite $\mathcal{X}$, $\pi_\theta(x) \gt 0$, differentiable in $\theta$; $R$ fixed. Then:</p>
-    <div class="math-block" style="margin:8px 0">$$\nabla_\theta\, \mathbb{E}_{X \sim \pi_\theta}\big[ R(X) \big]
-      \;=\; \mathbb{E}_{X \sim \pi_\theta}\big[ R(X)\, \nabla_\theta \log \pi_\theta(X) \big]$$</div>
+  <div class="p9-fig p9d-fig" style="max-width:1000px; aspect-ratio:1000/150;">
+    <svg viewBox="0 0 1000 150" aria-label="Chain: noise epsilon is mapped by T theta to the sample X, which the reward R maps to R of X. Backward along the path, the derivative factors are the partial derivative of T theta in theta and R prime of X.">
+      <defs><marker id="p9d-ah124" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#003876"/></marker>
+            <marker id="p9d-ah124r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1a5296"/></marker></defs>
+      <rect x="60" y="30" width="120" height="60" rx="10" fill="#f2f2f2" stroke="#666" stroke-width="2"/>
+      <line x1="182" y1="60" x2="416" y2="60" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah124)"/>
+      <rect x="420" y="30" width="160" height="60" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+      <line x1="582" y1="60" x2="776" y2="60" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah124)"/>
+      <rect x="780" y="30" width="170" height="60" rx="10" fill="#e9f4ec" stroke="#1a7a3d" stroke-width="2"/>
+      <line x1="400" y1="112" x2="200" y2="112" stroke="#1a5296" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#p9d-ah124r)"/>
+      <line x1="760" y1="112" x2="600" y2="112" stroke="#1a5296" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#p9d-ah124r)"/>
+    </svg>
+    <span class="fl fl-grey" style="left:12%; top:40%;">$\varepsilon$</span>
+    <span class="fl fl-blue" style="left:30%; top:20%;">$T_\theta$</span>
+    <span class="fl fl-blue" style="left:50%; top:40%;">$X$</span>
+    <span class="fl fl-blue" style="left:68%; top:20%;">$R$</span>
+    <span class="fl fl-green" style="left:86.5%; top:40%;">$R(X)$</span>
+    <span class="fl fl-sub fl-mid" style="left:30%; top:90%;">$\partial_\theta T_\theta(\varepsilon)$</span>
+    <span class="fl fl-sub fl-mid" style="left:68%; top:90%;">$R'(X)$</span>
   </div>
-  <p class="muted">$\nabla_\theta \log \pi_\theta(x)$: the <strong>score</strong> &mdash; hence the name</p>
-</div>
-
-<!-- Step 1 -->
-<div class="slide" data-slide-id="S88">
-  <h2>Proof Step 1 &mdash; Expand the Expectation</h2>
-  <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$J(\theta)
-    \;\stackrel{(\text{LOTUS})}{=}\; \sum_{x \in \mathcal{X}} \pi_\theta(x)\, R(x)$$</div>
-  <ul>
-    <li>$R(x)$: fixed numbers &mdash; all $\theta$-dependence sits in $\pi_\theta$</li>
-    <li>Finitely many terms, each differentiable in $\theta$</li>
-  </ul>
-</div>
-
-<!-- Step 2 -->
-<div class="slide" data-slide-id="S89">
-  <h2>Proof Step 2 &mdash; Swap $\nabla$ and $\sum$</h2>
-  <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$\nabla_\theta J(\theta)
-    \;\stackrel{(\text{finite sum})}{=}\; \sum_{x} R(x)\, \nabla_\theta\, \pi_\theta(x)$$</div>
-  <ul>
-    <li>Finite sums: differentiate term by term &mdash; automatic</li>
-    <li><em>Honest flag</em>: continuous $\mathcal{X}$ needs an interchange condition (dominated convergence &mdash; name only)</li>
-  </ul>
-</div>
-
-<!-- Step 3 -->
-<div class="slide" data-slide-id="S90">
-  <h2>Proof Step 3 &mdash; Log-Derivative, Then Reread</h2>
-  <div class="divider"></div>
-  <div class="math-block">$$\begin{aligned}
-    \sum_x R(x)\, \nabla_\theta \pi_\theta(x)
-    \;&amp;\stackrel{(\text{log-derivative})}{=}\; \sum_x R(x)\, \pi_\theta(x)\, \nabla_\theta \log \pi_\theta(x) \\[4pt]
-    &amp;\stackrel{(\text{LOTUS backwards})}{=}\; \mathbb{E}_{\pi_\theta}\big[ R(X)\, \nabla_\theta \log \pi_\theta(X) \big] \qquad \blacksquare
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \nabla_\theta J(\theta) \;&amp;\stackrel{(\text{swap})}{=}\; \mathbb{E}_{\varepsilon}\big[ \nabla_\theta\, R(T_\theta(\varepsilon)) \big] \\[2pt]
+    &amp;\stackrel{(\text{chain rule})}{=}\; \mathbb{E}_{\varepsilon}\big[ R'(T_\theta(\varepsilon))\; \partial_\theta T_\theta(\varepsilon) \big]
   \end{aligned}$$</div>
-  <p class="muted">The inserted $\pi_\theta$ is what lets us read the sum as an expectation again</p>
+  <p>Needs: law of $\varepsilon$ free of $\theta$; $T_\theta$ and $R$ differentiable</p>
+  <p class="muted">Swap of $\nabla$ and $\mathbb{E}$ must be justified (scalar case shown)</p>
+  <div class="cite">Mohamed, Rosca, Figurnov &amp; Mnih, JMLR 2020, &sect;&sect;5.2&ndash;5.3; Kingma &amp; Welling, ICLR 2014, &sect;2.3</div>
 </div>
 
-<!-- REINFORCE estimator -->
-<div class="slide" data-slide-id="S92">
-  <h2>The REINFORCE Estimator</h2>
+<!-- S125: two routes to d/dtheta E[(theta+eps)^2] -->
+<div class="slide" data-slide-id="S125">
+  <h2>Check the Gaussian Gradient</h2>
   <div class="divider"></div>
-  <p>Theorem 5 + Theorem 1: sample and average the new integrand</p>
-  <div class="math-block" style="margin:8px 0">$$\hat{g}_n = \frac{1}{n} \sum_{i=1}^{n} R(X_i)\, \nabla_\theta \log \pi_\theta(X_i),
-    \qquad X_i \sim \pi_\theta$$</div>
-  <ul>
-    <li><strong>Unbiased</strong> estimate of $\nabla_\theta J$ &mdash; then gradient ascent</li>
-    <li>Needs: sampling $\pi_\theta$, evaluating $R$, differentiating $\log \pi_\theta$</li>
-  </ul>
-</div>
-
-<!-- Worked check setup -->
-<div class="slide" data-slide-id="S93">
-  <h2>Worked Check &mdash; a Two-Action Policy</h2>
-  <div class="divider"></div>
-  <p>Actions $\{a, b\}$; policy $\pi_\theta(a) = \sigma(\theta)$ (sigmoid); rewards $R(a) = 1$, $R(b) = 0$</p>
-  <p><strong>Direct route</strong> &mdash; here $J$ is computable:</p>
-  <div class="math-block" style="margin:8px 0">$$J(\theta) = \sigma(\theta) \cdot 1 + (1 - \sigma(\theta)) \cdot 0 = \sigma(\theta),
-    \qquad \nabla_\theta J = \sigma(\theta)\big( 1 - \sigma(\theta) \big)$$</div>
-  <p class="muted">Sigmoid derivative $\sigma' = \sigma(1 - \sigma)$ &mdash; the yardstick to match</p>
-</div>
-
-<!-- Worked check identity -->
-<div class="slide" data-slide-id="S94">
-  <h2>Worked Check &mdash; the Identity Agrees</h2>
-  <div class="divider"></div>
-  <p>Scores: $\nabla \log \sigma(\theta) = 1 - \sigma$; &nbsp;$\nabla \log (1 - \sigma(\theta)) = -\sigma$</p>
-  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ R\, \nabla \log \pi_\theta \big]
-    = \sigma \cdot 1 \cdot (1 - \sigma) \;+\; (1 - \sigma) \cdot 0 \cdot (-\sigma)
-    = \sigma (1 - \sigma) \;\;✓$$</div>
-  <p class="muted">At $\theta = 0$: both sides $= \tfrac12 \cdot \tfrac12 = \tfrac14$</p>
-</div>
-
-<!-- Baseline lemma -->
-<div class="slide" data-slide-id="S96a">
-  <h2>Baselines &mdash; Free Variance Reduction</h2>
-  <div class="divider"></div>
-  <div class="card" style="padding:10px 16px;">
-    <p><strong>Lemma (baseline invariance).</strong> The score has mean zero, so for any constant $b$:</p>
-    <div class="math-block" style="margin:8px 0">$$\mathbb{E}_{\pi_\theta}\big[ (R(X) - b)\, \nabla_\theta \log \pi_\theta(X) \big]
-      = \nabla_\theta J(\theta)$$</div>
+  <p>Example: $R(X) = X^2$ with $X = \theta + \varepsilon$, $\;\varepsilon \sim \mathcal{N}(0,1)$</p>
+  <div class="grid-2 p9d-tight">
+    <div>
+      <h3>Analytic check</h3>
+      <div class="math-block">$$\begin{aligned}
+        J(\theta) &amp;= \mathbb{E}\big[\theta^2 + 2\theta\varepsilon + \varepsilon^2\big] \\
+        &amp;= \theta^2 + 1 \\
+        J'(\theta) &amp;= 2\theta
+      \end{aligned}$$</div>
+    </div>
+    <div>
+      <h3>Pathwise contribution</h3>
+      <div class="math-block">$$\begin{aligned}
+        \partial_\theta (\theta + \varepsilon)^2 &amp;= 2(\theta + \varepsilon) = 2X \\
+        \mathbb{E}[2X] &amp;= 2\theta + 2\,\mathbb{E}[\varepsilon] \\
+        &amp;= 2\theta
+      \end{aligned}$$</div>
+    </div>
   </div>
-  <p>Proof of mean-zero score:</p>
-  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_{\pi_\theta}\big[ \nabla \log \pi_\theta \big]
-    = \sum_x \pi_\theta \frac{\nabla \pi_\theta}{\pi_\theta}
-    = \nabla \sum_x \pi_\theta(x) = \nabla\, 1 = 0 \qquad \blacksquare$$</div>
+  <div class="highlight">
+    <p>Means agree; one draw $2X$ scatters around $2\theta$ with variance $4$</p>
+  </div>
 </div>
 
-<!-- SLIDE S96b — placeholder (P4) -->
-<div class="slide" data-slide-id="S96b">
-  <h2>[S96b placeholder] A Valid Baseline Preserves the Gradient</h2>
-</div>
-
-<!-- Baseline at work -->
-<div class="slide" data-slide-id="S97">
-  <h2>Baseline at Work &mdash; the Toy, Revisited</h2>
+<!-- S126: two-action draw; probability mass moves, the sampled action does not -->
+<!-- exact geometry: bar height = 150 * prob, baseline y=160; sigma(0)=0.5, sigma(1)=0.7311 (gen/p9d_gradient_checks.py) -->
+<div class="slide" data-slide-id="S126">
+  <h2>Discrete Draws Need Another Route</h2>
   <div class="divider"></div>
-  <p>Two-action policy at $\theta = 0$; single-sample gradient estimates:</p>
-  <table>
-    <thead><tr><th>sample</th><th>no baseline</th><th>baseline <span style="text-transform:none">$b = \tfrac12$</span></th></tr></thead>
-    <tbody>
-      <tr><td>$a$ (prob $\tfrac12$)</td><td>$1 \cdot \tfrac12 = \tfrac12$</td><td>$\tfrac12 \cdot \tfrac12 = \tfrac14$</td></tr>
-      <tr><td>$b$ (prob $\tfrac12$)</td><td>$0 \cdot (-\tfrac12) = 0$</td><td>$(-\tfrac12)(-\tfrac12) = \tfrac14$</td></tr>
-      <tr><td><strong>mean / variance</strong></td><td>$\tfrac14$ / $\tfrac{1}{16}$</td><td>$\tfrac14$ / $\mathbf{0}$</td></tr>
-    </tbody>
-  </table>
-  <p class="muted" style="margin-top:10px;">Same mean, variance killed &mdash; the estimator became constant</p>
+  <p>A sampled action jumps; its probability moves smoothly</p>
+  <div class="p9-fig p9d-fig" style="max-width:900px; aspect-ratio:1000/240;">
+    <svg viewBox="0 0 1000 240" aria-label="Bar chart. At theta equal 0, action a1 with reward 1 and action a0 with reward 0 each have probability one half. At theta equal 1, a1 has probability 0.731 and a0 has 0.269: raising theta moves probability mass toward a1, while each action stays the same.">
+      <defs><marker id="p9d-ah126" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#003876"/></marker></defs>
+      <line x1="80" y1="160" x2="420" y2="160" stroke="#333" stroke-width="2"/>
+      <line x1="580" y1="160" x2="920" y2="160" stroke="#333" stroke-width="2"/>
+      <rect x="115" y="85" width="110" height="75" fill="#003876"/>
+      <rect x="275" y="85" width="110" height="75" fill="#9aa4af"/>
+      <rect x="615" y="50.35" width="110" height="109.65" fill="#003876"/>
+      <rect x="775" y="119.65" width="110" height="40.35" fill="#9aa4af"/>
+      <line x1="440" y1="100" x2="556" y2="100" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah126)"/>
+    </svg>
+    <span class="fl" style="left:17%; top:25%;">$\tfrac12$</span>
+    <span class="fl" style="left:33%; top:25%;">$\tfrac12$</span>
+    <span class="fl" style="left:67%; top:12%;">$0.731$</span>
+    <span class="fl" style="left:83%; top:40%;">$0.269$</span>
+    <span class="fl fl-sub fl-blue" style="left:49.8%; top:31%;">raise $\theta$</span>
+    <span class="fl fl-sub fl-blue" style="left:17%; top:77%;">$a_1$: $R = 1$</span>
+    <span class="fl fl-sub fl-grey" style="left:33%; top:77%;">$a_0$: $R = 0$</span>
+    <span class="fl fl-sub fl-blue" style="left:67%; top:77%;">$a_1$: $R = 1$</span>
+    <span class="fl fl-sub fl-grey" style="left:83%; top:77%;">$a_0$: $R = 0$</span>
+    <span class="fl" style="left:25%; top:94%;">$\theta = 0$</span>
+    <span class="fl" style="left:75%; top:94%;">$\theta = 1$</span>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$J(\theta) = \sigma(\theta)\cdot 1 + \big(1 - \sigma(\theta)\big)\cdot 0 = \sigma(\theta),
+    \qquad \sigma(\theta) = \frac{1}{1 + e^{-\theta}}$$</div>
+  <p class="muted">No smooth path from $\theta$ to the action: differentiate its probability</p>
 </div>
 
-<!-- SLIDE S127 — placeholder (P4) -->
+<!-- S86: log-derivative identity, parameter score -->
+<div class="slide" data-slide-id="S86">
+  <h2>The Log-Derivative Identity</h2>
+  <div class="divider"></div>
+  <p>Rewrite a probability derivative as probability $\times$ score</p>
+  <div class="math-block">$$\textcolor{#003876}{\nabla_\theta} \ln p_\theta(x) = \frac{\textcolor{#003876}{\nabla_\theta}\, p_\theta(x)}{p_\theta(x)}
+    \quad\Longleftrightarrow\quad
+    \textcolor{#003876}{\nabla_\theta}\, p_\theta(x) = p_\theta(x)\, \underbrace{\textcolor{#003876}{\nabla_\theta} \ln p_\theta(x)}_{s_\theta(x)}$$</div>
+  <p>Needs $p_\theta(x) \gt 0$, differentiable in $\theta$, with $x$ held fixed</p>
+  <div class="highlight">
+    <p><strong>Parameter score</strong> $s_\theta(x) = \nabla_\theta \ln p_\theta(x)$, natural log</p>
+  </div>
+  <p class="muted">Not $\nabla_x \ln p(x)$: that score differentiates in the sample</p>
+</div>
+
+<!-- S87: theorem statement, finite classroom scope -->
+<div class="slide" data-slide-id="S87">
+  <h2>Reward Times Score Gives the Gradient</h2>
+  <div class="divider"></div>
+  <div class="card p9d-thm">
+    <h3>Theorem (score-function identity).</h3>
+    <p>Fixed finite set $\mathcal{X}$; $p_\theta(x) \gt 0$, differentiable in $\theta$; fixed reward $R : \mathcal{X} \to \mathbb{R}$</p>
+    <div class="math-block" style="margin:8px 0">$$\nabla_\theta\, \mathbb{E}_{X \sim p_\theta}\big[ R(X) \big]
+      = \mathbb{E}_{X \sim p_\theta}\big[ \underbrace{R(X)}_{\text{reward}}\; \underbrace{s_\theta(X)}_{\text{score}} \big]$$</div>
+  </div>
+  <p>Only $\ln p_\theta$ is differentiated; $R$ is just evaluated</p>
+  <p class="muted">Continuous $X$: needs a justified swap and support fixed in $\theta$</p>
+  <div class="cite">Mohamed, Rosca, Figurnov &amp; Mnih, JMLR 2020, &sect;&sect;4.2&ndash;4.3</div>
+</div>
+
+<!-- S88: proof step 1 -->
+<div class="slide" data-slide-id="S88">
+  <h2>Proof: Expand the Expectation</h2>
+  <div class="divider"></div>
+  <p>A finite expectation is a weighted sum over fixed outcomes</p>
+  <div class="math-block">$$J(\theta) = \sum_{x \in \mathcal{X}} \underbrace{\textcolor{#003876}{p_\theta(x)}}_{\text{depends on } \theta}\;
+    \underbrace{R(x)}_{\text{fixed number}}$$</div>
+  <p>Outcome set $\mathcal{X}$ and rewards $R(x)$: unchanged by $\theta$</p>
+  <p class="muted">The sampling step is gone: no derivative of a drawn $X$ needed</p>
+</div>
+
+<!-- S89: proof step 2 -->
+<div class="slide" data-slide-id="S89">
+  <h2>Proof (continued): Differentiate the Finite Sum</h2>
+  <div class="divider"></div>
+  <p class="muted">Recall: $J(\theta) = \sum_{x} p_\theta(x)\, R(x)$, finitely many terms</p>
+  <div class="math-block">$$\begin{aligned}
+    \nabla_\theta J(\theta) \;&amp;\stackrel{(\text{finite sum})}{=}\; \sum_{x} \nabla_\theta \big[ p_\theta(x)\, R(x) \big] \\[2pt]
+    &amp;\stackrel{(R \text{ fixed})}{=}\; \sum_{x} R(x)\, \textcolor{#003876}{\nabla_\theta\, p_\theta(x)}
+  \end{aligned}$$</div>
+  <p>Finite sum: differentiate term by term</p>
+  <p class="muted">Integrals or infinite sums: this swap needs its own proof</p>
+</div>
+
+<!-- S90: proof step 3 -->
+<div class="slide" data-slide-id="S90">
+  <h2>Proof (continued): Read an Expectation</h2>
+  <div class="divider"></div>
+  <p class="muted">So far: $\nabla_\theta J(\theta) = \sum_{x} R(x)\, \nabla_\theta\, p_\theta(x)$</p>
+  <div class="math-block">$$\begin{aligned}
+    \sum_{x} R(x)\, \nabla_\theta\, p_\theta(x) \;&amp;\stackrel{(\text{log-derivative})}{=}\; \sum_{x} \textcolor{#003876}{p_\theta(x)}\, R(x)\, s_\theta(x) \\[2pt]
+    &amp;\stackrel{(\text{weights } p_\theta)}{=}\; \mathbb{E}_{X \sim p_\theta}\big[ R(X)\, s_\theta(X) \big] \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p>Weights $p_\theta(x)$ turn the sum into an expectation</p>
+  <p class="muted">So the draws must come from the current $p_\theta$</p>
+</div>
+
+<!-- S92: REINFORCE recipe -->
+<div class="slide" data-slide-id="S92">
+  <h2>Average the Gradient Contributions</h2>
+  <div class="divider"></div>
+  <div class="p9-fig p9d-fig" style="max-width:1000px; aspect-ratio:1000/190;">
+    <svg viewBox="0 0 1000 190" aria-label="Recipe: draw X i from p theta; compute its reward R of X i and its score s theta of X i; multiply them; average the products over i.">
+      <defs><marker id="p9d-ah92" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#003876"/></marker></defs>
+      <rect x="20" y="64" width="220" height="62" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+      <rect x="320" y="10" width="240" height="62" rx="10" fill="#e9f4ec" stroke="#1a7a3d" stroke-width="2"/>
+      <rect x="320" y="118" width="240" height="62" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+      <circle cx="660" cy="95" r="32" fill="#fff" stroke="#003876" stroke-width="2"/>
+      <rect x="760" y="64" width="220" height="62" rx="10" fill="#003876"/>
+      <path d="M242,85 L316,45" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah92)"/>
+      <path d="M242,105 L316,145" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah92)"/>
+      <path d="M562,45 L630,80" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah92)"/>
+      <path d="M562,145 L630,110" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah92)"/>
+      <line x1="694" y1="95" x2="756" y2="95" stroke="#003876" stroke-width="3" marker-end="url(#p9d-ah92)"/>
+    </svg>
+    <span class="fl fl-blue" style="left:13%; top:50%;">draw $X_i \sim p_\theta$</span>
+    <span class="fl fl-green" style="left:44%; top:21.5%;">reward $R(X_i)$</span>
+    <span class="fl fl-blue" style="left:44%; top:78.5%;">score $s_\theta(X_i)$</span>
+    <span class="fl fl-big fl-blue" style="left:66%; top:50%;">$\times$</span>
+    <span class="fl fl-white" style="left:87%; top:50%;">average over $i$</span>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\hat{g}_n = \frac{1}{n} \sum_{i=1}^{n} R(X_i)\, s_\theta(X_i),
+    \qquad X_1, \dots, X_n \stackrel{\text{IID}}{\sim} p_\theta$$</div>
+  <p>$\mathbb{E}[\hat{g}_n] = \nabla_\theta J(\theta)$ under the theorem&rsquo;s conditions</p>
+  <p class="muted">Needs samples, $R$ values and $\nabla_\theta \ln p_\theta$; never $\nabla R$</p>
+</div>
+
+<!-- S93: two-action policy, direct derivative -->
+<div class="slide" data-slide-id="S93">
+  <h2>A Two-Action Policy</h2>
+  <div class="divider"></div>
+  <p>An exact derivative to check the estimator against</p>
+  <div class="p9d-split">
+    <div class="p9-fig p9d-fig" style="width:420px; aspect-ratio:420/280; align-self:start;">
+      <svg viewBox="0 0 420 280" aria-label="Tree: the policy pi theta picks action a1 with probability sigma of theta and reward 1, or action a0 with probability 1 minus sigma of theta and reward 0.">
+        <circle cx="50" cy="140" r="36" fill="#003876"/>
+        <line x1="84" y1="128" x2="245" y2="58" stroke="#003876" stroke-width="3"/>
+        <line x1="84" y1="152" x2="245" y2="222" stroke="#9aa4af" stroke-width="3"/>
+        <rect x="245" y="28" width="170" height="60" rx="10" fill="#eef3f9" stroke="#003876" stroke-width="2"/>
+        <rect x="245" y="192" width="170" height="60" rx="10" fill="#f2f2f2" stroke="#9aa4af" stroke-width="2"/>
+      </svg>
+      <span class="fl fl-white" style="left:11.9%; top:50%;">$\pi_\theta$</span>
+      <span class="fl fl-blue" style="left:33%; top:17%;">$\sigma(\theta)$</span>
+      <span class="fl fl-grey" style="left:33%; top:89%;">$1 - \sigma(\theta)$</span>
+      <span class="fl fl-blue" style="left:78.6%; top:20.7%;">$a_1$: $R = 1$</span>
+      <span class="fl fl-grey" style="left:78.6%; top:79.3%;">$a_0$: $R = 0$</span>
+    </div>
+    <div>
+      <div class="math-block" style="margin:0 0 12px">$$\begin{aligned}
+        J(\theta) &amp;= \sigma(\theta)\cdot 1 + \big(1 - \sigma(\theta)\big)\cdot 0 = \sigma(\theta) \\
+        J'(\theta) &amp;= \sigma(\theta)\big(1 - \sigma(\theta)\big)
+      \end{aligned}$$</div>
+      <p>At $\theta = 0$: $\sigma = \tfrac12$, so $J'(0) = \tfrac14$</p>
+      <p class="muted">Parameter continuous; actions discrete</p>
+    </div>
+  </div>
+</div>
+
+<!-- S94: score route on the same toy; contributions at theta = 0 -->
+<!-- exact geometry: X = 140 + 360 (v + 0.75); v=0 -> 410, 1/4 -> 500, 1/2 -> 590 -->
+<div class="slide" data-slide-id="S94">
+  <h2>Both Routes Give the Same Derivative</h2>
+  <div class="divider"></div>
+  <p>Scores $s_\theta(a_1) = 1 - \sigma$ and $s_\theta(a_0) = -\sigma$</p>
+  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ R\, s_\theta \big]
+    = \sigma \cdot 1 \cdot (1 - \sigma) \;+\; (1 - \sigma) \cdot 0 \cdot (-\sigma)
+    = \sigma (1 - \sigma) \;\; ✓$$</div>
+  <div class="p9-fig p9d-fig" style="max-width:1000px; aspect-ratio:1000/170;">
+    <svg viewBox="0 0 1000 170" aria-label="Number line at theta equal 0. The contribution R times s is 0 for action a0 and one half for action a1, each with probability one half. A dashed line marks their mean, one quarter.">
+      <line x1="140" y1="125" x2="860" y2="125" stroke="#333" stroke-width="2"/>
+      <line x1="230" y1="119" x2="230" y2="131" stroke="#333" stroke-width="2"/>
+      <line x1="410" y1="119" x2="410" y2="131" stroke="#333" stroke-width="2"/>
+      <line x1="590" y1="119" x2="590" y2="131" stroke="#333" stroke-width="2"/>
+      <line x1="770" y1="119" x2="770" y2="131" stroke="#333" stroke-width="2"/>
+      <line x1="500" y1="36" x2="500" y2="125" stroke="#003876" stroke-width="2.5" stroke-dasharray="7 5"/>
+      <circle cx="410" cy="88" r="15" fill="#9aa4af"/>
+      <circle cx="590" cy="88" r="15" fill="#003876"/>
+    </svg>
+    <span class="fl fl-blue" style="left:50%; top:12%;">mean $\tfrac14$</span>
+    <span class="fl fl-grey" style="left:35%; top:52%;">$a_0$</span>
+    <span class="fl fl-blue" style="left:65%; top:52%;">$a_1$</span>
+    <span class="fl fl-sub" style="left:23%; top:91%;">$-\tfrac12$</span>
+    <span class="fl fl-sub" style="left:41%; top:91%;">$0$</span>
+    <span class="fl fl-sub" style="left:59%; top:91%;">$\tfrac12$</span>
+    <span class="fl fl-sub" style="left:77%; top:91%;">$1$</span>
+  </div>
+  <p class="muted">At $\theta = 0$ each draw gives $0$ or $\tfrac12$; only their mean is $\tfrac14$</p>
+</div>
+
+<!-- S96a: mean-zero score -->
+<div class="slide" data-slide-id="S96a">
+  <h2>The Score Has Mean Zero</h2>
+  <div class="divider"></div>
+  <p>Under the theorem&rsquo;s conditions: finite fixed $\mathcal{X}$, $\;p_\theta \gt 0$ differentiable</p>
+  <div class="math-block">$$\begin{aligned}
+    \mathbb{E}_{p_\theta}\big[ s_\theta(X) \big] &amp;= \textstyle\sum_{x} p_\theta(x)\, \nabla_\theta \ln p_\theta(x) &amp;&amp;\quad \text{(definition)} \\
+    &amp;= \textstyle\sum_{x} \nabla_\theta\, p_\theta(x) &amp;&amp;\quad \text{(log-derivative)} \\
+    &amp;= \nabla_\theta \textstyle\sum_{x} p_\theta(x) &amp;&amp;\quad \text{(finite sum)} \\
+    &amp;= \nabla_\theta\, 1 = 0 &amp;&amp;\quad \text{(total probability)}
+  \end{aligned}$$</div>
+  <p class="muted">Mean zero, not zero: a single score is usually nonzero</p>
+</div>
+
+<!-- S96b: baseline invariance -->
+<div class="slide" data-slide-id="S96b">
+  <h2>A Valid Baseline Preserves the Gradient</h2>
+  <div class="divider"></div>
+  <p>Subtract one constant $b$ from every reward</p>
+  <div class="math-block">$$\mathbb{E}\big[ (R(X) - b)\, s_\theta(X) \big]
+    = \underbrace{\mathbb{E}\big[ R(X)\, s_\theta(X) \big]}_{\nabla_\theta J(\theta)}
+    \;-\; b\, \underbrace{\mathbb{E}\big[ s_\theta(X) \big]}_{0}
+    = \nabla_\theta J(\theta)$$</div>
+  <p>Allowed: $b$ fixed before the draw, not a function of $X$</p>
+  <p class="muted">An action-dependent $b(X)$ breaks this cancellation</p>
+  <div class="highlight">
+    <p>Same mean; lower variance <strong>not</strong> guaranteed</p>
+  </div>
+  <div class="cite">Mohamed, Rosca, Figurnov &amp; Mnih, JMLR 2020, &sect;7.4.3 (Baselines), eq. (61)</div>
+</div>
+
+<!-- S97: good baseline on the toy -->
+<!-- exact geometry: X = 140 + 360 (v + 0.75); values from gen/p9d_gradient_checks.py -->
+<div class="slide" data-slide-id="S97">
+  <h2>This Baseline Removes the Toy&rsquo;s Variance</h2>
+  <div class="divider"></div>
+  <p>Toy at $\theta = 0$; contribution $g_b = (R - b)\, s_\theta$</p>
+  <div class="p9-fig p9d-fig" style="max-width:1000px; aspect-ratio:1000/250;">
+    <svg viewBox="0 0 1000 250" aria-label="Two number lines with the same mean one quarter. Top, no baseline b equal 0: contributions 0 for a0 and one half for a1, variance one sixteenth. Bottom, b equal one half: both actions give one quarter, variance 0.">
+      <line x1="140" y1="75" x2="860" y2="75" stroke="#d6dde6" stroke-width="2"/>
+      <line x1="140" y1="160" x2="860" y2="160" stroke="#d6dde6" stroke-width="2"/>
+      <line x1="140" y1="205" x2="860" y2="205" stroke="#333" stroke-width="2"/>
+      <line x1="230" y1="199" x2="230" y2="211" stroke="#333" stroke-width="2"/>
+      <line x1="410" y1="199" x2="410" y2="211" stroke="#333" stroke-width="2"/>
+      <line x1="590" y1="199" x2="590" y2="211" stroke="#333" stroke-width="2"/>
+      <line x1="770" y1="199" x2="770" y2="211" stroke="#333" stroke-width="2"/>
+      <line x1="500" y1="36" x2="500" y2="205" stroke="#003876" stroke-width="2.5" stroke-dasharray="7 5"/>
+      <circle cx="410" cy="75" r="15" fill="#9aa4af"/>
+      <circle cx="590" cy="75" r="15" fill="#003876"/>
+      <circle cx="500" cy="160" r="19" fill="#1a7a3d"/>
+    </svg>
+    <span class="fl fl-blue" style="left:50%; top:9%;">mean $\tfrac14$</span>
+    <span class="fl fl-sub" style="left:7%; top:30%;">$b = 0$</span>
+    <span class="fl fl-sub fl-green" style="left:7%; top:64%;">$b = \tfrac12$</span>
+    <span class="fl fl-grey" style="left:36.5%; top:16%;">$a_0$</span>
+    <span class="fl fl-blue" style="left:63.5%; top:16%;">$a_1$</span>
+    <span class="fl fl-sub fl-green" style="left:58%; top:57%;">both actions</span>
+    <span class="fl fl-sub" style="left:93%; top:30%;">Var $\tfrac{1}{16}$</span>
+    <span class="fl fl-sub fl-green" style="left:93%; top:64%;">Var $0$</span>
+    <span class="fl fl-sub" style="left:23%; top:93%;">$-\tfrac12$</span>
+    <span class="fl fl-sub" style="left:41%; top:93%;">$0$</span>
+    <span class="fl fl-sub" style="left:59%; top:93%;">$\tfrac12$</span>
+    <span class="fl fl-sub" style="left:77%; top:93%;">$1$</span>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$b = \tfrac12:\qquad a_1:\ \big(1 - \tfrac12\big)\cdot\tfrac12 = \tfrac14,
+    \qquad a_0:\ \big(0 - \tfrac12\big)\cdot\big({-\tfrac12}\big) = \tfrac14$$</div>
+  <p class="muted">Exact two-outcome calculation, not an empirical result</p>
+</div>
+
+<!-- S127: bad baseline on the toy -->
+<!-- exact geometry: X = 140 + 360 (v + 0.75); b=2: a1 -> -1/2 (230), a0 -> 1 (770) -->
 <div class="slide" data-slide-id="S127">
-  <h2>[S127 placeholder] A Bad Baseline Adds Variance</h2>
+  <h2>A Bad Baseline Adds Variance</h2>
+  <div class="divider"></div>
+  <p>Same toy, baseline $b = 2$: contributions $-\tfrac12$ and $1$</p>
+  <div class="p9-fig p9d-fig" style="max-width:1000px; aspect-ratio:1000/250;">
+    <svg viewBox="0 0 1000 250" aria-label="Two number lines with the same mean one quarter. Top, no baseline b equal 0: contributions 0 for a0 and one half for a1, variance one sixteenth. Bottom, b equal 2: contributions minus one half for a1 and 1 for a0, variance nine sixteenths.">
+      <line x1="140" y1="75" x2="860" y2="75" stroke="#d6dde6" stroke-width="2"/>
+      <line x1="140" y1="160" x2="860" y2="160" stroke="#d6dde6" stroke-width="2"/>
+      <line x1="230" y1="160" x2="770" y2="160" stroke="#c0392b" stroke-width="3"/>
+      <line x1="410" y1="75" x2="590" y2="75" stroke="#003876" stroke-width="3"/>
+      <line x1="140" y1="205" x2="860" y2="205" stroke="#333" stroke-width="2"/>
+      <line x1="230" y1="199" x2="230" y2="211" stroke="#333" stroke-width="2"/>
+      <line x1="410" y1="199" x2="410" y2="211" stroke="#333" stroke-width="2"/>
+      <line x1="590" y1="199" x2="590" y2="211" stroke="#333" stroke-width="2"/>
+      <line x1="770" y1="199" x2="770" y2="211" stroke="#333" stroke-width="2"/>
+      <line x1="500" y1="36" x2="500" y2="205" stroke="#003876" stroke-width="2.5" stroke-dasharray="7 5"/>
+      <circle cx="410" cy="75" r="15" fill="#9aa4af"/>
+      <circle cx="590" cy="75" r="15" fill="#003876"/>
+      <circle cx="230" cy="160" r="15" fill="#003876"/>
+      <circle cx="770" cy="160" r="15" fill="#9aa4af"/>
+    </svg>
+    <span class="fl fl-blue" style="left:50%; top:9%;">mean $\tfrac14$</span>
+    <span class="fl fl-sub" style="left:7%; top:30%;">$b = 0$</span>
+    <span class="fl fl-sub fl-red" style="left:7%; top:64%;">$b = 2$</span>
+    <span class="fl fl-grey" style="left:36.5%; top:16%;">$a_0$</span>
+    <span class="fl fl-blue" style="left:63.5%; top:16%;">$a_1$</span>
+    <span class="fl fl-blue" style="left:23%; top:50%;">$a_1$</span>
+    <span class="fl fl-grey" style="left:77%; top:50%;">$a_0$</span>
+    <span class="fl fl-sub" style="left:93%; top:30%;">Var $\tfrac{1}{16}$</span>
+    <span class="fl fl-sub fl-red" style="left:93%; top:64%;">Var $\tfrac{9}{16}$</span>
+    <span class="fl fl-sub" style="left:23%; top:93%;">$-\tfrac12$</span>
+    <span class="fl fl-sub" style="left:41%; top:93%;">$0$</span>
+    <span class="fl fl-sub" style="left:59%; top:93%;">$\tfrac12$</span>
+    <span class="fl fl-sub" style="left:77%; top:93%;">$1$</span>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\operatorname{Var}(g_b) = \tfrac14\big(b - \tfrac12\big)^2:
+    \qquad \tfrac{1}{16}\ (b = 0), \quad 0\ (b = \tfrac12), \quad \tfrac{9}{16}\ (b = 2)$$</div>
+  <p class="muted">Mean stays $\tfrac14$; the baseline choice sets the variance</p>
 </div>
 
-<!-- SLIDE S128 — placeholder (P4) -->
+<!-- S128: two-route decision diagram -->
 <div class="slide" data-slide-id="S128">
-  <h2>[S128 placeholder] Two Gradient Estimators, Different Requirements</h2>
+  <h2>Two Gradient Estimators, Different Requirements</h2>
+  <div class="divider"></div>
+  <div class="p9d-root">Target: $\nabla_\theta\, \mathbb{E}_{X \sim p_\theta}\big[R(X)\big]$</div>
+  <svg class="p9d-fork" viewBox="0 0 1000 44" aria-hidden="true">
+    <path d="M500,0 L250,40 M500,0 L750,40" stroke="#003876" stroke-width="3" fill="none"/>
+  </svg>
+  <div class="grid-2 p9d-routes">
+    <div class="p9d-route">
+      <h3>Pathwise</h3>
+      <p>Recipe $X = T_\theta(\varepsilon)$, noise law free of $\theta$</p>
+      <p>$T_\theta$ and $R$ differentiable</p>
+      <p class="muted">Gaussian: average $2X$ for $R = X^2$</p>
+    </div>
+    <div class="p9d-route">
+      <h3>Score function</h3>
+      <p>$\ln p_\theta(x)$ differentiable in $\theta$</p>
+      <p>$R$ only evaluated: no $\nabla R$</p>
+      <p class="muted">Two actions: average $R\, s_\theta$</p>
+    </div>
+  </div>
+  <div class="highlight">
+    <p>Both need a justified $\nabla$/$\mathbb{E}$ swap; neither always has lower variance</p>
+  </div>
 </div>
 
 <!-- ===== SECTION 09 — OFF-POLICY & RLHF ===== -->

@@ -155,7 +155,9 @@ The bar chart shows the exact distribution of $\hat\mu_6$ for six IID darts. The
 
 **Proof of unbiasedness.** Each $X_i \sim p$, so $\mathbb E[f(X_i)] = \mu$. Linearity gives
 
-$$\mathbb E[\hat\mu_n] = \frac1n\sum_{i=1}^n \mathbb E[f(X_i)] = \frac1n \cdot n\mu = \mu.$$
+$$\mathbb E[\hat\mu_n] = \frac1n\sum_{i=1}^n \mathbb E[f(X_i)]$$
+
+$$= \frac1n \cdot n\mu = \mu.$$
 
 Independence is not used: identically distributed draws with $\mathbb E|f(X)| \lt \infty$ suffice for this identity. Independence matters for the variance on slide 9.
 
@@ -323,15 +325,17 @@ E03: Owen, *Monte Carlo theory, methods and examples*, Ch. 7, Sections 7.1 and 7
 
 **Message.** For a rare event the absolute error can be small while the error relative to the answer is large.
 
-Let $Y$ indicate an event of probability $\rho$, so $Y \sim \mathrm{Bernoulli}(\rho)$ and $\mu = \rho$. One indicator has variance $\rho(1-\rho)$, which is small when $\rho$ is small. The useful scale is relative: $\mathrm{RMSE}/|\mu| = \sqrt{(1-\rho)/(n\rho)}$, which is large unless $n$ is far above $1/\rho$. At fixed $n$, a smaller $\rho$ can mean a smaller absolute error but a larger relative error.
+Let $Y$ indicate an event of probability $\rho$, so $Y \sim \mathrm{Bernoulli}(\rho)$ and $\mu = \rho$. For a rare event, one indicator has a small variance $\rho(1-\rho)$. The useful scale is relative: $\mathrm{RMSE}/|\mu| = \sqrt{(1-\rho)/(n\rho)}$, which is small only when $n$ is large compared with $1/\rho$. At fixed $n$ and $0 \lt \rho \le 1/2$, a rarer event has a lower absolute RMSE but a higher relative RMSE. Both are distribution-level RMSEs, not the error of one realized run.
 
-The plot shows per-draw spreads against the event probability $\rho$, both axes logarithmic: $\rho$ from $10^{-6}$ to $0.5$ across, values from $10^{-3}$ to $10^3$ up, with a grey dashed reference line at 1. The dashed blue curve is the absolute SD $\sigma_f = \sqrt{\rho(1-\rho)}$; it falls as the event gets rarer. The solid red curve is the relative SD $\sigma_f/\rho$; it rises. Dividing either by $\sqrt n$ gives the RMSE.
+The plot shows per-draw spreads against the event probability $\rho$, both axes logarithmic: $\rho$ from $10^{-6}$ to $0.5$ across, values from $10^{-3}$ to $10^3$ up, with a grey dashed reference line at 1. The dashed blue curve is the absolute SD $\sigma_f = \sqrt{\rho(1-\rho)}$; it falls as the event gets rarer. The solid red curve is the relative SD $\sigma_f/\rho$; it rises. At $\rho = 1/2$ the absolute SD is $1/2$ and the relative SD is $1$, so the curves do not meet on the displayed range. Dividing either by $\sqrt n$ gives the RMSE.
 
 **Details.**
 
 **Calculation.** $Y$ is Bernoulli$(\rho)$, so $\mathrm{Var}(Y) = \rho(1-\rho)$ and
 
-$$\frac{\mathrm{RMSE}(\hat\mu_n)}{\rho} = \sqrt{\frac{\rho(1-\rho)}{n\rho^2}} = \sqrt{\frac{1-\rho}{n\rho}}.$$
+$$\frac{\mathrm{RMSE}(\hat\mu_n)}{\rho} = \sqrt{\frac{\rho(1-\rho)}{n\rho^2}}$$
+
+$$= \sqrt{\frac{1-\rho}{n\rho}}.$$
 
 **Two errors, two scales.** An absolute RMSE of $\sqrt{\rho(1-\rho)/n}$ looks small next to 1, but $\mu = \rho$ may be smaller still. A run of $n$ draws sees no hit with probability $(1-\rho)^n$, and then reports $\hat\mu = 0$: a small absolute error and a 100% relative error. Relative error is defined only for $\mu \ne 0$.
 
@@ -1159,11 +1163,13 @@ Mohamed et al., JMLR 2020, Sec. 4.2 (E07).
 
 Apply $\nabla_\theta p_\theta(x) = p_\theta(x) s_\theta(x)$, valid because $p_\theta(x) \gt 0$:
 
-$$\sum_{x} R(x)\, \nabla_\theta\, p_\theta(x) = \sum_{x} p_\theta(x)\, R(x)\, s_\theta(x).$$
+$$\sum_{x} R(x)\, \nabla_\theta\, p_\theta(x)$$
+
+$$= \sum_{x} p_\theta(x)\, R(x)\, s_\theta(x).$$
 
 A sum of $p_\theta(x)$ times a function of $x$ is an expectation under $p_\theta$:
 
-$$\nabla_\theta J(\theta) = \mathbb{E}_{X \sim p_\theta}\big[R(X)\, s_\theta(X)\big]. \qquad \blacksquare$$
+$$\nabla_\theta J(\theta) = \mathbb{E}_{X \sim p_\theta}\big[R(X)\, s_\theta(X)\big]. \quad \blacksquare$$
 
 The weights are the current probabilities $p_\theta$. So the samples used to estimate the gradient must come from the current $p_\theta$, not from an older or different distribution.
 
@@ -1533,7 +1539,7 @@ The slide opens with the shared setting: target $\mu=\mathbb E_p[f(X)]$, IID dra
 - Importance sampling. Needs: draws from $q$, an evaluable normalized ratio $p/q$, and $q>0$ wherever $fp\neq 0$. Claim: unbiased; the variance is finite only if $\mathbb E_q[(fw)^2]<\infty$.
 - Self-normalized IS. Needs: $\tilde p\propto p$, $q>0$ wherever $p>0$, and a positive total of the sampled weights. Claim: consistent; generally biased at finite $n$.
 
-Highlighted line: unbiased or consistent is not low error; check the second moment.
+The slide has no highlight line. The lecture's warning is said aloud: unbiased or consistent is not low error; check the second moment.
 
 Full coverage of $p$ is enough for importance sampling but not necessary; first-moment validity and finite variance are separate checks. The self-normalized bias has exceptions, such as constant $f$ or $q=p$.
 

@@ -32,6 +32,20 @@
 .p9-fig .fl-red   { color: #c0392b; }
 .p9-fig .fl-green { color: #1a7a3d; }
 /* --- P1 scoped CSS (p9a-) --- */
+.p9a-flow { display: flex; align-items: stretch; gap: 12px; margin: 14px 0 18px; }
+.p9a-box { flex: 1 1 0; border: 2px solid var(--yonsei-blue); border-radius: 10px; padding: 12px 16px;
+           background: #f5f8fc; text-align: center; }
+.p9a-box.p9a-wide { flex: 1.35 1 0; }
+.p9a-box p { margin: 4px 0; }
+.p9a-box.p9a-hard { border: 2.5px dashed #c0392b; background: #fdf3f2; }
+.p9a-head { font-weight: 700; color: var(--yonsei-blue); }
+.p9a-hard .p9a-head { color: #c0392b; }
+.p9a-easy { color: #1a7a3d; font-weight: 600; }
+.p9a-hardtxt { color: #c0392b; font-weight: 600; }
+.p9a-num { display: inline-block; width: 1.6em; height: 1.6em; line-height: 1.6em; border-radius: 50%;
+           background: var(--yonsei-blue); color: #fff; margin-right: 10px; }
+.p9a-arrow { align-self: center; font-size: 2.4rem; color: #888; }
+.p9a-dartcols { display: grid; grid-template-columns: 1fr 400px; gap: 32px; align-items: start; }
 /* --- end P1 --- */
 /* --- P2 scoped CSS (p9b-) --- */
 /* --- end P2 --- */
@@ -123,183 +137,322 @@
   <p class="subtitle">How accurate is a sample average?</p>
 </div>
 
-<!-- Three integrals -->
+<!-- S04 — motivation -->
 <div class="slide" data-slide-id="S04">
-  <h2>Three Expectations Nobody Can Compute</h2>
+  <h2>A Known Model, a Hard Average</h2>
   <div class="divider"></div>
-  <div class="grid-3">
-    <div class="card">
-      <h3>Bayesian posterior</h3>
-      <p>$\int \tilde{p}(\theta)\, d\theta$ over $\mathbb{R}^d$</p>
-      <p class="muted">$d$ in the millions</p>
+  <p>Point: drawing $X$ is easy; computing $\mathbb{E}_p[f(X)]$ is not</p>
+  <div class="p9a-flow">
+    <div class="p9a-box">
+      <p class="p9a-head">Sampler $p$</p>
+      <p>a language model</p>
+      <p class="p9a-easy">easy: draw one reply $X$</p>
     </div>
-    <div class="card">
-      <h3>Expected return (RL)</h3>
-      <p>$\mathbb{E}[R(\tau)]$ over trajectories $\tau$</p>
-      <p class="muted">every action sequence</p>
+    <div class="p9a-arrow">&rarr;</div>
+    <div class="p9a-box">
+      <p class="p9a-head">Evaluate $f(X)$</p>
+      <p>fixed scoring rule</p>
+      <p class="p9a-easy">easy: score one reply</p>
     </div>
-    <div class="card">
-      <h3>LM output reward</h3>
-      <p>$\mathbb{E}[r(X)]$ over token sequences</p>
-      <p class="muted">$|\mathcal{V}|^{T}$ outcomes</p>
+    <div class="p9a-arrow">&rarr;</div>
+    <div class="p9a-box p9a-hard">
+      <p class="p9a-head">Target $\mu = \mathbb{E}_p[f(X)]$</p>
+      <p>average over all replies</p>
+      <p class="p9a-hardtxt">hard: unknown number</p>
     </div>
   </div>
-  <p class="muted" style="margin-top:14px;">All the same object: $\mathbb{E}_p[f(X)]$ &mdash; and none closes</p>
+  <p class="muted">Hard here: no convenient closed form, and far too many replies to sum</p>
 </div>
 
-<!-- The idea -->
+<!-- S06 — the recipe -->
 <div class="slide" data-slide-id="S06">
-  <h2>The Idea &mdash; Integration by Averaging</h2>
+  <h2>Sample, Evaluate, Average</h2>
   <div class="divider"></div>
-  <p>Draw from $p$, evaluate $f$, average:</p>
-  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_p[f(X)] \;\approx\; \frac{1}{n} \sum_{i=1}^{n} f(X_i),
-    \qquad X_i \stackrel{\text{i.i.d.}}{\sim} p$$</div>
+  <p>Point: an expectation becomes an average of evaluations</p>
+  <div class="p9a-flow">
+    <div class="p9a-box">
+      <p class="p9a-head"><span class="p9a-num">1</span>Sample</p>
+      <p>$X_1, \dots, X_n \stackrel{\text{iid}}{\sim} p$</p>
+    </div>
+    <div class="p9a-arrow">&rarr;</div>
+    <div class="p9a-box">
+      <p class="p9a-head"><span class="p9a-num">2</span>Evaluate</p>
+      <p>$f(X_1), \dots, f(X_n)$</p>
+    </div>
+    <div class="p9a-arrow">&rarr;</div>
+    <div class="p9a-box">
+      <p class="p9a-head"><span class="p9a-num">3</span>Average</p>
+      <p>$\frac{1}{n} \sum_{i=1}^{n} f(X_i) \approx \mu$</p>
+    </div>
+  </div>
+  <p>IID: independent draws, same $p$, same fixed $f$</p>
+  <p class="muted">Needs draws from $p$, not a formula for $p(x)$</p>
+  <p class="muted">Assumes the mean exists: $\mathbb{E}_p|f(X)| \lt \infty$</p>
+</div>
+
+<!-- S26 — darts illustration -->
+<div class="slide" data-slide-id="S26">
+  <h2>Six Draws Give a Noisy Estimate</h2>
+  <div class="divider"></div>
+  <div class="p9a-dartcols">
+    <div>
+      <p>$X \sim \mathrm{Unif}[-1,1]^2$, &nbsp;$f(X) = 4 \cdot \mathbf{1}\{X \text{ in disk}\}$</p>
+      <p>Disk over square $= \pi/4$, so $\mu = \pi$</p>
+      <p><strong>4 in</strong> (filled), 2 out (hollow)</p>
+      <div class="math-block" style="margin:8px 0">$$\hat{\mu}_6 = 4 \cdot \tfrac{4}{6} = \tfrac{8}{3} \approx 2.67$$</div>
+      <p class="muted">Shows the recipe, not its reliability</p>
+    </div>
+    <div class="p9-fig" style="max-width:400px;align-self:start;">
+    <svg viewBox="0 0 400 440">
+      <!-- square [-1,1]^2 -> (20..380)x(20..380); centre (200,200), half-side 180; dart (x,y) -> (200+180x, 200-180y) -->
+      <rect x="20" y="20" width="360" height="360" fill="#f8fafc" stroke="#222" stroke-width="2.5"/>
+      <circle cx="200" cy="200" r="180" fill="#eaf0f7" stroke="#003876" stroke-width="3"/>
+      <!-- in: filled blue (x^2+y^2 <= 1) -->
+      <circle cx="290" cy="110" r="12" fill="#003876"/>  <!-- (0.5, 0.5) -->
+      <circle cx="236" cy="308" r="12" fill="#003876"/>  <!-- (0.2,-0.6) -->
+      <circle cx="128" cy="182" r="12" fill="#003876"/>  <!-- (-0.4,0.1) -->
+      <circle cx="254" cy="38"  r="12" fill="#003876"/>  <!-- (0.3, 0.9) -->
+      <!-- out: hollow grey -->
+      <circle cx="38"  cy="56"  r="11" fill="#fff" stroke="#777" stroke-width="4"/>  <!-- (-0.9,0.8) -->
+      <circle cx="344" cy="326" r="11" fill="#fff" stroke="#777" stroke-width="4"/>  <!-- (0.8,-0.7) -->
+    </svg>
+    <span class="fl fl-sub fl-grey" style="left:50%;top:94.5%">hand-chosen, not a random run</span>
+    </div>
+  </div>
+</div>
+
+<!-- S16 — estimator as sample mean -->
+<div class="slide" data-slide-id="S16">
+  <h2>Monte Carlo Reuses the Sample Mean</h2>
+  <div class="divider"></div>
+  <p>Point: set $Y_i = f(X_i)$, then reuse sample-mean facts</p>
+  <div class="math-block" style="margin:8px 0">$$\underbrace{\hat{\mu}_n}_{\text{estimate of } \mu}
+    \;=\; \underbrace{\frac{1}{n} \sum_{i=1}^{n}}_{\text{average}} \underbrace{f(X_i)}_{Y_i:\ \text{evaluation}}
+    \;=\; \bar{Y}_n, \qquad X_1, \dots, X_n \stackrel{\text{iid}}{\sim} p$$</div>
+  <div class="card" style="padding:10px 16px;">
+    <p><strong>Recall (sample mean).</strong> IID $Y_i$ with $\mathbb{E}|Y_1| \lt \infty$: &nbsp;$\mathbb{E}[\bar{Y}_n] = \mathbb{E}[Y_1]$, &nbsp;$\bar{Y}_n \to \mathbb{E}[Y_1]$ (LLN)</p>
+  </div>
   <ul>
-    <li>The LLN says the average <strong>converges</strong></li>
-    <li>Concentration says <strong>how fast</strong></li>
+    <li>First moment $\mathbb{E}_p|f(X)| \lt \infty$: $\mu$ exists, LLN applies</li>
+    <li>Finite $\sigma_f^2 = \mathrm{Var}_p(f(X))$: an extra assumption, for error rates</li>
   </ul>
 </div>
 
-<!-- Darts SVG -->
-<div class="slide" data-slide-id="S26">
-  <h2>The Dartboard</h2>
+<!-- S19 — unbiased is not accurate -->
+<div class="slide" data-slide-id="S19">
+  <h2>Unbiased Does Not Mean Accurate</h2>
   <div class="divider"></div>
-  <div class="p9-fig" style="max-width:1000px;margin:4px auto;">
-  <svg viewBox="0 0 1000 410">
-    <!-- square [-1,1]^2 mapped to (325..675)x(15..365); center (500,190), half-side 175 -->
-    <rect x="325" y="15" width="350" height="350" fill="#f8fafc" stroke="#222" stroke-width="2.5"/>
-    <circle cx="500" cy="190" r="175" fill="#eaf0f7" stroke="#003876" stroke-width="3"/>
-    <!-- darts: cx = 500 + 175x, cy = 190 - 175y -->
-    <circle cx="587.5" cy="102.5" r="10" fill="#003876"/>
-    <circle cx="342.5" cy="50"    r="10" fill="#999"/>
-    <circle cx="535"   cy="295"   r="10" fill="#003876"/>
-    <circle cx="430"   cy="172.5" r="10" fill="#003876"/>
-    <circle cx="640"   cy="312.5" r="10" fill="#999"/>
-    <circle cx="552.5" cy="32.5"  r="10" fill="#003876"/>
+  <p>Linearity: $\mathbb{E}[\hat{\mu}_n] = \frac{1}{n} \sum_{i} \mathbb{E}_p[f(X_i)] = \mu$ &nbsp;for every $n$</p>
+  <div class="p9-fig" style="max-width:900px;margin:4px auto;">
+  <svg viewBox="0 0 1000 350">
+    <!-- exact pmf of hat mu_6 = 4K/6, K ~ Bin(6, pi/4) (gen/p9a_part01.py): x = 120 + 190 v, y = 300 - 650 P -->
+    <line x1="70" y1="300" x2="940" y2="300" stroke="#222" stroke-width="2.5"/>
+    <rect x="94"    y="299.9" width="52" height="0.1"  fill="#7f9cc0"/>
+    <rect x="220.7" y="298.6" width="52" height="1.4"  fill="#7f9cc0"/>
+    <rect x="347.3" y="287.2" width="52" height="12.8" fill="#7f9cc0"/>
+    <rect x="474"   y="237.8" width="52" height="62.2" fill="#7f9cc0"/>
+    <rect x="600.7" y="129.1" width="52" height="170.9" fill="#7f9cc0"/>
+    <rect x="727.3" y="49.9"  width="52" height="250.1" fill="#7f9cc0"/>
+    <rect x="854"   y="147.4" width="52" height="152.6" fill="#7f9cc0"/>
+    <!-- mean = pi at x = 120 + 190 pi = 716.9 -->
+    <line x1="716.9" y1="22" x2="716.9" y2="300" stroke="#c0392b" stroke-width="4" stroke-dasharray="12 8"/>
   </svg>
-  <span class="fl fl-grey" style="left:15.00%;top:35.37%">disk area</span>
-  <span class="fl fl-grey" style="left:15.00%;top:46.34%">over square</span>
-  <span class="fl fl-grey" style="left:15.00%;top:57.32%">$= \pi/4$</span>
-  <span class="fl fl-blue" style="left:85.00%;top:32.93%">in: $4$</span>
-  <span class="fl fl-lgrey" style="left:85.00%;top:45.12%">out: $2$</span>
-  <span class="fl" style="left:85.00%;top:60.98%">hit rate $4/6$</span>
-  <span class="fl fl-sub fl-grey" style="left:50.00%;top:96.10%">6 illustrative darts (positions chosen by hand, not random)</span>
+  <span class="fl fl-sub" style="left:12.00%;top:93.5%">$0$</span>
+  <span class="fl fl-sub" style="left:24.67%;top:93.5%">$\tfrac23$</span>
+  <span class="fl fl-sub" style="left:37.33%;top:93.5%">$\tfrac43$</span>
+  <span class="fl fl-sub" style="left:50.00%;top:93.5%">$2$</span>
+  <span class="fl fl-sub" style="left:62.67%;top:93.5%">$\tfrac83$</span>
+  <span class="fl fl-sub" style="left:75.33%;top:93.5%">$\tfrac{10}3$</span>
+  <span class="fl fl-sub" style="left:88.00%;top:93.5%">$4$</span>
+  <span class="fl fl-sub fl-grey" style="left:50.00%;top:61.5%">$0.096$</span>
+  <span class="fl fl-sub fl-grey" style="left:62.67%;top:31.0%">$0.263$</span>
+  <span class="fl fl-sub fl-grey" style="left:84.0%;top:10.0%">$0.385$</span>
+  <span class="fl fl-sub fl-grey" style="left:88.00%;top:36.5%">$0.235$</span>
+  <span class="fl fl-red" style="left:62.5%;top:6.5%">mean $= \pi$</span>
   </div>
-  <p class="muted">Estimate: $\hat{\pi} = 4 \cdot \tfrac{4}{6} = \tfrac{8}{3} \approx 2.67$ &mdash; noisy at $n = 6$, as it should be</p>
+  <p class="muted">Exact distribution of $\hat{\mu}_6$ for IID darts &middot; x: value &middot; y: probability</p>
+  <p>No value equals $\pi$; 35% of runs miss by $\ge 0.5$</p>
 </div>
 
-<!-- Definition -->
-<div class="slide" data-slide-id="S16">
-  <h2>Definition &mdash; the Monte Carlo Estimator</h2>
+<!-- S22 — RMSE rate -->
+<div class="slide" data-slide-id="S22">
+  <h2>Averaging Reduces RMSE</h2>
+  <div class="divider"></div>
+  <p>Assume IID draws and finite $\sigma_f^2 = \mathrm{Var}_p(f(X))$</p>
+  <div class="math-block" style="margin:8px 0">$$\mathrm{RMSE}(\hat{\mu}_n) = \sqrt{\mathbb{E}\big[(\hat{\mu}_n - \mu)^2\big]}
+    \stackrel{\text{unbiased}}{=} \sqrt{\mathrm{Var}(\hat{\mu}_n)} = \frac{\sigma_f}{\sqrt{n}}$$</div>
+  <div class="p9-fig" style="max-width:740px;margin:0 auto;">
+  <svg viewBox="0 0 1000 290">
+    <!-- exact curve RMSE = sqrt(pi(4-pi))/sqrt(n) (gen/p9a_part01.py): x = 150 + 156 (log10 n - 1), y = 20 + 75 (-log10 RMSE) -->
+    <line x1="150" y1="250" x2="950" y2="250" stroke="#222" stroke-width="2.5"/>
+    <line x1="150" y1="250" x2="150" y2="12"  stroke="#222" stroke-width="2.5"/>
+    <line x1="150" y1="41.3" x2="930" y2="228.8" stroke="#003876" stroke-width="4.5"/>
+    <circle cx="306" cy="78.8"  r="9" fill="#003876"/>
+    <circle cx="618" cy="153.8" r="9" fill="#003876"/>
+    <line x1="306" y1="78.8" x2="306" y2="250" stroke="#999" stroke-width="2" stroke-dasharray="6 6"/>
+    <line x1="618" y1="153.8" x2="618" y2="250" stroke="#999" stroke-width="2" stroke-dasharray="6 6"/>
+    <line x1="141" y1="20"  x2="150" y2="20"  stroke="#222" stroke-width="2"/>
+    <line x1="141" y1="95"  x2="150" y2="95"  stroke="#222" stroke-width="2"/>
+    <line x1="141" y1="170" x2="150" y2="170" stroke="#222" stroke-width="2"/>
+    <line x1="141" y1="245" x2="150" y2="245" stroke="#222" stroke-width="2"/>
+  </svg>
+  <span class="fl fl-sub fl-grey" style="left:11.0%;top:6.9%">$1$</span>
+  <span class="fl fl-sub fl-grey" style="left:10.5%;top:32.8%">$10^{-1}$</span>
+  <span class="fl fl-sub fl-grey" style="left:10.5%;top:58.6%">$10^{-2}$</span>
+  <span class="fl fl-sub fl-grey" style="left:10.5%;top:84.5%">$10^{-3}$</span>
+  <span class="fl fl-sub fl-grey" style="left:15.0%;top:93.5%">$10$</span>
+  <span class="fl fl-sub fl-grey" style="left:30.6%;top:93.5%">$10^2$</span>
+  <span class="fl fl-sub fl-grey" style="left:61.8%;top:93.5%">$10^4$</span>
+  <span class="fl fl-sub fl-grey" style="left:93.0%;top:93.5%">$10^6$</span>
+  <span class="fl fl-blue" style="left:39.5%;top:22.0%">$0.164$</span>
+  <span class="fl fl-blue" style="left:71.0%;top:48.0%">$0.0164$</span>
+  <span class="fl" style="left:68.0%;top:8.0%">$100\times$ draws: RMSE $\div 10$</span>
+  </div>
+  <p class="muted">Darts, $\sigma_f \approx 1.64$ &middot; x: draws $n$, y: RMSE, log&ndash;log &middot; typical error, not a bound</p>
+</div>
+
+<!-- S114 — estimated standard error -->
+<div class="slide" data-slide-id="S114">
+  <h2>Estimating the Error Bar</h2>
+  <div class="divider"></div>
+  <p>IID evaluations, finite variance, $n \geq 2$</p>
+  <div class="p9a-flow">
+    <div class="p9a-box">
+      <p class="p9a-head">Observed data</p>
+      <p>$Y_1, \dots, Y_n$</p>
+    </div>
+    <div class="p9a-arrow">&rarr;</div>
+    <div class="p9a-box p9a-wide">
+      <p class="p9a-head">Sample spread</p>
+      <p>$s_Y^2 = \tfrac{1}{n-1} \sum_{i} (Y_i - \bar{Y}_n)^2$</p>
+    </div>
+    <div class="p9a-arrow">&rarr;</div>
+    <div class="p9a-box">
+      <p class="p9a-head">Estimated SE</p>
+      <p>$\widehat{\mathrm{SE}} = s_Y / \sqrt{n}$</p>
+    </div>
+  </div>
+  <p>Unknown truth: SE $= \sigma_f/\sqrt{n}$; &nbsp;observed $s_Y$ estimates $\sigma_f$</p>
+  <div class="highlight"><p>$\widehat{\mathrm{SE}}$ estimates typical spread, not this run&rsquo;s error $|\hat{\mu}_n - \mu|$</p></div>
+  <p class="muted">A finite $s_Y$ cannot reveal tails no draw visited</p>
+</div>
+
+<!-- S115 — asymptotic interval vs finite-sample bound -->
+<div class="slide" data-slide-id="S115">
+  <h2>Approximate Intervals, Exact Guarantees</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Asymptotic approximation</h3>
+      <div class="math-block" style="margin:8px 0">$$\bar{Y}_n \pm 1.96\, \widehat{\mathrm{SE}}$$</div>
+      <p>Coverage $\approx 95\%$ for large $n$</p>
+      <p class="muted">IID, $0 \lt \sigma_f^2 \lt \infty$; $n$ alone does not certify the normal fit</p>
+    </div>
+    <div class="card">
+      <h3>Finite-sample bound</h3>
+      <div class="math-block" style="margin:8px 0">$$\Pr\big(|\bar{Y}_n - \mu| \geq \epsilon\big) \leq \frac{\sigma_f^2}{n \epsilon^2}$$</div>
+      <p>Chebyshev: valid at every $n$</p>
+      <p class="muted">Needs known $\sigma_f^2$ or a proven upper bound, not plug-in $s_Y^2$</p>
+    </div>
+  </div>
+  <p style="margin-top:14px">Different questions: approximate coverage vs guaranteed tail</p>
+</div>
+
+<!-- S24 — Hoeffding on a known range -->
+<div class="slide" data-slide-id="S24">
+  <h2>Bounded Averages Concentrate</h2>
   <div class="divider"></div>
   <div class="card" style="padding:10px 16px;">
-    <p><strong>Definition (Monte Carlo estimator).</strong> For $X_1, \dots, X_n \stackrel{\text{i.i.d.}}{\sim} p$:</p>
-    <div class="math-block" style="margin:8px 0">$$\hat{\mu}_n \;=\; \frac{1}{n} \sum_{i=1}^{n} f(X_i)$$</div>
+    <p><strong>Recall (Hoeffding).</strong> IID $W_i \in [0,1]$: &nbsp;$\Pr\big(|\bar{W}_n - \mathbb{E}W_1| \geq t\big) \leq 2 e^{-2 n t^2}$</p>
   </div>
-  <ul>
-    <li>Exactly the sample mean $\bar{Y}_n$ with $Y_i = f(X_i)$</li>
-    <li>Everything we proved about sample means <strong>applies verbatim</strong></li>
-  </ul>
+  <p>Rescale $Y_i \in [a,b]$, $a \lt b$: &nbsp;$W_i = \frac{Y_i - a}{b - a}$, &nbsp;$t = \frac{\epsilon}{b-a}$ gives</p>
+  <div class="math-block" style="margin:8px 0">$$\Pr\big(|\bar{Y}_n - \mu| \geq \epsilon\big) \;\leq\; 2 \exp\!\left(-\frac{2 n \epsilon^2}{(b-a)^2}\right)$$</div>
+  <p>Darts, $Y \in [0,4]$, $\epsilon = 0.01$, $\delta = 0.05$: &nbsp;$n \geq 295{,}111$ suffices</p>
+  <p class="muted">Fixed $f$, chosen before sampling; known range, not estimated</p>
 </div>
 
-<!-- Thm 1 implication -->
-<div class="slide" data-slide-id="S19">
-  <h2>What Unbiasedness Buys</h2>
-  <div class="divider"></div>
-  <ul>
-    <li>No systematic error to correct &mdash; all error is <strong>noise</strong></li>
-    <li>Averaging independent runs keeps the target fixed</li>
-    <li>MSE = variance &mdash; the bias term is zero</li>
-  </ul>
-  <p class="muted">Contrast coming: a useful estimator that is <strong>not</strong> unbiased</p>
-</div>
-
-<!-- RMSE -->
-<div class="slide" data-slide-id="S22">
-  <h2>RMSE &mdash; the Error Yardstick</h2>
-  <div class="divider"></div>
-  <p>Recall: $\text{MSE} = \text{Bias}^2 + \mathrm{Var}$. Here bias $= 0$:</p>
-  <div class="math-block" style="margin:8px 0">$$\text{RMSE}\big( \hat{\mu}_n \big)
-    = \sqrt{ \mathbb{E}\big[ (\hat{\mu}_n - \mu)^2 \big] }
-    = \frac{\sigma_f}{\sqrt{n}}$$</div>
-  <ul>
-    <li>Typical error shrinks like $1/\sqrt{n}$</li>
-    <li>$10\times$ more accuracy costs $100\times$ more samples</li>
-  </ul>
-</div>
-
-<!-- SLIDE S114 — placeholder (P1) -->
-<div class="slide" data-slide-id="S114">
-  <h2>[S114 placeholder] Estimating the Error Bar</h2>
-</div>
-
-<!-- SLIDE S115 — placeholder (P1) -->
-<div class="slide" data-slide-id="S115">
-  <h2>[S115 placeholder] Approximate Intervals, Exact Guarantees</h2>
-</div>
-
-<!-- Guarantee: Hoeffding -->
-<div class="slide" data-slide-id="S24">
-  <h2>Accuracy Guarantee II &mdash; Hoeffding</h2>
-  <div class="divider"></div>
-  <p>If additionally $f(x) \in [a,b]$ for all $x$:</p>
-  <div class="math-block" style="margin:8px 0">$$\Pr\big( |\hat{\mu}_n - \mu| \geq \epsilon \big)
-    \;\leq\; 2 \exp\!\left( -\frac{2 n \epsilon^2}{(b-a)^2} \right)$$</div>
-  <p>Inverted: error $\leq \epsilon$ with confidence $1 - \delta$ once</p>
-  <div class="math-block" style="margin:8px 0">$$n \;\geq\; \frac{(b-a)^2 \ln(2/\delta)}{2 \epsilon^2}$$</div>
-</div>
-
-<!-- Remarkable absence -->
+<!-- S33 — rate vs cost -->
 <div class="slide" data-slide-id="S33">
-  <h2>The Remarkable Absence</h2>
+  <h2>The Rate Is Not the Cost</h2>
   <div class="divider"></div>
-  <p>Let $X \in \mathbb{R}^d$ &mdash; any $d$. Theorem 2 still reads:</p>
-  <div class="math-block" style="margin:8px 0">$$\text{RMSE} \;=\; \frac{\sigma_f}{\sqrt{n}}$$</div>
+  <p>$X \in \mathbb{R}^d$: dimension leaves the exponent, not the cost</p>
+  <div class="math-block" style="margin:8px 0">$$\mathrm{RMSE} = \frac{\overbrace{\sigma_f(d)}^{\text{may grow with } d}}{\sqrt{n}},
+    \qquad \text{work} = n \times \underbrace{c(d)}_{\text{cost per draw + evaluation}}$$</div>
   <ul>
-    <li>The dimension $d$ appears <strong>nowhere</strong></li>
-    <li>The proof never touched the domain &mdash; only $Y_i = f(X_i)$, a scalar</li>
+    <li>Exponent $-\tfrac12$: proof used only scalars $Y_i = f(X_i)$</li>
   </ul>
-  <p class="muted">Caveat kept for later: $\sigma_f$ itself can grow with $d$</p>
+  <div class="highlight"><p>Dimension-free rate $\neq$ dimension-free budget</p></div>
 </div>
 
-<!-- Chart -->
+<!-- S37 — tensor grids vs MC (schematic) -->
 <div class="slide" data-slide-id="S37">
-  <h2>Error vs. Work &mdash; the Picture</h2>
+  <h2>Tensor Grids Grow With Dimension</h2>
   <div class="divider"></div>
-  <div class="p9-fig" style="max-width:1060px;margin:4px auto;">
-  <svg viewBox="0 0 1060 370">
-    <!-- log-log: x = log10(work) 0..10 -> 150..980 ; y = log10(error) 0..-5 -> 45..300 -->
-    <line x1="150" y1="300" x2="1000" y2="300" stroke="#222" stroke-width="2.5"/>
-    <line x1="150" y1="300" x2="150"  y2="25"  stroke="#222" stroke-width="2.5"/>
-    <!-- grid d=1: slope -2 -->
-    <line x1="150" y1="45" x2="357.5" y2="300" stroke="#2e7d32" stroke-width="4"/>
-    <!-- MC: slope -1/2 -->
-    <line x1="150" y1="45" x2="980" y2="300" stroke="#003876" stroke-width="4.5"/>
-    <!-- grid d=20: slope -0.1 -->
-    <line x1="150" y1="45" x2="980" y2="96"  stroke="#b23b3b" stroke-width="4"/>
-    <!-- ticks -->
-    <line x1="565" y1="300" x2="565" y2="309" stroke="#222" stroke-width="2"/>
-    <line x1="980" y1="300" x2="980" y2="309" stroke="#222" stroke-width="2"/>
-    <line x1="150" y1="45"  x2="141" y2="45"  stroke="#222" stroke-width="2"/>
+  <p>Grid: $N = m^d$ points, error $\propto N^{-2/d}$ (smooth $f$) &middot; MC: RMSE $\propto N^{-1/2}$</p>
+  <div class="p9-fig" style="max-width:1000px;margin:4px auto;">
+  <svg viewBox="0 0 1060 330">
+    <!-- schematic, constants = 1 (gen/p9a_part01.py): x = 150 + 100 log10 N, y = 25 + 65 (-log10 error) -->
+    <line x1="150" y1="290" x2="960" y2="290" stroke="#222" stroke-width="2.5"/>
+    <line x1="150" y1="290" x2="150" y2="15"  stroke="#222" stroke-width="2.5"/>
+    <line x1="150" y1="25" x2="550" y2="285" stroke="#b23b3b" stroke-width="4" stroke-dasharray="4 7"/>
+    <line x1="150" y1="25" x2="950" y2="155" stroke="#b23b3b" stroke-width="4" stroke-dasharray="14 8"/>
+    <line x1="150" y1="25" x2="950" y2="77"  stroke="#b23b3b" stroke-width="4" stroke-dasharray="26 10"/>
+    <line x1="150" y1="25" x2="950" y2="285" stroke="#003876" stroke-width="5"/>
+    <line x1="550" y1="290" x2="550" y2="299" stroke="#222" stroke-width="2"/>
+    <line x1="950" y1="290" x2="950" y2="299" stroke="#222" stroke-width="2"/>
+    <line x1="141" y1="155" x2="150" y2="155" stroke="#222" stroke-width="2"/>
+    <line x1="141" y1="285" x2="150" y2="285" stroke="#222" stroke-width="2"/>
   </svg>
-  <span class="fl" style="left:53.30%;top:95.14%">samples / grid points (log scale)</span>
-  <span class="fl" style="left:3.30%;top:46.49%;transform:translate(-50%,-50%) rotate(-90deg)">error (log scale)</span>
-  <span class="fl fl-green" style="left:45.28%;top:58.11%">grid, $d=1$ (slope $-2$)</span>
-  <span class="fl fl-blue" style="left:78.30%;top:47.30%">Monte Carlo (slope $-1/2$)</span>
-  <span class="fl fl-sub fl-blue" style="left:78.30%;top:54.86%">$=$ grid at $d=4$</span>
-  <span class="fl fl-red" style="left:80.19%;top:15.68%">grid, $d=20$ (slope $-0.1$)</span>
-  <span class="fl fl-sub fl-grey" style="left:14.15%;top:87.84%">$1$</span>
-  <span class="fl fl-sub fl-grey" style="left:53.30%;top:87.84%">$10^{5}$</span>
-  <span class="fl fl-sub fl-grey" style="left:92.45%;top:87.84%">$10^{10}$</span>
-  <span class="fl fl-sub fl-grey" style="left:11.32%;top:12.16%">$1$</span>
-  <span class="fl fl-sub fl-grey" style="left:9.91%;top:81.08%">$10^{-5}$</span>
+  <span class="fl fl-red" style="left:52.8%;top:81.0%;transform:translate(0,-50%)">grid $d=2$</span>
+  <span class="fl fl-red" style="left:90.6%;top:46.97%;transform:translate(0,-50%)">$d=8$</span>
+  <span class="fl fl-red" style="left:90.6%;top:23.3%;transform:translate(0,-50%)">$d=20$</span>
+  <span class="fl fl-blue" style="left:90.6%;top:86.4%;transform:translate(0,-50%)">MC</span>
+  <span class="fl fl-sub fl-grey" style="left:11.5%;top:7.6%">$1$</span>
+  <span class="fl fl-sub fl-grey" style="left:10.6%;top:47.0%">$10^{-2}$</span>
+  <span class="fl fl-sub fl-grey" style="left:10.6%;top:86.4%">$10^{-4}$</span>
+  <span class="fl fl-sub fl-grey" style="left:14.15%;top:94.5%">$1$</span>
+  <span class="fl fl-sub fl-grey" style="left:51.9%;top:94.5%">$10^{4}$</span>
+  <span class="fl fl-sub fl-grey" style="left:89.6%;top:94.5%">$10^{8}$</span>
+  <span class="fl fl-sub fl-grey" style="left:71.0%;top:94.5%">evaluations $N$ (log)</span>
+  <span class="fl fl-sub fl-grey" style="left:3.8%;top:46.0%;transform:translate(-50%,-50%) rotate(-90deg)">error (log)</span>
   </div>
-  <p class="muted">Grid slope $-2/d$ flattens as $d$ grows; MC's $-\tfrac12$ never moves</p>
+  <p class="muted">Schematic, constants set to 1: grid = deterministic error, MC = RMSE; not a runtime race</p>
 </div>
 
-<!-- SLIDE S116 — placeholder (P1) -->
+<!-- S116 — relative error for rare events -->
 <div class="slide" data-slide-id="S116">
-  <h2>[S116 placeholder] Rare Events Need Relative Error</h2>
+  <h2>Rare Events Need Relative Error</h2>
+  <div class="divider"></div>
+  <p>$Y = \mathbf{1}\{X \gt 10\}$, $X \sim \mathrm{Exp}(1)$: &nbsp;$\mu = \rho = e^{-10} \approx 4.5 \times 10^{-5}$</p>
+  <p>Variance $\rho(1-\rho)$ is small; &nbsp;relative RMSE $= \mathrm{RMSE}/|\mu| = \sqrt{(1-\rho)/(n\rho)}$ is large</p>
+  <div class="p9-fig" style="max-width:900px;margin:10px auto 4px;">
+  <svg viewBox="0 0 1000 300">
+    <!-- exact per-draw curves (gen/p9a_part01.py): x = 150 + 135 (log10 rho + 6), y = 20 + 40 (3 - log10 value) -->
+    <line x1="150" y1="265" x2="940" y2="265" stroke="#222" stroke-width="2.5"/>
+    <line x1="150" y1="265" x2="150" y2="10"  stroke="#222" stroke-width="2.5"/>
+    <line x1="150" y1="140" x2="930" y2="140" stroke="#bbb" stroke-width="2" stroke-dasharray="6 6"/>
+    <polyline fill="none" stroke="#c0392b" stroke-width="4.5" points="150.0,20.0 175.6,23.8 201.3,27.6 226.9,31.4 252.6,35.2 278.2,39.0 303.9,42.8 329.5,46.6 355.2,50.4 380.8,54.2 406.5,58.0 432.1,61.8 457.7,65.6 483.4,69.4 509.0,73.2 534.7,77.0 560.3,80.8 586.0,84.6 611.6,88.4 637.3,92.2 662.9,96.0 688.6,99.9 714.2,103.7 739.8,107.6 765.5,111.5 791.1,115.5 816.8,119.6 842.4,123.8 868.1,128.4 893.7,133.6 919.4,140.0"/>
+    <polyline fill="none" stroke="#003876" stroke-width="4.5" stroke-dasharray="14 8" points="150.0,260.0 175.6,256.2 201.3,252.4 226.9,248.6 252.6,244.8 278.2,241.0 303.9,237.2 329.5,233.4 355.2,229.6 380.8,225.8 406.5,222.0 432.1,218.2 457.7,214.4 483.4,210.6 509.0,206.8 534.7,203.0 560.3,199.2 586.0,195.4 611.6,191.6 637.3,187.8 662.9,184.1 688.6,180.3 714.2,176.5 739.8,172.8 765.5,169.1 791.1,165.5 816.8,162.0 842.4,158.7 868.1,155.6 893.7,153.2 919.4,152.0"/>
+    <line x1="373.7" y1="15" x2="373.7" y2="265" stroke="#666" stroke-width="2" stroke-dasharray="4 5"/>
+    <circle cx="373.7" cy="53.1"  r="8" fill="#c0392b"/>
+    <circle cx="373.7" cy="226.9" r="8" fill="#003876"/>
+    <line x1="141" y1="20"  x2="150" y2="20"  stroke="#222" stroke-width="2"/>
+    <line x1="141" y1="140" x2="150" y2="140" stroke="#222" stroke-width="2"/>
+    <line x1="141" y1="260" x2="150" y2="260" stroke="#222" stroke-width="2"/>
+  </svg>
+  <span class="fl fl-red" style="left:72%;top:20%">relative SD $\sigma_f/\rho$</span>
+  <span class="fl fl-blue" style="left:72%;top:73%">absolute SD $\sigma_f$</span>
+  <span class="fl fl-red" style="left:39.5%;top:11%;transform:translate(0,-50%)">$\approx 148$</span>
+  <span class="fl fl-blue" style="left:39.5%;top:83%;transform:translate(0,-50%)">$\approx 0.0067$</span>
+  <span class="fl fl-sub fl-grey" style="left:11.0%;top:6.7%">$10^{3}$</span>
+  <span class="fl fl-sub fl-grey" style="left:11.5%;top:46.7%">$1$</span>
+  <span class="fl fl-sub fl-grey" style="left:10.5%;top:86.7%">$10^{-3}$</span>
+  <span class="fl fl-sub fl-grey" style="left:15.0%;top:94.5%">$10^{-6}$</span>
+  <span class="fl fl-sub fl-grey" style="left:37.4%;top:94.5%">$\rho = e^{-10}$</span>
+  <span class="fl fl-sub fl-grey" style="left:69.0%;top:94.5%">$10^{-2}$</span>
+  <span class="fl fl-sub fl-grey" style="left:88.0%;top:94.5%">event probability $\rho$</span>
+  </div>
+  <p class="muted">Per-draw SDs, exact; divide by $\sqrt{n}$ for RMSE. Relative RMSE $\leq 0.1$ needs $n \geq 2{,}202{,}547$</p>
 </div>
 
 <!-- ===== SECTION 05 — IMPORTANCE SAMPLING ===== -->

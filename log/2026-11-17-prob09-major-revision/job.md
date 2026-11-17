@@ -4,14 +4,18 @@ deck: courses/deepmath/prob09-monte-carlo/prob09-monte-carlo.html
 audience / mode / duration: junior undergraduate AI majors / rigorous, example-led / 150 minutes (two 75-minute teaching blocks); approved 2026-11-17 12:27 KST
 baseline: b20ab73ac7e74e9489d379cf9caad7565f17e31e
 id commit: not yet created; baseline has no slide IDs and chapter-style notes
-branch: 2026-11-17-prob09-major-revision (reserved; not created)
+branch: 2026-11-17-prob09-major-revision (created from baseline; planning record head 7e07e81235f89357f7546343186bd8f461a8e0f2)
 pr: none
-state: planning
-round: 0 of 3
+state: in-work
+round: 1 of 3
+current plan: plan-v2.md (complete stage-4 work order; 85 slide targets, 150 minutes, five packages plus integration)
+current action: slides to perform accepted A/B setup and full build, then return exact-commit work-r1 pointer; owner review and PR follow
+setup decision: work-r0 at 7e07e81235f89357f7546343186bd8f461a8e0f2 accepted; mechanical note wrappers, then joint attribute-only ID commit; Markdown untouched during setup; details in plan-v2
+validation: 85 unique full specs, 113 baseline dispositions, 16 new IDs plus two splits; disjoint complete package ownership; section times total 150 minutes
 albert decisions:
 - 2026-11-17: requested a major revision of prob09 slides and notes after a content, continuity and redundancy audit against prob01-prob08.
 - 2026-11-17 12:27 KST: Albert said “go ahead” in response to the scope/outline proposal; stages 1-3 and proposed pacing approved. Full build plan being completed; no merge authorization.
-- Planning query to slides: baseline notes are 11 chapters, with no per-slide articles. Propose a contract-compliant way to prepare matching note articles and make the required joint deck/note ID-only commit. Can a separate purely mechanical note-structure preparation preserve every word/formula, followed by an attribute-only ID commit, satisfy the contract? Do not implement yet; report the setup decision/issue in the job record and send its pointer. No relaxation of the contract is authorized. Full plan follows.
+- 2026-11-17: stages 1-3 approval implemented in full plan-v2; build order issued in round 1. The earlier planning query is resolved by the accepted two-commit setup. No contract exception, merge or PDF delivery is authorized.
 
 ## Sizing and boundaries
 
@@ -35,4 +39,8 @@ The contract requires an ID-only commit with deck and matching note IDs before s
 
 ## Next action
 
-plan-v1.md is complete: scope, evidence map, audit decisions, title sequence and time budget. Obtain Albert's approval of stages 1-3. Then resolve ID/note preparation and write plan-v2 with full per-slide specifications and executable package boundaries before sending slides a work-order pointer. No work order has been sent.
+Albert approved stages 1-3 on 2026-11-17. Complete plan-v2, then send its work-order pointer. No content build order has yet been sent.
+
+## Setup decision — 2026-11-17
+
+Read work-r0.md at 7e07e81235f89357f7546343186bd8f461a8e0f2 and verified that changes from baseline touch only this job's tracked record. Accept the two-commit proposal: A adds only unlabelled note-article wrappers, preserving the existing content and order; B adds matching IDs to deck and HTML articles in a joint attribute-only commit. Commit B satisfies the ID-only requirement; no deck-only exception or semantic rewriting in setup is authorized. Temporary empty articles are scaffolding only and must all be replaced or removed according to the final slide mapping during the build. Leave Markdown untouched in A/B. Report all block-to-baseline assignments, including any non-exact match. Check wrapper-stripped byte equivalence (permit wrapper-insertion whitespace only), visible text/math equality and unchanged desktop/narrow rendering for A, and exact attribute-stripped byte equality for B. If chapter boundaries prevent 113 valid ordered wrappers without other edits, stop and return the problem. Record both SHAs; B becomes the id commit. This setup is authorized only with the completed plan-v2 work order, not this planning header alone.

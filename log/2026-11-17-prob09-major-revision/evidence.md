@@ -128,3 +128,42 @@ Append-only. Entries checked 2026-11-17. Equations below use natural logarithms 
 - Setup: note HTML has 11 section elements and zero article/data-slide-id/message entries. The accessible Markdown is a separate self-contained artifact, not disposable when HTML is restructured.
 - Does not establish: every earlier formula is missing from every note; uncertainty is resolved by importing the fact explicitly rather than claiming a prior proof that was not found.
 - Label: published result (course-artifact audit).
+
+
+## E17 — Retained dart illustration and error arithmetic
+
+- Claim/calculation: six hand-chosen points (0.5,0.5), (-0.9,0.8), (0.2,-0.6), (-0.4,0.1), (0.8,-0.7), (0.3,0.9) give four unit-disk hits, hence 4(4/6)=8/3. They are an illustration, not an IID realization or a convergence experiment.
+- Source/version: baseline prob09 pp25-30, equations independently recomputed using the exact unit-square/unit-disk geometry and E02. For actual IID uniform draws on [-1,1]^2, Y=4 indicator(hit) has variance pi(4-pi)=2.6967662132698145. Chebyshev at epsilon=.01, delta=.05 gives ceil(pi(4-pi)/(.05*.01^2))=539354; Hoeffding with range [0,4] gives ceil(16 ln(40)/(2*.01^2))=295111.
+- Limits: these bounds are sufficient, not minimal sample sizes; the Chebyshev calculation uses a known variance in a pedagogical benchmark. A displayed six-point hand example does not support a statistical error bar.
+- Label: our calculation / illustrative example. Figure-generator path awaiting slides; points above are deterministic inputs.
+
+## E18 — Check the weighted integrand's second moment
+
+- Claim/calculation: with p=Exp(1), f(x)=x, q=Exp(2), w=e^x/2. E_q[fw]=integral x exp(-x) dx=1, but E_q[(fw)^2]=integral x^2/2 dx=infinity. A nonnegative IID sample mean remains consistent by the integrable LLN; finite-n squared error has infinite expectation.
+- Contrast: q=Exp(1/2) gives E_q[(fw)^2]=2 integral x^2 exp(-3x/2) dx=32/27; variance per draw is 5/27. Bare-weight E_q[w^2]=4/3 is a different number. Ordinary sampling of X has variance 1.
+- Source: direct integration with E04; baseline prob09 pp66-69 supplies the example. Checked with integral x^2 exp(-a x) dx=2/a^3, a>0.
+- Limits: a heavy-tail label alone does not establish integrability for arbitrary f, nor a universal variance improvement. Do not claim every finite batch has a giant weight or use finite sample variance as proof of finite population variance.
+- Label: our calculation / illustrative example. No stochastic plot required; any new plot must record generator inputs/path.
+
+## E19 — Exact finite-batch diagnostics and missed support
+
+- Claim/calculation: weights (.1,.2,.1,.1,9.5) sum to 10, normalized shares (.01,.02,.01,.01,.95), and empirical ESS=100/90.32=1.1071744907. This describes weight imbalance, not 95% of the estimated sum for arbitrary f.
+- Support example: p uniform on {1,2,3,4}, q uniform on {1,2,3}, f=indicator(x=4). All observed p/q are 3/4; normalized weights are 1/n and ESS=n, but both weighted estimates are zero while the target is 1/4.
+- Source/version: direct enumeration and E04/E06; baseline pp48,70,79-81. Equal positive weights attain ESS=n; a single positive weight attains ESS=1.
+- Limits: the support-failure example violates the consistency theorem; it is not a counterexample to that theorem. Neither an imbalance nor a healthy ESS proves a population second-moment condition.
+- Label: our calculation / illustrative example. Deterministic bar inputs above; repository generator path awaiting slides.
+
+## E20 — Explicit independent-token compounding toy
+
+- Claim/calculation: let behavior tokens be independent binary draws q=(1/2,1/2), target tokens independent with p=((1+sqrt(.1))/2,(1-sqrt(.1))/2). Then each token weight has E_q[w_t]=1 and E_q[w_t^2]=1.1. Independence under q gives E_q[(product_{t=1}^T w_t)^2]=1.1^T. At T=100 this is 13780.61234; the population proxy n/E_q[w^2] at n=10^6 is 72.5657.
+- Source: our direct two-state calculation plus probability product rule/independence (E01) and E06's diagnostic scope. This makes the old moment-only caricature an explicit example.
+- Limits: autoregressive token ratios generally depend on the common prefix and cannot be factored this way without additional conditions. The population proxy is not an observed ESS, a count of independent samples, or an accuracy guarantee. No universal exponential law for language models follows.
+- Label: our calculation / illustrative example. If plotted, use the exact formula, no random seed needed; repository generator path awaiting slides.
+
+
+## E21 — Differentiate the scoped reward-plus-KL objective correctly
+
+- Claim/calculation: on a fixed finite support with positive differentiable p_theta and fixed positive reference q, fixed reward r and fixed beta, J=sum p_theta r-beta sum p_theta ln(p_theta/q) has gradient E_p[(r-beta ln(p_theta/q)) grad ln p_theta]. Differentiating the KL contributes both sum (grad p_theta) ln(p_theta/q) and sum grad p_theta; the second is grad 1=0. Thus the displayed score form is justified by normalization, not by pretending the log-ratio reward has no theta dependence.
+- Sources: direct differentiation from E07's score identity and E10's simplified objective. Continuous or infinite outcome spaces need appropriate differentiation/interchange and integrability assumptions separately.
+- Limits: this is not a derivation of PPO's clipped optimization surrogate, nor a permission to ignore arbitrary parameter-dependent reward terms. The learned reward model and reference are fixed for this policy-gradient calculation.
+- Label: our calculation. No figure generator required for the note derivation.

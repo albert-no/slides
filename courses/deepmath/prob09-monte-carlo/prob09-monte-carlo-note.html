@@ -45,7 +45,7 @@
 <body>
 
 <h1>Deep Learning Math 9 · Monte Carlo &amp; Importance Sampling &mdash; Notes</h1>
-<p class="meta">Companion to <code>prob09-monte-carlo.html</code> (85 slides, 150 minutes in two 75-minute blocks, break after Part 03). Audience: junior undergraduate AI majors who have seen expectation, variance, the law of large numbers and concentration in prob01&ndash;prob08.</p>
+<p class="meta">Companion to <code>prob09-monte-carlo.html</code> (86 slides, 150 minutes in two 75-minute blocks, break after Part 03). Audience: junior undergraduate AI majors who have seen expectation, variance, the law of large numbers and concentration in prob01&ndash;prob08.</p>
 <p class="meta"><strong>How to use it.</strong> There is one article per slide, in slide order, headed by the slide number and title. Each article opens with a one-sentence <em>Message</em>, then explains the slide well enough to teach it, then gives <em>Details</em> (derivations, numbers, figure provenance) and <em>Sources</em>. Pace lines on the part dividers give the target time for each part and the time elapsed at its start; they are targets, not auto-advance intervals. A text-only Markdown edition, <code>prob09-monte-carlo-note.md</code>, carries the same articles with every figure described in words.</p>
 <p class="meta"><strong>Conventions.</strong> $X$ is a random outcome; $f$ a fixed integration function with target $\mu=\mathbb E_p[f(X)]$; $R$ the reward in the gradient examples and $r$ the learned reward in the RLHF example (the PPO slide uses $r$ for its ratio, as in the cited figure, and says so). $p$ is the target and $q$ the proposal; $w=p/q$ is the normalized density ratio, $\tilde w=\tilde p/q$ the unnormalized one, and $\bar w_i$ the normalized share of draw $i$. $\sigma_f$ is the population standard deviation and $s_Y$ the observed sample standard deviation. $\theta$ denotes model parameters; the behavior policy $\pi_b$ and the reference policy $\pi_{\text{ref}}$ are never interchanged. Exponential distributions use the rate parameter. $\ln$ is the natural logarithm and KL is measured in nats. Results proved in earlier lectures are cited, not re-proved.</p>
 
@@ -1282,27 +1282,39 @@ with the example value $\epsilon=0.2$. The ratio $r_t(\theta)=\pi_\theta(a_t\mid
 </div>
 </article>
 
-<article data-slide-id="S109">
-<h2>84. One Target, Different Estimators</h2>
+<article data-slide-id="S109a">
+<h2>84. Choose an Expectation Estimator by Its Requirements</h2>
 <p class="pace">Synthesis and closer · &asymp;5 min · elapsed &asymp;145 min</p>
-<p class="msg"><span class="kt">Message.</span> Choose an estimator by the ingredients you can compute and the error claims you can justify.</p>
-<p>The table lines up the five estimators of the lecture. The middle column is what each one needs to be computable; the right column is the strongest claim it supports in general. Ask the room which row fits an example from earlier: the darts estimate of $\pi$ (ordinary MC), the rare event $\mathbb P(X\gt 10)$ for $X\sim\mathrm{Exp}(1)$ (importance sampling), a target known only up to its normalizer (self-normalized IS), the Gaussian with $R=X^2$ (pathwise), the two-action policy (score). The highlight is the lecture's warning: unbiased or consistent does not mean low error; the second moment decides that.</p>
+<p class="msg"><span class="kt">Message.</span> For an expectation, the ingredients you can compute decide which estimators are available; the conditions they meet decide what you can honestly claim.</p>
+<p>The first synthesis slide lines up the three estimators of $\mu = \mathbb E_p[f(X)]$. The lead line states what all three share: IID draws and an integrable integrand, $\mathbb E_p|f(X)|\lt\infty$. The middle column is what each one needs to be computable; the right column is the strongest claim it supports in general. Ordinary MC needs draws from $p$; it is unbiased, and its RMSE is $\sigma_f/\sqrt n$ only when the variance $\sigma_f^2$ is finite. Importance sampling needs draws from $q$, an evaluable normalized ratio $p/q$, and $q\gt 0$ wherever $fp\neq 0$; full coverage of $p$ is enough but not necessary. It is then unbiased, but its variance is finite only if $\mathbb E_q[(fw)^2]\lt\infty$: first-moment validity and finite variance are separate checks. Self-normalized IS needs only $\tilde p\propto p$, coverage of the whole target, and a positive total of the sampled weights; it is consistent under these assumptions and generally biased at finite $n$, with exceptions such as constant $f$ or $q=p$.</p>
+<p>Ask the room which row fits an example from earlier: the darts estimate of $\pi$ (ordinary MC), the rare event $\mathbb P(X\gt 10)$ for $X\sim\mathrm{Exp}(1)$ (importance sampling, although ordinary MC is also available there), a target known only up to its normalizer (self-normalized IS). The highlight is the lecture's warning: unbiased or consistent does not mean low error; the second moment decides that.</p>
 <div class="detail">
 <h3>Formula reference</h3>
-<p>Ordinary MC: $\hat\mu_n = \frac1n\sum_{i=1}^n f(X_i)$, $X_i\sim p$ IID; unbiased, and with finite variance $\mathrm{RMSE} = \sigma_f/\sqrt n$.</p>
-<p>Importance sampling: $\hat\mu_{\mathrm{IS}} = \frac1n\sum_{i=1}^n w(X_i)\,f(X_i)$, $w = p/q$, $X_i\sim q$; unbiased when $q\gt 0$ wherever $f p\neq 0$; its variance is finite only if $\mathbb E_q[w^2 f^2]\lt\infty$.</p>
-<p>Self-normalized IS: $\hat\mu_{\mathrm{SN}} = \sum_i \tilde w_i f(X_i) \big/ \sum_j \tilde w_j$, $\tilde w = \tilde p/q$; consistent under the support condition, biased at finite $n$.</p>
-<p>Pathwise gradient: with $X = T_\theta(\varepsilon)$ and the law of $\varepsilon$ free of $\theta$, $\nabla_\theta\mathbb E[R(X)] = \mathbb E[\nabla_\theta R(T_\theta(\varepsilon))]$ when the swap is justified.</p>
-<p>Score gradient: $\nabla_\theta\mathbb E_{p_\theta}[R(X)] = \mathbb E_{p_\theta}[R(X)\,s_\theta(X)]$, $s_\theta = \nabla_\theta \ln p_\theta$; a constant baseline $b$ keeps the mean, $\mathbb E[(R-b)s_\theta] = \mathbb E[R s_\theta]$, but does not always lower the variance.</p>
+<p>Ordinary MC: $\hat\mu_n = \frac1n\sum_{i=1}^n f(X_i)$, $X_i\sim p$ IID, $\mathbb E_p|f(X)|\lt\infty$; unbiased, and with finite variance $\sigma_f^2$, $\mathrm{RMSE} = \sigma_f/\sqrt n$.</p>
+<p>Importance sampling: $\hat\mu_{\mathrm{IS}} = \frac1n\sum_{i=1}^n w(X_i)\,f(X_i)$, $w = p/q$, $X_i\sim q$ IID; unbiased when $q\gt 0$ wherever $f p\neq 0$ and $\mathbb E_p|f(X)|\lt\infty$; its variance is finite only if $\mathbb E_q[w^2 f^2]\lt\infty$.</p>
+<p>Self-normalized IS: $\hat\mu_{\mathrm{SN}} = \sum_i \tilde w_i f(X_i) \big/ \sum_j \tilde w_j$, $\tilde w = \tilde p/q$, $X_i\sim q$ IID; requires $q\gt 0$ wherever $p\gt 0$, a proper target ($0\lt Z\lt\infty$), $\mathbb E_p|f(X)|\lt\infty$ and a positive denominator; consistent under these conditions, generally biased at finite $n$.</p>
 <h3>Prerequisites in the series (optional)</h3>
-<p>prob01: LOTUS, variance rules, Jensen with its equality case. prob02: KL divergence and its nonnegativity. prob04: the chain rule of probability. prob05: law of large numbers, Chebyshev, CLT. prob06: Hoeffding. prob07: MSE decomposition and estimator bias. prob08: Gaussian machinery, the substrate for reparameterization.</p>
+<p>prob01: LOTUS and Jensen with its equality case. prob02: KL divergence and its nonnegativity. prob04: the chain rule of probability. prob05: the mean and variance of a sample mean, law of large numbers, Chebyshev, CLT. prob06: Hoeffding. prob07: MSE decomposition and estimator bias. prob08: Gaussian machinery, the substrate for the Gaussian path $X=\theta+\varepsilon$.</p>
 <h3>Sources</h3>
-<p>Summary of results stated and sourced on the earlier slides (E02, E04&ndash;E08, E15).</p>
+<p>Summary of results stated and sourced on the earlier slides (E02, E04&ndash;E06). Prerequisite locations: E01.</p>
+</div>
+</article>
+<article data-slide-id="S109b">
+<h2>85. Choose a Gradient Estimator by Its Requirements</h2>
+<p class="msg"><span class="kt">Message.</span> For the gradient of an expectation, the pathwise and score estimators are unbiased only under their own conditions, and being available does not make either one efficient.</p>
+<p>The second synthesis slide changes the target from an expectation to its gradient, $\nabla_\theta\mathbb E_{p_\theta}[R(X)]$. The pathwise estimator needs a sampling path $X=T_\theta(\varepsilon)$ whose base noise $\varepsilon$ has a law free of $\theta$, a valid chain rule along that path, and a justified swap of gradient and expectation. The score estimator needs the setting in which the identity was proved: a fixed support, a differentiable $p_\theta$ and a valid swap, which the lecture showed in full for a finite outcome space. A constant baseline $b$, fixed before the draw and independent of the sample, keeps the mean because the score has mean zero; it does not always lower the variance.</p>
+<p>Ask the room which row fits: the Gaussian with $R=X^2$ (both rows are available), the two-action policy (score only, because a sampled discrete action has no naive differentiable path). The highlight is the companion warning for gradients: being available is not being efficient; compare the variances on the problem at hand, as the Gaussian comparison did.</p>
+<div class="detail">
+<h3>Formula reference</h3>
+<p>Pathwise gradient: with $X = T_\theta(\varepsilon)$ and the law of $\varepsilon$ free of $\theta$, $\nabla_\theta\mathbb E[R(X)] = \mathbb E[\nabla_\theta R(T_\theta(\varepsilon))]$ when the chain rule holds along the path and the swap is justified.</p>
+<p>Score gradient: $\nabla_\theta\mathbb E_{p_\theta}[R(X)] = \mathbb E_{p_\theta}[R(X)\,s_\theta(X)]$, $s_\theta = \nabla_\theta \ln p_\theta$, for a fixed support and a valid swap (finite outcome space: always). A constant baseline $b$ keeps the mean, $\mathbb E[(R-b)s_\theta] = \mathbb E[R s_\theta]$, because $\mathbb E[s_\theta]=0$; it lowers the variance only under the condition $b(b-2b^*)\lt 0$ derived for the baseline slides.</p>
+<h3>Sources</h3>
+<p>Summary of results stated and sourced on the earlier slides (E07, E08, E15, E27).</p>
 </div>
 </article>
 
 <article data-slide-id="S113">
-<h2>85. Closer</h2>
+<h2>86. Closer</h2>
 <p class="msg"><span class="kt">Message.</span> The target stays the same; the sampler and the estimator decide the error.</p>
 <p>The closer shows the importance-sampling identity: the same expectation under $p$, computed from draws of $q$. Closing cue: before trusting a Monte Carlo number, name what it needs and what error claim it supports. Further reading is in the References below.</p>
 </article>
@@ -1318,7 +1330,7 @@ with the example value $\epsilon=0.2$. The ratio $r_t(\theta)=\pi_\theta(a_t\mid
     <li>J. Schulman, F. Wolski, P. Dhariwal, A. Radford, O. Klimov, &ldquo;Proximal Policy Optimization Algorithms,&rdquo; arXiv:1707.06347v2, 2017 &mdash; &sect;3 clipped surrogate objective, eq.&nbsp;(7) and Figure&nbsp;1; &sect;4 KL-penalty variant. <a href="https://arxiv.org/abs/1707.06347">arXiv:1707.06347</a>.</li>
     <li>L. Ouyang et al., &ldquo;Training language models to follow instructions with human feedback,&rdquo; NeurIPS 2022 &mdash; the reward-plus-KL RL objective, arXiv:2203.02155v1 &sect;3.5, eq.&nbsp;(2). <a href="https://arxiv.org/abs/2203.02155">arXiv:2203.02155</a>.</li>
     <li>R. S. Sutton, A. G. Barto, <em>Reinforcement Learning: An Introduction</em>, 2nd ed., MIT Press, 2018 &mdash; further reading on policy-gradient methods and baselines. <a href="http://incompleteideas.net/book/the-book.html">incompleteideas.net/book/the-book.html</a>.</li>
-    <li>Companion notes in this series, read at commit <code>b20ab73</code>: <code>prob01</code> (LOTUS, variance, Jensen), <code>prob02</code> (KL divergence), <code>prob04</code> (chain rule of probability), <code>prob05</code> (LLN, Chebyshev, CLT), <code>prob06</code> (Hoeffding), <code>prob07</code> (MSE decomposition, estimator bias), <code>prob08</code> (Gaussian machinery) &mdash; <code>../prob0N-&lt;topic&gt;/prob0N-&lt;topic&gt;-note.html</code>.</li>
+    <li>Companion notes in this series, read at commit <code>b20ab73</code>: <code>prob01</code> (LOTUS, Jensen), <code>prob02</code> (KL divergence), <code>prob04</code> (chain rule of probability), <code>prob05</code> (sample-mean mean and variance, LLN, Chebyshev, CLT), <code>prob06</code> (Hoeffding), <code>prob07</code> (MSE decomposition, estimator bias), <code>prob08</code> (Gaussian machinery) &mdash; <code>../prob0N-&lt;topic&gt;/prob0N-&lt;topic&gt;-note.html</code>.</li>
   </ol>
 </section>
 

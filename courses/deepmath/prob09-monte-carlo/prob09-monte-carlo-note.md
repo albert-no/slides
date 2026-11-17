@@ -2,7 +2,7 @@
 
 **About this file.** This is the text-only, screen-reader-friendly edition of the Lecture 9 companion note. It has one section per slide, in slide order, each headed by the slide number, title and slide ID in brackets; the HTML note has the same sections. Every figure and table is described in words or linearized into lists, and all mathematics is written in LaTeX. Nothing else is needed to read it.
 
-Companion to `prob09-monte-carlo.html` (85 slides, 150 minutes in two 75-minute blocks, break after Part 3). Audience: junior undergraduate AI majors who have seen expectation, variance, the law of large numbers and concentration in prob01-prob08. Each section opens with a one-sentence message, then explains the slide, then gives details and sources. Pace lines on the part dividers give target times; they are targets, not auto-advance intervals.
+Companion to `prob09-monte-carlo.html` (86 slides, 150 minutes in two 75-minute blocks, break after Part 3). Audience: junior undergraduate AI majors who have seen expectation, variance, the law of large numbers and concentration in prob01-prob08. Each section opens with a one-sentence message, then explains the slide, then gives details and sources. Pace lines on the part dividers give target times; they are targets, not auto-advance intervals.
 
 **Conventions.** $X$ is a random outcome; $f$ a fixed integration function with target $\mu=\mathbb E_p[f(X)]$; $R$ the reward in the gradient examples and $r$ the learned reward in the RLHF example (the PPO slide uses $r$ for its ratio, as in the cited figure, and says so). $p$ is the target and $q$ the proposal; $w=p/q$ is the normalized density ratio, $\tilde w=\tilde p/q$ the unnormalized one, and $\bar w_i$ the normalized share of draw $i$. $\sigma_f$ is the population standard deviation and $s_Y$ the observed sample standard deviation. $\theta$ denotes model parameters; the behavior policy $\pi_b$ and the reference policy $\pi_{\text{ref}}$ are never interchanged. Exponential distributions use the rate parameter. $\ln$ is the natural logarithm and KL is measured in nats. Results proved in earlier lectures are cited, not re-proved.
 
@@ -1518,38 +1518,62 @@ Sources. Schulman, Wolski, Dhariwal, Radford, Klimov, "Proximal Policy Optimizat
 
 ## Closing
 
-<!-- BEGIN S109 -->
-### 84. One Target, Different Estimators [S109]
+<!-- BEGIN S109a -->
+### 84. Choose an Expectation Estimator by Its Requirements [S109a]
 
 *Pace: Synthesis and closer, about 5 min; elapsed about 145 min.*
 
-**Message.** Choose an estimator by the ingredients you can compute and the error claims you can justify.
+**Message.** For an expectation, the ingredients you can compute decide which estimators are available; the conditions they meet decide what you can honestly claim.
 
-The slide is a three-column table, read row by row:
+The slide opens with the shared setting: target $\mu=\mathbb E_p[f(X)]$, IID draws, and $\mathbb E_p|f(X)|<\infty$. Below it is a three-column table, read row by row:
 
-- Ordinary MC. Needs: draws from $p$. Claim: unbiased, RMSE $\sigma_f/\sqrt{n}$.
-- Importance sampling. Needs: the normalized ratio $p/q$ and full support. Claim: unbiased, but the variance can be infinite.
-- Self-normalized IS. Needs: $p$ up to a constant. Claim: consistent, biased at finite $n$.
-- Pathwise gradient. Needs: a sampling path $X=T_\theta(\varepsilon)$ and a differentiable $R$. Claim: unbiased if the swap of gradient and expectation is valid.
-- Score gradient. Needs: a differentiable $\ln p_\theta$. Claim: unbiased; a baseline keeps the mean.
+- Ordinary MC. Needs: draws from $p$. Claim: unbiased; RMSE $\sigma_f/\sqrt{n}$ if $\sigma_f<\infty$.
+- Importance sampling. Needs: draws from $q$, an evaluable normalized ratio $p/q$, and $q>0$ wherever $fp\neq 0$. Claim: unbiased; the variance is finite only if $\mathbb E_q[(fw)^2]<\infty$.
+- Self-normalized IS. Needs: $\tilde p\propto p$, $q>0$ wherever $p>0$, and a positive total of the sampled weights. Claim: consistent; generally biased at finite $n$.
 
 Highlighted line: unbiased or consistent is not low error; check the second moment.
 
-Question for the room: which row fits each earlier example (darts for $\pi$; $\mathbb P(X>10)$ with $X\sim\mathrm{Exp}(1)$; a target known up to its normalizer; the Gaussian with $R=X^2$; the two-action policy)?
+Full coverage of $p$ is enough for importance sampling but not necessary; first-moment validity and finite variance are separate checks. The self-normalized bias has exceptions, such as constant $f$ or $q=p$.
+
+Question for the room: which row fits each earlier example (darts for $\pi$; $\mathbb P(X>10)$ with $X\sim\mathrm{Exp}(1)$, where ordinary MC is also available; a target known up to its normalizer)?
 
 Formula reference:
 
-- Ordinary MC: $\hat\mu_n = \frac1n\sum_{i=1}^n f(X_i)$, $X_i\sim p$ IID; unbiased, and with finite variance $\mathrm{RMSE}=\sigma_f/\sqrt n$.
-- Importance sampling: $\hat\mu_{\mathrm{IS}} = \frac1n\sum_i w(X_i) f(X_i)$, $w=p/q$, $X_i\sim q$; unbiased when $q>0$ wherever $fp\neq 0$; finite variance only if $\mathbb E_q[w^2f^2]<\infty$.
-- Self-normalized IS: $\hat\mu_{\mathrm{SN}} = \sum_i \tilde w_i f(X_i)/\sum_j\tilde w_j$, $\tilde w=\tilde p/q$; consistent, biased at finite $n$.
-- Pathwise: $\nabla_\theta \mathbb E[R(X)] = \mathbb E[\nabla_\theta R(T_\theta(\varepsilon))]$ when the swap is justified.
-- Score: $\nabla_\theta \mathbb E_{p_\theta}[R(X)] = \mathbb E_{p_\theta}[R(X)s_\theta(X)]$, $s_\theta=\nabla_\theta\ln p_\theta$; a constant baseline keeps the mean but does not always lower the variance.
+- Ordinary MC: $\hat\mu_n = \frac1n\sum_{i=1}^n f(X_i)$, $X_i\sim p$ IID, $\mathbb E_p|f(X)|<\infty$; unbiased, and with finite variance $\sigma_f^2$, $\mathrm{RMSE}=\sigma_f/\sqrt n$.
+- Importance sampling: $\hat\mu_{\mathrm{IS}} = \frac1n\sum_i w(X_i) f(X_i)$, $w=p/q$, $X_i\sim q$ IID; unbiased when $q>0$ wherever $fp\neq 0$ and $\mathbb E_p|f(X)|<\infty$; finite variance only if $\mathbb E_q[w^2f^2]<\infty$.
+- Self-normalized IS: $\hat\mu_{\mathrm{SN}} = \sum_i \tilde w_i f(X_i)/\sum_j\tilde w_j$, $\tilde w=\tilde p/q$, $X_i\sim q$ IID; requires $q>0$ wherever $p>0$, a proper target ($0<Z<\infty$), $\mathbb E_p|f(X)|<\infty$ and a positive denominator; consistent under these conditions, generally biased at finite $n$.
 
-Prerequisites in the series (optional): prob01 (LOTUS, variance, Jensen), prob02 (KL), prob04 (chain rule of probability), prob05 (LLN, Chebyshev, CLT), prob06 (Hoeffding), prob07 (MSE decomposition, bias), prob08 (Gaussian machinery).
-<!-- END S109 -->
+Prerequisites in the series (optional): prob01 (LOTUS, Jensen), prob02 (KL), prob04 (chain rule of probability), prob05 (mean and variance of a sample mean, LLN, Chebyshev, CLT), prob06 (Hoeffding), prob07 (MSE decomposition, bias), prob08 (Gaussian machinery, the substrate for the Gaussian path $X=\theta+\varepsilon$).
+
+Sources: summary of results sourced on the earlier slides (E02, E04-E06); prerequisite locations E01.
+<!-- END S109a -->
+
+<!-- BEGIN S109b -->
+### 85. Choose a Gradient Estimator by Its Requirements [S109b]
+
+**Message.** For the gradient of an expectation, the pathwise and score estimators are unbiased only under their own conditions, and being available does not make either one efficient.
+
+The slide opens with the new target, $\nabla_\theta\mathbb E_{p_\theta}[R(X)]$, the gradient of an expectation. Below it is a three-column table with two rows:
+
+- Pathwise gradient. Needs: $X=T_\theta(\varepsilon)$ with the law of $\varepsilon$ free of $\theta$; the chain rule and the swap of gradient and expectation are valid. Claim: unbiased under those conditions.
+- Score gradient. Needs: a fixed support, a differentiable $p_\theta$, and a valid swap (the finite case was shown in full). Claim: unbiased; a constant baseline $b$ keeps the mean.
+
+Highlighted line: available is not efficient; compare variances on the problem at hand.
+
+The baseline must be a constant fixed before the draw, independent of the sample; it keeps the mean because the score has mean zero, and it does not always lower the variance.
+
+Question for the room: which row fits the Gaussian with $R=X^2$ (both rows are available) and the two-action policy (score only, because a sampled discrete action has no naive differentiable path)?
+
+Formula reference:
+
+- Pathwise: $\nabla_\theta \mathbb E[R(X)] = \mathbb E[\nabla_\theta R(T_\theta(\varepsilon))]$ when the chain rule holds along the path and the swap is justified.
+- Score: $\nabla_\theta \mathbb E_{p_\theta}[R(X)] = \mathbb E_{p_\theta}[R(X)s_\theta(X)]$, $s_\theta=\nabla_\theta\ln p_\theta$, for a fixed support and a valid swap (finite outcome space: always). A constant baseline keeps the mean because $\mathbb E[s_\theta]=0$; it lowers the variance only when $b(b-2b^*)<0$, as derived for the baseline slides.
+
+Sources: summary of results sourced on the earlier slides (E07, E08, E15, E27).
+<!-- END S109b -->
 
 <!-- BEGIN S113 -->
-### 85. Closer [S113]
+### 86. Closer [S113]
 
 **Message.** The target stays the same; the sampler and the estimator decide the error.
 
@@ -1566,4 +1590,4 @@ The closing slide shows the importance-sampling identity $\mathbb E_p[f(X)] = \m
 6. J. Schulman, F. Wolski, P. Dhariwal, A. Radford, O. Klimov, "Proximal Policy Optimization Algorithms," arXiv:1707.06347v2, 2017. Section 3 clipped surrogate objective, eq. (7) and Figure 1; Section 4 KL-penalty variant. https://arxiv.org/abs/1707.06347
 7. L. Ouyang et al., "Training language models to follow instructions with human feedback," NeurIPS 2022. The reward-plus-KL RL objective, arXiv:2203.02155v1 Section 3.5, eq. (2). https://arxiv.org/abs/2203.02155
 8. R. S. Sutton, A. G. Barto, *Reinforcement Learning: An Introduction*, 2nd ed., MIT Press, 2018. Further reading on policy-gradient methods and baselines. http://incompleteideas.net/book/the-book.html
-9. Companion notes in this series, read at commit b20ab73: prob01 (LOTUS, variance, Jensen), prob02 (KL divergence), prob04 (chain rule of probability), prob05 (LLN, Chebyshev, CLT), prob06 (Hoeffding), prob07 (MSE decomposition, estimator bias), prob08 (Gaussian machinery).
+9. Companion notes in this series, read at commit b20ab73: prob01 (LOTUS, Jensen), prob02 (KL divergence), prob04 (chain rule of probability), prob05 (mean and variance of a sample mean, LLN, Chebyshev, CLT), prob06 (Hoeffding), prob07 (MSE decomposition, estimator bias), prob08 (Gaussian machinery).

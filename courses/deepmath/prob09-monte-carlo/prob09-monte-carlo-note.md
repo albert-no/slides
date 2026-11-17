@@ -7,19 +7,32 @@
 <!-- BEGIN S01 -->
 ### 1. Monte Carlo & Importance Sampling [S01]
 
-(placeholder, INT)
+**Message.** Monte Carlo turns an expectation into a computation; choosing the sampler or the gradient estimator changes the error, not the target.
+
+Lecture 9 of Deep Learning Math, for junior undergraduates in AI. It builds on the earlier lectures' expectation, variance, the law of large numbers and concentration, and asks one practical question throughout: when an average or its gradient has no convenient closed form, how do we estimate it, and what can we honestly say about the error?
 <!-- END S01 -->
 
 <!-- BEGIN S02 -->
 ### 2. Contents [S02]
 
-(placeholder, INT)
+**Message.** Six decisions organize the lecture.
+
+1. Estimate an Expectation: the ordinary Monte Carlo estimator, what it targets, and how far one run can land from it.
+2. Change the Sampler: sample from a different distribution and correct with importance weights.
+3. Control Proposal Risk: when a proposal helps and when it makes the error infinite.
+4. Remove the Normalizer: self-normalized weights when the target is known only up to a constant, at the price of a small bias.
+5. Differentiate Expectations: gradients along a sampling path or through the score.
+6. Reuse Samples Responsibly: the same ratio and gradient tools when data come from a different policy.
+
+Pacing cue: two 75-minute blocks with the break after Part 3.
 <!-- END S02 -->
 
 <!-- BEGIN S03 -->
 ### 3. 01 · Estimate an Expectation [S03]
 
-(placeholder, INT)
+**Message.** First separate the number we want from the randomness of its estimate.
+
+This part does not re-teach probability. It takes the expectation, the sample mean and its variance as known, and asks what an estimate built from random draws promises: what it targets, how its error shrinks, how to report that error from the data, and what the cost of a target accuracy depends on.
 <!-- END S03 -->
 
 <!-- BEGIN S04 -->
@@ -328,7 +341,9 @@ E11: running rare event $p = \mathrm{Exp}(1)$, $f = \mathbf 1\{x \gt 10\}$, $\mu
 <!-- BEGIN S41 -->
 ### 16. 02 · Change the Sampler [S41]
 
-(placeholder, INT)
+**Message.** Visit useful outcomes more often without changing the target.
+
+Part 01 ended with a rare event whose relative error ordinary sampling cannot control at a reasonable sample size. The fix is to draw from a different distribution that visits the important region more often, and to correct each draw by a weight so that the average still targets the original expectation.
 <!-- END S41 -->
 
 <!-- BEGIN S43 -->
@@ -418,7 +433,9 @@ E11: running rare event $p = \mathrm{Exp}(1)$, $f = \mathbf 1\{x \gt 10\}$, $\mu
 <!-- BEGIN S55 -->
 ### 31. 03 · Control Proposal Risk [S55]
 
-(placeholder, INT)
+**Message.** A correct mean is not enough for reliable Monte Carlo.
+
+Part 02 showed a practical proposal that keeps the target and cuts the relative error. This part asks why it works and how another proposal can fail: the second moment of the weighted integrand decides the error, the best proposal follows the integrand, and a proposal with lighter tails than the target can leave the estimate unbiased but with infinite variance.
 <!-- END S55 -->
 
 <!-- BEGIN S56 -->
@@ -490,7 +507,9 @@ E11: running rare event $p = \mathrm{Exp}(1)$, $f = \mathbf 1\{x \gt 10\}$, $\mu
 <!-- BEGIN S72 -->
 ### 43. 04 · Remove the Normalizer [S72]
 
-(placeholder, INT)
+**Message.** An unknown normalizing constant changes the estimator and its guarantees.
+
+Ordinary importance sampling needs the normalized ratio $p/q$. Often the target is known only up to a constant, $p = \tilde p / Z$ with $Z$ unknown. Dividing by the total weight removes $Z$, but the result is a ratio of two averages: consistent, yet biased at any finite sample size, and its weight diagnostics have blind spots.
 <!-- END S72 -->
 
 <!-- BEGIN S73 -->
@@ -657,7 +676,9 @@ Scaling all weights by one constant leaves ESS unchanged, so $Z$ does not matter
 <!-- BEGIN S83 -->
 ### 55. 05 · Differentiate Expectations [S83]
 
-(placeholder, INT)
+**Message.** Learning changes the distribution whose average we want.
+
+Up to now the distribution was fixed and we estimated one number. In learning, the parameters $\theta$ move the distribution itself, and we need the gradient of an expectation with respect to $\theta$. Two estimators follow: differentiate along a sampling path, or differentiate the log-probability (the score). The estimator results from Part 01 carry over and are not re-proved.
 <!-- END S83 -->
 
 <!-- BEGIN S84 -->
@@ -1113,7 +1134,9 @@ Mohamed et al., JMLR 2020, Secs. 4.2-4.3 and 5.2-5.3 (E07). Figure: drawn for th
 <!-- BEGIN S99 -->
 ### 75. 06 · Reuse Samples Responsibly [S99]
 
-(placeholder, INT)
+**Message.** Reusing data introduces a second distribution, not a new target.
+
+Samples collected under one policy are reused to evaluate or improve another. The correction is the importance ratio of Part 02, now a product over the steps of a sequence, and the gradient tools of Part 05 apply on top. This part applies that toolkit to a scoped, historical RLHF example; it is not a survey of reinforcement-learning methods.
 <!-- END S99 -->
 
 <!-- BEGIN S100 -->
@@ -1249,11 +1272,35 @@ Sources. Schulman, Wolski, Dhariwal, Radford, Klimov, "Proximal Policy Optimizat
 <!-- BEGIN S109 -->
 ### 84. One Target, Different Estimators [S109]
 
-(placeholder, INT)
+**Message.** Choose an estimator by the ingredients you can compute and the error claims you can justify.
+
+The slide is a three-column table, read row by row:
+
+- Ordinary MC. Needs: draws from $p$. Claim: unbiased, RMSE $\sigma_f/\sqrt{n}$.
+- Importance sampling. Needs: the normalized ratio $p/q$ and full support. Claim: unbiased, but the variance can be infinite.
+- Self-normalized IS. Needs: $p$ up to a constant. Claim: consistent, biased at finite $n$.
+- Pathwise gradient. Needs: a sampling path $X=T_\theta(\varepsilon)$ and a differentiable $R$. Claim: unbiased if the swap of gradient and expectation is valid.
+- Score gradient. Needs: a differentiable $\ln p_\theta$. Claim: unbiased; a baseline keeps the mean.
+
+Highlighted line: unbiased or consistent is not low error; check the second moment.
+
+Question for the room: which row fits each earlier example (darts for $\pi$; $\mathbb P(X>10)$ with $X\sim\mathrm{Exp}(1)$; a target known up to its normalizer; the Gaussian with $R=X^2$; the two-action policy)?
+
+Formula reference:
+
+- Ordinary MC: $\hat\mu_n = \frac1n\sum_{i=1}^n f(X_i)$, $X_i\sim p$ IID; unbiased, and with finite variance $\mathrm{RMSE}=\sigma_f/\sqrt n$.
+- Importance sampling: $\hat\mu_{\mathrm{IS}} = \frac1n\sum_i w(X_i) f(X_i)$, $w=p/q$, $X_i\sim q$; unbiased when $q>0$ wherever $fp\neq 0$; finite variance only if $\mathbb E_q[w^2f^2]<\infty$.
+- Self-normalized IS: $\hat\mu_{\mathrm{SN}} = \sum_i \tilde w_i f(X_i)/\sum_j\tilde w_j$, $\tilde w=\tilde p/q$; consistent, biased at finite $n$.
+- Pathwise: $\nabla_\theta \mathbb E[R(X)] = \mathbb E[\nabla_\theta R(T_\theta(\varepsilon))]$ when the swap is justified.
+- Score: $\nabla_\theta \mathbb E_{p_\theta}[R(X)] = \mathbb E_{p_\theta}[R(X)s_\theta(X)]$, $s_\theta=\nabla_\theta\ln p_\theta$; a constant baseline keeps the mean but does not always lower the variance.
+
+Prerequisites in the series (optional): prob01 (LOTUS, variance, Jensen), prob02 (KL), prob04 (chain rule of probability), prob05 (LLN, Chebyshev, CLT), prob06 (Hoeffding), prob07 (MSE decomposition, bias), prob08 (Gaussian machinery).
 <!-- END S109 -->
 
 <!-- BEGIN S113 -->
 ### 85. Closer [S113]
 
-(placeholder, INT)
+**Message.** The target stays the same; the sampler and the estimator decide the error.
+
+The closing slide shows the importance-sampling identity $\mathbb E_p[f(X)] = \mathbb E_q[f(X)\,p(X)/q(X)]$ and "Questions?". Closing cue: before trusting a Monte Carlo number, name what it needs and what error claim it supports. Further reading is in the References.
 <!-- END S113 -->

@@ -231,3 +231,11 @@ Append-only. Entries checked 2026-11-17. Equations below use natural logarithms 
 - For IID nonnegative weights with 0<E_q[w] and finite E_q[w^2], strong LLN gives ESS/n -> (E_q[w])^2/E_q[w^2]. With w=p/q and full p-support coverage, E_q[w]=1, yielding the familiar 1/E_q[w^2]. E06's interpretation as a diagnostic still applies.
 - E19's missing-support example checks the distinction: E_q[w]=3/4 and E_q[w^2]=9/16, so the general limit is 1, agreeing with ESS=n. Incorrectly using 1/E_q[w^2] would give 16/9, outside the sample bound.
 - Label: our derivation from LLN and the ESS definition, with E19's exact countercheck; no new generator required.
+
+## E31 — Generic rare-event bridge: domain and curve endpoints
+
+- **Label:** our calculation; exact Bernoulli identities, not empirical data.
+- **Claim/setup:** For IID Bernoulli(rho) indicators, 0<rho<1, the sample mean has absolute RMSE sqrt(rho(1-rho)/n) and relative RMSE sqrt((1-rho)/(n*rho)). On 0<rho<=1/2, at fixed n, decreasing rho decreases absolute RMSE and increases relative RMSE. This is a statement about RMSE, not a monotonic guarantee about the realized error of individual runs. A rare event does not force large relative RMSE independently of n.
+- **Endpoint check:** The plotted per-draw absolute SD and relative SD at rho=1/2 are 1/2 and 1, respectively. The curves do not meet there. On the plotted domain their ratio is 1/rho>=2. Both plotted spreads are divided by sqrt(n) to obtain their sample-mean RMSE counterparts.
+- **Reproduction:** `courses/deepmath/prob09-monte-carlo/gen/p9a_part01.py` prints the curve coordinates used by the inline SVG in S116. Inputs are rho on the displayed range 10^-6 to 1/2, absolute sqrt(rho*(1-rho)) and relative sqrt((1-rho)/rho); no random draws or seed. Round-2 removed the special Exp(1) marker, not these curves.
+- **Does not establish:** That absolute error is decreasing over the whole interval (0,1), that every run follows the RMSE ordering, or that the two curves meet near rho=1/2. This supports the local round-2 correction F15 without restoring the duplicated Exp(1) example.

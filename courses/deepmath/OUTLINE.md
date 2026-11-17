@@ -509,17 +509,17 @@ Generators: `prob09-monte-carlo/gen/` (`p9a_part01.py`, `p9b_calc.py`, `p9b_figs
 | — | Title + Contents (six parts) | 1–2 | prob09-monte-carlo/prob09-monte-carlo.html:115 |
 | 01 | Estimate an Expectation (known model hard average, sample-evaluate-average, six hand-chosen darts, sample mean, unbiased ≠ accurate with exact binomial pmf, RMSE σ_f/√n, estimated SE s_Y/√n, CLT interval vs Chebyshev 539,354 / Hoeffding, rate vs cost, tensor grids d = 2/8/20, rare-event relative error ρ = e⁻¹⁰) | 3–15 | prob09-monte-carlo/prob09-monte-carlo.html:183 |
 | 02 | Change the Sampler (rare tail P(X>10), X~Exp(1), n_MC = 2,202,547; visit useful outcomes; weights w = p/q; IS identity theorem + two-slide proof S46–S47b; support counterexample; IS estimator; practical Exp(0.1) proposal, relative variance 13.31, n_IS = 1331; coverage ≠ variance) | 16–30 | prob09-monte-carlo/prob09-monte-carlo.html:509 |
-| 03 | Control Proposal Risk (second moment decides; optimal proposal q* = \|f\|p/c + two-slide proof; zero variance for one-sign f; oracle needs normaliser; light-tailed Exp(2) → infinite second moment; consistency ≠ error bar; check the integrand, not just weights) | 31–42 | prob09-monte-carlo/prob09-monte-carlo.html:791 |
-| 04 | Remove the Normalizer (target known up to Z; unnormalised weights; positive total; ratio of two averages; consistency; one-draw SNIS bias; normalisation does not guarantee improvement; weight dominance; ESS; healthy ESS can miss support; estimator choice by what is known) | 43–54 | prob09-monte-carlo/prob09-monte-carlo.html:983 |
-| 05 | Differentiate Expectations (distribution moves with θ; frozen samples; Gaussian recipe; pathwise identity + Gaussian check; discrete draws; log-derivative; score-function theorem + three-step proof; REINFORCE average; two-action policy both routes; mean-zero score; baseline invariance; good b = 1/2 vs bad b = 2 baseline; two-estimator requirements) | 55–74 | prob09-monte-carlo/prob09-monte-carlo.html:1295 |
-| 06 | Reuse Samples Responsibly (behaviour-policy data; IS correction; per-token ratio product; compounding toy E[w²] = 1.1^T; behaviour vs reference roles; KL is not a variance certificate; scoped InstructGPT reward-plus-KL objective; PPO clipping as surrogate with Schulman et al. Fig. 1) | 75–83 | prob09-monte-carlo/prob09-monte-carlo.html:1800 |
-| — | Synthesis table: five estimators, needs, honest claim (S109); closer E_p[f] = E_q[f·p/q] | 84–85 | prob09-monte-carlo/prob09-monte-carlo.html:2012 |
+| 03 | Control Proposal Risk (second moment decides; optimal proposal q* = \|f\|p/c + two-slide proof; zero variance for one-sign f; oracle needs normaliser; light-tailed Exp(2) → infinite second moment; consistency ≠ error bar; check the integrand, not just weights) | 31–42 | prob09-monte-carlo/prob09-monte-carlo.html:790 |
+| 04 | Remove the Normalizer (target known up to Z; unnormalised weights; positive total; ratio of two averages; consistency; one-draw SNIS bias; normalisation does not guarantee improvement; weight dominance; ESS; healthy ESS can miss support; estimator choice by what is known) | 43–54 | prob09-monte-carlo/prob09-monte-carlo.html:982 |
+| 05 | Differentiate Expectations (distribution moves with θ; frozen samples; Gaussian recipe; pathwise identity + Gaussian check; discrete draws; log-derivative; score-function theorem + three-step proof; REINFORCE average; two-action policy both routes; mean-zero score; baseline invariance; good b = 1/2 vs bad b = 2 baseline; two-estimator requirements) | 55–74 | prob09-monte-carlo/prob09-monte-carlo.html:1294 |
+| 06 | Reuse Samples Responsibly (behaviour-policy data; IS correction; per-token ratio product; compounding toy E[w²] = 1.1^T; behaviour vs reference roles; KL is not a variance certificate; scoped InstructGPT reward-plus-KL objective; PPO clipping as surrogate with Schulman et al. Fig. 1) | 75–83 | prob09-monte-carlo/prob09-monte-carlo.html:1799 |
+| — | Synthesis table: five estimators, needs, honest claim (S109); closer E_p[f] = E_q[f·p/q] | 84–85 | prob09-monte-carlo/prob09-monte-carlo.html:2011 |
 
 Key theorems (unnumbered on slides): **Theorem (importance-sampling identity)**
-E_p[f] = E_q[f·p/q] when q > 0 wherever fp ≠ 0 (prob09-monte-carlo/prob09-monte-carlo.html:599, proof S47a–S47b);
+E_p[f] = E_q[f·p/q] when q > 0 wherever fp ≠ 0 (prob09-monte-carlo/prob09-monte-carlo.html:598, proof S47a–S47b);
 **Theorem (optimal proposal)** q* = \|f\|p/c minimises the IS second moment
-(prob09-monte-carlo/prob09-monte-carlo.html:838, proof S60–S61); **Theorem (score-function identity)**
-∇_θ E_{p_θ}[R] = E[R ∇_θ ln p_θ] for finite outcome spaces (prob09-monte-carlo/prob09-monte-carlo.html:1522, proof
+(prob09-monte-carlo/prob09-monte-carlo.html:837, proof S60–S61); **Theorem (score-function identity)**
+∇_θ E_{p_θ}[R] = E[R ∇_θ ln p_θ] for finite outcome spaces (prob09-monte-carlo/prob09-monte-carlo.html:1521, proof
 S88–S90); baseline invariance via mean-zero score (S96a–S96b).
 Named-not-proved, flagged: strong LLN; CLT interval as approximate; SNIS
 consistency; ESS as a heuristic diagnostic; ∇/∫ interchange for continuous X;

@@ -40,6 +40,12 @@
 /* --- P4 scoped CSS (p9d-) --- */
 /* --- end P4 --- */
 /* --- P5 scoped CSS (p9e-) --- */
+.p9e-beh { color: #b35900 !important; }          /* behavior policy pi_b (amber) */
+.p9e-ref { color: #1a7a3d !important; }          /* reference policy pi_ref (green) */
+.p9e-img { display: block; width: 100%; height: auto; }
+.p9e-ppo { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: start; }
+.p9e-ppo-fig { display: flex; gap: 18px; }
+.p9e-ppo-fig img { height: 280px; width: auto; display: block; }
 /* --- end P5 --- */
 </style>
 </head>
@@ -997,103 +1003,208 @@
   <p class="subtitle">Old samples, new policy</p>
 </div>
 
-<!-- Off-policy problem -->
+<!-- S100: logged data come from the behavior policy (P5) -->
 <div class="slide" data-slide-id="S100">
-  <h2>The Off-Policy Problem</h2>
+  <h2>Old Samples, a New Target</h2>
   <div class="divider"></div>
-  <ul>
-    <li>Samples on disk: drawn from $\pi_{b}$ &mdash; yesterday's policy, logged data</li>
-    <li>Wanted: expectations under <strong>today's</strong> $\pi_\theta$</li>
-    <li>Fresh samples per update: one full generation each &mdash; expensive</li>
-  </ul>
-  <p class="muted">Reusing stale samples for a new distribution &mdash; we own this tool now</p>
-</div>
-
-<!-- It's IS -->
-<div class="slide" data-slide-id="S101">
-  <h2>Old Samples, New Policy &mdash; It's Theorem 3</h2>
-  <div class="divider"></div>
-  <p>IS identity with target $\pi_\theta$, proposal $\pi_b$:</p>
-  <div class="math-block" style="margin:8px 0">$$\mathbb{E}_{\pi_\theta}\big[ R(X) \big]
-    = \mathbb{E}_{\pi_b}\!\left[ \frac{\pi_\theta(X)}{\pi_b(X)}\, R(X) \right]$$</div>
-  <ul>
-    <li>Weights: ratio of the two policies at the logged sample</li>
-    <li>Support condition: $\pi_b$ must cover everything $\pi_\theta$ can do</li>
-  </ul>
-</div>
-
-<!-- Sequences multiply -->
-<div class="slide" data-slide-id="S102">
-  <h2>Sequences Multiply Weights</h2>
-  <div class="divider"></div>
-  <p>Chain rule of probability on a length-$T$ sequence:</p>
-  <div class="math-block" style="margin:8px 0">$$w(x) = \frac{\pi_\theta(x)}{\pi_b(x)}
-    = \prod_{t=1}^{T} \frac{\pi_\theta(x_t \mid x_{\lt t})}{\pi_b(x_t \mid x_{\lt t})}$$</div>
-  <ul>
-    <li>One modest ratio per token &mdash; $T$ of them, <strong>multiplied</strong></li>
-    <li>Small drifts compound into giant or vanishing weights</li>
-  </ul>
-</div>
-
-<!-- Degeneracy grows -->
-<div class="slide" data-slide-id="S103">
-  <h2>Degeneracy Grows With Length</h2>
-  <div class="divider"></div>
-  <p><em>Caricature</em>: independent tokens, each with $\mathbb{E}[w_t^2] = 1.1$:</p>
-  <div class="math-block" style="margin:8px 0">$$\mathbb{E}\big[ w^2 \big] = \prod_{t=1}^{100} \mathbb{E}\big[ w_t^2 \big]
-    = 1.1^{100} = e^{100 \ln 1.1} \approx e^{9.53} \approx 13{,}800$$</div>
-  <ul>
-    <li>ESS heuristic $n_{\text{eff}} \approx n / \mathbb{E}[w^2]$: &nbsp;$10^6$ samples $\to$ $n_{\text{eff}} \approx 73$</li>
-    <li>Each factor $\geq 1$ always ($\mathbb{E}[w_t] = 1$ + Jensen) &mdash; growth is the rule</li>
-  </ul>
-</div>
-
-<!-- SLIDE S129 — placeholder (P5) -->
-<div class="slide" data-slide-id="S129">
-  <h2>[S129 placeholder] Behavior and Reference Are Different Roles</h2>
-</div>
-
-<!-- Recall KL -->
-<div class="slide" data-slide-id="S105">
-  <h2>Recall &mdash; KL Divergence</h2>
-  <div class="divider"></div>
-  <div class="card" style="padding:10px 16px;">
-    <p><strong>Recall (KL divergence).</strong> For distributions $P, Q$:</p>
-    <div class="math-block" style="margin:8px 0">$$D(P \,\|\, Q) = \sum_x P(x) \log \frac{P(x)}{Q(x)}
-      \;\geq\; 0, \qquad = 0 \text{ iff } P = Q$$</div>
+  <p>Fixed prompt $c$; reward $R(c,x)$ fixed during the update</p>
+  <div class="p9-fig" style="max-width:1000px;margin:8px auto;aspect-ratio:1000/300;">
+  <svg viewBox="0 0 1000 300">
+    <defs><marker id="p9e-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker></defs>
+    <rect x="20" y="15" width="340" height="120" rx="12" fill="#fbf3ea" stroke="#b35900" stroke-width="3"/>
+    <rect x="20" y="165" width="340" height="120" rx="12" fill="#eef2f8" stroke="#003876" stroke-width="3"/>
+    <rect x="620" y="15" width="360" height="270" rx="12" fill="#f4f5f7" stroke="#444" stroke-width="3"/>
+    <line x1="362" y1="75" x2="614" y2="75" stroke="#333" stroke-width="3" marker-end="url(#p9e-ah)"/>
+    <line x1="362" y1="225" x2="614" y2="225" stroke="#333" stroke-width="3" stroke-dasharray="10 8" marker-end="url(#p9e-ah)"/>
+  </svg>
+  <span class="fl p9e-beh" style="left:19%;top:18.5%">behavior $\pi_b(x\mid c)$</span>
+  <span class="fl fl-sub fl-grey" style="left:19%;top:33%">generated the logs</span>
+  <span class="fl fl-blue" style="left:19%;top:68.5%">current $\pi_\theta(x\mid c)$</span>
+  <span class="fl fl-sub fl-grey" style="left:19%;top:83%">policy we now care about</span>
+  <span class="fl fl-sub" style="left:48.8%;top:15%">samples $x_1,\dots,x_n$</span>
+  <span class="fl fl-sub" style="left:48.8%;top:65%">target only</span>
+  <span class="fl fl-sub fl-grey" style="left:48.8%;top:88%">no fresh samples</span>
+  <span class="fl" style="left:80%;top:38%">estimate</span>
+  <span class="fl fl-blue" style="left:80%;top:55%">$\mathbb{E}_{X\sim\pi_\theta(\cdot\mid c)}[R(c,X)]$</span>
+  <span class="fl fl-sub fl-grey" style="left:80%;top:72%">from the logs alone</span>
   </div>
+  <p><strong>Mismatch:</strong> samples from $\pi_b$, expectation under $\pi_\theta$</p>
+</div>
+
+<!-- S101: reuse the IS identity with behavior as proposal (P5) -->
+<div class="slide" data-slide-id="S101">
+  <h2>Importance Weights Correct the Mismatch</h2>
+  <div class="divider"></div>
+  <p>Same IS identity, relabelled: target $p=\pi_\theta$, proposal $q=\pi_b$</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    {\color{#666}\mathbb{E}_{p}[f(X)]} &amp;{\color{#666}\;=\; \mathbb{E}_{q}\Big[\tfrac{p(X)}{q(X)}\,f(X)\Big]} \\[4pt]
+    \mathbb{E}_{\pi_\theta(\cdot\mid c)}[R(c,X)] &amp;\;=\; \mathbb{E}_{\pi_b(\cdot\mid c)}\Big[\underbrace{\frac{\pi_\theta(X\mid c)}{\pi_b(X\mid c)}}_{w(X)}\,R(c,X)\Big]
+  \end{aligned}$$</div>
   <ul>
-    <li>Proved earlier via Jensen</li>
-    <li>Note: it is the mean <strong>log-weight</strong> under $P$ &mdash; today's objects again</li>
+    <li>Ratio: current over behavior, at each logged response</li>
+    <li>Coverage: $\pi_b(x\mid c) \gt 0$ wherever $\pi_\theta(x\mid c) \gt 0$</li>
+    <li>Estimate: $\frac1n\sum_i w(x_i)\,R(c,x_i)$ over logged $x_i \sim \pi_b(\cdot\mid c)$</li>
   </ul>
 </div>
 
-<!-- RLHF objective -->
+<!-- S102: chain rule gives one conditional ratio per token (P5) -->
+<div class="slide" data-slide-id="S102">
+  <h2>Sequence Ratios Multiply</h2>
+  <div class="divider"></div>
+  <div class="p9-fig" style="max-width:1000px;margin:4px auto;aspect-ratio:1000/190;">
+  <svg viewBox="0 0 1000 190">
+    <rect x="40"  y="70" width="120" height="64" rx="10" fill="#f4f5f7" stroke="#444" stroke-width="2.5"/>
+    <rect x="200" y="70" width="120" height="64" rx="10" fill="#eef2f8" stroke="#003876" stroke-width="2.5"/>
+    <rect x="360" y="70" width="120" height="64" rx="10" fill="#eef2f8" stroke="#003876" stroke-width="2.5"/>
+    <rect x="520" y="70" width="120" height="64" rx="10" fill="#dbe5f2" stroke="#003876" stroke-width="4"/>
+    <rect x="800" y="70" width="120" height="64" rx="10" fill="#eef2f8" stroke="#003876" stroke-width="2.5"/>
+    <!-- bracket over the history c, x1, x2 of token x3 -->
+    <path d="M 45 55 L 45 35 L 475 35 L 475 55" fill="none" stroke="#b35900" stroke-width="3"/>
+    <line x1="475" y1="45" x2="560" y2="66" stroke="#b35900" stroke-width="3"/>
+  </svg>
+  <span class="fl" style="left:10%;top:53.7%">$c$</span>
+  <span class="fl fl-blue" style="left:26%;top:53.7%">$x_1$</span>
+  <span class="fl fl-blue" style="left:42%;top:53.7%">$x_2$</span>
+  <span class="fl fl-blue" style="left:58%;top:53.7%">$x_3$</span>
+  <span class="fl" style="left:72%;top:53.7%">$\cdots$</span>
+  <span class="fl fl-blue" style="left:86%;top:53.7%">$x_T$</span>
+  <span class="fl fl-sub" style="left:26%;top:87%">$w_1$</span>
+  <span class="fl fl-sub" style="left:42%;top:87%">$w_2$</span>
+  <span class="fl fl-sub" style="left:58%;top:87%">$w_3$</span>
+  <span class="fl fl-sub" style="left:86%;top:87%">$w_T$</span>
+  <span class="fl fl-sub p9e-beh" style="left:26%;top:9%">history of $x_3$: $c, x_1, x_2$</span>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$w(x) = \frac{\pi_\theta(x\mid c)}{\pi_b(x\mid c)} = \prod_{t=1}^{T} w_t,
+    \qquad w_t = \frac{\pi_\theta(x_t \mid c, x_{\lt t})}{\pi_b(x_t \mid c, x_{\lt t})}$$</div>
+  <p>Chain rule: exact, same history top and bottom</p>
+  <p class="muted">No independence assumed: each factor depends on its prefix</p>
+</div>
+
+<!-- S103: exact independent-token toy, E[w^2] = 1.1^T (P5; gen/p9e_compounding.py) -->
+<div class="slide" data-slide-id="S103">
+  <h2>Compounding Mismatch Can Destroy Efficiency</h2>
+  <div class="divider"></div>
+  <div class="cols">
+    <div class="col-1-3">
+      <p><strong>Independent-token toy</strong></p>
+      <ul>
+        <li>Tokens independent under $\pi_b$</li>
+        <li>Each $\mathbb{E}[w_t]=1$</li>
+        <li>Each $\mathbb{E}[w_t^2]=1.1$</li>
+      </ul>
+      <div class="math-block" style="margin:8px 0">$$\mathbb{E}[w^2] = 1.1^{T}$$</div>
+      <p class="muted">Exact formula, not a measured model</p>
+    </div>
+    <div class="col-2-3" style="align-self:start;">
+      <div class="p9-fig" style="max-width:680px;aspect-ratio:720/460;">
+        <img class="p9e-img" src="fig/p9e-compounding.svg" alt="Line on a log scale: the second moment of the sequence weight, 1.1 to the power T, rises from 1 at T equals 0 to about 117 at T equals 50 and about 13,781 at T equals 100.">
+        <span class="fl fl-sub" style="left:16%;top:5.4%;transform:translate(0,-50%)">$\mathbb{E}_{\pi_b}[w^2]$, log scale</span>
+        <span class="fl fl-sub" style="left:13.33%;top:82.61%;transform:translate(-100%,-50%)">$1$</span>
+        <span class="fl fl-sub" style="left:13.33%;top:67.15%;transform:translate(-100%,-50%)">$10$</span>
+        <span class="fl fl-sub" style="left:13.33%;top:51.69%;transform:translate(-100%,-50%)">$10^2$</span>
+        <span class="fl fl-sub" style="left:13.33%;top:36.23%;transform:translate(-100%,-50%)">$10^3$</span>
+        <span class="fl fl-sub" style="left:13.33%;top:20.77%;transform:translate(-100%,-50%)">$10^4$</span>
+        <span class="fl fl-sub" style="left:15.28%;top:88.04%">$0$</span>
+        <span class="fl fl-sub" style="left:35.42%;top:88.04%">$25$</span>
+        <span class="fl fl-sub" style="left:55.56%;top:88.04%">$50$</span>
+        <span class="fl fl-sub" style="left:75.69%;top:88.04%">$75$</span>
+        <span class="fl fl-sub" style="left:95.83%;top:88.04%">$100$</span>
+        <span class="fl fl-sub" style="left:55.56%;top:96%">length $T$ (tokens)</span>
+        <span class="fl fl-red" style="left:92%;top:10%;transform:translate(-100%,-50%)">$T=100$: $\approx 13{,}781$</span>
+        <span class="fl fl-sub fl-red" style="left:60%;top:58%;transform:translate(0,-50%)">$T=50$: $\approx 117$</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S129: three policies, two comparisons (P5) -->
+<div class="slide" data-slide-id="S129">
+  <h2>Behavior and Reference Are Different Roles</h2>
+  <div class="divider"></div>
+  <p>Three policies, two different comparisons</p>
+  <div class="p9-fig" style="max-width:1000px;margin:8px auto;aspect-ratio:1000/300;">
+  <svg viewBox="0 0 1000 300">
+    <rect x="20"  y="15" width="280" height="130" rx="12" fill="#fbf3ea" stroke="#b35900" stroke-width="3"/>
+    <rect x="360" y="15" width="280" height="130" rx="12" fill="#eef2f8" stroke="#003876" stroke-width="3"/>
+    <rect x="700" y="15" width="280" height="130" rx="12" fill="#edf6f0" stroke="#1a7a3d" stroke-width="3"/>
+    <path d="M 160 152 L 160 185 L 470 185 L 470 152" fill="none" stroke="#b35900" stroke-width="3"/>
+    <path d="M 530 152 L 530 185 L 840 185 L 840 152" fill="none" stroke="#1a7a3d" stroke-width="3"/>
+  </svg>
+  <span class="fl p9e-beh" style="left:16%;top:25%">behavior $\pi_b$</span>
+  <span class="fl fl-sub fl-grey" style="left:16%;top:36.5%">generated the data</span>
+  <span class="fl fl-blue" style="left:50%;top:25%">current $\pi_\theta$</span>
+  <span class="fl fl-sub fl-grey" style="left:50%;top:36.5%">being trained</span>
+  <span class="fl p9e-ref" style="left:84%;top:25%">reference $\pi_{\text{ref}}$</span>
+  <span class="fl fl-sub fl-grey" style="left:84%;top:36.5%">fixed anchor</span>
+  <span class="fl p9e-beh" style="left:31.5%;top:76%">correction: $w=\pi_\theta/\pi_b$</span>
+  <span class="fl fl-sub fl-grey" style="left:31.5%;top:91%">reweights samples from $\pi_b$</span>
+  <span class="fl p9e-ref" style="left:68.5%;top:76%">penalty: $D_{\mathrm{KL}}(\pi_\theta\,\|\,\pi_{\text{ref}})$</span>
+  <span class="fl fl-sub fl-grey" style="left:68.5%;top:91%">keeps $\pi_\theta$ near $\pi_{\text{ref}}$</span>
+  </div>
+  <p>May coincide at the start; jobs and later values differ</p>
+  <p class="muted">Near $\pi_{\text{ref}}$ says nothing about weights against $\pi_b$</p>
+</div>
+
+<!-- S105: KL to the reference does not bound the weight second moment (P5; gen/p9e_kl_counterexample.py) -->
+<div class="slide" data-slide-id="S105">
+  <h2>KL Is Not a Variance Certificate</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3 class="p9e-ref">Drift penalty (reference)</h3>
+      <div class="math-block" style="margin:8px 0">$$D_{\mathrm{KL}}(\pi_\theta\,\|\,\pi_{\text{ref}}) = \mathbb{E}_{\pi_\theta}\Big[\ln\frac{\pi_\theta(X)}{\pi_{\text{ref}}(X)}\Big]$$</div>
+    </div>
+    <div>
+      <h3 class="p9e-beh">Weight cost (behavior)</h3>
+      <div class="math-block" style="margin:8px 0">$$\mathbb{E}_{\pi_b}[w^2] = \mathbb{E}_{\pi_b}\Big[\Big(\frac{\pi_\theta(X)}{\pi_b(X)}\Big)^{2}\Big]$$</div>
+    </div>
+  </div>
+  <div class="highlight">Small KL does <strong>not</strong> upper-bound $\mathbb{E}_{\pi_b}[w^2]$</div>
+  <p>Two-state example, $\pi_b=\pi_{\text{ref}}$: KL $\approx 0.0017$ nats, $\mathbb{E}_{\pi_b}[w^2] \approx 10{,}001$</p>
+  <p class="muted">Natural log; KL in nats</p>
+</div>
+
+<!-- S106: scoped historical reward-plus-KL objective (P5) -->
 <div class="slide" data-slide-id="S106">
-  <h2>The RLHF-Shaped Objective</h2>
+  <h2>Reward Tuning Uses This Toolkit</h2>
   <div class="divider"></div>
-  <p>Reward-tune a language model $\pi_\theta$ without losing the reference $\pi_{\text{ref}}$:</p>
-  <div class="math-block" style="margin:8px 0">$$\max_\theta \;\; \mathbb{E}_{X \sim \pi_\theta}\big[ r(X) \big]
-    \;-\; \beta\, D\big( \pi_\theta \,\|\, \pi_{\text{ref}} \big)$$</div>
+  <p>RLHF (reinforcement learning from human feedback): historical InstructGPT case, simplified</p>
+  <div class="math-block" style="margin:8px 0">$$\max_\theta\;
+    \underbrace{\mathbb{E}_{X\sim\pi_\theta}\big[r(X)\big]}_{\text{learned reward, fixed}}
+    \;-\;\beta\,\underbrace{D_{\mathrm{KL}}\big(\pi_\theta\,\|\,\pi_{\text{ref}}\big)}_{\text{fixed SFT reference}},
+    \qquad \beta \ge 0$$</div>
   <ul>
-    <li>First term: differentiated by Theorem 5 (with a baseline), estimated by MC</li>
-    <li>$r$ from human preferences &mdash; a learned, black-box reward</li>
-    <li>Second term: KL leash &mdash; stay near the reference model</li>
-    <li>$\beta$: the dial between reward chasing and drift</li>
+    <li>Fixed prompt $c$, dropped from notation</li>
+    <li>$r$: reward model fitted to human comparisons</li>
+    <li>$\pi_{\text{ref}}$: the supervised fine-tuned (SFT) model</li>
+    <li>Toolkit: MC averages + score-function gradients</li>
   </ul>
-  <p class="muted"><em>Scope</em>: the schematic objective family &mdash; no claims about any specific algorithm</p>
+  <div class="cite">Ouyang et al., NeurIPS 2022; arXiv:2203.02155v1 &sect;3.5 eq. (2), PPO-ptx pretraining term omitted</div>
 </div>
 
-<!-- Keep ratio near 1 -->
+<!-- S104: PPO clipping is a surrogate, not a ratio bound (P5; fig = Schulman et al. 2017 Fig. 1, unmodified crop) -->
 <div class="slide" data-slide-id="S104">
-  <h2>Keep the Ratio Near One</h2>
+  <h2>A Surrogate Is Not a Hard Constraint</h2>
   <div class="divider"></div>
-  <ul>
-    <li>Lesson: off-policy weights are safe only while $\pi_\theta \approx \pi_b$</li>
-    <li>Practical methods <strong>constrain</strong> the per-step ratio (clipping, trust regions &mdash; names only)</li>
-    <li>Needed: a principled meter for "how far has $\pi_\theta$ drifted?"</li>
-  </ul>
-  <p class="muted">We built exactly that meter already&hellip;</p>
+  <div class="math-block" style="margin:4px 0 12px;padding:6px 24px">$$\min\!\big(r\hat{A},\; \operatorname{clip}(r,1-\epsilon,1+\epsilon)\,\hat{A}\big),
+    \qquad r=\frac{\pi_\theta(a\mid s)}{\pi_{\theta_{\text{old}}}(a\mid s)}$$</div>
+  <div class="p9e-ppo">
+    <div class="p9e-ppo-fig">
+      <img src="fig/p9e-ppo-fig1-pos.png" alt="PPO Figure 1, left panel, advantage positive: the surrogate term rises linearly in the ratio r through the starting point r equals 1, then is flat beyond 1 plus epsilon.">
+      <img src="fig/p9e-ppo-fig1-neg.png" alt="PPO Figure 1, right panel, advantage negative: the surrogate term is flat for r below 1 minus epsilon, then falls linearly through the starting point r equals 1.">
+    </div>
+    <div>
+      <p>PPO: proximal policy optimization</p>
+      <p>$\hat{A}$: estimated advantage of action $a$ in state $s$</p>
+      <p class="muted">x: ratio $r$ &middot; y: one term &middot; dot: $r=1$</p>
+      <ul>
+        <li>Flat: no gain from moving $r$ further</li>
+        <li>Realized $r$ can still leave $[1-\epsilon,1+\epsilon]$</li>
+        <li>Clipped objective $\neq$ exact IS identity</li>
+      </ul>
+    </div>
+  </div>
+  <div class="cite">Schulman et al., arXiv:1707.06347v2 (2017) &mdash; Figure 1, unmodified crop (left: $\hat{A}\gt 0$, right: $\hat{A}\lt 0$)</div>
 </div>
 
 <!-- Recap table -->

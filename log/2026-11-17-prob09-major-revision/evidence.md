@@ -167,3 +167,67 @@ Append-only. Entries checked 2026-11-17. Equations below use natural logarithms 
 - Sources: direct differentiation from E07's score identity and E10's simplified objective. Continuous or infinite outcome spaces need appropriate differentiation/interchange and integrability assumptions separately.
 - Limits: this is not a derivation of PPO's clipped optimization surrogate, nor a permission to ignore arbitrary parameter-dependent reward terms. The learned reward model and reference are fixed for this policy-gradient calculation.
 - Label: our calculation. No figure generator required for the note derivation.
+
+## E22 — Correction to E10's source locator
+
+- Replaces the locator in E10, not its substantive claim. The displayed RL objective is in Ouyang et al., **arXiv:2203.02155v1, §3.5 “Models”, RL paragraph, equation (2)**: https://arxiv.org/html/2203.02155v1 . The NeurIPS proceedings PDF instead describes this training in **§3.4, printed p6**, without that displayed objective: https://proceedings.neurips.cc/paper_files/paper/2022/file/b1efde53be364a73914f58805a001731-Paper-Conference.pdf . Both versions checked 2026-11-17.
+- Setup/limits remain those of E10: fixed SFT reference, learned reward, gamma=0 removes the pretraining term; this is a simplified historical example, not a universal RLHF recipe. The candidate correctly uses the arXiv-v1 locator; do not revert it to the planner's erroneous §3.2.
+- Label: published result / bibliographic correction.
+
+## E23 — Precise midpoint-rule locator for E03
+
+- Owen, Ch.7, §7.1, Theorem 7.1, printed p5, bounds the one-dimensional midpoint error by M(b-a)^3/(24m^2) when the continuous second derivative is bounded by M. §7.4, printed pp12-13, explains the tensor-product cost N=m^d and resulting exponent -r/d; r=2 gives N^(-2/d). https://artowen.su.domains/mc/Ch-quadrature.pdf (checked 2026-11-17).
+- Assumptions/constants and limits in E03 still apply. This is not a universal runtime crossover or a measured benchmark; the plotted constants are deliberately equal to one.
+- Label: published result / locator clarification.
+
+## E24 — Actual generator and figure provenance for the reviewed implementation
+
+- Version: candidate 3f4bdd71df2566930e41f8f7e1b506d4f00d546e. All paths below are relative to `courses/deepmath/prob09-monte-carlo/`. These actual paths supersede the “not yet assigned” generator fields in E11-E15 and E17-E21.
+- `gen/p9a_part01.py`: E17's six hand-placed points and disk geometry, Bin(6,pi/4) exact PMF, RMSE, Chebyshev/Hoeffding counts; tensor-grid exponent curves for d=2,8,20 with constants one; Bernoulli rare-event error curves and E11's ordinary-MC budget. Formula-based, no RNG; inline SVG coordinates are printed by the script.
+- `gen/p9b_calc.py`: E11 rare-event proposal lambda=.1, exact second-moment and sample budgets; E18 tail example and E19 four-state support example. Closed forms/fractions plus a numerical integration cross-check. `gen/p9b_figs.py` writes `fig/p9b-{tail,visits,ratio,support,proposal,contrib,budget,weighted,oracle,light}.svg`: exact function curves on stated domains/axis transforms; hand-placed dots and the signed-integrand schematic are labelled illustrative. Parameters and transforms are in the generator/SVG comments. No RNG.
+- `gen/p9c_snis_examples.py`: E12/E19 finite-state arithmetic, SNIS MSE/bias extensions E25, ESS, and zero-denominator probabilities; exact fractions/binomial enumeration, no RNG.
+- `gen/p9d_gradient_checks.py`: E13 two-action sigmoid at theta=0/1 and baselines b=0,1/2,2; E15 Gaussian X=theta+epsilon, R=X^2 at theta=1; exact toy fractions, Gaussian Simpson quadrature on [-12,12] with 24000 panels, and five illustrative Gaussian draws using seed 20261117. The seed is only for those five illustrative values, not the analytic variance claim.
+- `gen/p9e_compounding.py`: E20 binary independent-token toy, exact 1.1^T, writes `fig/p9e-compounding.svg`. `gen/p9e_kl_counterexample.py`: E14's two-state sums and E21's three-state softmax finite-difference check; deterministic, no RNG.
+- `fig/p9e-ppo-fig1-{pos,neg}.png`: unmodified panel crops of E09's Figure 1, arXiv:1707.06347v2 printed p3, reported rendered at 300dpi; source and interpretation verified, not an original simulation.
+- Review check: all seven scripts ran successfully from the pinned archive; before/after SHA256 hashes of all target-folder files were unchanged. Formula checks agree with E11-E21. Reproduction does not by itself prove a model assumption or make an illustrative plot empirical.
+- Label: our calculation / illustrative example / published figure provenance, as distinguished above.
+
+## E25 — SNIS MSE comparison and heuristic bias expansion
+
+- Setup: E12's p=(3/4,1/4), q=(1/2,1/2), tilde w=(6,2), n=1. Direct enumeration gives MSE(IS), MSE(SNIS) = (9/16,5/16) for f=(1,0), and (1/16,5/16) for f=(0,1). For constant f=1, SNIS is exact and IS MSE=1/4. Thus neither method universally has smaller MSE.
+- Calculation: expand A_n/B_n about (Z mu,Z). The second-order expected correction is [mu Var(tilde w)-Cov(tilde w f,tilde w)]/(n Z^2) = -E_q[w^2(f-mu)]/n. This is a **heuristic expansion**, not an unconditional bias theorem; moments and the near-zero denominator/remainder need control.
+- In E12's f=(1,0) toy the leading constant is -3/16. Exact binomial enumeration gives n times bias -0.25 (n=1,2), -0.2177 (5), -0.2023 (10), -0.1903 (50), -0.1882 (200). `courses/deepmath/prob09-monte-carlo/gen/p9c_snis_examples.py` recomputes all values without random draws.
+- Limits: no claim that every finite-n SNIS estimator is biased or that its bias is always small; no universal finite-sample error ordering.
+- Label: our calculation.
+
+## E26 — Sufficient conditions for the gradient/expectation swap
+
+- Source basis: E07's score/pathwise identities. The note adds the elementary dominated-convergence justification, checked directly: on a parameter neighbourhood U, differentiable integrand h_theta with an integrable bound on each parameter derivative, and an integrable h at a reference parameter, permits differentiation under a fixed measure. Apply the mean-value bound to difference quotients and then dominated convergence, component by component.
+- Score case: h_theta(x)=R(x)p_theta(x), common fixed support, |R partial_theta p_theta| bounded by integrable g(x). Pathwise case: h_theta(epsilon)=R(T_theta(epsilon)), parameter-free noise law, valid chain rule, derivatives bounded by g(epsilon) with E[g]<infinity. The fixed finite positive-probability theorem needs no integral-interchange theorem.
+- Limits: a smooth-looking sampler does not establish domination; discrete threshold sampling cannot be differentiated naively to get the probability derivative. Sufficient conditions are not an if-and-only-if characterization of all pathwise methods.
+- Label: our derivation of sufficient conditions, supporting E07/E15; no generated figure or RNG.
+
+## E27 — General constant-baseline variance calculation
+
+- Under E[s]=0, 0<E[s^2]<infinity, and E[R^2 s^2]<infinity, expand Var((R-b)s). The mean is independent of b, so the difference from b=0 is E[s^2] b^2 - 2b E[Rs^2] = E[s^2] b(b-2b*), with b*=E[Rs^2]/E[s^2]. It is negative exactly when b(b-2b*)<0.
+- In E13's toy b*=1/2: strict improvement holds for 0<b<1; b=1=2b* ties with b=0. The form 0<b<2b* presumes b*>0, so retain the sign-general product condition in general statements. If E[s^2]=0, s=0 almost surely and the baseline is irrelevant; the quotient is not defined.
+- For a shared scalar baseline minimizing trace covariance, replace s^2 by squared score norm under corresponding finite-moment/positive-denominator conditions. E08 supplies the published baseline context; `courses/deepmath/prob09-monte-carlo/gen/p9d_gradient_checks.py` checks the E13 toy, not all distributions.
+- Label: our calculation.
+
+## E28 — Bayesian normalization context
+
+- Given fixed observed data d, prior density p_0(z), and likelihood L(d|z), the posterior is p(z|d)=p_0(z)L(d|z)/Z(d), where Z(d)=integral p_0(z)L(d|z) dz is finite and positive. This is Bayes' rule / normalization of the joint density, not a new empirical claim. It motivates tilde p=p_0 L in S73/S82.
+- A proposal covering this proper posterior permits the E05 construction for integrable f, subject to a positive sampled denominator. Being able to sample a posterior by some other method does not imply its normalized density is evaluable, and SNIS is not the only possible posterior method.
+- Label: our illustrative substitution into Bayes' identity and E05; no numbers, plot or RNG.
+
+## E29 — Sequence-support counting illustration
+
+- For a fixed length T and vocabulary of cardinality |V|, there are |V|^T possible token strings before any zero-probability restrictions. Naive exact summation over that full support has that many terms. This directly counts T independent choices of token *indices*, not probabilistic independence of tokens.
+- Limits: not every model has full support; factorization/special rewards can permit shortcuts or closed forms. This is an illustration of why generic expectation summation can be expensive, not a lower-bound theorem for all language-model expectations.
+- Label: our direct counting argument; no external benchmark or generated figure.
+
+## E30 — Population ESS needs normalized mass coverage
+
+- For IID nonnegative weights with 0<E_q[w] and finite E_q[w^2], strong LLN gives ESS/n -> (E_q[w])^2/E_q[w^2]. With w=p/q and full p-support coverage, E_q[w]=1, yielding the familiar 1/E_q[w^2]. E06's interpretation as a diagnostic still applies.
+- E19's missing-support example checks the distinction: E_q[w]=3/4 and E_q[w^2]=9/16, so the general limit is 1, agreeing with ESS=n. Incorrectly using 1/E_q[w^2] would give 16/9, outside the sample bound.
+- Label: our derivation from LLN and the ESS definition, with E19's exact countercheck; no new generator required.

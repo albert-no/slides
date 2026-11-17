@@ -3,15 +3,17 @@ size: large
 deck: courses/deepmath/prob09-monte-carlo/prob09-monte-carlo.html
 audience / mode / duration: junior undergraduate AI majors / rigorous, example-led / 150 minutes (two 75-minute teaching blocks); approved 2026-11-17 12:27 KST
 baseline: b20ab73ac7e74e9489d379cf9caad7565f17e31e
-id commit: not yet created; baseline has no slide IDs and chapter-style notes
+id commit: c47b198f8e8d0153fee6923ce2dafe8b13f4fe77
+setup wrapper commit: 08e7f8638176cebdfcf0702fe92021df8337a4d2
 branch: 2026-11-17-prob09-major-revision (created from baseline; planning record head 7e07e81235f89357f7546343186bd8f461a8e0f2)
 pr: none
 state: in-work
-round: 1 of 3
+round: 2 of 3
+reviewed content candidate: 3f4bdd71df2566930e41f8f7e1b506d4f00d546e
 current plan: plan-v2.md (complete stage-4 work order; 85 slide targets, 150 minutes, five packages plus integration)
-current action: slides to perform accepted A/B setup and full build, then return exact-commit work-r1 pointer; owner review and PR follow
+current action: review-r1.md verdict revise; round-2 repairs F01-F13 handed to slides, F14 nonblocking preference; evidence appended through E30; no PR
 setup decision: work-r0 at 7e07e81235f89357f7546343186bd8f461a8e0f2 accepted; mechanical note wrappers, then joint attribute-only ID commit; Markdown untouched during setup; details in plan-v2
-validation: 85 unique full specs, 113 baseline dispositions, 16 new IDs plus two splits; disjoint complete package ownership; section times total 150 minutes
+validation: round-1 candidate has 85 paired unique IDs across deck/HTML/Markdown; full 85-page visual and content pass; seven generators reproduce unchanged files; remaining blockers in review-r1.md; section times total 150 minutes
 albert decisions:
 - 2026-11-17: requested a major revision of prob09 slides and notes after a content, continuity and redundancy audit against prob01-prob08.
 - 2026-11-17 12:27 KST: Albert said “go ahead” in response to the scope/outline proposal; stages 1-3 and proposed pacing approved. Full build plan being completed; no merge authorization.

@@ -7,11 +7,11 @@ id commit: c47b198f8e8d0153fee6923ce2dafe8b13f4fe77 (inherited stable IDs; no ne
 branch: 2026-11-17-prob09-major-revision (existing PR77 continuation; approved proposal with pacing waived, C13; no new branch)
 pr: 77 (existing, open)
 pr url: https://github.com/albert-no/slides/pull/77
-state: in-work
+state: approved
 round: 2 of 3
-review candidate: 6cf17f6ccb63bb3622267bf0993e67e2068867a8
+review candidate: fa153e52db9bafabda25b883b60456252221e8f7
 current plan: plan-v2.md (full work order; plan-v1 retained as the original approval proposal)
-current action: review-r1 issued (revise); F01/F02 blocking short-note wording, F03/F04 nonblocking; await work-r2 exact commit; no structural/pacing change
+current action: review-r2 approved; all F01-F04 closed; await slides final record-only push, then verify and update existing PR77; no merge authorization
 prior job: 2026-11-17-prob09-major-revision; all original findings closed, approved source 839fdc4708624a9838804f2f45a6ef5fb87be52a and final log-only head 5f4b1d99c5d799785752aa12c494715c3b21327b
 albert decisions:
 - 2026-11-18: 12 new comments request ML motivations, clearer MC/IS explanations, an unknown-Z example, removal of pp13-14 and the entire gradient-estimation section, and retention of the RL importance-sampling section. The earlier 150-minute six-part plan no longer fits the requested scope.
@@ -21,7 +21,7 @@ albert decisions:
 
 header note: proposal-era narrative below is historical; C13 and plan-v2 supersede its awaiting-approval/pacing statements.
 
-latest review: review-r1.md, verdict revise, pinned6cf17f6;70-slide main structure accepted; no follow-up approval or merge order
+latest review: review-r2.md, verdict approved, pinned fa153e52db9bafabda25b883b60456252221e8f7;70 slides, all C01-C13 covered, all F01-F04 closed; no merge order
 
 ## Size and gate
 

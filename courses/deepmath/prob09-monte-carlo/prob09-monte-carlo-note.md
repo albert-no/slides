@@ -2,33 +2,31 @@
 
 **About this file.** This is the text-only, screen-reader-friendly edition of the Lecture 9 companion note. It has one section per slide, in slide order, each headed by the slide number, title and slide ID in brackets; the HTML note has the same sections. Every figure and table is described in words or linearized into lists, and all mathematics is written in LaTeX. Nothing else is needed to read it.
 
-Companion to `prob09-monte-carlo.html` (86 slides, 150 minutes in two 75-minute blocks, break after Part 3). Audience: junior undergraduate AI majors who have seen expectation, variance, the law of large numbers and concentration in prob01-prob08. Each section opens with a one-sentence message, then explains the slide, then gives details and sources. Pace lines on the part dividers give target times; they are targets, not auto-advance intervals.
+Companion to `prob09-monte-carlo.html` (@@N@@ slides; no fixed duration). Audience: junior undergraduate AI majors who have seen expectation, variance, the law of large numbers and concentration in prob01-prob08. Each section opens with a one-sentence message, then explains the slide, then gives details and sources.
 
-**Conventions.** $X$ is a random outcome; $f$ a fixed integration function with target $\mu=\mathbb E_p[f(X)]$; $R$ the reward in the gradient examples and $r$ the learned reward in the RLHF example (the PPO slide uses $r$ for its ratio, as in the cited figure, and says so). $p$ is the target and $q$ the proposal; $w=p/q$ is the normalized density ratio, $\tilde w=\tilde p/q$ the unnormalized one, and $\bar w_i$ the normalized share of draw $i$. $\sigma_f$ is the population standard deviation and $s_Y$ the observed sample standard deviation. $\theta$ denotes model parameters; the behavior policy $\pi_b$ and the reference policy $\pi_{\text{ref}}$ are never interchanged. Exponential distributions use the rate parameter. $\ln$ is the natural logarithm and KL is measured in nats. Results proved in earlier lectures are cited, not re-proved.
+**Conventions.** $X$ is a random outcome; $f$ a fixed integration function with target $\mu=\mathbb E_p[f(X)]$; $R$ the reward in the policy examples and $r$ the learned reward in the RLHF example (the PPO slide uses $r$ for its ratio, as in the cited figure, and says so). $p$ is the target and $q$ the proposal; $w=p/q$ is the normalized density ratio, $\tilde w=\tilde p/q$ the unnormalized one, and $\bar w_i$ the normalized share of draw $i$. $\sigma_f$ is the population standard deviation and $s_Y$ the observed sample standard deviation. $\theta$ denotes model parameters; the behavior policy $\pi_b$ and the reference policy $\pi_{\text{ref}}$ are never interchanged. Exponential distributions use the rate parameter. $\ln$ is the natural logarithm and KL is measured in nats. Results proved in earlier lectures are cited, not re-proved.
 
 ## Opening
 
 <!-- BEGIN S01 -->
 ### 1. Monte Carlo & Importance Sampling [S01]
 
-**Message.** Monte Carlo turns an expectation into a computation; choosing the sampler or the gradient estimator changes the error, not the target.
+**Message.** Monte Carlo turns an expectation into a computation; choosing or reweighting the sampler changes the error, not the target.
 
-Lecture 9 of Deep Learning Math, for junior undergraduates in AI. It builds on the earlier lectures' expectation, variance, the law of large numbers and concentration, and asks one practical question throughout: when an average or its gradient has no convenient closed form, how do we estimate it, and what can we honestly say about the error?
+Lecture 9 of Deep Learning Math, for junior undergraduates in AI. It builds on the earlier lectures' expectation, variance, the law of large numbers and concentration, and asks one practical question throughout: when an average has no convenient closed form, how do we estimate it, and what can we honestly say about the error?
 <!-- END S01 -->
 
 <!-- BEGIN S02 -->
 ### 2. Contents [S02]
 
-**Message.** Six decisions organize the lecture.
+**Message.** Five decisions organize the lecture.
 
-1. Estimate an Expectation: the ordinary Monte Carlo estimator, what it targets, and how far one run can land from it.
+1. Estimate an Expectation: why machine learning needs averages (a population loss, a generator's pass rate), the ordinary Monte Carlo estimator, what it targets, and how far one run can land from it.
 2. Change the Sampler: sample from a different distribution and correct with importance weights.
 3. Control Proposal Risk: when a proposal helps and when it makes the error infinite.
 4. Remove the Normalizer: self-normalized weights when the target is known only up to a constant, with possible finite-sample bias.
-5. Differentiate Expectations: gradients along a sampling path or through the score.
-6. Reuse Samples Responsibly: the same ratio and gradient tools when data come from a different policy.
+5. Reuse Samples in RL: the same ratio when reinforcement-learning data come from a different policy.
 
-Pacing cue: two 75-minute blocks with the break after Part 3.
 <!-- END S02 -->
 
 ## Part 1 - Estimate an Expectation
@@ -36,11 +34,9 @@ Pacing cue: two 75-minute blocks with the break after Part 3.
 <!-- BEGIN S03 -->
 ### 3. Part 1: Estimate an Expectation [S03]
 
-*Pace: Part 01, about 25 min; elapsed about 0 min.*
-
 **Message.** First separate the number we want from the randomness of its estimate.
 
-This part does not re-teach probability. It takes the expectation, the sample mean and its variance as known, and asks what an estimate built from random draws promises: what it targets, how its error shrinks, how to report that error from the data, and what the cost of a target accuracy depends on.
+This part does not re-teach probability. It takes the expectation, the sample mean and its variance as known, and asks two questions: why machine learning keeps needing averages it cannot compute exactly, and what an estimate built from random draws promises: what it targets, how its error shrinks, how to report that error from the data, and why rare events need relative error.
 <!-- END S03 -->
 
 <!-- BEGIN S04 -->
@@ -276,50 +272,6 @@ Darts: $(b-a)^2 = 16$, $\ln 40 = 3.688879$, so $n \ge 295{,}110.36$, rounded up 
 E01: Hoeffding on $[0,1]$, prob06 (p. 18), commit b20ab73; prob06 states it on $[0,1]$, and the $[a,b]$ form is the rescaling above. E17: Hoeffding sample size 295,111. Arithmetic printed by `gen/p9a_part01.py`.
 <!-- END S24 -->
 
-<!-- BEGIN S33 -->
-### 13. The Rate Is Not the Cost [S33]
-
-**Message.** Dimension is absent from the $1/\sqrt n$ exponent, but not from the constant or the cost.
-
-For $X \in \mathbb R^d$, the display splits the budget in two. The error is $\mathrm{RMSE} = \sigma_f(d)/\sqrt n$, where the overbrace warns that $\sigma_f(d)$ may grow with $d$. The work is $n \times c(d)$, where $c(d)$ is the cost of one draw plus one evaluation. The bullet explains why $d$ is missing from the exponent: the proof on slide 9 only used the scalars $Y_i = f(X_i)$, never the space $X$ lives in.
-
-The highlight is the takeaway: a dimension-free rate is not a dimension-free budget.
-
-**Details.**
-
-**What the proof never asked.** The variance argument needs IID draws and finite $\sigma_f^2$. It does not need $f$ to be smooth or continuous, and it does not refer to $d$.
-
-**Where $d$ can enter.** Two places. The variance $\sigma_f^2$ is a property of $f$ under $p$ and can grow with $d$. The cost $c(d)$ of producing and scoring one draw usually grows with $d$; for a language model, with reply length. Neither is controlled by the theorem.
-
-**Sources.**
-
-E02: Owen, Ch. 1-2 (the $\sigma_f/\sqrt n$ rate; E02 explicitly does not establish dimension-independent cost or variance). E03: Owen, Ch. 7, Sections 7.1, 7.4.
-<!-- END S33 -->
-
-<!-- BEGIN S37 -->
-### 14. Tensor Grids Grow With Dimension [S37]
-
-**Message.** For a tensor grid the error exponent shrinks with $d$; for Monte Carlo it does not.
-
-The formula line sets the comparison. A tensor grid with $m$ points per axis uses $N = m^d$ evaluations, and for a smooth $f$ its error scales like $N^{-2/d}$. Monte Carlo with $N$ evaluations has RMSE scaling like $N^{-1/2}$.
-
-The plot is schematic, with every constant set to 1. Both axes are logarithmic: evaluations $N$ from 1 to $10^8$ across, error from 1 down to $10^{-4}$. Each scaling is a straight line from the top left. The solid blue MC line has slope $-1/2$ and reaches $10^{-4}$ at $N = 10^8$. Three red dashed grid lines have slope $-2/d$: the dotted $d = 2$ line drops twice as steeply and reaches $10^{-4}$ already at $N = 10^4$; the $d = 8$ line ends at $10^{-2}$; the $d = 20$ line ends near $10^{-0.8}$, barely below 1. The grid's error is deterministic; MC's is an RMSE. The plot compares exponents, not runtimes.
-
-**Details.**
-
-**The $N = m^d$ argument.** In one dimension the midpoint rule with $m$ cells has error of order $m^{-2}$ for a sufficiently smooth integrand. The tensor product of $d$ such rules keeps error of order $m^{-2}$ but uses $N = m^d$ points. Substituting $m = N^{1/d}$ gives error of order $N^{-2/d}$. The constant depends on derivatives of $f$.
-
-**Points per axis.** At $N = 10^8$: $m = 10^4$ for $d = 2$, $m = 10$ for $d = 8$, and $m \approx 2.5$ for $d = 20$, already fewer than three points per axis.
-
-**The $d = 4$ case.** At $d = 4$, $-2/d = -1/2$: the grid has MC's exponent, which is why the plot shows $d = 2, 8, 20$ instead. Equal exponents are not a wall-clock threshold. Constants, smoothness and the cost per evaluation decide which method is cheaper at a given accuracy, and higher-order or non-tensor rules change the exponents.
-
-**Limits.** This is one comparison for smooth integrands on regular tensor grids. It does not show that grids fail at any particular dimension, and it ignores quasi-Monte Carlo and other methods outside this lecture.
-
-**Sources.**
-
-E03: Owen, *Monte Carlo theory, methods and examples*, Ch. 7, Sections 7.1 and 7.4 (tensor midpoint scaling; no universal dimension threshold). Figure: inline SVG, schematic with unit constants; line end points and points per axis printed by `gen/p9a_part01.py`.
-<!-- END S37 -->
-
 <!-- BEGIN S116 -->
 ### 15. Rare Events Need Relative Error [S116]
 
@@ -350,8 +302,6 @@ Our calculation (Bernoulli variance). Figure: inline SVG; curve points printed b
 
 <!-- BEGIN S41 -->
 ### 16. Part 2: Change the Sampler [S41]
-
-*Pace: Part 02, about 25 min; elapsed about 25 min.*
 
 **Message.** Visit useful outcomes more often without changing the target.
 
@@ -575,8 +525,6 @@ Sources: E04; E11.
 <!-- BEGIN S55 -->
 ### 31. Part 3: Control Proposal Risk [S55]
 
-*Pace: Part 03, about 25 min; elapsed about 50 min.*
-
 **Message.** A correct mean is not enough for reliable Monte Carlo.
 
 Part 02 showed a practical proposal that keeps the target and cuts the relative error. This part asks why it works and how another proposal can fail: the second moment of the weighted integrand decides the error, the best proposal follows the integrand, and a proposal with lighter tails than the target can leave the estimate unbiased but with infinite variance.
@@ -746,8 +694,6 @@ Sources: E18 (checked with $\int_0^\infty x^2 e^{-ax}\,dx = 2/a^3$); `gen/p9b_ca
 <!-- BEGIN S72 -->
 ### 43. Part 4: Remove the Normalizer [S72]
 
-*Pace: Part 04, about 20 min; elapsed about 75 min; the break comes before this part.*
-
 **Message.** An unknown normalizing constant changes the estimator and its guarantees.
 
 Ordinary importance sampling needs the normalized ratio $p/q$. Often the target is known only up to a constant, $p = \tilde p / Z$ with $Z$ unknown. Dividing by the total weight removes $Z$, but the result is a ratio of two averages: consistent, yet generally biased at finite sample sizes, and its weight diagnostics have blind spots.
@@ -916,482 +862,14 @@ A well-chosen $q$ can beat ordinary Monte Carlo even when sampling $p$ is possib
 **Sources.** E02: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 1-2 (posted PDF), Secs. 2.1-2.2, 2.7-2.8, https://artowen.su.domains/mc/Ch-intro.pdf (accessed 2026-11-17). E04: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.1, Theorem 9.1, pp. 4-6. E05: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.2, Theorem 9.2, eqs (9.6)-(9.10), pp. 8-10. Figure: our capability map, no data.
 <!-- END S82 -->
 
-## Part 5 - Differentiate Expectations
-
-<!-- BEGIN S83 -->
-### 55. Part 5: Differentiate Expectations [S83]
-
-*Pace: Part 05, about 35 min; elapsed about 95 min.*
-
-**Message.** Learning changes the distribution whose average we want.
-
-Up to now the distribution was fixed and we estimated one number. In learning, the parameters $\theta$ move the distribution itself, and we need the gradient of an expectation with respect to $\theta$. Two estimators follow: differentiate along a sampling path, or differentiate the log-probability (the score). The estimator results from Part 01 carry over and are not re-proved.
-<!-- END S83 -->
-
-<!-- BEGIN S84 -->
-### 56. The Distribution Now Changes [S84]
-
-**Message.** In this part the parameter $\theta$ no longer weights a fixed sample; it changes the distribution $p_\theta$ that generates the sample, and we want the derivative of an average with respect to that change.
-
-Until now the distribution we sampled from was fixed, and Monte Carlo estimated one number. Now the distribution itself carries a parameter. The quantity of interest is the expected reward
-
-$$J(\theta) = \mathbb{E}_{X \sim p_\theta}\big[R(X)\big],$$
-
-where the reward $R$ is a fixed function: it does not depend on $\theta$. The only way $\theta$ affects $J$ is through which values of $X$ tend to be drawn. The goal of this part is $\nabla_\theta J(\theta)$, the direction in which to move $\theta$ to raise the average reward.
-
-The figure on the slide reads left to right: parameters $\theta$ set the distribution $p_\theta$, the distribution produces a random draw $X$, and the draw receives the reward $R(X)$. Averaging that reward over $X \sim p_\theta$ gives $J(\theta)$.
-
-**Details.**
-
-Throughout this part, $\theta$ denotes the parameters, $p_\theta$ a generic distribution (written $\pi_\theta$ in the two-action example), and $R$ the fixed reward used in the gradient examples. Logarithms are natural.
-
-**Sources.**
-
-Problem setup as in Mohamed, Rosca, Figurnov and Mnih, "Monte Carlo Gradient Estimation in Machine Learning," *JMLR* 21(132), 2020 (E07). Figure: drawn for this note.
-<!-- END S84 -->
-
-<!-- BEGIN S85 -->
-### 57. Frozen Samples Hide the Derivative [S85]
-
-**Message.** Drawing samples once and differentiating their average reward gives no gradient information, because stored numbers contain no $\theta$; the gradient must itself be written as an expectation and then estimated.
-
-Suppose we draw $x_1, \dots, x_n$ from $p_\theta$ and store them. The average $\tfrac1n \sum_i R(x_i)$ is now a fixed number: no $\theta$ appears in it, so its derivative in $\theta$ is zero. Yet $J(\theta)$ does change with $\theta$, because a different $\theta$ would have produced different draws. The figure contrasts the two situations. In the frozen row the link from $\theta$ to the samples is cut. In the live row $\theta$ sets $p_\theta$, and $p_\theta$ decides which $X_i$ appear.
-
-So the answer to "can Monte Carlo estimate $\nabla_\theta J$?" is yes, but not by differentiating stored samples. We first rewrite $\nabla_\theta J(\theta)$ as an expectation of some computable quantity, and then estimate that expectation by sampling. This part gives two such rewrites: the pathwise one and the score-function one.
-
-**Details.**
-
-The two rewrites differ in what they require: the pathwise form needs a differentiable sampling recipe and a differentiable reward, the score-function form needs a differentiable log-probability. Both need the derivative and the expectation to be exchangeable.
-
-**Sources.**
-
-Mohamed et al., JMLR 2020 (E07). Figure: drawn for this note.
-<!-- END S85 -->
-
-<!-- BEGIN S123 -->
-### 58. A Gaussian Sample Is a Recipe [S123]
-
-**Message.** A Gaussian sample can be produced by a recipe, $X_\theta = \theta + \varepsilon$ with $\varepsilon \sim \mathcal{N}(0,1)$, in which all randomness sits in noise whose law does not depend on $\theta$.
-
-Recall the construction of a Gaussian vector: if $W$ has independent $\mathcal{N}(0,1)$ entries, then $X = DW + \mu$ is Gaussian with mean $\mu$. The scalar case with $D = 1$ and $\mu = \theta$ gives
-
-$$X_\theta = \theta + \varepsilon, \qquad \varepsilon \sim \mathcal{N}(0,1),$$
-
-so $X_\theta$ has distribution $\mathcal{N}(\theta, 1)$. The figure shows the recipe: the noise $\varepsilon$ is drawn from a law that does not involve $\theta$, then $\theta$ is added. Along the addition, $\partial X_\theta / \partial \theta = 1$.
-
-This changes what "differentiate the sample" means. We do not differentiate a stored number. We hold the noise $\varepsilon$ fixed and ask how the output of the recipe moves when $\theta$ moves.
-
-**Details.**
-
-The same idea applies to any recipe $X = T_\theta(\varepsilon)$ with a base noise law free of $\theta$; the Gaussian location shift is the simplest case.
-
-**Sources.**
-
-Gaussian by construction: course prerequisite, prob08 slide 37 "Definition 2 - by Construction" (E01, E15). Figure: drawn for this note.
-<!-- END S123 -->
-
-<!-- BEGIN S124 -->
-### 59. Differentiate Along the Sampling Path [S124]
-
-**Message.** If $X = T_\theta(\varepsilon)$ with noise law free of $\theta$, the gradient is the expected chain-rule derivative along the sampling path, provided the derivative and expectation may be swapped.
-
-Write the sample as $X = T_\theta(\varepsilon)$. Because the law of $\varepsilon$ does not depend on $\theta$, $J(\theta) = \mathbb{E}_\varepsilon[R(T_\theta(\varepsilon))]$ is an average over a fixed distribution of a function of $\theta$. For scalar $\theta$ and $X$:
-
-$$\nabla_\theta J(\theta) = \mathbb{E}_{\varepsilon}\big[\nabla_\theta R(T_\theta(\varepsilon))\big]$$
-
-(swap of $\nabla$ and $\mathbb{E}$), and by the chain rule
-
-$$\nabla_\theta R(T_\theta(\varepsilon)) = R'(T_\theta(\varepsilon))\,\partial_\theta T_\theta(\varepsilon).$$
-
-The figure shows the forward path $\varepsilon \to X \to R(X)$ and the two backward factors, $\partial_\theta T_\theta(\varepsilon)$ and $R'(X)$, that the chain rule multiplies.
-
-The requirements are visible in the formula: the noise law must be free of $\theta$, $T_\theta$ must be differentiable in $\theta$, and $R$ must be differentiable in $X$. The swap of derivative and expectation is a separate condition; it is not automatic.
-
-**Details.**
-
-For vector $\theta$ and $X$ the chain rule becomes a Jacobian product. A sufficient condition for the swap is that, for $\theta$ in a neighbourhood $U$, $|\nabla_\theta R(T_\theta(\varepsilon))|$ is bounded by a function $g(\varepsilon)$ with $\mathbb{E}[g(\varepsilon)] < \infty$ (dominated convergence).
-
-**Sources.**
-
-Mohamed et al., JMLR 2020, Secs. 5.2-5.3 (E07); D. P. Kingma and M. Welling, "Auto-Encoding Variational Bayes," ICLR 2014, Sec. 2.3 (E15). Figure: drawn for this note.
-<!-- END S124 -->
-
-<!-- BEGIN S125 -->
-### 60. Check the Gaussian Gradient [S125]
-
-**Message.** For $R(X) = X^2$ with $X = \theta + \varepsilon$, the exact derivative is $2\theta$, and the pathwise contribution $2X$ has exactly that mean.
-
-Analytic check: expand the square and use $\mathbb{E}[\varepsilon] = 0$, $\mathbb{E}[\varepsilon^2] = 1$.
-
-$$J(\theta) = \mathbb{E}\big[\theta^2 + 2\theta\varepsilon + \varepsilon^2\big] = \theta^2 + 1,$$
-
-$$J'(\theta) = 2\theta.$$
-
-Pathwise contribution: hold $\varepsilon$ fixed and differentiate $(\theta + \varepsilon)^2$ in $\theta$, which gives $2(\theta + \varepsilon) = 2X$. Its mean is $2\theta + 2\,\mathbb{E}[\varepsilon] = 2\theta$, the same derivative.
-
-The agreement is about means. A single contribution $2X$ is random: $\operatorname{Var}(2X) = 4\operatorname{Var}(\varepsilon) = 4$. At $\theta = 1$ the target is $2$, while five seeded draws of $2X$ in our generator give $2.28$, $1.66$, $2.14$, $3.38$, $1.42$.
-
-**Details.**
-
-The generator also checks the identity numerically at $\theta = 1$ by quadrature over $\varepsilon$: $J = 2$, $\mathbb{E}[2X] = 2$, $\operatorname{Var}(2X) = 4$.
-
-**Sources.**
-
-Gaussian reparameterization example (E15); our calculation in `gen/p9d_gradient_checks.py` (E24: Simpson quadrature on $[-12, 12]$; seed 20261117 for the five draws).
-<!-- END S125 -->
-
-<!-- BEGIN S126 -->
-### 61. Discrete Draws Need Another Route [S126]
-
-**Message.** When the outcome is discrete, the sampled action jumps rather than moving smoothly, so there is no useful path derivative; instead we differentiate the probabilities, which do move smoothly.
-
-Take two actions: $a_1$ with reward $1$ and $a_0$ with reward $0$. The policy picks $a_1$ with probability $\sigma(\theta) = 1/(1 + e^{-\theta})$. Then
-
-$$J(\theta) = \sigma(\theta)\cdot 1 + \big(1 - \sigma(\theta)\big)\cdot 0 = \sigma(\theta).$$
-
-The bar chart compares $\theta = 0$, where both actions have probability $\tfrac12$, with $\theta = 1$, where $a_1$ has probability $0.731$ and $a_0$ has $0.269$. Raising $\theta$ moves probability mass toward $a_1$. The actions themselves do not change: each draw is still $a_1$ or $a_0$.
-
-This is why the pathwise route fails here. Any recipe that maps noise to an action produces a value that jumps between two points, so its derivative in $\theta$ carries no information about how the probabilities move.
-
-**Details.**
-
-Concretely, take $U$ uniform on $(0,1)$ and set $A = a_1$ if $U < \sigma(\theta)$, else $a_0$. For almost every fixed $U$, a small change in $\theta$ leaves $A$ unchanged, so the derivative of $R(A)$ in $\theta$ is $0$ almost everywhere. Its expectation is $0$, while $J'(\theta) = \sigma'(\theta) \gt 0$: the naive swap gives the wrong answer because the threshold moves. The values $0.731$ and $0.269$ are $\sigma(1)$ and $1 - \sigma(1)$ to three decimals.
-
-**Sources.**
-
-Our calculation (E13), `gen/p9d_gradient_checks.py`. Figure: drawn to scale from those values.
-<!-- END S126 -->
-
-<!-- BEGIN S86 -->
-### 62. The Log-Derivative Identity [S86]
-
-**Message.** Wherever $p_\theta(x) \gt 0$ is differentiable in $\theta$, the derivative of the probability equals the probability times the parameter score $s_\theta(x) = \nabla_\theta \ln p_\theta(x)$.
-
-By the chain rule for the natural logarithm, with $x$ held fixed,
-
-$$\nabla_\theta \ln p_\theta(x) = \frac{\nabla_\theta\, p_\theta(x)}{p_\theta(x)}.$$
-
-Multiplying both sides by $p_\theta(x)$ gives
-
-$$\nabla_\theta\, p_\theta(x) = p_\theta(x)\, s_\theta(x).$$
-
-The identity needs $p_\theta(x) \gt 0$ (so that the logarithm is defined) and differentiability in $\theta$. The quantity $s_\theta(x) = \nabla_\theta \ln p_\theta(x)$ is the *parameter score*.
-
-It is not the same as the sample-space score $\nabla_x \ln p(x)$, which differentiates in the sample, not in the parameter.
-
-**Details.**
-
-The point of the rewrite is that a derivative of a probability, which is not itself an expectation, becomes a probability-weighted quantity. That weighting is what turns sums into expectations in the next proof.
-
-**Sources.**
-
-Mohamed et al., JMLR 2020, Sec. 4.2 (E07).
-<!-- END S86 -->
-
-<!-- BEGIN S87 -->
-### 63. Reward Times Score Gives the Gradient [S87]
-
-**Message.** On a fixed finite outcome set with positive differentiable probabilities, the gradient of the expected reward equals the expected reward times score.
-
-**Theorem (score-function identity).** Let $\mathcal{X}$ be a fixed finite set, let $p_\theta(x) \gt 0$ be differentiable in $\theta$ for every $x \in \mathcal{X}$, and let $R : \mathcal{X} \to \mathbb{R}$ be a fixed reward. Then
-
-$$\nabla_\theta\, \mathbb{E}_{X \sim p_\theta}[R(X)] = \mathbb{E}_{X \sim p_\theta}\big[R(X)\, s_\theta(X)\big].$$
-
-Only $\ln p_\theta$ is differentiated; the reward is just evaluated at the drawn outcomes. So $R$ may be discontinuous, a black box, or defined only on a discrete set. The proof follows on the next three slides.
-
-For continuous $X$ the same formula holds under extra conditions: the swap of derivative and integral must be justified, and the support of $p_\theta$ must not move with $\theta$.
-
-**Details.**
-
-A sufficient condition in the continuous case: for $\theta$ in a neighbourhood $U$, $\sup_{\theta \in U} |R(x)\,\nabla_\theta p_\theta(x)| \le g(x)$ with $\int g(x)\,dx < \infty$; dominated convergence then allows the swap. For vector $\theta$ the identity holds componentwise.
-
-**Sources.**
-
-Mohamed et al., JMLR 2020, Secs. 4.2-4.3 (E07).
-<!-- END S87 -->
-
-<!-- BEGIN S88 -->
-### 64. Proof: Expand the Expectation [S88]
-
-**Message.** On a finite set the expectation is a weighted sum, in which only the weights $p_\theta(x)$ depend on $\theta$.
-
-Write the expectation out:
-
-$$J(\theta) = \sum_{x \in \mathcal{X}} p_\theta(x)\, R(x).$$
-
-Each term is a weight $p_\theta(x)$, which depends on $\theta$, times a number $R(x)$, which does not. The outcome set $\mathcal{X}$ is also fixed.
-
-After this step nothing random remains: the sampling has disappeared into the weights, and we never need the derivative of a drawn $X$.
-
-**Details.**
-
-This is the step that fails to generalize for free: for an infinite or continuous outcome space, the sum becomes an infinite series or an integral.
-
-**Sources.**
-
-Proof as in Mohamed et al., JMLR 2020, Sec. 4.2 (E07), specialized to a finite set.
-<!-- END S88 -->
-
-<!-- BEGIN S89 -->
-### 65. Proof (continued): Differentiate the Finite Sum [S89]
-
-**Message.** A finite sum may be differentiated term by term, and since $R$ is fixed only the weights are differentiated.
-
-Starting from $J(\theta) = \sum_x p_\theta(x) R(x)$ with finitely many terms:
-
-$$\nabla_\theta J(\theta) = \sum_{x} \nabla_\theta\big[p_\theta(x)\, R(x)\big]$$
-
-(derivative of a finite sum), and since $R(x)$ does not depend on $\theta$,
-
-$$\nabla_\theta J(\theta) = \sum_{x} R(x)\, \nabla_\theta\, p_\theta(x).$$
-
-For integrals or infinite sums this exchange of derivative and sum is exactly the step that needs its own justification.
-
-**Details.**
-
-The sum $\sum_x R(x)\nabla_\theta p_\theta(x)$ is the exact gradient, but it is not yet an expectation: the derivatives $\nabla_\theta p_\theta(x)$ can be negative and do not sum to one, so we cannot sample from them.
-
-**Sources.**
-
-Mohamed et al., JMLR 2020, Sec. 4.2 (E07).
-<!-- END S89 -->
-
-<!-- BEGIN S90 -->
-### 66. Proof (continued): Read an Expectation [S90]
-
-**Message.** The log-derivative identity puts the weights $p_\theta(x)$ back in front, which turns the sum into an expectation under the current $p_\theta$.
-
-Apply $\nabla_\theta p_\theta(x) = p_\theta(x) s_\theta(x)$, valid because $p_\theta(x) \gt 0$:
-
-$$\sum_{x} R(x)\, \nabla_\theta\, p_\theta(x)$$
-
-$$= \sum_{x} p_\theta(x)\, R(x)\, s_\theta(x).$$
-
-A sum of $p_\theta(x)$ times a function of $x$ is an expectation under $p_\theta$:
-
-$$\nabla_\theta J(\theta) = \mathbb{E}_{X \sim p_\theta}\big[R(X)\, s_\theta(X)\big]. \quad \blacksquare$$
-
-The weights are the current probabilities $p_\theta$. So the samples used to estimate the gradient must come from the current $p_\theta$, not from an older or different distribution.
-
-**Details.**
-
-Samples from another distribution can still be used, but only with an importance-sampling correction, which is the subject of the next part.
-
-**Sources.**
-
-Mohamed et al., JMLR 2020, Sec. 4.2 (E07).
-<!-- END S90 -->
-
-<!-- BEGIN S92 -->
-### 67. Average the Gradient Contributions [S92]
-
-**Message.** The score-function (REINFORCE) estimator averages reward times score over draws from $p_\theta$; under the theorem's conditions it is unbiased for $\nabla_\theta J$.
-
-The recipe in the figure: draw $X_i \sim p_\theta$, compute its reward $R(X_i)$ and its score $s_\theta(X_i)$, multiply the two, and average over $i$:
-
-$$\hat{g}_n = \frac{1}{n}\sum_{i=1}^{n} R(X_i)\, s_\theta(X_i),$$
-
-with $X_1, \dots, X_n$ IID from $p_\theta$. Each term has mean $\mathbb{E}[R(X)s_\theta(X)] = \nabla_\theta J(\theta)$ by the theorem, so $\mathbb{E}[\hat{g}_n] = \nabla_\theta J(\theta)$ (componentwise for vector $\theta$).
-
-What the estimator needs: samples from the current distribution, the reward values at those samples, and the score $\nabla_\theta \ln p_\theta$. It never needs $\nabla R$.
-
-**Details.**
-
-$\hat g_n$ is a plain Monte Carlo average of the contribution $R(X)s_\theta(X)$, so its variance is $\operatorname{Var}(R s_\theta)/n$ per component, as for any sample mean of IID terms.
-
-**Sources.**
-
-Mohamed et al., JMLR 2020, Sec. 4.2 (E07). Figure: drawn for this note.
-<!-- END S92 -->
-
-<!-- BEGIN S93 -->
-### 68. A Two-Action Policy [S93]
-
-**Message.** A two-action policy with a sigmoid probability gives an exact derivative, $J'(\theta) = \sigma(\theta)(1 - \sigma(\theta))$, against which to check the score-function estimator.
-
-The tree in the figure: the policy $\pi_\theta$ picks $a_1$ (reward $1$) with probability $\sigma(\theta)$ and $a_0$ (reward $0$) with probability $1 - \sigma(\theta)$, where $\sigma(\theta) = 1/(1 + e^{-\theta})$. Then $J(\theta) = \sigma(\theta)$.
-
-Differentiate the sigmoid:
-
-$$\sigma'(\theta) = \frac{e^{-\theta}}{(1 + e^{-\theta})^2} = \sigma(\theta)\big(1 - \sigma(\theta)\big),$$
-
-since $1 - \sigma(\theta) = e^{-\theta}/(1 + e^{-\theta})$.
-
-At $\theta = 0$, $\sigma = \tfrac12$ and $J'(0) = \tfrac14$. The parameter is continuous while the actions are discrete, the situation where the pathwise route fails.
-
-**Details.**
-
-At $\theta = 1$: $\sigma = 0.7311$, $1 - \sigma = 0.2689$ and $J'(1) = 0.1966$; central differences in the generator agree with both values.
-
-**Sources.**
-
-Our calculation (E13), `gen/p9d_gradient_checks.py`. Figure: drawn for this note.
-<!-- END S93 -->
-
-<!-- BEGIN S94 -->
-### 69. Both Routes Give the Same Derivative [S94]
-
-**Message.** On the two-action toy, reward times score has mean $\sigma(1 - \sigma)$, exactly the direct derivative, although each single contribution is $0$ or $\tfrac12$ at $\theta = 0$.
-
-The scores are $s_\theta(a_1) = \frac{d}{d\theta}\ln\sigma(\theta) = 1 - \sigma$ and $s_\theta(a_0) = \frac{d}{d\theta}\ln(1 - \sigma(\theta)) = -\sigma$. Then
-
-$$\mathbb{E}[R\, s_\theta] = \sigma \cdot 1 \cdot (1 - \sigma)$$
-
-$$\qquad + (1 - \sigma)\cdot 0 \cdot(-\sigma)$$
-
-$$= \sigma(1 - \sigma),$$
-
-which matches $J'(\theta)$ from the previous slide.
-
-The number line on the slide shows the two possible single-draw contributions at $\theta = 0$: $0$ for $a_0$ and $\tfrac12$ for $a_1$, each with probability $\tfrac12$. Neither equals the gradient $\tfrac14$; only their mean does. That spread is the variance of the estimator.
-
-**Details.**
-
-At $\theta = 0$ the scores are $\tfrac12$ and $-\tfrac12$, and the variance of one contribution is $\tfrac1{16}$.
-
-**Sources.**
-
-Our calculation (E13), `gen/p9d_gradient_checks.py` (exact fractions). Figure: drawn to scale from those values.
-<!-- END S94 -->
-
-<!-- BEGIN S96a -->
-### 70. The Score Has Mean Zero [S96a]
-
-**Message.** Under the theorem's conditions the score has mean zero, because the probabilities always sum to one.
-
-With a fixed finite $\mathcal{X}$ and $p_\theta \gt 0$ differentiable:
-
-$$\mathbb{E}_{p_\theta}[s_\theta(X)] = \sum_x p_\theta(x)\,\nabla_\theta \ln p_\theta(x)$$
-
-by definition of expectation;
-
-$$= \sum_x \nabla_\theta\, p_\theta(x)$$
-
-by the log-derivative identity;
-
-$$= \nabla_\theta \sum_x p_\theta(x)$$
-
-because the sum is finite; and since the probabilities sum to one,
-
-$$= \nabla_\theta 1 = 0.$$
-
-Mean zero does not mean each score is zero. In the two-action toy at $\theta = 0$ the scores are $\tfrac12$ and $-\tfrac12$; they cancel only on average.
-
-**Details.**
-
-This is the special case $R \equiv 1$ of the score-function identity: the expected reward is constantly $1$, so its gradient is $0$.
-
-**Sources.**
-
-Mohamed et al., JMLR 2020, Sec. 4.2 (E07); toy values from `gen/p9d_gradient_checks.py` (E13).
-<!-- END S96a -->
-
-<!-- BEGIN S96b -->
-### 71. A Valid Baseline Preserves the Gradient [S96b]
-
-**Message.** Subtracting a constant baseline $b$ from the reward leaves the expected gradient unchanged, because the score has mean zero; it can change the variance in either direction.
-
-For a constant $b$:
-
-$$\mathbb{E}\big[(R(X) - b)\, s_\theta(X)\big]$$
-
-$$= \mathbb{E}\big[R(X)\, s_\theta(X)\big] - b\,\mathbb{E}\big[s_\theta(X)\big]$$
-
-$$= \nabla_\theta J(\theta) - b \cdot 0.$$
-
-The step that pulls $b$ out of the expectation needs $b$ to be fixed before the draw: it must not be a function of the sampled $X$. If the baseline depends on the action, $b(X)$, the cancellation need not happen: the mean is preserved exactly when $\mathbb{E}[b(X)s_\theta(X)]=0$, which a general action-dependent baseline does not satisfy.
-
-The mean is preserved for every constant $b$. The variance is not: some baselines lower it, others raise it, as the next two slides show.
-
-**Details.**
-
-A baseline may depend on anything fixed before the draw, for example a state on which the distribution is conditioned: the same argument applied to the conditional distribution gives $\mathbb{E}[s_\theta(X) \mid \text{state}] = 0$.
-
-For scalar $\theta$, write $g_b = (R - b)s_\theta$ and assume $\mathbb{E}[R^2s_\theta^2]<\infty$ (so every $g_b$ has finite variance) and $0<\mathbb{E}[s_\theta^2]<\infty$. If $\mathbb{E}[s_\theta^2]=0$, the score is zero almost surely and every $b$ gives the same estimator, so there is nothing to choose. Otherwise $\operatorname{Var}(g_b) - \operatorname{Var}(g_0) = \mathbb{E}[s_\theta^2]\; b\,(b - 2b^*)$ with $b^* = \mathbb{E}[R s_\theta^2]/\mathbb{E}[s_\theta^2]$. So $b^*$ minimizes the variance, and a constant $b$ strictly lowers it exactly when $b(b - 2b^*) < 0$. For a vector $\theta$ with one shared scalar baseline, the same calculation for the total variance (the trace) uses $\|s_\theta\|^2$ in place of $s_\theta^2$, under the analogous conditions $\mathbb{E}[R^2\|s_\theta\|^2]<\infty$ and $0<\mathbb{E}[\|s_\theta\|^2]<\infty$; then $b^*=\mathbb{E}[R\|s_\theta\|^2]/\mathbb{E}[\|s_\theta\|^2]$.
-
-**Sources.**
-
-Mohamed et al., JMLR 2020, Sec. 7.4.3 "Baselines," eq. (61) (E08). Variance formula: our calculation, checked on the toy in `gen/p9d_gradient_checks.py` (E13).
-<!-- END S96b -->
-
-<!-- BEGIN S97 -->
-### 72. This Baseline Removes the Toy's Variance [S97]
-
-**Message.** On the two-action toy at $\theta = 0$, the baseline $b = \tfrac12$ makes both possible contributions equal to $\tfrac14$, so this estimator has zero variance.
-
-The contribution of one draw is $g_b = (R - b)s_\theta$. At $\theta = 0$ the scores are $\tfrac12$ for $a_1$ and $-\tfrac12$ for $a_0$.
-
-- Without a baseline ($b = 0$): $a_1$ gives $\tfrac12$, $a_0$ gives $0$; mean $\tfrac14$, variance $\tfrac1{16}$.
-- With $b = \tfrac12$: $a_1$ gives $(1 - \tfrac12)\cdot\tfrac12 = \tfrac14$, and $a_0$ gives $(0 - \tfrac12)\cdot(-\tfrac12) = \tfrac14$; mean $\tfrac14$, variance $0$.
-
-The figure shows these as two number lines sharing the mean $\tfrac14$: the top line has two dots at $0$ and $\tfrac12$, the bottom line a single dot at $\tfrac14$ for both actions.
-
-This is an exact two-outcome calculation, not an empirical result. Zero variance is special to this toy: here $s_\theta^2 = \tfrac14$ for both actions, so the variance-minimizing $b^* = \mathbb{E}[R s^2]/\mathbb{E}[s^2]$ equals $\mathbb{E}[R] = \tfrac12$.
-
-**Details.**
-
-In general the best constant baseline $b^*$ only minimizes the variance; it reaches zero only when the contribution $(R - b^*)s_\theta$ is the same for every outcome.
-
-**Sources.**
-
-Our calculation (E13), `gen/p9d_gradient_checks.py` (exact fractions). Figure: drawn to scale from those values.
-<!-- END S97 -->
-
-<!-- BEGIN S127 -->
-### 73. A Bad Baseline Adds Variance [S127]
-
-**Message.** On the same toy, $b = 2$ keeps the mean at $\tfrac14$ but raises the variance from $\tfrac1{16}$ to $\tfrac9{16}$: a valid baseline is not automatically a helpful one.
-
-With $b = 2$ at $\theta = 0$, action $a_1$ gives $(1 - 2)\cdot\tfrac12 = -\tfrac12$ and $a_0$ gives $(0 - 2)\cdot(-\tfrac12) = 1$. The mean is still $\tfrac14$; the two values are now farther apart.
-
-For this toy the variance of one contribution is
-
-$$\operatorname{Var}(g_b) = \tfrac14\big(b - \tfrac12\big)^2,$$
-
-which is $\tfrac1{16}$ at $b = 0$, $0$ at $b = \tfrac12$ and $\tfrac9{16}$ at $b = 2$.
-
-The figure shows the two number lines with the same mean: for $b = 0$ the dots sit at $0$ and $\tfrac12$, for $b = 2$ at $-\tfrac12$ (action $a_1$) and $1$ (action $a_0$).
-
-**Details.**
-
-By the general formula $\operatorname{Var}(g_b) - \operatorname{Var}(g_0) = \mathbb{E}[s^2]\, b(b - 2b^*)$ with $\mathbb{E}[s^2] = \tfrac14$ and $b^* = \tfrac12$: $b = \tfrac12$ lowers the variance by $\tfrac1{16}$, $b = 1$ leaves it unchanged, and $b = 2$ raises it by $\tfrac12$.
-
-**Sources.**
-
-Our calculation (E13), `gen/p9d_gradient_checks.py` (exact fractions). Figure: drawn to scale from those values.
-<!-- END S127 -->
-
-<!-- BEGIN S128 -->
-### 74. Two Gradient Estimators, Different Requirements [S128]
-
-**Message.** Pathwise and score-function estimators target the same gradient but need different things; both need a justified swap of derivative and expectation, and neither always has lower variance.
-
-The decision diagram branches from the target $\nabla_\theta\,\mathbb{E}_{X \sim p_\theta}[R(X)]$ into two routes.
-
-- **Pathwise.** Needs a sampling recipe $X = T_\theta(\varepsilon)$ whose noise law is free of $\theta$, and needs $T_\theta$ and $R$ to be differentiable. Example: for $R = X^2$ with Gaussian $X$, average $2X$.
-- **Score function.** Needs $\ln p_\theta(x)$ to be differentiable in $\theta$. The reward is only evaluated, so no $\nabla R$ is needed. Example: for the two-action policy, average $R\,s_\theta$.
-
-Neither route is a universal winner on variance; which one is lower depends on the problem.
-
-**Details.**
-
-The score-function estimator can be combined with a baseline; the ordinary pathwise formula shown here cannot be used unless its chain-rule and interchange conditions hold; sampled discrete actions do not provide a naive differentiable path.
-
-**Sources.**
-
-Mohamed et al., JMLR 2020, Secs. 4.2-4.3 and 5.2-5.3 (E07). Figure: drawn for this note.
-<!-- END S128 -->
-
-## Part 6 - Reuse Samples Responsibly
+## Part 5 - Reuse Samples in RL
 
 <!-- BEGIN S99 -->
-### 75. Part 6: Reuse Samples Responsibly [S99]
-
-*Pace: Part 06, about 15 min; elapsed about 130 min.*
+### 75. Part 5: Reuse Samples in RL [S99]
 
 **Message.** Reusing data introduces a second distribution, not a new target.
 
-Samples collected under one policy are reused to evaluate or improve another. The correction is the importance ratio of Part 02, now a product over the steps of a sequence, and the gradient tools of Part 05 apply on top. This part applies that toolkit to a scoped, historical RLHF example; it is not a survey of reinforcement-learning methods.
+In reinforcement learning (RL), samples collected under one policy are reused to evaluate another. The correction is the importance ratio of Part 02, now a product over the steps of a sequence. This part applies that toolkit to a scoped, historical RLHF example; it is not a survey of reinforcement-learning methods.
 <!-- END S99 -->
 
 <!-- BEGIN S100 -->
@@ -1529,8 +1007,6 @@ Sources. Schulman, Wolski, Dhariwal, Radford, Klimov, "Proximal Policy Optimizat
 <!-- BEGIN S109a -->
 ### 84. Choose an Expectation Estimator by Its Requirements [S109a]
 
-*Pace: Synthesis and closer, about 5 min; elapsed about 145 min.*
-
 **Message.** For an expectation, the ingredients you can compute decide which estimators are available; the conditions they meet decide what you can honestly claim.
 
 The slide opens with the shared setting: target $\mu=\mathbb E_p[f(X)]$, IID draws, and $\mathbb E_p|f(X)|<\infty$. Below it is a three-column table, read row by row:
@@ -1555,30 +1031,6 @@ Prerequisites in the series (optional): prob01 (LOTUS, Jensen), prob02 (KL), pro
 
 Sources: summary of results sourced on the earlier slides (E02, E04-E06); prerequisite locations E01.
 <!-- END S109a -->
-
-<!-- BEGIN S109b -->
-### 85. Choose a Gradient Estimator by Its Requirements [S109b]
-
-**Message.** For the gradient of an expectation, the pathwise and score estimators are unbiased only under their own conditions, and being available does not make either one efficient.
-
-The slide opens with the new target, $\nabla_\theta\mathbb E_{p_\theta}[R(X)]$, the gradient of an expectation. Below it is a three-column table with two rows:
-
-- Pathwise gradient. Needs: $X=T_\theta(\varepsilon)$ with the law of $\varepsilon$ free of $\theta$; the chain rule and the swap of gradient and expectation are valid. Claim: unbiased under those conditions.
-- Score gradient. Needs: a fixed support, a differentiable $p_\theta$, and a valid swap (the finite case was shown in full). Claim: unbiased; a constant baseline $b$ keeps the mean.
-
-Highlighted line: available is not efficient; compare variances on the problem at hand.
-
-The baseline must be a constant fixed before the draw, independent of the sample; it keeps the mean because the score has mean zero, and it does not always lower the variance.
-
-Question for the room: which row fits the Gaussian with $R=X^2$ (both rows are available) and the two-action policy (score only, because a sampled discrete action has no naive differentiable path)?
-
-Formula reference:
-
-- Pathwise: $\nabla_\theta \mathbb E[R(X)] = \mathbb E[\nabla_\theta R(T_\theta(\varepsilon))]$ when the chain rule holds along the path and the swap is justified.
-- Score: $\nabla_\theta \mathbb E_{p_\theta}[R(X)] = \mathbb E_{p_\theta}[R(X)s_\theta(X)]$, $s_\theta=\nabla_\theta\ln p_\theta$, for a fixed support and a valid swap (finite outcome space: always). A constant baseline keeps the mean because $\mathbb E[s_\theta]=0$; it lowers the variance only when $b(b-2b^*)<0$, as derived for the baseline slides.
-
-Sources: summary of results sourced on the earlier slides (E07, E08, E15, E27).
-<!-- END S109b -->
 
 <!-- BEGIN S113 -->
 ### 86. Closer [S113]

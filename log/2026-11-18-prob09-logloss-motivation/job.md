@@ -7,9 +7,10 @@ id commit: c47b198f8e8d0153fee6923ce2dafe8b13f4fe77 (inherited; no new ID migrat
 branch: 2026-11-17-prob09-major-revision (existing PR77 continuation, as in preceding follow-up; no second branch/PR)
 pr: 77 (existing, open)
 pr url: https://github.com/albert-no/slides/pull/77
-state: in-work
+state: approved
 round: 1 of 1
-current action: plan-v2.md incorporates C02 sampling-access emphasis; await one integrated work-r1 with exact pushed commit
+current action: review-r1 approved at 7f624f37a1b28f44cac32225664496329286e760; C01/C02 covered, no open findings; await final record-only push before updating existing PR77; no merge order
+review candidate: 7f624f37a1b28f44cac32225664496329286e760
 current plan: plan-v2.md amendment plus frozen initial spec below
 albert decisions:
 - 2026-11-18 16:02 KST: clarified the intended pp4-5 motivation: a sample average of log(1/q(X)), with X drawn from P, is Monte Carlo for cross-entropy; its difference from forward KL is a model-independent entropy term. This supersedes the preceding job's one-hot/classifier-led opening only. No merge order.

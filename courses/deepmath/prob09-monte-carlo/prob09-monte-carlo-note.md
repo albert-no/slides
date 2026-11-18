@@ -699,14 +699,30 @@ Sources: E18 (checked with $\int_0^\infty x^2 e^{-ax}\,dx = 2/a^3$); `gen/p9b_ca
 Ordinary importance sampling needs the normalized ratio $p/q$. Often the target is known only up to a constant, $p = \tilde p / Z$ with $Z$ unknown. Dividing by the total weight removes $Z$, but the result is a ratio of two averages: consistent, yet generally biased at finite sample sizes, and its weight diagnostics have blind spots.
 <!-- END S72 -->
 
+<!-- BEGIN S132 -->
+### 00. Bayes Leaves a Normalizing Integral [S132]
+
+**Message.** Even a small, familiar Bayesian model gives a posterior that we can evaluate at any point, while its normalizing integral is still left to compute.
+
+**Slide.** Our toy: latent logit $\theta\sim N(0,1)$, success probability $s(\theta)=1/(1+e^{-\theta})$. Observed: two successes, independent given $\theta$, so likelihood $s(\theta)^2$. Figure: three panels over $\theta$ from $-4$ to $4$, joined by a times sign and an equals sign. Left, grey, "prior $\varphi(\theta)$": the standard normal density, peak about 0.4 at 0. Middle, red, "likelihood $s(\theta)^2$": rises from 0 on the left to nearly 1 on the right, axis 0 to 1. Right, blue, "unnormalized $\varphi(\theta)s(\theta)^2$", on the same vertical scale as the left panel: a lower bump shifted right, peak about 0.14, area shaded and labelled "shaded area $=Z$". Closing line: posterior $\propto\varphi(\theta)s(\theta)^2$ at any $\theta$; the normalizing integral remains.
+
+The toy is ours. The prior density $\varphi(\theta)=e^{-\theta^2/2}/\sqrt{2\pi}$ is a closed form. The logistic function maps any real logit to a probability in $(0,1)$; it is the success probability of one trial. Given $\theta$ the two trials are independent, so the likelihood is $s(\theta)^2$, and Bayes' rule gives $\tilde p(\theta)=\varphi(\theta)s(\theta)^2$. Two successes favour large logits, so the product sits to the right of the prior. It is not yet a density: its area is $Z$, not one, and dividing by $Z$ rescales its height without changing its shape.
+
+**Details.** $Z=\int\varphi(t)s(t)^2\,dt$ is the marginal probability of the two observed successes; $0<Z<\infty$, indeed $Z<1$ because $s^2<1$ makes the integrand smaller than $\varphi$. Evaluating $\tilde p$ at a point needs two closed-form functions; knowing $Z$ means integrating over every $\theta$. In this one-dimensional toy a numerical integral is easy, and the notes of [[S133]] use one as a check; the estimator built there never needs it. The question it answers: the probability that a third trial succeeds.
+
+**Sources.** E07: Stan User's Guide (page identifies v2.40), "How Stan Works", "Target log density", https://mc-stan.org/docs/stan-users-guide/how-stan-works.html ; "Regression Models", "Logistic and probit regression", https://mc-stan.org/docs/stan-users-guide/regression.html ; inspected 2026-11-18. These support posterior proportionality and logistic/Bernoulli likelihoods only; no claim that Stan's sampler is importance sampling. Toy model, curves and figure: ours, `gen/p9f_unknown_z.py` (exact closed forms on a grid, no randomness; peaks 0.399 and 0.139 printed by the generator).
+<!-- END S132 -->
+
 <!-- BEGIN S73 -->
 ### 44. The Target Is Known Up to Z [S73]
 
 **Message.** An unnormalized density fixes the shape of the target but not its height, so the ratio $p/q$ cannot be evaluated.
 
-**Slide.** $p=\tilde p/Z$ with $\tilde p\ge 0$ and target $\mu=E_p[f(X)]$; $Z$ is unknown but neither zero nor infinite. Figure: a dependency chain. $\tilde p(x)$ can be evaluated; $Z$ is unknown with $0<Z<\infty$; therefore $p=\tilde p/Z$ cannot be evaluated, and the IS weight $w=p/q$ is blocked without $Z$.
+**Slide.** $p=\tilde p/Z$ with $\tilde p\ge 0$ and target $\mu=E_p[f(X)]$; $Z$ is unknown but neither zero nor infinite. Figure: a dependency chain. $\tilde p(x)$ can be evaluated; $Z$ is unknown with $0<Z<\infty$; therefore $p=\tilde p/Z$ cannot be evaluated, and the IS weight $w=p/q$ is blocked without $Z$. Closing line: in the toy, $\tilde p(\theta)=\varphi(\theta)s(\theta)^2$ and $Z=\int\varphi(\theta)s(\theta)^2\,d\theta$.
 
 Often we can evaluate $\tilde p(x)$ but cannot compute $Z=\int\tilde p(x)\,dx$. In Bayes' rule the posterior is prior times likelihood divided by an evidence integral; only the numerator is available pointwise. Writing $p\propto\tilde p$ gives $p(x)/q(x)=\tilde p(x)/(Z\,q(x))$, which still contains the unknown $Z$, so ordinary IS is blocked.
+
+In the toy of [[S132]], $\tilde p(\theta)=\varphi(\theta)s(\theta)^2$ and $Z=\int\varphi(t)s(t)^2\,dt$. Each value of $\tilde p$ is a closed-form computation; $Z$ is a one-dimensional integral that could be checked numerically (the notes of [[S133]] do so, for validation only), but self-normalized sampling never needs it. Unknown means not computed, not undefined.
 
 **Details.** Assume $\tilde p\ge 0$ and $0<Z<\infty$. Unknown means not computed; $Z$ is a fixed finite positive number. $Z=0$ leaves no target; $Z=\infty$ is an improper target, outside the theorems here. The mean also needs $E_p|f(X)|<\infty$.
 
@@ -718,7 +734,7 @@ Often we can evaluate $\tilde p(x)$ but cannot compute $Z=\int\tilde p(x)\,dx$. 
 
 **Message.** Every computable weight is the true weight times the same unknown $Z$.
 
-**Slide.** Draw $X_i$ iid from $q$; $\tilde w_i=\tilde p(X_i)/q(X_i)=Z\,w_i$ with $w_i=p(X_i)/q(X_i)$. Support: $q>0$ wherever $\tilde p>0$, not only where $fp\ne 0$.
+**Slide.** Draw $X_i$ IID from $q$; $\tilde w_i=\tilde p(X_i)/q(X_i)=Z\,w_i$ with $w_i=p(X_i)/q(X_i)$. Support: $q>0$ wherever $\tilde p>0$, not only where $fp\ne 0$.
 
 One $\tilde w_i$ alone is useless as an estimate of $w_i$, but $Z$ is the same for every draw, so it can cancel in a ratio.
 
@@ -741,16 +757,30 @@ $Z$ appears above and below the bar and cancels. The estimate is a weighted aver
 **Sources.** E05: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.2, Theorem 9.2, eqs (9.6)-(9.10), pp. 8-10. Probabilities: `gen/p9c_snis_examples.py` (exact fractions, no randomness).
 <!-- END S75 -->
 
+<!-- BEGIN S133 -->
+### 00. Likelihood Weights Remove the Unknown Z [S133]
+
+**Message.** Draw from the prior, weight each draw by its likelihood, and the self-normalized average estimates the posterior predictive probability without $Z$.
+
+**Slide.** Target: next-success probability $\mu=E_{\text{post}}[s(\theta)]$. A flow of four boxes, left to right: "$\theta_i$ IID from $q=\varphi$, prior draw"; "$s(\theta_i)$, success prob."; "$\tilde w_i=\tilde p/q=s(\theta_i)^2$, likelihood weight"; "$\hat\mu_{\mathrm{SN}}$, weighted prediction". Formula: $\hat\mu_{\mathrm{SN}}=\sum_i\tilde w_i s(\theta_i)/\sum_j\tilde w_j=\sum_i s(\theta_i)^3/\sum_j s(\theta_j)^2$. Every weight $>0$: positive total, no $Z$ needed. Consistent ratio estimator, not exact at finite $n$.
+
+The target is the probability that a third trial succeeds, averaged over posterior uncertainty: $\mu=(1/Z)\int s(\theta)\varphi(\theta)s(\theta)^2\,d\theta$. With the prior as proposal, $\tilde w_i=\varphi(\theta_i)s(\theta_i)^2/\varphi(\theta_i)=s(\theta_i)^2$: the prior cancels and only the likelihood is left. With $f=s$ the SNIS formula of [[S75]] gives the ratio above: each draw contributes weight $s^2$ times prediction $s$, hence the third power on top and the weights alone below. No step uses $Z$.
+
+**Details.** $q=\varphi>0$ everywhere covers the target; $f=s\in(0,1)$ gives $E_p|f|<\infty$. All weights are strictly positive, so the total is positive for every $n\ge 1$ and the $0/0$ event of [[S75]] cannot occur; that is a property of this toy, not of SNIS in general. The consistency result of [[S77]] applies, but at fixed $n$ the ratio is generally biased ([[S78]]). Sanity check: under the prior alone $E[s(\theta)]=1/2$ exactly ($\varphi$ symmetric, $s(-t)=1-s(t)$), so two successes should push the prediction above 1/2. Validation only, never an input: composite Simpson on $[-12,12]$ with 12,000 and 24,000 panels gives $Z=0.29337903585809$, $\int\varphi s^3=0.19006855378714$, $\mu=0.64786003959422$, changing by less than $10^{-14}$ when the panels double. One illustrative batch (seed 20261118, $n=10{,}000$, $\theta_i$ IID $N(0,1)$ from Python's `random.Random(seed).gauss`) gives $\hat\mu_{\mathrm{SN}}=0.6480$; one batch is not an error bar.
+
+**Sources.** E05: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.2, Theorem 9.2, eqs (9.6)-(9.10), pp. 8-10. E07: Stan User's Guide (page identifies v2.40), "How Stan Works", "Target log density", https://mc-stan.org/docs/stan-users-guide/how-stan-works.html ; "Regression Models", "Logistic and probit regression", https://mc-stan.org/docs/stan-users-guide/regression.html ; inspected 2026-11-18. These support posterior proportionality and logistic/Bernoulli likelihoods only; no claim that Stan's sampler is importance sampling. Toy model and all numbers: ours, `gen/p9f_unknown_z.py` (stable evaluation of logistic powers via $\log s$).
+<!-- END S133 -->
+
 <!-- BEGIN S76 -->
 ### 47. Two Averages Form One Ratio [S76]
 
 **Message.** SNIS is a ratio of two unbiased averages computed from the same draws.
 
-**Slide.** Conditions line, then a figure: the same draws feed two averages, $A_n=\frac1n\sum\tilde w_i f(X_i)$ with mean $\int\tilde p f=Z\mu$, and $B_n=\frac1n\sum\tilde w_i$ with mean $\int\tilde p=Z$; the two are labelled "generally dependent" and combine into $A_n/B_n=\hat\mu_{\mathrm{SN}}$. Each average is unbiased; the ratio is not: $E[A_n/B_n]\ne E[A_n]/E[B_n]$ in general.
+**Slide.** Conditions line (IID draws, full target support, $E_p|f(X)|<\infty$), then a figure: the same draws feed two averages, $A_n=\frac1n\sum\tilde w_i f(X_i)$ with mean $\int\tilde p f=Z\mu$, and $B_n=\frac1n\sum\tilde w_i$ with mean $\int\tilde p=Z$; the two are labelled "generally dependent" and combine into $A_n/B_n=\hat\mu_{\mathrm{SN}}$. Each average is unbiased; the ratio is not: $E[A_n/B_n]\ne E[A_n]/E[B_n]$ in general.
 
 Under full support, $E_q[\tilde w f]=\int\tilde p f\,dx=Z\mu$ and $E_q[\tilde w]=\int\tilde p\,dx=Z$, so the ratio of means is $\mu$.
 
-**Details.** Full support makes the integrals over $\{q>0\}$ include all target mass. Integrability: $E_q|\tilde w f|=Z\,E_p|f|<\infty$. Expectation does not commute with taking a ratio: division is nonlinear and $A_n$, $B_n$, built from the same draws, are generally dependent, so the mean of the ratio differs from the ratio of means in general; slide 49 gives an exact case.
+**Details.** Full support makes the integrals over $\{q>0\}$ include all target mass. Integrability: $E_q|\tilde w f|=Z\,E_p|f|<\infty$. Expectation does not commute with taking a ratio: division is nonlinear and $A_n$, $B_n$, built from the same draws, are generally dependent, so the mean of the ratio differs from the ratio of means in general; slide [[S78]] gives an exact case.
 
 **Sources.** E05: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.2, Theorem 9.2, eqs (9.6)-(9.10), pp. 8-10. Figure: our flow diagram, no data.
 <!-- END S76 -->
@@ -760,9 +790,9 @@ Under full support, $E_q[\tilde w f]=\int\tilde p f\,dx=Z\mu$ and $E_q[\tilde w]
 
 **Message.** Both averages converge, the denominator's limit $Z$ is positive, so the ratio converges to $\mu$.
 
-**Slide.** Three steps: $A_n\to Z\mu$ a.s. (strong LLN); $B_n\to Z$ a.s. (strong LLN); $A_n/B_n\to\mu$ a.s. ($u/v$ continuous where $v\ne 0$). Positive limit $Z$: eventually $B_n>0$. A limit only: no finite-$n$ unbiasedness, and finite batches can still total zero.
+**Slide.** Conditions: IID draws, full target support, $E_p|f(X)|<\infty$. Three steps: $A_n\to Z\mu$ a.s. (strong LLN); $B_n\to Z$ a.s. (strong LLN); $A_n/B_n\to\mu$ a.s. ($u/v$ continuous where $v\ne 0$). Positive limit $Z$: eventually $B_n>0$. A limit only: no finite-$n$ unbiasedness, and finite batches can still total zero.
 
-**Details.** Conditions: $0<Z<\infty$; $q>0$ wherever $\tilde p>0$; $E_p|f|<\infty$, giving $E_q|\tilde w f|=Z\,E_p|f|<\infty$ and $E_q\tilde w=Z$. Pathwise: if $a_n\to a$ and $b_n\to b\ne 0$ then $a_n/b_n\to a/b$; on the probability-one event where both averages converge, $B_n>Z/2>0$ for all large $n$. "Large" depends on the path, so no fixed $n$ guarantees $B_n>0$ (slide 46), and convergence says nothing about $E[\hat\mu_{\mathrm{SN}}]$ at fixed $n$ (slide 49).
+**Details.** Conditions: draws IID from $q$; $0<Z<\infty$; $q>0$ wherever $\tilde p>0$; $E_p|f|<\infty$, giving $E_q|\tilde w f|=Z\,E_p|f|<\infty$ and $E_q\tilde w=Z$. Pathwise: if $a_n\to a$ and $b_n\to b\ne 0$ then $a_n/b_n\to a/b$; on the probability-one event where both averages converge, $B_n>Z/2>0$ for all large $n$. "Large" depends on the path, so no fixed $n$ guarantees $B_n>0$ (slide [[S75]]), and convergence says nothing about $E[\hat\mu_{\mathrm{SN}}]$ at fixed $n$ (slide [[S78]]). In the toy of [[S133]] every weight is strictly positive, so its total is never zero; the theorem is broader and allows zero weights, where finite batches can still total zero.
 
 **Sources.** E05: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.2, Theorem 9.2, eqs (9.6)-(9.10), pp. 8-10.
 <!-- END S77 -->
@@ -795,7 +825,7 @@ Bias $=-1/4$. Both denominators are positive, so the bias is not caused by an un
 
 Consistency in both columns also needs $E_p|f(X)|<\infty$. Self-normalization does not automatically reduce variance.
 
-**Details.** Two-state example of slide 49 at $n=1$, exact MSE (our calculation):
+**Details.** Two-state example of slide [[S78]] at $n=1$, exact MSE (our calculation):
 
 - $f=(1,0)$, $\mu=3/4$: IS $9/16$, SNIS $5/16$ (SNIS better).
 - $f=(0,1)$, $\mu=1/4$: IS $1/16$, SNIS $5/16$ (IS better).
@@ -817,7 +847,7 @@ A second-order Taylor (delta-method) expansion of $A_n/B_n$ around $(Z\mu,Z)$ su
 
 **Slide.** Weights $\tilde w=(.1,.2,.1,.1,9.5)$, total 10. Bar chart of shares $\bar w_i$ against sample index $i=1..5$: $.01,.02,.01,.01$ and a red bar of $.95$ for sample 5 (illustrative batch, not data). Sample 5 holds 95% of the normalized weight. Its contribution $\bar w_5 f(X_5)$ depends on $f$; no proof of infinite variance.
 
-**Details.** Draw $i$ contributes $\bar w_i f(X_i)$: if $f(X_5)=0$ it contributes nothing, and opposite signs can cancel, so this is not "95% of the estimate". One uneven batch does not prove $E_q[w^2]=\infty$; a finite-second-moment proposal can produce one by chance, and a batch can look even while support is missing (slide 53).
+**Details.** Draw $i$ contributes $\bar w_i f(X_i)$: if $f(X_5)=0$ it contributes nothing, and opposite signs can cancel, so this is not "95% of the estimate". One uneven batch does not prove $E_q[w^2]=\infty$; a finite-second-moment proposal can produce one by chance, and a batch can look even while support is missing (slide [[S81]]).
 
 **Sources.** E06: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.3, eqs (9.13)-(9.14), pp. 11-12. E19: our calculation, `gen/p9c_snis_examples.py` (exact fractions, no randomness).
 <!-- END S70 -->
@@ -857,7 +887,7 @@ Scaling all weights by one constant leaves ESS unchanged, so $Z$ does not matter
 
 A well-chosen $q$ can beat ordinary Monte Carlo even when sampling $p$ is possible, as the rare-event example showed.
 
-**Details.** Bayesian posteriors are proportional to prior times likelihood, with an evidence integral as normalizer, so posterior expectations with a proposal $q$ fall in the SNIS row, provided the posterior is proper ($0<Z<\infty$) and $q$ covers its support. Each row only says what can be computed; for ordinary IS the second moment is $\int f^2p^2/q$. Weight diagnostics (slides 51-53) detect some failures but certify none.
+**Details.** Bayesian posteriors are proportional to prior times likelihood, with an evidence integral as normalizer, so posterior expectations with a proposal $q$ fall in the SNIS row, provided the posterior is proper ($0<Z<\infty$) and $q$ covers its support. Each row only says what can be computed; for ordinary IS the second moment is $\int f^2p^2/q$. Weight diagnostics (slides [[S70]]-[[S81]]) detect some failures but certify none.
 
 **Sources.** E02: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 1-2 (posted PDF), Secs. 2.1-2.2, 2.7-2.8, https://artowen.su.domains/mc/Ch-intro.pdf (accessed 2026-11-17). E04: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.1, Theorem 9.1, pp. 4-6. E05: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.2, Theorem 9.2, eqs (9.6)-(9.10), pp. 8-10. Figure: our capability map, no data.
 <!-- END S82 -->

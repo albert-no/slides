@@ -106,6 +106,14 @@ table.p9c-cmp td.p9c-span { text-align: center; color: var(--gray-text); }
 .p9e-ppo-fig { display: flex; gap: 18px; }
 .p9e-ppo-fig img { height: 280px; width: auto; display: block; }
 /* --- end P5 --- */
+/* --- P3 (2026-11-18) scoped CSS (p9z-) --- */
+.p9z-flow { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 12px 0 6px; }
+.p9z-box { padding: 10px 16px; border: 2px solid var(--yonsei-blue); border-radius: 10px; background: #f5f8fc;
+           text-align: center; line-height: 1.3; }
+.p9z-box p { margin: 0; }
+.p9z-arrow { font-size: 1.8rem; color: #888; }
+.p9z-img { display: block; width: 100%; height: auto; }
+/* --- end P3 (2026-11-18) --- */
 </style>
 </head>
 <body data-brand-logo="../../../reference/kor-eng2.png">
@@ -928,6 +936,26 @@ table.p9c-cmp td.p9c-span { text-align: center; color: var(--gray-text); }
   <p class="subtitle">The target is known only up to a constant</p>
 </div>
 
+<!-- S132 — Bayes Leaves a Normalizing Integral -->
+<div class="slide" data-slide-id="S132">
+  <h2>Bayes Leaves a Normalizing Integral</h2>
+  <div class="divider"></div>
+  <p>Our toy: latent logit $\theta\sim N(0,1)$, success probability $s(\theta)=1/(1+e^{-\theta})$</p>
+  <p>Observed: two successes, independent given $\theta$, so likelihood $s(\theta)^2$</p>
+  <div class="p9-fig" style="max-width:1020px;margin:4px auto;">
+    <img class="p9z-img" src="fig/p9f-bayes.svg" alt="Three panels over theta from minus 4 to 4. Left: the standard normal prior density phi, peak 0.4 at 0. Middle: the likelihood s of theta squared, rising from 0 on the left to 1 on the right. Right, on the same vertical scale as the left panel: the product phi times s squared, a lower bump shifted right with peak about 0.14; its shaded area is Z.">
+    <span class="fl fl-sub fl-grey" style="left:18.27%;top:7.72%">prior $\varphi(\theta)$</span>
+    <span class="fl fl-sub fl-red" style="left:50.00%;top:7.72%">likelihood $s(\theta)^2$</span>
+    <span class="fl fl-sub fl-blue" style="left:81.73%;top:7.72%">unnormalized $\varphi(\theta)s(\theta)^2$</span>
+    <span class="fl fl-big fl-grey" style="left:34.13%;top:51.75%">$\times$</span>
+    <span class="fl fl-big fl-grey" style="left:65.87%;top:51.75%">$=$</span>
+    <span class="fl fl-sub fl-blue" style="left:86.54%;top:52.63%">shaded area $=Z$</span>
+    <span class="fl fl-sub" style="left:97.12%;top:82.46%">$\theta$</span>
+  </div>
+  <p>Posterior $\propto\varphi(\theta)s(\theta)^2$ at any $\theta$; the normalizing integral remains</p>
+  <div class="cite">Toy model and curves: ours (<code>gen/p9f_unknown_z.py</code>). Bayesian framework: Stan User&rsquo;s Guide, &ldquo;How Stan Works&rdquo;; &ldquo;Logistic and probit regression&rdquo;</div>
+</div>
+
 <!-- S73 — The Target Is Known Up to Z -->
 <div class="slide" data-slide-id="S73">
   <h2>The Target Is Known Up to Z</h2>
@@ -954,7 +982,7 @@ table.p9c-cmp td.p9c-span { text-align: center; color: var(--gray-text); }
   <span class="fl " style="left:85.10%;top:41.90%">$w=p/q$</span>
   <span class="fl fl-sub fl-red" style="left:85.10%;top:59.05%">blocked without $Z$</span>
   </div>
-  <p class="muted">Knowing $p \propto \tilde p$ gives no value of $p/q$</p>
+  <p>Toy: $\tilde p(\theta)=\varphi(\theta)s(\theta)^2$ and $Z=\int\varphi(\theta)s(\theta)^2\,d\theta$</p>
 </div>
 
 <!-- S74 — Compute Unnormalized Weights -->
@@ -984,11 +1012,27 @@ table.p9c-cmp td.p9c-span { text-align: center; color: var(--gray-text); }
   <p><strong>All sampled weights zero:</strong> undefined, not silently $0$</p>
 </div>
 
+<!-- S133 — Likelihood Weights Remove the Unknown Z -->
+<div class="slide" data-slide-id="S133">
+  <h2>Likelihood Weights Remove the Unknown Z</h2>
+  <div class="divider"></div>
+  <p>Target: next-success probability $\mu=\mathbb{E}_{\text{post}}[s(\theta)]$</p>
+  <div class="p9z-flow">
+    <div class="p9z-box"><p>$\theta_i \stackrel{\text{IID}}{\sim} q=\varphi$</p><p class="muted">prior draw</p></div><div class="p9z-arrow">→</div>
+    <div class="p9z-box"><p>$s(\theta_i)$</p><p class="muted">success prob.</p></div><div class="p9z-arrow">→</div>
+    <div class="p9z-box"><p>$\tilde w_i=\tilde p/q=s(\theta_i)^2$</p><p class="muted">likelihood weight</p></div><div class="p9z-arrow">→</div>
+    <div class="p9z-box"><p>$\hat\mu_{\mathrm{SN}}$</p><p class="muted">weighted prediction</p></div>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\hat\mu_{\mathrm{SN}} = \frac{\sum_i \tilde w_i\, s(\theta_i)}{\sum_j \tilde w_j} = \frac{\sum_i s(\theta_i)^3}{\sum_j s(\theta_j)^2}$$</div>
+  <p>Every weight $\gt 0$: positive total, no $Z$ needed</p>
+  <p class="muted">Consistent ratio estimator, not exact at finite $n$</p>
+</div>
+
 <!-- S76 — Two Averages Form One Ratio -->
 <div class="slide" data-slide-id="S76">
   <h2>Two Averages Form One Ratio</h2>
   <div class="divider"></div>
-  <p>Conditions: iid draws, full target support, $\mathbb{E}_p|f(X)|\lt\infty$</p>
+  <p>Conditions: IID draws, full target support, $\mathbb{E}_p|f(X)|\lt\infty$</p>
   <div class="p9-fig" style="max-width:1040px;margin:6px auto;">
   <svg viewBox="0 0 1040 260" role="img" aria-label="The same draws X 1 to X n from q feed two averages: A n, the average of weighted f values, with mean Z mu, and B n, the average of weights, with mean Z. Built from the same draws, the two are generally dependent; their ratio A n over B n is the self-normalized estimate.">
     <defs><marker id="p9c-ah-1040-260" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker></defs>
@@ -1019,7 +1063,7 @@ table.p9c-cmp td.p9c-span { text-align: center; color: var(--gray-text); }
 <div class="slide" data-slide-id="S77">
   <h2>The Ratio Converges to the Target</h2>
   <div class="divider"></div>
-  <p>Iid draws, full target support, $\mathbb{E}_p|f(X)|\lt\infty$:</p>
+  <p>IID draws, full target support, $\mathbb{E}_p|f(X)|\lt\infty$:</p>
   <div class="math-block" style="margin:8px 0">$$\begin{aligned}
     A_n &\xrightarrow{\ \text{a.s.}\ } Z\mu &&\text{strong LLN}\\
     B_n &\xrightarrow{\ \text{a.s.}\ } Z \gt 0 &&\text{strong LLN}\\

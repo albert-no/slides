@@ -657,12 +657,25 @@ $$\begin{aligned}
 <p>Ordinary importance sampling needs the normalized ratio $p/q$. Often the target is known only up to a constant, $p = \tilde p / Z$ with $Z$ unknown. Dividing by the total weight removes $Z$, but the result is a ratio of two averages: consistent, yet generally biased at finite sample sizes, and its weight diagnostics have blind spots.</p>
 </article>
 
+<article data-slide-id="S132">
+<h2>00. Bayes Leaves a Normalizing Integral</h2>
+<p class="msg"><span class="kt">Message.</span> Even a small, familiar Bayesian model gives a posterior that we can evaluate at any point, while its normalizing integral is still left to compute.</p>
+<p>The toy is ours. An unknown logit $\theta$ has a standard normal prior with density $\varphi(\theta)=e^{-\theta^2/2}/\sqrt{2\pi}$, a closed form we can evaluate anywhere. The logistic function $s(\theta)=1/(1+e^{-\theta})$ turns any real logit into a probability between $0$ and $1$; it is the success probability of one trial. We observe two successes. Given $\theta$ the two trials are independent (conditional independence), so the likelihood is $s(\theta)\cdot s(\theta)=s(\theta)^2$. Bayes&rsquo; rule says the posterior is proportional to prior times likelihood:</p>
+$$\tilde p(\theta)=\varphi(\theta)\,s(\theta)^2.$$
+<p><strong>Reading the figure.</strong> Three panels share the horizontal axis $\theta\in[-4,4]$. Left, grey: the prior $\varphi$, peak about $0.4$ at $\theta=0$. Middle, red: the likelihood $s(\theta)^2$, a probability on $[0,1]$, near $0$ for negative logits and near $1$ for large ones; two successes favour large logits. Right, blue, on the same vertical scale as the left panel: the product $\varphi s^2$, a lower bump shifted to the right with peak about $0.14$. Its shaded area is $Z$. The product is not yet a density, because its area is not one; dividing by $Z$ rescales its height without changing its shape.</p>
+<div class="detail"><h3>Details</h3>
+<p>$Z=\int\varphi(t)s(t)^2\,dt$ is the marginal probability of the two observed successes. It satisfies $0\lt Z\lt\infty$: the integrand is positive, and since $s^2\lt 1$ it is below $\varphi$, whose integral is $1$, so $Z\lt 1$.</p>
+<p>Evaluating $\tilde p$ at one point needs two closed-form functions. Knowing $Z$ means integrating $\tilde p$ over every $\theta$. In this one-dimensional toy a numerical integral is easy, and the notes of [[S133]] use one as a check; the point is that the estimator built there never needs it. The question that slide answers: what is the probability that a third trial succeeds?</p>
+<h3>Sources</h3><p>E07: Stan User&rsquo;s Guide (page identifies v2.40), &ldquo;How Stan Works&rdquo;, &ldquo;Target log density&rdquo;, <a href="https://mc-stan.org/docs/stan-users-guide/how-stan-works.html">mc-stan.org/docs/stan-users-guide/how-stan-works.html</a>; &ldquo;Regression Models&rdquo;, &ldquo;Logistic and probit regression&rdquo;, <a href="https://mc-stan.org/docs/stan-users-guide/regression.html">mc-stan.org/docs/stan-users-guide/regression.html</a>; inspected 2026-11-18. These support posterior proportionality and logistic/Bernoulli likelihoods only; no claim that Stan&rsquo;s sampler is importance sampling. Toy model, curves and figure: ours, <code>gen/p9f_unknown_z.py</code> (exact closed forms on a grid, no randomness; peaks $0.399$ and $0.139$ printed by the generator).</p></div>
+</article>
+
 <article data-slide-id="S73">
 <h2>44. The Target Is Known Up to Z</h2>
 <p class="msg"><span class="kt">Message.</span> An unnormalized density fixes the shape of the target but not its height, so the ratio $p/q$ cannot be evaluated.</p>
 <p>Often we can evaluate $\tilde p(x)$ at any point but cannot compute $Z=\int\tilde p(x)\,dx$. Bayes&rsquo; rule is the standard case: the posterior is prior times likelihood divided by an evidence integral, and only the product in the numerator is available pointwise. Writing $p\propto\tilde p$ says $p=\tilde p/Z$ for some $Z$, but every weight</p>
 $$\frac{p(x)}{q(x)}=\frac{\tilde p(x)}{Z\,q(x)}$$
 <p>still contains that unknown number. Ordinary importance sampling needs each of these values, so it is blocked.</p>
+<p>In the toy of [[S132]], $\tilde p(\theta)=\varphi(\theta)s(\theta)^2$ and $Z=\int\varphi(t)s(t)^2\,dt$. Each value of $\tilde p$ is a closed-form computation. $Z$ is a one-dimensional integral that could be checked numerically (the notes of [[S133]] do so, for validation only), but self-normalized sampling never needs it. Unknown here means not computed, not undefined.</p>
 <div class="detail"><h3>Details</h3>
 <p>Standing assumptions: $\tilde p\ge 0$ and $0\lt Z\lt\infty$. &ldquo;Unknown&rdquo; means not computed; $Z$ is still a fixed, finite, positive number. If $Z=0$ there is no target to normalize. If $Z=\infty$ the target is improper, $p$ is not a probability density, and the theorems of this part do not apply. The target mean $\mu=E_p[f(X)]$ also needs $E_p|f(X)|\lt\infty$.</p>
 <h3>Sources</h3><p>E05: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.2, Theorem&nbsp;9.2, eqs (9.6)&ndash;(9.10), pp.&nbsp;8&ndash;10. Figure: our dependency diagram, no data.</p></div>
@@ -695,6 +708,23 @@ $$P\Big(\textstyle\sum_j\tilde w_j=0\Big)=(1-\pi)^n.$$
 <h3>Sources</h3><p>E05: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.2, Theorem&nbsp;9.2, eqs (9.6)&ndash;(9.10), pp.&nbsp;8&ndash;10. Probability values: <code>gen/p9c_snis_examples.py</code> (exact fractions, no randomness).</p></div>
 </article>
 
+<article data-slide-id="S133">
+<h2>00. Likelihood Weights Remove the Unknown Z</h2>
+<p class="msg"><span class="kt">Message.</span> Draw from the prior, weight each draw by its likelihood, and the self-normalized average estimates the posterior predictive probability without $Z$.</p>
+<p>The target is the probability that a third trial succeeds, averaged over the posterior uncertainty about $\theta$:</p>
+$$\mu=E_{\text{post}}[s(\theta)]=\frac{1}{Z}\int s(\theta)\,\varphi(\theta)s(\theta)^2\,d\theta.$$
+<p>Take the prior as proposal, $q=\varphi$, and draw $\theta_1,\dots,\theta_n$ IID from $N(0,1)$. The unnormalized weight is</p>
+$$\tilde w_i=\frac{\tilde p(\theta_i)}{q(\theta_i)}=\frac{\varphi(\theta_i)s(\theta_i)^2}{\varphi(\theta_i)}=s(\theta_i)^2:$$
+<p>the prior cancels and only the likelihood is left. With $f(\theta)=s(\theta)$, the SNIS formula of [[S75]] gives</p>
+$$\hat\mu_{\mathrm{SN}}=\frac{\sum_i\tilde w_i\,s(\theta_i)}{\sum_j\tilde w_j}=\frac{\sum_i s(\theta_i)^3}{\sum_j s(\theta_j)^2}.$$
+<p>The numerator has a third power because each draw contributes weight $s^2$ times prediction $s$; the denominator has the weights alone. <strong>Reading the flow:</strong> four boxes, left to right: a prior draw $\theta_i$; its success probability $s(\theta_i)$; its likelihood weight $s(\theta_i)^2$; the weighted prediction $\hat\mu_{\mathrm{SN}}$. No box uses $Z$.</p>
+<div class="detail"><h3>Details</h3>
+<p><strong>Conditions.</strong> $q=\varphi\gt 0$ everywhere, so it covers the whole target. $f=s$ lies in $(0,1)$, so $E_p|f|\lt\infty$. Every weight is strictly positive, so the total is positive for every $n\ge 1$ and the $0/0$ event of [[S75]] cannot occur here; that is a property of this toy, not of SNIS in general. The consistency result of [[S77]] applies: $\hat\mu_{\mathrm{SN}}\to\mu$ almost surely. At a fixed $n$ the estimator is a ratio and is generally biased ([[S78]]): it is not the exact posterior probability.</p>
+<p><strong>A sanity check without numbers.</strong> Under the prior alone, $E[s(\theta)]=1/2$ exactly, because $\varphi$ is symmetric and $s(-t)=1-s(t)$. Two observed successes should push the prediction above $1/2$.</p>
+<p><strong>Validation only, never an input.</strong> Composite Simpson integration on $[-12,12]$ with 12,000 and 24,000 panels gives $Z=0.29337903585809$, $\int\varphi s^3=0.19006855378714$ and $\mu=0.64786003959422$; doubling the panels changes each by less than $10^{-14}$. One illustrative batch (seed 20261118, $n=10{,}000$, $\theta_i$ IID $N(0,1)$ from Python&rsquo;s <code>random.Random(seed).gauss</code>) gives $\hat\mu_{\mathrm{SN}}=0.6480$. One batch is an illustration, not an error bar.</p>
+<h3>Sources</h3><p>E05: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.2, Theorem&nbsp;9.2, eqs (9.6)&ndash;(9.10), pp.&nbsp;8&ndash;10. E07: Stan User&rsquo;s Guide (page identifies v2.40), &ldquo;How Stan Works&rdquo;, &ldquo;Target log density&rdquo;, <a href="https://mc-stan.org/docs/stan-users-guide/how-stan-works.html">mc-stan.org/docs/stan-users-guide/how-stan-works.html</a>; &ldquo;Regression Models&rdquo;, &ldquo;Logistic and probit regression&rdquo;, <a href="https://mc-stan.org/docs/stan-users-guide/regression.html">mc-stan.org/docs/stan-users-guide/regression.html</a>; inspected 2026-11-18. These support posterior proportionality and logistic/Bernoulli likelihoods only; no claim that Stan&rsquo;s sampler is importance sampling. Toy model and all numbers: ours, <code>gen/p9f_unknown_z.py</code> (stable evaluation of logistic powers via $\log s$).</p></div>
+</article>
+
 <article data-slide-id="S76">
 <h2>47. Two Averages Form One Ratio</h2>
 <p class="msg"><span class="kt">Message.</span> SNIS is a ratio of two unbiased averages computed from the same draws.</p>
@@ -704,7 +734,7 @@ $$E_q[\tilde w]=\int\tilde p\,dx=Z.$$
 <p>So $E[A_n]=Z\mu$, $E[B_n]=Z$, and the ratio of the two means is exactly $\mu$.</p>
 <div class="detail"><h3>Details</h3>
 <p>Full support is used in the integrals: the integral over $\{q\gt 0\}$ must include every point where $\tilde p\gt 0$, or the integrals miss target mass. Integrability: $E_q|\tilde w f|=Z\,E_p|f|\lt\infty$.</p>
-<p>The ratio of means is not the mean of the ratio. Expectation does not commute with taking a ratio: division is nonlinear, and $A_n$ and $B_n$, built from the same draws, are generally dependent. In general $E[A_n/B_n]\ne E[A_n]/E[B_n]$; the two-state example on slide 49 gives an exact case.</p>
+<p>The ratio of means is not the mean of the ratio. Expectation does not commute with taking a ratio: division is nonlinear, and $A_n$ and $B_n$, built from the same draws, are generally dependent. In general $E[A_n/B_n]\ne E[A_n]/E[B_n]$; the two-state example on slide [[S78]] gives an exact case.</p>
 <h3>Sources</h3><p>E05: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.2, Theorem&nbsp;9.2, eqs (9.6)&ndash;(9.10), pp.&nbsp;8&ndash;10. Figure: our flow diagram, no data.</p></div>
 </article>
 
@@ -713,9 +743,10 @@ $$E_q[\tilde w]=\int\tilde p\,dx=Z.$$
 <p class="msg"><span class="kt">Message.</span> Both averages converge, the denominator&rsquo;s limit $Z$ is positive, so the ratio converges to $\mu$.</p>
 <p>By the strong law of large numbers, $A_n\to Z\mu$ and $B_n\to Z$ almost surely. The map $(u,v)\mapsto u/v$ is continuous wherever $v\ne 0$, and the limit point $(Z\mu,Z)$ has $Z\gt 0$. Hence $\hat\mu_{\mathrm{SN}}=A_n/B_n\to\mu$ almost surely.</p>
 <div class="detail"><h3>Details</h3>
-<p><strong>Conditions.</strong> $0\lt Z\lt\infty$; $q\gt 0$ wherever $\tilde p\gt 0$; $E_p|f(X)|\lt\infty$. These give $E_q|\tilde w f|=Z\,E_p|f|\lt\infty$ and $E_q[\tilde w]=Z\lt\infty$, which is what the strong law needs.</p>
+<p><strong>Conditions.</strong> $X_1,X_2,\dots$ IID from $q$; $0\lt Z\lt\infty$; $q\gt 0$ wherever $\tilde p\gt 0$; $E_p|f(X)|\lt\infty$. These give $E_q|\tilde w f|=Z\,E_p|f|\lt\infty$ and $E_q[\tilde w]=Z\lt\infty$, which is what the strong law needs.</p>
 <p><strong>Pathwise step.</strong> If numbers satisfy $a_n\to a$ and $b_n\to b\ne 0$, then $a_n/b_n\to a/b$. Apply this on the probability-one event where both averages converge. On that event $B_n\gt Z/2\gt 0$ for all large $n$, so the estimator is eventually defined.</p>
-<p><strong>What the limit does not give.</strong> &ldquo;Large $n$&rdquo; depends on the sample path; no fixed $n$ guarantees $B_n\gt 0$ (slide 46). Convergence also says nothing about $E[\hat\mu_{\mathrm{SN}}]$ at a fixed $n$ (slide 49).</p>
+<p><strong>What the limit does not give.</strong> &ldquo;Large $n$&rdquo; depends on the sample path; no fixed $n$ guarantees $B_n\gt 0$ (slide [[S75]]). Convergence also says nothing about $E[\hat\mu_{\mathrm{SN}}]$ at a fixed $n$ (slide [[S78]]).</p>
+<p><strong>Scope.</strong> In the toy of [[S133]] every weight is strictly positive, so its total is never zero. The theorem is broader: it allows zero weights, and then finite batches can still total zero.</p>
 <h3>Sources</h3><p>E05: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.2, Theorem&nbsp;9.2, eqs (9.6)&ndash;(9.10), pp.&nbsp;8&ndash;10.</p></div>
 </article>
 
@@ -736,7 +767,7 @@ $$\hat\mu_{\mathrm{SN}}=\frac{\tilde w_1 f(X_1)}{\tilde w_1}=f(X_1).$$
 <p class="msg"><span class="kt">Message.</span> Removing $Z$ trades one obstacle for a ratio-estimator problem: SNIS is not unbiased in general, and neither estimator always has smaller error.</p>
 <p>The table on the slide compares the two estimators. Ordinary IS is blocked when $Z$ is unknown; SNIS cancels it. IS is consistent when $q$ covers $fp$, while SNIS needs $q$ to cover all of $p$. IS is unbiased at every $n$; SNIS is not in general. On error there is no universal ranking. Self-normalization does not automatically reduce variance.</p>
 <div class="detail"><h3>Details</h3>
-<p><strong>Both directions occur.</strong> Use the two-state example of slide 49 at $n=1$, with mean squared error (MSE) computed exactly (our calculation):</p>
+<p><strong>Both directions occur.</strong> Use the two-state example of slide [[S78]] at $n=1$, with mean squared error (MSE) computed exactly (our calculation):</p>
 <ul>
 <li>$f=(1,0)$, $\mu=3/4$: MSE of IS $=9/16$, of SNIS $=5/16$. SNIS is better.</li>
 <li>$f=(0,1)$, $\mu=1/4$: MSE of IS $=1/16$, of SNIS $=5/16$. IS is better.</li>
@@ -760,7 +791,7 @@ $$\operatorname{Bias}\approx-\frac{E_q[w^2(f-\mu)]}{n}.$$
 <p>In the illustrative batch $\tilde w=(.1,.2,.1,.1,9.5)$ the total is $10$, so the shares are $\bar w=(.01,.02,.01,.01,.95)$. The estimate is $\sum_i\bar w_i f(X_i)$, and $95\%$ of the normalized weight sits on $X_5$. The other four draws together carry $5\%$.</p>
 <div class="detail"><h3>Details</h3>
 <p>The share is not the contribution. Draw $i$ contributes $\bar w_i f(X_i)$, which depends on $f$: if $f(X_5)=0$, sample 5 contributes nothing, and contributions of opposite sign can cancel. So the slide says &ldquo;95% of the normalized weight&rdquo;, not &ldquo;95% of the estimate&rdquo;.</p>
-<p>One uneven batch does not prove that $E_q[w^2]$ is infinite. A proposal with finite second moment can still produce an uneven batch by chance. In the other direction, a batch can look even while the proposal misses part of the target (slide 53). The batch here is illustrative, not data.</p>
+<p>One uneven batch does not prove that $E_q[w^2]$ is infinite. A proposal with finite second moment can still produce an uneven batch by chance. In the other direction, a batch can look even while the proposal misses part of the target (slide [[S81]]). The batch here is illustrative, not data.</p>
 <h3>Sources</h3><p>E06: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.3, eqs (9.13)&ndash;(9.14), pp.&nbsp;11&ndash;12. E19: our calculation (batch arithmetic), <code>gen/p9c_snis_examples.py</code> (exact fractions, no randomness).</p></div>
 </article>
 
@@ -769,7 +800,7 @@ $$\operatorname{Bias}\approx-\frac{E_q[w^2(f-\mu)]}{n}.$$
 <p class="msg"><span class="kt">Message.</span> The effective sample size (ESS) turns weight imbalance into one number between $1$ and $n$.</p>
 <p>For nonnegative weights with a positive total,</p>
 $$\mathrm{ESS}=\frac{(\sum_i\tilde w_i)^2}{\sum_i\tilde w_i^2}=\frac{1}{\sum_i\bar w_i^2}.$$
-<p>Scaling every weight by the same constant leaves ESS unchanged, so the unknown $Z$ does not matter. Equal weights give $n$; one positive weight gives $1$. For the batch of slide 51, $\sum_i\bar w_i^2=.9032$, so $\mathrm{ESS}=100/90.32\approx 1.107$.</p>
+<p>Scaling every weight by the same constant leaves ESS unchanged, so the unknown $Z$ does not matter. Equal weights give $n$; one positive weight gives $1$. For the batch of slide [[S70]], $\sum_i\bar w_i^2=.9032$, so $\mathrm{ESS}=100/90.32\approx 1.107$.</p>
 <div class="detail"><h3>Details</h3>
 <p><strong>Bounds.</strong> The shares satisfy $\bar w_i\ge 0$ and $\sum_i\bar w_i=1$. Cauchy&ndash;Schwarz gives $1=(\sum_i\bar w_i\cdot 1)^2\le n\sum_i\bar w_i^2$, so $\mathrm{ESS}\le n$, with equality exactly when all shares equal $1/n$. Since $0\le\bar w_i\le 1$, $\bar w_i^2\le\bar w_i$, so $\sum_i\bar w_i^2\le 1$ and $\mathrm{ESS}\ge 1$, with equality exactly when one share is $1$.</p>
 <p><strong>Checks by hand.</strong> Zero weights drop out of both sums, so ESS is at most the number of positive weights. For the batch, $\sum_i\bar w_i^2=.0001+.0004+.0001+.0001+.9025=.9032$.</p>
@@ -797,7 +828,7 @@ $$\hat\mu_{\mathrm{IS}}=\hat\mu_{\mathrm{SN}}=0\ne\tfrac14$$
 <p>The slide is a capability map, not a decision tree. Each row lists inputs that are sufficient for one estimator, and several rows can hold at once. If you can sample $p$ and evaluate $f$, the ordinary Monte Carlo average is available. If you can sample $q$ and evaluate the normalized ratio $p/q$, with $q\gt 0$ wherever $fp\neq 0$, importance sampling is available and unbiased. If you can sample $q$ and evaluate $\tilde p/q$, with $q\gt 0$ wherever $p\gt 0$ and a positive sampled total, SNIS is available; it is consistent but generally biased at finite $n$. The closing line is the point: these requirements tell us which estimators are available, not which is best. A well-chosen $q$ can beat ordinary Monte Carlo even when sampling $p$ is possible, as the rare-event example showed.</p>
 <div class="detail"><h3>Details</h3>
 <p><strong>Bayesian posteriors.</strong> The posterior density is proportional to prior times likelihood; the normalizer is the evidence integral, usually not computable. Posterior expectations estimated with a proposal $q$ therefore fall in the third row, provided the posterior is proper ($0\lt Z\lt\infty$) and $q$ covers its support.</p>
-<p><strong>Available is not efficient.</strong> Each row only says which estimator can be computed. Its error still depends on $q$ and $f$; for ordinary IS the second moment is $\int f^2p^2/q$. Weight diagnostics (slides 51&ndash;53) help detect some failures but certify none.</p>
+<p><strong>Available is not efficient.</strong> Each row only says which estimator can be computed. Its error still depends on $q$ and $f$; for ordinary IS the second moment is $\int f^2p^2/q$. Weight diagnostics (slides [[S70]]&ndash;[[S81]]) help detect some failures but certify none.</p>
 <h3>Sources</h3><p>E02: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;1&ndash;2 (posted PDF), &sect;&sect;2.1&ndash;2.2, 2.7&ndash;2.8, <a href="https://artowen.su.domains/mc/Ch-intro.pdf">artowen.su.domains/mc/Ch-intro.pdf</a> (accessed 2026-11-17). E04: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.1, Theorem&nbsp;9.1, pp.&nbsp;4&ndash;6. E05: A. B. Owen, <em>Monte Carlo theory, methods and examples</em>, Ch.&nbsp;9 (posted PDF), <a href="https://artowen.su.domains/mc/Ch-var-is.pdf">artowen.su.domains/mc/Ch-var-is.pdf</a>, &sect;9.2, Theorem&nbsp;9.2, eqs (9.6)&ndash;(9.10), pp.&nbsp;8&ndash;10. Figure: our capability map, no data.</p></div>
 </article>
 

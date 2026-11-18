@@ -533,7 +533,7 @@ Sources: E19 (our calculation); `gen/p9b_calc.py`; figure `gen/p9b_figs.py` -> `
 
 Recipe (flow diagram): draw $X_i \sim q$ -> evaluate $f$, $p$, $q$ -> form $Y_i = f(X_i)\,w(X_i)$ -> average over $n$.
 
-$$\hat\mu_{\mathrm{IS}} = \frac{1}{n}\sum_{i=1}^n f(X_i)\,w(X_i), \qquad X_1,\dots,X_n \overset{\text{iid}}{\sim} q.$$
+$$\hat\mu_{\mathrm{IS}} = \frac{1}{n}\sum_{i=1}^n f(X_i)\,w(X_i), \qquad X_1,\dots,X_n \overset{\text{IID}}{\sim} q.$$
 
 Unbiased under the identity's conditions: $\mathbb{E}[\hat\mu_{\mathrm{IS}}] = \mathbb{E}_q[fw] = \mu$. Divide by $n$, not by the sum of weights. Extra cost over plain MC: evaluate $p$ and $q$.
 
@@ -557,17 +557,19 @@ Sources: E11; figure `gen/p9b_figs.py` -> `fig/p9b-proposal.svg`.
 <!-- END S117 -->
 
 <!-- BEGIN S118 -->
-### 27. More Tail Visits, Corrected Weights [S118]
+### 27. Average Weighted Contributions to Estimate the Target [S118]
 
-**Message.** The proposal hits the event about 37% of the time, and each hit carries a weight that corrects for the oversampling.
+**Message.** Each draw from $q$ contributes one weighted value $f(X)\,w(X)$; the estimator averages these values, and their mean under $q$ is the target $\mu$.
 
-$$\Pr_q(X > 10) = e^{-1} \approx 0.37, \qquad w(x) = \frac{e^{-x}}{0.1\,e^{-0.1x}} = 10\,e^{-0.9x}.$$
+Draw $X \sim q = \mathrm{Exp}(0.1)$; weight $w(x) = p(x)/q(x) = 10\,e^{-0.9x}$.
 
-About 8,100 times more tail hits than under $p$ ($e^9 \approx 8{,}103$). The contribution $fw$ is 0 below 10; above, it is $10e^{-0.9x}$ and varies with $x$. More hits alone do not prove lower variance.
+Figure: $x$ from 8 to 20, log-scale vertical axis. Green solid curve: weighted contribution $f(x)\,w(x) = 10e^{-0.9x}$ for $x > 10$, from $1.23 \times 10^{-3}$ just above 10 (about $27\mu$) to about $1.5 \times 10^{-7}$ at 20. For $x \le 10$ the contribution is 0, which a log axis cannot draw; the white strip is labelled instead. Blue dashed horizontal line: the target mean $\mu = \mathbb{E}_p f = \mathbb{E}_q[fw] = e^{-10}$, crossed by the curve near $x = 13.7$.
 
-Figure: log-scale plot of $fw$ for $x$ from 8 to 20. Zero up to 10; $1.23 \times 10^{-3}$ just above $x = 10$ (about $27\mu$), falling to about $1.5 \times 10^{-7}$ at 20. A dashed line marks $\mu = e^{-10}$; the curve crosses it near $x = 13.7$.
+The dashed line is the target, not a density: $\hat\mu_{\mathrm{IS}}$ averages $fw$ over $q$-draws. More tail hits alone do not prove lower variance.
 
-Sources: E11; `gen/p9b_calc.py`; figure `gen/p9b_figs.py` -> `fig/p9b-contrib.svg`.
+Details (moved from the slide): $\Pr_q(X > 10) = e^{-1} \approx 0.37$ against $e^{-10}$ under $p$, about 8,100 times more tail hits ($e^9 \approx 8{,}103$). Crossing at $x = (10 + \ln 10)/0.9 \approx 13.67$. Check: $\mathbb{E}_q[fw] = e^{-10}$.
+
+Sources: E04; E11; `gen/p9b_calc.py`; figure `gen/p9b_figs.py` -> `fig/p9b-contrib.svg`.
 <!-- END S118 -->
 
 <!-- BEGIN S119 -->
@@ -643,13 +645,17 @@ Sources: E04; E02.
 <!-- END S56 -->
 
 <!-- BEGIN S57 -->
-### 33. Follow the Weighted Integrand [S57]
+### 33. Sample Where Contributions Matter [S57]
 
-**Message.** To keep $\int f^2p^2/q$ small, place proposal mass where $|f|p$ is large, not where $p$ is large.
+**Message.** Place proposal mass where the contribution profile $|f|p$ is large, not where $p$ alone is large.
 
-$f^2p^2/q$ is large where $|f|p$ is big and $q$ small. So aim $q$ at $|f|p$, not at $p$. Absolute value: a density is never negative. Intuition here, not yet an optimality proof.
+Intuition before the theorem: $p = \mathcal{N}(0,1)$ and $f(x) = x$.
 
-Figure (illustration, $p = \mathcal{N}(0,1)$, $f(x) = x$, exact curves): grey $p$ peaked at 0; dashed red signed product $fp$, negative on the left; shaded blue $|f|p$ with two lobes near $x = \pm 1$ and zero at $x = 0$, where $p$ peaks.
+Figure (exact curves): grey dashed $p$, peaked at 0 (most likely $x$); thick blue shaded $|f|p = |x|p$, two lobes peaking at $x = \pm 1$ and zero at $x = 0$, where $p$ peaks.
+
+Aim $q$ at the profile $|f|p$, not at $p$. The profile is unnormalized; the absolute value is there because a density is never negative.
+
+Details (moved from the slide): $\int f^2p^2/q$ is large where $|f|p$ is big and $q$ small. The signed product $fp$ is negative for $x < 0$; a density cannot follow it. Peak value $\varphi(1) \approx 0.242$; $p(0) \approx 0.399$.
 
 Sources: E04; figure `gen/p9b_figs.py` -> `fig/p9b-weighted.svg`.
 <!-- END S57 -->
@@ -698,21 +704,34 @@ The sign of $f$ may flip; the magnitude stays $c$. $q^*$ is a density ($\int |f|
 Sources: E04.
 <!-- END S61 -->
 
-<!-- BEGIN S63 -->
-### 37. One-Sign Integrands Permit Zero Variance [S63]
+<!-- BEGIN S63a -->
+### 37. Random Draws Can Give Identical Contributions [S63a]
 
-**Message.** For the nonnegative rare-event indicator, the optimal proposal gives every draw the exact answer.
+**Message.** Under the oracle proposal for the tail, the draws $X$ are still random, but every draw yields the same contribution $Y = e^{-10}$, so the estimator has zero variance.
 
-Indicator $f \ge 0$, so $c = \mu = e^{-10}$:
+Tail oracle ($f = \mathbf{1}\{x > 10\}$, $p = \mathrm{Exp}(1)$): draw $X = 10 + \mathrm{Exp}(1)$, so $q^*(x) = e^{-(x-10)}$ on $x > 10$.
 
-$$q^*(x) = \frac{\mathbf{1}\{x > 10\}\,e^{-x}}{e^{-10}} = \mathbf{1}\{x > 10\}\,e^{-(x-10)}.$$
+Figure (schematic): four boxes with different locations $x = 10.3, 11.2, 12.7, 15.0$ (illustrative, not simulated draws), each with an arrow into one box $Y = f\,w^* = e^{-10}$.
 
-Each draw: $fw^* = e^{-10}$ exactly, so the variance is 0. This is an oracle benchmark built from the known answer. Sign-changing $f$: usually $c^2 - \mu^2 > 0$.
+$$Y = \frac{f(X)\,p(X)}{q^*(X)} = \frac{e^{-X}}{e^{-(X-10)}} = e^{-10} \quad \text{for every } X > 10.$$
 
-Figure: $q^*$ is zero below 10, jumps to 1 at $x = 10$ and decays exponentially; a strip below shows schematic draws, all past 10, each with $fw^* = e^{-10}$.
+Zero variance: $X$ is still random ($\mathrm{Var}\,X = 1$), yet $\mathrm{Var}\,Y = 0$. Built from the known answer $e^{-10}$: a benchmark, not a method.
 
-Sources: E04; our calculation; figure `gen/p9b_figs.py` -> `fig/p9b-oracle.svg`.
-<!-- END S63 -->
+Sources: E05; check `gen/p9b_calc.py`; figure `gen/p9b_figs.py` -> `fig/p9b-identical.svg`.
+<!-- END S63a -->
+<!-- BEGIN S63b -->
+### 00. Constant Contributions Give Zero Estimator Variance [S63b]
+
+**Message.** For any nonnegative integrand, the oracle proposal $q^* = fp/\mu$ makes every contribution equal to $\mu$, so the estimator has zero variance for every $n$; it needs $\mu$, the unknown answer.
+
+General one-sign case: $f \ge 0$ with $0 < \mu = \mathbb{E}_p f < \infty$.
+
+$$q^* = \frac{fp}{\mu} \;\Rightarrow\; Y = \frac{f(X)\,p(X)}{q^*(X)} = \mu \quad q^*\text{-a.s.} \;\Rightarrow\; \mathrm{Var}_{q^*}(Y) = 0,\ \mathrm{Var}(\hat\mu_n) = 0.$$
+
+Oracle only: $q^*$ needs $\mu$. Sign-changing $f$: $fw^* = \pm c$, so the variance $c^2 - \mu^2 > 0$ if both signs occur. Not the same as a no-hit batch, which has zero spread but the wrong estimate 0.
+
+Sources: E05; E04, Owen, Ch. 9, section 9.1, optimal-density discussion, pp. 4-6.
+<!-- END S63b -->
 
 <!-- BEGIN S64 -->
 ### 38. The Oracle Needs a Normalizer [S64]
@@ -763,7 +782,7 @@ Sources: E18 (direct integration).
 
 **Message.** This integrable example converges, but its infinite second moment rules out finite RMSE and the usual finite-variance CLT error bar.
 
-Same estimator: $Y_i = X_i\,w(X_i)$ iid under $q = \mathrm{Exp}(2)$.
+Same estimator: $Y_i = X_i\,w(X_i)$ IID under $q = \mathrm{Exp}(2)$.
 
 - $\mathbb{E}_q|Y| < \infty$ (holds) -> LLN: $\hat\mu_{\mathrm{IS}} \to \mu$ (holds).
 - $\mathbb{E}_q[Y^2] < \infty$ (fails) -> variance, RMSE, CLT error bars (unavailable).
@@ -773,19 +792,36 @@ It converges, but the usual finite-variance error tools do not apply. A calm bat
 Sources: E02, Owen, Ch. 2, sections 2.1-2.2; E18.
 <!-- END S121 -->
 
-<!-- BEGIN S69 -->
-### 42. Check the Integrand, Not Just Weights [S69]
+<!-- BEGIN S69a -->
+### 42. A Heavier Proposal Helps This Integrand [S69a]
 
-**Message.** A heavier proposal, $\mathrm{Exp}(1/2)$, gives a finite variance; the deciding integral includes $f^2$, not just the weights.
+**Message.** For $f(x) = x$ under $p = \mathrm{Exp}(1)$, the heavier proposal $q = \mathrm{Exp}(1/2)$ cuts the per-draw variance from 1 to $5/27$.
 
-Same $f(x) = x$, $p = \mathrm{Exp}(1)$; heavier proposal $q = \mathrm{Exp}(1/2)$:
+Same $f(x) = x$ and $p = \mathrm{Exp}(1)$, so $\mu = 1$; heavier $q = \mathrm{Exp}(1/2)$.
 
-$$\mathbb{E}_q[(fw)^2] = \int_0^\infty x^2\,\frac{e^{-2x}}{\tfrac12 e^{-x/2}}\,dx = 2\int_0^\infty x^2 e^{-3x/2}\,dx = \frac{32}{27}.$$
+Figure: horizontal bars, per-draw variance on a linear axis 0 to 1.1 (shorter is better). Grey: ordinary MC ($q = p$), 1. Green: IS with $q = \mathrm{Exp}(1/2)$, $5/27 \approx 0.19$.
 
-Variance per draw $32/27 - 1 = 5/27$, vs 1 for ordinary MC. The criterion is $\int f^2p^2/q < \infty$; the bare $\mathbb{E}_q[w^2] = 4/3$ is a different number. Heavier tails are a heuristic, not a guarantee for every $f$.
+$$\mathbb{E}_q[(fw)^2] = 2\int_0^\infty x^2 e^{-3x/2}\,dx = \frac{32}{27}, \qquad \mathrm{Var}_q(fw) = \frac{32}{27} - 1 = \frac{5}{27}.$$
 
-Sources: E18 (checked with $\int_0^\infty x^2 e^{-ax}\,dx = 2/a^3$); `gen/p9b_calc.py`.
-<!-- END S69 -->
+For $f = x$: 5.4 times less variance per draw, so the same RMSE with 5.4 times fewer draws. The comparison is of the variance of $fw$, not of the bare weight $w$ (moved to notes: $\mathbb{E}_q[w^2] = 4/3$).
+
+Sources: E06; E18 (checked with $\int_0^\infty x^2 e^{-ax}\,dx = 2/a^3$); `gen/p9b_calc.py`; figure `gen/p9b_figs.py` -> `fig/p9b-var.svg`.
+<!-- END S69a -->
+<!-- BEGIN S69b -->
+### 00. Heavier Tails Are Not a Requirement [S69b]
+
+**Message.** A proposal does not need heavier tails than $p$: what matters is coverage and a finite $\int f^2p^2/q$, which depends on $f$.
+
+Must $q$ have heavier tails than $p$? No. Lighter tail $q = \mathrm{Exp}(1.5)$, same $f(x) = x$ and $p$:
+
+$$\frac{f^2p^2}{q} = \frac{x^2 e^{-2x}}{1.5\,e^{-1.5x}} = \tfrac23\,x^2 e^{-x/2} \ \text{(still decays)}, \qquad \mathrm{Var}_q(fw) = \tfrac{32}{3} - 1 = \tfrac{29}{3} \approx 9.67 < \infty.$$
+
+Finite, though worse than ordinary MC's 1. Validity: $q > 0$ wherever $fp \ne 0$. Finite variance: $\int f^2p^2/q < \infty$, which depends on $f$.
+
+Details (notes only): for $q = \mathrm{Exp}(\lambda)$, $\mathbb{E}_q[(fw)^2] = 2/[\lambda(2-\lambda)^3]$ for $0 < \lambda < 2$ and $\infty$ for $\lambda \ge 2$. $\lambda = 0.1$ gives variance $13141/6859 \approx 1.916$, worse than ordinary MC.
+
+Sources: E06; `gen/p9b_calc.py`.
+<!-- END S69b -->
 
 ## Part 4 - Remove the Normalizer
 

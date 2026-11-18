@@ -95,6 +95,9 @@ for lam in (F(1, 10), F(1, 2), F(1), F(3, 2), F(2)):
     print(f"   lam = {str(lam):>4s}: E_q[(fw)^2] = {m} = {float(m):.6f} (numeric {num:.6f}); Var_q(fw) = {m-1} = {float(m-1):.6f}")
 print("   lam = 3/2: p^2/q = (2/3) e^{-x/2};  int (2/3) x^2 e^{-x/2} dx = (2/3)*16 = 32/3")
 print("   lam = 1 is ordinary MC (q = p): Var = 1; lam = 3/2 lighter tail than p yet finite (29/3 > 1: not efficient)")
+v_half, v_tenth = m2_lam(F(1, 2)) - 1, m2_lam(F(1, 10)) - 1
+print(f"   S69b: heavier tail P_q(X>t) = e^(-lam t), so Exp(1/10) is heavier than Exp(1/2): "
+      f"Var {v_half} = {float(v_half):.4f} -> {v_tenth} = {float(v_tenth):.4f} (worse, and worse than ordinary MC 1)")
 
 print("== Support counterexample (S48) ==")
 p = {x: F(1, 4) for x in (1, 2, 3, 4)}

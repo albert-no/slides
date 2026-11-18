@@ -346,8 +346,33 @@ def fig_light():
     report(P, 'x', P.X(4) - 2, P.y1 + 30)
 
 
+# ---------------------------------------------------------------- S69b too-heavy proposal
+def fig_heavy():
+    W, H = 1000, 200
+    P = Plot(W, H, (340, 10, 960, 150), (0, 2.1), (0, 1))
+    for t in (0, 1, 2):
+        x = P.X(t)
+        P.add(f'<line x1="{x:.1f}" y1="{P.y0}" x2="{x:.1f}" y2="{P.y1}" stroke="#e1e5ea" stroke-width="2"/>')
+        P.add(f'<line x1="{x:.1f}" y1="{P.y1}" x2="{x:.1f}" y2="{P.y1+8}" stroke="#333" stroke-width="2"/>')
+    P.add(f'<line x1="{P.x0}" y1="{P.y1}" x2="{P.x1}" y2="{P.y1}" stroke="#333" stroke-width="2"/>')
+    vals = [(5 / 27, GREEN), (13141 / 6859, RED)]
+    for i, (v, c) in enumerate(vals):
+        y = 22 + i * 64
+        P.add(f'<rect x="{P.x0}" y="{y}" width="{P.X(v)-P.x0:.1f}" height="50" fill="{c}"/>')
+    P.vline(1, color=GREY, top=P.y0)
+    P.save('p9b-heavy.svg', 'S69b: exact per-draw variance of Y=f w for f=x, p=Exp(1): q=Exp(1/2) 5/27=0.185, '
+           'heavier q=Exp(1/10) 13141/6859=1.916; dashed line = ordinary MC 1; linear x-axis X=340+620v/2.1')
+    print('  S69b overlays:')
+    for t in (0, 1, 2):
+        report(P, f'tick {t}', P.X(t), P.y1 + 30)
+    report(P, 'row label Exp(1/2)', 170, 47)
+    report(P, 'row label Exp(1/10)', 170, 111)
+    report(P, 'value Exp(1/2) (right of bar)', P.X(5 / 27) + 95, 47)
+    report(P, 'value Exp(1/10) (inside bar end)', P.X(13141 / 6859) - 80, 111)
+
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     for f in (fig_tail, fig_visits, fig_ratio, fig_support, fig_proposal, fig_contrib,
-              fig_budget, fig_weighted, fig_identical, fig_light, fig_var):
+              fig_budget, fig_weighted, fig_identical, fig_light, fig_var, fig_heavy):
         f()

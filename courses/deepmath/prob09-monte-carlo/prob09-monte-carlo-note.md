@@ -750,15 +750,21 @@ Sources: evidence 2026-11-18 E05; evidence 2026-11-18 E04, Owen, Ch. 9, section 
 <!-- END S63b -->
 
 <!-- BEGIN S64 -->
-### 40. The Oracle Needs a Normalizer [S64]
+### 40. Oracle Weights Need the Answer [S64]
 
-**Message.** Evaluating the optimal weight requires $c$, which is $|\mu|$ for a one-sign integrand and $\mu$ for this nonnegative indicator.
+**Message.** The oracle is circular: writing down $q^* = fp/\mu$ already needs the answer $\mu$, and each weighted contribution $Y = fp/q^*$ just returns $\mu$. Being able to draw from $q^*$ does not by itself let us evaluate $Y$.
 
-Dependency loop (diagram): $c = \mu$ (unknown target) -> $q^* = fp/c$ -> weight $w^* = p/q^* = c$ on $x > 10$ -> estimate $\mu$. Line below: circular, the weight needs $c$, and here $c = \mu$ is the answer.
+**Slide.** Setting line: $f \ge 0$, $0 < \mu = E_p f < \infty$. A flow of three boxes, left to right: "$\mu$: the unknown answer" (filled); "$q^* = fp/\mu$: building it needs $\mu$"; "$Y = fp/q^* = \mu$: each draw returns $\mu$". A return arrow is labelled: circular, the output is the number the input already needed. Line below: sampling from $q^*$ is not evaluating $Y = fp/q^*$; that needs $\mu$. Muted line: tail toy exception, $\mu = e^{-10}$ is computable, so both are easy there.
 
-Two different capabilities: sample $q^*$, or evaluate its normalized weight. Here the tail is known: $X = 10 + \mathrm{Exp}(1)$ samples $q^*$, and $c = e^{-10}$ is computable. In harder problems $c$ is unknown, so $w^*$ cannot be evaluated.
+The setting is the one of 39. The first box is the unknown answer. The second builds the oracle by dividing by $\mu$, so we need it before we start. The third is the contribution of one draw, which equals $\mu$. The output is exactly the number the input required.
 
-Sources: E04, Owen, Ch. 9, section 9.1.
+Two capabilities should be kept apart. Sampling from $q^*$ means producing draws $X \sim q^*$. Evaluating means computing the normalized value $q^*(x)$, or the contribution $Y$, at a given draw; that needs $\mu$.
+
+The running tail example is an exception: $X = 10 + \mathrm{Exp}(1)$ draws from $q^*$, and $\mu = e^{-10}$ is known in closed form. The limitation concerns problems where $\mu$ is not available.
+
+**Details.** Contribution versus bare weight: the quantity equal to $\mu$ is the contribution $Y = fp/q^*$. The bare weight is $p/q^* = \mu/f$ where $f > 0$; it equals $\mu$ only where $f = 1$, as for the tail indicator on $x > 10$. For sign-changing $f$ the optimal proposal is $|f|p/c$ with $c = E_p|f|$, and evaluating it needs $c$ instead of $\mu$. The obstacle is evaluating the normalized optimal contribution, not a universal impossibility of sampling $q^*$. Practical proposals aim to resemble $|f|p$ while keeping a known normalizer.
+
+**Sources.** oracle-tails-softmax E02; E04: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.1, optimal-density discussion, pp. 4-6.
 <!-- END S64 -->
 
 <!-- BEGIN S66 -->
@@ -824,19 +830,23 @@ For $f = x$: 5.4 times less variance per draw, so the same RMSE with 5.4 times f
 Sources: evidence 2026-11-18 E06; E18 (checked with $\int_0^\infty x^2 e^{-ax}\,dx = 2/a^3$); `gen/p9b_calc.py`; figure `gen/p9b_figs.py` -> `fig/p9b-var.svg`.
 <!-- END S69a -->
 <!-- BEGIN S69b -->
-### 45. Heavier Tails Are Not a Requirement [S69b]
+### 45. More Tail Mass Can Hurt [S69b]
 
-**Message.** A proposal does not need heavier tails than $p$: what matters is coverage and a finite $\int f^2p^2/q$, which depends on $f$.
+**Message.** No, a heavier tail is not always better: for $f(x) = x$ under $p = \mathrm{Exp}(1)$, moving from $q = \mathrm{Exp}(1/2)$ to the heavier $q = \mathrm{Exp}(1/10)$ raises the per-draw variance of $fw$ from $5/27 \approx 0.185$ to $13141/6859 \approx 1.916$.
 
-Must $q$ have heavier tails than $p$? No. Lighter tail $q = \mathrm{Exp}(1.5)$, same $f(x) = x$ and $p$:
+**Slide.** Lead line: is a heavier tail always better? No. Same $f(x) = x$, $p = \mathrm{Exp}(1)$, $\mu = 1$. Figure: two horizontal bars on a linear axis from 0 to 2.1 (ticks 0, 1, 2). Green bar, "$q = \mathrm{Exp}(1/2)$", length about 0.185. Red bar, "heavier $q = \mathrm{Exp}(1/10)$", length about 1.916. A dashed vertical line at 1 is labelled "ordinary MC". Key: bars are $\mathrm{Var}_q(fw)$, the variance of the weighted contribution; lower is better. Highlight: heavier tails are not required either; judge the $f$-dependent $\int f^2p^2/q$.
 
-$$\frac{f^2p^2}{q} = \frac{x^2 e^{-2x}}{1.5\,e^{-1.5x}} = \tfrac23\,x^2 e^{-x/2} \ \text{(still decays)}, \qquad \mathrm{Var}_q(fw) = \tfrac{32}{3} - 1 = \tfrac{29}{3} \approx 9.67 < \infty.$$
+For $q = \mathrm{Exp}(\lambda)$ the tail is $P_q(X > t) = e^{-\lambda t}$, so a smaller rate means a heavier tail. Both proposals are heavier than $p$; $\mathrm{Exp}(1/10)$ is the heavier one. The bars show the variance of $fw$, not of $q$ or of the bare weight. The heavier proposal is worse than ordinary Monte Carlo, the dashed line at 1.
 
-Finite, though worse than ordinary MC's 1. Validity: $q > 0$ wherever $fp \ne 0$. Finite variance: $\int f^2p^2/q < \infty$, which depends on $f$.
+Why: the contribution profile $x e^{-x}$ peaks at $x = 1$. A very heavy proposal spends many draws far beyond that region and leaves too little density where the integrand contributes most, so the weights there become large.
 
-Details (notes only): for $q = \mathrm{Exp}(\lambda)$, $\mathbb{E}_q[(fw)^2] = 2/[\lambda(2-\lambda)^3]$ for $0 < \lambda < 2$ and $\infty$ for $\lambda \ge 2$. $\lambda = 0.1$ gives variance $13141/6859 \approx 1.916$, worse than ordinary MC.
+**Details.** For $q = \mathrm{Exp}(\lambda)$, $f^2p^2/q = x^2 e^{-(2-\lambda)x}/\lambda$, so $E_q[(fw)^2] = 2/[\lambda(2-\lambda)^3]$ for $0 < \lambda < 2$ and $\infty$ for $\lambda \ge 2$. Values of $\mathrm{Var}_q(fw)$: $\lambda = 1/10$ gives $13141/6859$; $\lambda = 1/2$ gives $5/27$; $\lambda = 1$ gives 1 (ordinary MC); $\lambda = 3/2$ gives $29/3$; $\lambda = 2$ gives $\infty$ (slides 41-42).
 
-Sources: evidence 2026-11-18 E06; `gen/p9b_calc.py`.
+A lighter tail can also give finite variance. Take $q = \mathrm{Exp}(1.5)$, lighter-tailed than $p$: $f^2p^2/q = x^2 e^{-2x}/(1.5\,e^{-1.5x}) = \tfrac23\,x^2 e^{-x/2}$, so $E_q[(fw)^2] = \tfrac23 \cdot 16 = \tfrac{32}{3}$ and $\mathrm{Var}_q(fw) = \tfrac{29}{3} \approx 9.67 < \infty$. Finite, though worse than ordinary MC. So heavier tails are neither necessary nor automatically better.
+
+Two separate conditions. Validity: $q > 0$ wherever $fp \ne 0$ (with $E_p|f| < \infty$). Finite variance: $\int f^2p^2/q < \infty$. Neither value here is optimal over all proposals: the oracle of 39 has variance 0.
+
+**Sources.** oracle-tails-softmax E03; evidence 2026-11-18 E06 (formula and criterion). Numbers: `gen/p9b_calc.py` (exact fractions and a numerical check). Figure: `gen/p9b_figs.py` -> `fig/p9b-heavy.svg`, exact values, no randomness.
 <!-- END S69b -->
 
 ## Part 4 - Remove the Normalizer
@@ -846,37 +856,39 @@ Sources: evidence 2026-11-18 E06; `gen/p9b_calc.py`.
 
 **Message.** An unknown normalizing constant changes the estimator and its guarantees.
 
-Ordinary importance sampling needs the normalized ratio $p/q$. Often the target is known only up to a constant, $p = \tilde p / Z$ with $Z$ unknown. Dividing by the total weight removes $Z$, but the result is a ratio of two averages: consistent, yet generally biased at finite sample sizes, and its weight diagnostics have blind spots. The part opens with a concrete case before the general statement: a small Bayesian posterior whose unnormalized density is available pointwise; the estimator never needs its normalizing integral, and the numerical value of that integral computed later is used only to validate the estimate.
+Ordinary importance sampling needs the normalized ratio $p/q$. Often the target is known only up to a constant, $p = \tilde p / Z$, and $Z$ is not computed. Dividing by the total weight removes $Z$, but the result is a ratio of two averages: consistent, yet generally biased at finite sample sizes, and its weight diagnostics have blind spots. The part opens with a familiar case: a softmax over three outcomes, where each probability is one exponential score divided by the sum of all of them. With three outcomes that sum is trivial and serves as an exact check; with very many outcomes it is the expensive part, and the estimator of 51 never computes it.
 <!-- END S72 -->
 
 <!-- BEGIN S132 -->
-### 47. Bayes Leaves a Normalizing Integral [S132]
+### 47. Softmax Needs a Global Sum [S132]
 
-**Message.** The unnormalized posterior can be evaluated pointwise; obtaining the normalized density still requires the integral $Z$.
+**Message.** A softmax probability is one positive mass in the numerator over a denominator $Z$ that sums the masses of all outcomes.
 
-**Slide.** Our toy: latent logit $\theta\sim N(0,1)$, success probability $s(\theta)=1/(1+e^{-\theta})$. Observed: two successes, independent given $\theta$, so likelihood $s(\theta)^2$. Figure: three panels over $\theta$ from $-4$ to $4$, joined by a times sign and an equals sign. Left, grey, "prior $\varphi(\theta)$": the standard normal density, peak about 0.4 at 0. Middle, red, "likelihood $s(\theta)^2$": rises from 0 on the left to nearly 1 on the right, axis 0 to 1. Right, blue, "unnormalized $\varphi(\theta)s(\theta)^2$", on the same vertical scale as the left panel: a lower bump shifted right, peak about 0.14, area shaded and labelled "shaded area $=Z$". Closing line: posterior $\propto\varphi(\theta)s(\theta)^2$ at any $\theta$; the normalizing integral remains.
+**Slide.** Lead line: logits $z_k$ -> masses $a_k = e^{z_k} > 0$ -> $p(k) = a_k/Z$, with $Z = \sum_j a_j$. A table with columns A, B, C. Row "logit": $0$, $\ln 2$, $\ln 4$. Row "mass": 1, 2, 4, with "sum $Z = 7$" in red. Row "$p(k)$": 1/7, 2/7, 4/7, with "sum 1". Below, one stacked bar with segments of widths 1, 2, 4; the C segment is filled blue and labelled "C: 4". Caption: $p(C)$ = one segment over the whole bar, 4/7. Highlight: easy here; with very many outcomes $Z$ needs every score, and that sum is what we skip.
 
-The toy is ours. The prior density $\varphi(\theta)=e^{-\theta^2/2}/\sqrt{2\pi}$ is a closed form. The logistic function maps any real logit to a probability in $(0,1)$; it is the success probability of one trial. Given $\theta$ the two trials are independent, so the likelihood is $s(\theta)^2$, and Bayes' rule gives $\tilde p(\theta)=\varphi(\theta)s(\theta)^2$. Two successes favour large logits, so the product sits to the right of the prior. It is not yet a density: its area is $Z$, not one, and dividing by $Z$ rescales its height without changing its shape.
+A softmax turns real scores into probabilities. Each outcome $k$ has a logit $z_k$. Exponentiating gives a positive unnormalized mass $a_k = e^{z_k}$. Dividing by the global sum $Z$ gives probabilities that add to one. The numerator needs one score; the denominator needs every score.
 
-**Details.** $Z=\int\varphi(t)s(t)^2\,dt$ is the marginal probability of the two observed successes; $0<Z<\infty$, indeed $Z<1$ because $s^2<1$ makes the integrand smaller than $\varphi$. Evaluating $\tilde p$ at a point needs two closed-form functions; knowing $Z$ means integrating over every $\theta$. In this one-dimensional toy a numerical integral is easy, and the notes of 51 use one as a check; the estimator built there never needs it. The question it answers: the probability that a third trial succeeds.
+Here $Z$ is easy. With very many outcomes, suppose scoring all of them is expensive while the score of a sampled outcome is cheap. Then the full sum is what we would like to leave uncomputed, and this part shows how.
 
-**Sources.** evidence 2026-11-18 E07: Stan User's Guide (page identifies v2.40), "How Stan Works", "Target log density", https://mc-stan.org/docs/stan-users-guide/how-stan-works.html ; "Regression Models", "Logistic and probit regression", https://mc-stan.org/docs/stan-users-guide/regression.html ; inspected 2026-11-18. These support posterior proportionality and logistic/Bernoulli likelihoods only; no claim that Stan's sampler is importance sampling. Toy model, curves and figure: ours, `gen/p9f_unknown_z.py` (exact closed forms on a grid, no randomness; peaks 0.399 and 0.139 printed by the generator).
+**Details.** For finitely many outcomes $K$ and finite logits, every $a_k > 0$, so $0 < Z < \infty$. If all logits are already available, normalizing them is straightforward. The large-$K$ scenario is a teaching assumption, not a claim about how production softmax layers are computed or that they use the estimator of 51.
+
+**Sources.** Definition: oracle-tails-softmax E04: I. Goodfellow, Y. Bengio and A. Courville, *Deep Learning* (2016), Ch. 6, Sec. 6.2.2.3 "Softmax Units for Multinoulli Output Distributions", eq. (6.29), https://www.deeplearningbook.org/contents/mlp.html, inspected 2026-11-18. Toy numbers: ours, oracle-tails-softmax E05; exact check `gen/p9f_unknown_z.py` (no randomness).
 <!-- END S132 -->
 
 <!-- BEGIN S73 -->
 ### 48. The Target Is Known Up to Z [S73]
 
-**Message.** An unnormalized density fixes the shape of the target but not its height, so the ratio $p/q$ cannot be evaluated.
+**Message.** If $Z$ is not computed, the unnormalized masses fix the shape of the target but not its height, so the ratio $p/q$ cannot be evaluated.
 
-**Slide.** $p=\tilde p/Z$ with $\tilde p\ge 0$ and target $\mu=E_p[f(X)]$; $Z$ is unknown but neither zero nor infinite. Figure: a dependency chain. $\tilde p(x)$ can be evaluated; $Z$ is unknown with $0<Z<\infty$; therefore $p=\tilde p/Z$ cannot be evaluated, and the IS weight $w=p/q$ is blocked without $Z$. Closing line: in the toy, $\tilde p(\theta)=\varphi(\theta)s(\theta)^2$ and $Z=\int\varphi(\theta)s(\theta)^2\,d\theta$.
+**Slide.** $p(k)=\tilde p(k)/Z$ with $\tilde p\ge 0$ and target $\mu=E_p[f(X)]$. If $Z$ is not computed, it is still not zero and not infinite. Figure: a dependency chain. $\tilde p(k)$, evaluable at any $k$; $Z=\sum_k\tilde p(k)$, not computed, but $0<Z<\infty$; therefore $p=\tilde p/Z$ cannot be evaluated, and the IS weight $w=p/q$ is blocked without $Z$. Closing line: softmax, $\tilde p(k)=e^{z_k}$ and $Z=\sum_j e^{z_j}$.
 
-Often we can evaluate $\tilde p(x)$ but cannot compute $Z=\int\tilde p(x)\,dx$. In Bayes' rule the posterior is prior times likelihood divided by an evidence integral; only the numerator is available pointwise. Writing $p\propto\tilde p$ gives $p(x)/q(x)=\tilde p(x)/(Z\,q(x))$, which still contains the unknown $Z$, so ordinary IS is blocked.
+Suppose we can evaluate $\tilde p(k)$ at any outcome but do not compute $Z$. Writing $p\propto\tilde p$ gives $p(k)/q(k)=\tilde p(k)/(Z\,q(k))$, which still contains that number, so ordinary IS is blocked.
 
-In the toy of 47, $\tilde p(\theta)=\varphi(\theta)s(\theta)^2$ and $Z=\int\varphi(t)s(t)^2\,dt$. Each value of $\tilde p$ is a closed-form computation; $Z$ is a one-dimensional integral that could be checked numerically (the notes of 51 do so, for validation only), but self-normalized sampling never needs it. Unknown means not computed, not undefined.
+For the softmax of 47, $\tilde p(k)=e^{z_k}$. In the three-outcome toy $Z=7$ is an exact check we keep for validation; the method being illustrated does not use it. Not computed does not mean undefined.
 
-**Details.** Assume $\tilde p\ge 0$ and $0<Z<\infty$. Unknown means not computed; $Z$ is a fixed finite positive number. $Z=0$ leaves no target; $Z=\infty$ is an improper target, outside the theorems here. The mean also needs $E_p|f(X)|<\infty$.
+**Details.** Assume $\tilde p\ge 0$ and $0<Z<\infty$; $Z$ is a fixed finite positive number we choose not to compute. $Z=0$ leaves no target; $Z=\infty$ is an improper target, outside the theorems here. The mean also needs $E_p|f(X)|<\infty$. Continuous outcomes: for a density the sum becomes an integral, $Z=\int\tilde p(x)\,dx$; Bayes' rule, with an evidence integral in the denominator, is a standard example. Every statement of this part holds with sums or integrals.
 
-**Sources.** E05: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.2, Theorem 9.2, eqs (9.6)-(9.10), pp. 8-10. Figure: our dependency diagram, no data.
+**Sources.** E05: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.2, Theorem 9.2, eqs (9.6)-(9.10), pp. 8-10. oracle-tails-softmax E06 (sums versus integrals). Figure: our dependency diagram, no data.
 <!-- END S73 -->
 
 <!-- BEGIN S74 -->
@@ -908,17 +920,19 @@ $Z$ appears above and below the bar and cancels. The estimate is a weighted aver
 <!-- END S75 -->
 
 <!-- BEGIN S133 -->
-### 51. Likelihood Weights Remove the Unknown Z [S133]
+### 51. Normalize the Sampled Softmax Weights [S133]
 
-**Message.** Draw from the prior, weight each draw by its likelihood, and the self-normalized average estimates the posterior predictive probability without $Z$.
+**Message.** Sampling outcomes uniformly and normalizing their masses estimates a softmax probability without ever computing $Z$; the cancellation removes $Z$, not sampling error.
 
-**Slide.** Target: next-success probability $\mu=E_{\text{post}}[s(\theta)]$. A flow of four boxes, left to right: "$\theta_i$ IID from $q=\varphi$, prior draw"; "$s(\theta_i)$, success prob."; "$\tilde w_i=\tilde p/q=s(\theta_i)^2$, likelihood weight"; "$\hat\mu_{\mathrm{SN}}$, weighted prediction". Formula: $\hat\mu_{\mathrm{SN}}=\sum_i\tilde w_i s(\theta_i)/\sum_j\tilde w_j=\sum_i s(\theta_i)^3/\sum_j s(\theta_j)^2$. Every weight $>0$: positive total, no $Z$ needed. Consistent ratio estimator, not exact at finite $n$.
+**Slide.** Lead line: target $\mu = p(C)$; draws $X_i$ IID from $q = \mathrm{Uniform}\{A,B,C\}$, so $\tilde w_i = 3a_{X_i}$. Three boxes: "draw 1: A, mass 1"; "draw 2: C, mass 4" (blue); "draw 3: C, mass 4" (blue). Caption: one illustrative batch; C draws (blue) feed the numerator. Formula: $\hat\mu_{\mathrm{SN}}=\sum\tilde w_i f(X_i)/\sum\tilde w_j = 3(4+4)/(3(1+4+4)) = 8/9 \approx 0.89$, with both 3s struck out, against $\mu = 4/7 \approx 0.57$. Highlight: $Z$ cancels; sampling error remains: consistent, not exact at finite $n$.
 
-The target is the probability that a third trial succeeds, averaged over posterior uncertainty: $\mu=(1/Z)\int s(\theta)\varphi(\theta)s(\theta)^2\,d\theta$. With the prior as proposal, $\tilde w_i=\varphi(\theta_i)s(\theta_i)^2/\varphi(\theta_i)=s(\theta_i)^2$: the prior cancels and only the likelihood is left. With $f=s$ the SNIS formula of 50 gives the ratio above: each draw contributes weight $s^2$ times prediction $s$, hence the third power on top and the weights alone below. No step uses $Z$.
+Keep the three outcomes of 47 with masses $a=(1,2,4)$. The target is $\mu=p(C)=E_p[f]$ with $f(k)=1\{k=C\}$. The draws come from the proposal $q$, not from the softmax. Since $q(k)=1/3$, the unnormalized weight is $\tilde w_i=\tilde p(X_i)/q(X_i)=3a_{X_i}$.
 
-**Details.** $q=\varphi>0$ everywhere covers the target; $f=s\in(0,1)$ gives $E_p|f|<\infty$. All weights are strictly positive, so the total is positive for every $n\ge 1$ and the $0/0$ event of 50 cannot occur; that is a property of this toy, not of SNIS in general. The consistency result of 53 applies, but at fixed $n$ the ratio is generally biased (54). Sanity check: under the prior alone $E[s(\theta)]=1/2$ exactly ($\varphi$ symmetric, $s(-t)=1-s(t)$), so two successes should push the prediction above 1/2. Validation only, never an input: composite Simpson on $[-12,12]$ with 12,000 and 24,000 panels gives $Z=0.29337903585809$, $\int\varphi s^3=0.19006855378714$, $\mu=0.64786003959422$, changing by less than $10^{-14}$ when the panels double. One illustrative batch (seed 20261118, $n=10{,}000$, $\theta_i$ IID $N(0,1)$ from Python's `random.Random(seed).gauss`) gives $\hat\mu_{\mathrm{SN}}=0.6480$; one batch is not an error bar.
+The batch A, C, C has masses 1, 4, 4; repeated outcomes count separately. Only the C draws have $f=1$ and enter the numerator; all three enter the denominator. The common factor 3 cancels and $Z$ never appears. The true value is $4/7$, so this batch is off: $Z$ cancels, but sampling error remains.
 
-**Sources.** E05: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.2, Theorem 9.2, eqs (9.6)-(9.10), pp. 8-10. evidence 2026-11-18 E07: Stan User's Guide (page identifies v2.40), "How Stan Works", "Target log density", https://mc-stan.org/docs/stan-users-guide/how-stan-works.html ; "Regression Models", "Logistic and probit regression", https://mc-stan.org/docs/stan-users-guide/regression.html ; inspected 2026-11-18. These support posterior proportionality and logistic/Bernoulli likelihoods only; no claim that Stan's sampler is importance sampling. Toy model and all numbers: ours, `gen/p9f_unknown_z.py` (stable evaluation of logistic powers via $\log s$).
+**Details.** $q>0$ on all three outcomes, so it covers the target. Every weight is positive, so the denominator is positive for every $n\ge 1$; that is a property of this toy, not of SNIS in general. $f$ is bounded. The consistency result of 53 applies: $\hat\mu_{\mathrm{SN}}\to 4/7$ almost surely. At a fixed $n$ the ratio is generally biased (54) and not exact. With uniform $q$ every weight carries the same factor $1/q=3$; for a nonuniform proposal the factor $1/q(X_i)$ differs between draws and must be kept. Validation, never an input: $Z=7$ gives the exact $\mu=4/7$. The batch A, C, C is a hand-picked possible batch (probability 1/27 as an ordered batch), not a simulated performance result. The toy shows the mechanics; it is not evidence that uniform sampling is an efficient large-softmax method.
+
+**Sources.** E05: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.2, Theorem 9.2, eqs (9.6)-(9.10), pp. 8-10. Toy, batch and arithmetic: ours, oracle-tails-softmax E05; exact fractions in `gen/p9f_unknown_z.py` (no randomness).
 <!-- END S133 -->
 
 <!-- BEGIN S76 -->
@@ -926,13 +940,13 @@ The target is the probability that a third trial succeeds, averaged over posteri
 
 **Message.** SNIS is a ratio of two unbiased averages computed from the same draws.
 
-**Slide.** Conditions line (IID draws, full target support, $E_p|f(X)|<\infty$), then a figure: the same draws feed two averages, $A_n=\frac1n\sum\tilde w_i f(X_i)$ with mean $\int\tilde p f=Z\mu$, and $B_n=\frac1n\sum\tilde w_i$ with mean $\int\tilde p=Z$; the two are labelled "generally dependent" and combine into $A_n/B_n=\hat\mu_{\mathrm{SN}}$. Each average is unbiased; the ratio is not: $E[A_n/B_n]\ne E[A_n]/E[B_n]$ in general.
+**Slide.** Conditions line (IID draws, full target support, $E_p|f(X)|<\infty$), then a figure: the same draws feed two averages, $A_n=\frac1n\sum\tilde w_i f(X_i)$ with mean $\sum_k\tilde p(k)f(k)=Z\mu$, and $B_n=\frac1n\sum\tilde w_i$ with mean $\sum_k\tilde p(k)=Z$; the two are labelled "generally dependent" and combine into $A_n/B_n=\hat\mu_{\mathrm{SN}}$. Each average is unbiased for its own sum; the ratio is not: $E[A_n/B_n]\ne E[A_n]/E[B_n]$ in general.
 
-Under full support, $E_q[\tilde w f]=\int\tilde p f\,dx=Z\mu$ and $E_q[\tilde w]=\int\tilde p\,dx=Z$, so the ratio of means is $\mu$.
+Under full support, $E_q[\tilde w f]=\sum_k\tilde p(k)f(k)=Z\mu$ and $E_q[\tilde w]=\sum_k\tilde p(k)=Z$, so the ratio of means is $\mu$. In the softmax toy, $\sum_k a_k f(k)=4=7\cdot\tfrac47$ and $\sum_k a_k=7$. For continuous outcomes the sums become integrals.
 
-**Details.** Full support makes the integrals over $\{q>0\}$ include all target mass. Integrability: $E_q|\tilde w f|=Z\,E_p|f|<\infty$. Expectation does not commute with taking a ratio: division is nonlinear and $A_n$, $B_n$, built from the same draws, are generally dependent, so the mean of the ratio differs from the ratio of means in general; slide 54 gives an exact case.
+**Details.** Full support makes the sums over $\{q>0\}$ include all target mass. Integrability: $E_q|\tilde w f|=Z\,E_p|f|<\infty$. Expectation does not commute with taking a ratio: division is nonlinear and $A_n$, $B_n$, built from the same draws, are generally dependent, so the mean of the ratio differs from the ratio of means in general; slide 54 gives an exact case.
 
-**Sources.** E05: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.2, Theorem 9.2, eqs (9.6)-(9.10), pp. 8-10. Figure: our flow diagram, no data.
+**Sources.** E05: A. B. Owen, *Monte Carlo theory, methods and examples*, Ch. 9 (posted PDF), https://artowen.su.domains/mc/Ch-var-is.pdf, Sec. 9.2, Theorem 9.2, eqs (9.6)-(9.10), pp. 8-10. oracle-tails-softmax E06. Figure: our flow diagram, no data.
 <!-- END S76 -->
 
 <!-- BEGIN S77 -->
@@ -1199,7 +1213,7 @@ Formula reference:
 - Importance sampling: $\hat\mu_{\mathrm{IS}} = \frac1n\sum_i w(X_i) f(X_i)$, $w=p/q$, $X_i\sim q$ IID; unbiased when $q>0$ wherever $fp\neq 0$ and $\mathbb E_p|f(X)|<\infty$; finite variance only if $\mathbb E_q[w^2f^2]<\infty$.
 - Self-normalized IS: $\hat\mu_{\mathrm{SN}} = \sum_i \tilde w_i f(X_i)/\sum_j\tilde w_j$, $\tilde w=\tilde p/q$, $X_i\sim q$ IID; requires $q>0$ wherever $p>0$, a proper target ($0<Z<\infty$), $\mathbb E_p|f(X)|<\infty$ and a positive denominator; consistent under these conditions, generally biased at finite $n$.
 
-Prerequisites in the series (optional): prob01 (LOTUS, Jensen), prob02 (KL), prob04 (chain rule of probability), prob05 (mean and variance of a sample mean, LLN, Chebyshev, CLT), prob06 (Hoeffding), prob07 (MSE decomposition, bias), prob08 (the standard normal, used as the prior in the Bayesian unknown-$Z$ example).
+Prerequisites in the series (optional): prob01 (LOTUS, Jensen), prob02 (KL), prob04 (chain rule of probability), prob05 (mean and variance of a sample mean, LLN, Chebyshev, CLT), prob06 (Hoeffding), prob07 (MSE decomposition, bias), prob08 (the standard normal, used in the normal contribution profile of 34).
 
 Sources: summary of results sourced on the earlier slides (E02, E04-E06); prerequisite locations E01.
 <!-- END S109a -->

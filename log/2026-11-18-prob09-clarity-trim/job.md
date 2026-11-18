@@ -8,9 +8,10 @@ branch: 2026-11-17-prob09-major-revision (existing PR77 continuation; approved p
 pr: 77 (existing, open)
 pr url: https://github.com/albert-no/slides/pull/77
 state: in-work
-round: 1 of 3
+round: 2 of 3
+review candidate: 6cf17f6ccb63bb3622267bf0993e67e2068867a8
 current plan: plan-v2.md (full work order; plan-v1 retained as the original approval proposal)
-current action: plan-v2 work order issued to slides; await work-r1 at an exact pushed commit; update existing PR77 only after review
+current action: review-r1 issued (revise); F01/F02 blocking short-note wording, F03/F04 nonblocking; await work-r2 exact commit; no structural/pacing change
 prior job: 2026-11-17-prob09-major-revision; all original findings closed, approved source 839fdc4708624a9838804f2f45a6ef5fb87be52a and final log-only head 5f4b1d99c5d799785752aa12c494715c3b21327b
 albert decisions:
 - 2026-11-18: 12 new comments request ML motivations, clearer MC/IS explanations, an unknown-Z example, removal of pp13-14 and the entire gradient-estimation section, and retention of the RL importance-sampling section. The earlier 150-minute six-part plan no longer fits the requested scope.
@@ -19,6 +20,8 @@ albert decisions:
 - 2026-11-18 11:26 KST: Albert replied to the scope/pacing proposal: "can be shorter. You do not need to worry about pacing" (C13). Proceed with scope; duration and slide count are not constraints. Existing PR77 is still open at the exact baseline by fresh REST check. No merge order.
 
 header note: proposal-era narrative below is historical; C13 and plan-v2 supersede its awaiting-approval/pacing statements.
+
+latest review: review-r1.md, verdict revise, pinned6cf17f6;70-slide main structure accepted; no follow-up approval or merge order
 
 ## Size and gate
 

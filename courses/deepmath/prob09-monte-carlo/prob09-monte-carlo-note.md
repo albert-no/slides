@@ -722,7 +722,7 @@ Sources: evidence 2026-11-18 E05; check `gen/p9b_calc.py`; figure `gen/p9b_figs.
 <!-- BEGIN S63b -->
 ### 39. Constant Contributions Give Zero Estimator Variance [S63b]
 
-**Message.** For any nonnegative integrand, the oracle proposal $q^* = fp/\mu$ makes every contribution equal to $\mu$, so the estimator has zero variance for every $n$; it needs $\mu$, the unknown answer.
+**Message.** For $f \ge 0$ with $0 \lt \mu = \mathbb E_p[f] \lt \infty$, the oracle proposal $q^* = fp/\mu$ makes every contribution equal to $\mu$, so its sample mean has zero variance for every $n$; evaluating the oracle weights still requires $\mu$, the unknown answer.
 
 General one-sign case: $f \ge 0$ with $0 < \mu = \mathbb{E}_p f < \infty$.
 
@@ -830,13 +830,13 @@ Sources: evidence 2026-11-18 E06; `gen/p9b_calc.py`.
 
 **Message.** An unknown normalizing constant changes the estimator and its guarantees.
 
-Ordinary importance sampling needs the normalized ratio $p/q$. Often the target is known only up to a constant, $p = \tilde p / Z$ with $Z$ unknown. Dividing by the total weight removes $Z$, but the result is a ratio of two averages: consistent, yet generally biased at finite sample sizes, and its weight diagnostics have blind spots. The part opens with a concrete case before the general statement: a small Bayesian posterior whose unnormalized density can be evaluated at any point, while its normalizing integral is never computed.
+Ordinary importance sampling needs the normalized ratio $p/q$. Often the target is known only up to a constant, $p = \tilde p / Z$ with $Z$ unknown. Dividing by the total weight removes $Z$, but the result is a ratio of two averages: consistent, yet generally biased at finite sample sizes, and its weight diagnostics have blind spots. The part opens with a concrete case before the general statement: a small Bayesian posterior whose unnormalized density is available pointwise; the estimator never needs its normalizing integral, and the numerical value of that integral computed later is used only to validate the estimate.
 <!-- END S72 -->
 
 <!-- BEGIN S132 -->
 ### 47. Bayes Leaves a Normalizing Integral [S132]
 
-**Message.** Even a small, familiar Bayesian model gives a posterior that we can evaluate at any point, while its normalizing integral is still left to compute.
+**Message.** The unnormalized posterior can be evaluated pointwise; obtaining the normalized density still requires the integral $Z$.
 
 **Slide.** Our toy: latent logit $\theta\sim N(0,1)$, success probability $s(\theta)=1/(1+e^{-\theta})$. Observed: two successes, independent given $\theta$, so likelihood $s(\theta)^2$. Figure: three panels over $\theta$ from $-4$ to $4$, joined by a times sign and an equals sign. Left, grey, "prior $\varphi(\theta)$": the standard normal density, peak about 0.4 at 0. Middle, red, "likelihood $s(\theta)^2$": rises from 0 on the left to nearly 1 on the right, axis 0 to 1. Right, blue, "unnormalized $\varphi(\theta)s(\theta)^2$", on the same vertical scale as the left panel: a lower bump shifted right, peak about 0.14, area shaded and labelled "shaded area $=Z$". Closing line: posterior $\propto\varphi(\theta)s(\theta)^2$ at any $\theta$; the normalizing integral remains.
 
@@ -1183,7 +1183,7 @@ Formula reference:
 - Importance sampling: $\hat\mu_{\mathrm{IS}} = \frac1n\sum_i w(X_i) f(X_i)$, $w=p/q$, $X_i\sim q$ IID; unbiased when $q>0$ wherever $fp\neq 0$ and $\mathbb E_p|f(X)|<\infty$; finite variance only if $\mathbb E_q[w^2f^2]<\infty$.
 - Self-normalized IS: $\hat\mu_{\mathrm{SN}} = \sum_i \tilde w_i f(X_i)/\sum_j\tilde w_j$, $\tilde w=\tilde p/q$, $X_i\sim q$ IID; requires $q>0$ wherever $p>0$, a proper target ($0<Z<\infty$), $\mathbb E_p|f(X)|<\infty$ and a positive denominator; consistent under these conditions, generally biased at finite $n$.
 
-Prerequisites in the series (optional): prob01 (LOTUS, Jensen), prob02 (KL), prob04 (chain rule of probability), prob05 (mean and variance of a sample mean, LLN, Chebyshev, CLT), prob06 (Hoeffding), prob07 (MSE decomposition, bias), prob08 (Gaussian machinery, the substrate for the Gaussian path $X=\theta+\varepsilon$).
+Prerequisites in the series (optional): prob01 (LOTUS, Jensen), prob02 (KL), prob04 (chain rule of probability), prob05 (mean and variance of a sample mean, LLN, Chebyshev, CLT), prob06 (Hoeffding), prob07 (MSE decomposition, bias), prob08 (the standard normal, used as the prior in the Bayesian unknown-$Z$ example).
 
 Sources: summary of results sourced on the earlier slides (E02, E04-E06); prerequisite locations E01.
 <!-- END S109a -->

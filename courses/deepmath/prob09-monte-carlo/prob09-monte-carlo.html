@@ -188,31 +188,73 @@ table.p9c-cmp td.p9c-span { text-align: center; color: var(--gray-text); }
   <p class="subtitle">Why ML needs averages, and how accurate they are</p>
 </div>
 
-<!-- S04 — A Known Model, a Hard Average -->
-<div class="slide" data-slide-id="S04">
-  <h2>A Known Model, a Hard Average</h2>
+<!-- S130 — One-Hot Cross-Entropy Equals KL -->
+<div class="slide" data-slide-id="S130">
+  <h2>One-Hot Cross-Entropy Equals KL</h2>
   <div class="divider"></div>
-  <p>Point: drawing $X$ is easy; computing $\mathbb{E}_p[f(X)]$ is not</p>
+  <p>Point: at one labelled input, the cross-entropy (CE) loss is a KL</p>
+  <p>Recall: input $x$ with label $y$; one-hot target $\delta_y$; classifier $q_\theta(\cdot \mid x)$</p>
+  <div class="math-block" style="margin:8px 0">$$\mathrm{CE}\big(\delta_y,\, q_\theta(\cdot \mid x)\big) \;=\; D\big(\delta_y \,\big\|\, q_\theta(\cdot \mid x)\big) \;=\; -\log q_\theta(y \mid x)$$</div>
+  <p class="muted">Exact because a one-hot target has entropy $0$; needs $q_\theta(y \mid x) \gt 0$</p>
+  <div class="highlight"><p>Not every CE is a KL: in general CE $=$ entropy $+$ KL</p></div>
+</div>
+
+<!-- S131 — Population Loss Requires an Average -->
+<div class="slide" data-slide-id="S131">
+  <h2>Population Loss Requires an Average</h2>
+  <div class="divider"></div>
+  <p>Point: a fixed model&rsquo;s loss over all data is an expectation</p>
+  <div class="p9a-flow">
+    <div class="p9a-box p9a-hard">
+      <p class="p9a-head">Population loss</p>
+      <p>$L(\theta) = \mathbb{E}\big[f(X, Y)\big]$</p>
+      <p>$(X, Y) \sim P_{\text{data}}$</p>
+      <p class="p9a-hardtxt">hard: all pairs</p>
+    </div>
+    <div class="p9a-arrow">&rarr;</div>
+    <div class="p9a-box p9a-wide">
+      <p class="p9a-head">Per-example loss</p>
+      <p>$f(x, y) = -\log q_\theta(y \mid x)$</p>
+      <p class="p9a-easy">easy: one example</p>
+    </div>
+    <div class="p9a-arrow">&rarr;</div>
+    <div class="p9a-box">
+      <p class="p9a-head">Sample average</p>
+      <p>$\frac{1}{n} \sum_{i=1}^{n} f(X_i, Y_i)$</p>
+      <p class="p9a-easy">estimates $L(\theta)$</p>
+    </div>
+  </div>
+  <p>Samples: $(X_i, Y_i) \stackrel{\text{iid}}{\sim} P_{\text{data}}$, labelled data, not draws from $q_\theta$</p>
+  <p class="muted">Model $\theta$ fixed; mean loss finite</p>
+  <p class="muted">Evaluates an expectation; no training step here</p>
+</div>
+
+<!-- S04 — Sampled Replies Estimate Pass Rate -->
+<div class="slide" data-slide-id="S04">
+  <h2>Sampled Replies Estimate Pass Rate</h2>
+  <div class="divider"></div>
+  <p>Point: replies are easy to sample; their pass rate is hard to compute</p>
   <div class="p9a-flow">
     <div class="p9a-box">
       <p class="p9a-head">Sampler $p$</p>
-      <p>a language model</p>
+      <p>one fixed prompt, stochastic model</p>
       <p class="p9a-easy">easy: draw one reply $X$</p>
     </div>
     <div class="p9a-arrow">&rarr;</div>
     <div class="p9a-box">
-      <p class="p9a-head">Evaluate $f(X)$</p>
-      <p>fixed scoring rule</p>
-      <p class="p9a-easy">easy: score one reply</p>
+      <p class="p9a-head">Check $f(X)$</p>
+      <p>$f(x) = 1$ if $x$ passes a fixed format check, else $0$</p>
+      <p class="p9a-easy">easy: check one reply</p>
     </div>
     <div class="p9a-arrow">&rarr;</div>
     <div class="p9a-box p9a-hard">
-      <p class="p9a-head">Target $\mu = \mathbb{E}_p[f(X)]$</p>
-      <p>average over all replies</p>
-      <p class="p9a-hardtxt">hard: unknown number</p>
+      <p class="p9a-head">Pass rate $\mu$</p>
+      <p>$\Pr_p(\text{pass}) = \mathbb{E}_p[f(X)]$</p>
+      <p class="p9a-hardtxt">hard: all possible replies</p>
     </div>
   </div>
-  <p class="muted">Hard here: no convenient closed form, and far too many replies to sum</p>
+  <p>Samples come from the model $p$, not from labelled data</p>
+  <p class="muted">Average $f$ over a few sampled replies to estimate $\mu$</p>
 </div>
 
 <!-- S06 — Sample, Evaluate, Average -->
@@ -362,10 +404,11 @@ table.p9c-cmp td.p9c-span { text-align: center; color: var(--gray-text); }
   <p class="muted">Darts, $\sigma_f \approx 1.64$ &middot; x: draws $n$, y: RMSE, log&ndash;log &middot; typical error, not a bound</p>
 </div>
 
-<!-- S114 — Estimating the Error Bar -->
+<!-- S114 — Standard Error Measures Estimator Spread -->
 <div class="slide" data-slide-id="S114">
-  <h2>Estimating the Error Bar</h2>
+  <h2>Standard Error Measures Estimator Spread</h2>
   <div class="divider"></div>
+  <p><strong>Standard error (SE)</strong>: standard deviation of $\bar{Y}_n$ across repeated samples</p>
   <p>IID evaluations, finite variance, $n \geq 2$</p>
   <div class="p9a-flow">
     <div class="p9a-box">
@@ -383,9 +426,8 @@ table.p9c-cmp td.p9c-span { text-align: center; color: var(--gray-text); }
       <p>$\widehat{\mathrm{SE}} = s_Y / \sqrt{n}$</p>
     </div>
   </div>
-  <p>Unknown truth: SE $= \sigma_f/\sqrt{n}$; &nbsp;observed $s_Y$ estimates $\sigma_f$</p>
+  <p>True SE $= \sigma_f/\sqrt{n}$; &nbsp;$s_Y$ estimates the outcome SD $\sigma_f$</p>
   <div class="highlight"><p>$\widehat{\mathrm{SE}}$ estimates typical spread, not this run&rsquo;s error $|\hat{\mu}_n - \mu|$</p></div>
-  <p class="muted">A finite $s_Y$ cannot reveal tails no draw visited</p>
 </div>
 
 <!-- S115 — Approximate Intervals, Exact Guarantees -->
@@ -422,37 +464,47 @@ table.p9c-cmp td.p9c-span { text-align: center; color: var(--gray-text); }
   <p class="muted">Fixed $f$, chosen before sampling; known range, not estimated</p>
 </div>
 
-<!-- S116 — Rare Events Need Relative Error -->
-<div class="slide" data-slide-id="S116">
-  <h2>Rare Events Need Relative Error</h2>
+<!-- S116a — Small Absolute Error Can Hide Failure -->
+<div class="slide" data-slide-id="S116a">
+  <h2>Small Absolute Error Can Hide Failure</h2>
   <div class="divider"></div>
-  <p>Event indicator $Y \sim \mathrm{Bernoulli}(\rho)$, so $\mu = \rho$</p>
-  <p>Rare $\rho$: small indicator variance $\rho(1-\rho)$</p>
-  <p>Relative RMSE $= \sqrt{(1-\rho)/(n\rho)}$: small only with enough draws</p>
-  <div class="p9-fig" style="max-width:900px;margin:10px auto 4px;">
-  <svg viewBox="0 0 1000 300" role="img" aria-label="Log-log plot against event probability rho, from 10 to the minus 6 to one half: the absolute per-draw SD rises with rho, while the relative SD falls with rho; at rho = 1/2, absolute SD is 1/2 and relative SD is 1; the curves do not meet on the displayed range.">
-    <!-- exact per-draw curves (gen/p9a_part01.py): x = 150 + 135 (log10 rho + 6), y = 20 + 40 (3 - log10 value) -->
-    <line x1="150" y1="265" x2="940" y2="265" stroke="#222" stroke-width="2.5"/>
-    <line x1="150" y1="265" x2="150" y2="10"  stroke="#222" stroke-width="2.5"/>
-    <line x1="150" y1="140" x2="930" y2="140" stroke="#bbb" stroke-width="2" stroke-dasharray="6 6"/>
-    <polyline fill="none" stroke="#c0392b" stroke-width="4.5" points="150.0,20.0 175.6,23.8 201.3,27.6 226.9,31.4 252.6,35.2 278.2,39.0 303.9,42.8 329.5,46.6 355.2,50.4 380.8,54.2 406.5,58.0 432.1,61.8 457.7,65.6 483.4,69.4 509.0,73.2 534.7,77.0 560.3,80.8 586.0,84.6 611.6,88.4 637.3,92.2 662.9,96.0 688.6,99.9 714.2,103.7 739.8,107.6 765.5,111.5 791.1,115.5 816.8,119.6 842.4,123.8 868.1,128.4 893.7,133.6 919.4,140.0"/>
-    <polyline fill="none" stroke="#003876" stroke-width="4.5" stroke-dasharray="14 8" points="150.0,260.0 175.6,256.2 201.3,252.4 226.9,248.6 252.6,244.8 278.2,241.0 303.9,237.2 329.5,233.4 355.2,229.6 380.8,225.8 406.5,222.0 432.1,218.2 457.7,214.4 483.4,210.6 509.0,206.8 534.7,203.0 560.3,199.2 586.0,195.4 611.6,191.6 637.3,187.8 662.9,184.1 688.6,180.3 714.2,176.5 739.8,172.8 765.5,169.1 791.1,165.5 816.8,162.0 842.4,158.7 868.1,155.6 893.7,153.2 919.4,152.0"/>
-    <line x1="141" y1="20"  x2="150" y2="20"  stroke="#222" stroke-width="2"/>
-    <line x1="141" y1="140" x2="150" y2="140" stroke="#222" stroke-width="2"/>
-    <line x1="141" y1="260" x2="150" y2="260" stroke="#222" stroke-width="2"/>
-  </svg>
-  <span class="fl fl-red" style="left:72%;top:20%">relative SD $\sigma_f/\rho$</span>
-  <span class="fl fl-blue" style="left:72%;top:73%">absolute SD $\sigma_f$</span>
-  <span class="fl fl-sub fl-grey" style="left:11.0%;top:6.7%">$10^{3}$</span>
-  <span class="fl fl-sub fl-grey" style="left:11.5%;top:46.7%">$1$</span>
-  <span class="fl fl-sub fl-grey" style="left:10.5%;top:86.7%">$10^{-3}$</span>
-  <span class="fl fl-sub fl-grey" style="left:15.0%;top:94.5%">$10^{-6}$</span>
-  <span class="fl fl-sub fl-grey" style="left:42.0%;top:94.5%">$10^{-4}$</span>
-  <span class="fl fl-sub fl-grey" style="left:69.0%;top:94.5%">$10^{-2}$</span>
-  <span class="fl fl-sub fl-grey" style="left:88.0%;top:94.5%">event probability $\rho$</span>
+  <p>Event indicator $Y \sim \mathrm{Bernoulli}(\rho)$ with $\rho = 0.001$ &nbsp;&middot;&nbsp; $n = 1000$ draws</p>
+  <p>Expected hits $n\rho = 1$; &nbsp;no hit with probability $0.999^{1000} \approx 37\%$</p>
+  <p>A zero-hit run reports $\hat{\mu}_n = 0$ against the truth $0.001$</p>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Absolute error</h3>
+      <p>$|0 - 0.001| = 0.001$</p>
+      <p>Looks tiny</p>
+    </div>
+    <div class="card">
+      <h3>Relative error</h3>
+      <p>$|0 - 0.001| \,/\, 0.001 = 100\%$</p>
+      <p>Misses the whole answer</p>
+    </div>
   </div>
-  <p class="muted">At fixed $n$ and $0 \lt \rho \le 1/2$: rarer events lower absolute RMSE but raise relative RMSE</p>
-  <div class="cite">Exact per-draw SDs; divide by $\sqrt{n}$ for RMSE. Figure: <code>gen/p9a_part01.py</code></div>
+  <p class="muted">One possible run, with chance 37%; not the typical error</p>
+</div>
+
+<!-- S116b — Relative Error Needs Enough Hits -->
+<div class="slide" data-slide-id="S116b">
+  <h2>Relative Error Needs Enough Hits</h2>
+  <div class="divider"></div>
+  <p>IID $Y_i \sim \mathrm{Bernoulli}(\rho)$ with $0 \lt \rho \lt 1$; &nbsp;$n\rho$ = expected hits</p>
+  <div class="math-block" style="margin:8px 0">$$\frac{\mathrm{RMSE}(\hat{\mu}_n)}{\rho} \;=\; \sqrt{\frac{1-\rho}{n\rho}} \;\approx\; \frac{1}{\sqrt{n\rho}} \quad \text{for rare } \rho$$</div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>$\rho = 0.001$ and $n = 1000$</h3>
+      <p>Expected hits $1$</p>
+      <p>Relative RMSE $\approx 100\%$</p>
+    </div>
+    <div class="card">
+      <h3>Target: relative RMSE $\le 10\%$</h3>
+      <p>Needs $n \geq 99{,}900$</p>
+      <p>About $100$ expected hits</p>
+    </div>
+  </div>
+  <p class="muted">An RMSE target: not 95% confidence, not a bound on one run</p>
 </div>
 
 <!-- ===== PART 02 — CHANGE THE SAMPLER ===== -->

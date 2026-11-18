@@ -39,26 +39,90 @@ Lecture 9 of Deep Learning Math, for junior undergraduates in AI. It builds on t
 This part does not re-teach probability. It takes the expectation, the sample mean and its variance as known, and asks two questions: why machine learning keeps needing averages it cannot compute exactly, and what an estimate built from random draws promises: what it targets, how its error shrinks, how to report that error from the data, and why rare events need relative error.
 <!-- END S03 -->
 
-<!-- BEGIN S04 -->
-### 4. A Known Model, a Hard Average [S04]
+<!-- BEGIN S130 -->
+### 00. One-Hot Cross-Entropy Equals KL [S130]
 
-**Message.** Being able to draw from a model does not make its averages easy to compute.
+**Message.** At one labelled input, the familiar cross-entropy loss is exactly a KL divergence, and computing it is easy; the hard part is averaging it over data.
 
-The slide is a three-box flow. The first box is the sampler $p$: here a language model, from which drawing one reply $X$ is easy. The second box is a fixed scoring rule $f$: evaluating one reply, $f(X)$, is also easy. The third box, drawn with a dashed red border, is the target $\mu = \mathbb E_p[f(X)]$, the average score over all replies the model could produce. That number is what we want, and it is the hard part. The rest of Part 01 turns the two easy boxes into an estimate of the hard one.
+The slide recalls a known identity rather than proving it again. Fix one input $x$ whose label is $y$. The *target distribution* is the one-hot distribution $\delta_y$, which puts probability 1 on the class $y$ and 0 on every other class. The *model distribution* is the classifier's predicted class probabilities $q_\theta(\cdot \mid x)$. The display says that the cross-entropy (CE) of the model against the target, the KL divergence from the target to the model, and the familiar loss $-\log q_\theta(y \mid x)$ are the same number.
 
-The three roles stay fixed for the whole lecture: $X$ is the random outcome, $p$ is the distribution we sample from, $f$ is a fixed function we can evaluate, and $\mu$ is the number we want.
+The grey line gives the reason and the condition. The identity is exact because a one-hot target has entropy 0, and it needs $q_\theta(y \mid x) \gt 0$; otherwise the loss is infinite. The highlight stops a common over-generalization: cross-entropy equals KL only in this one-hot case. In general cross-entropy is entropy plus KL. So the per-example loss of a labelled example is a quantity we can compute in one forward pass. The next slide asks for the loss over all data, which is an expectation.
 
 **Details.**
 
-**Why the average is hard.** A reply of $T$ tokens over a vocabulary $V$ is one of $|V|^T$ sequences, so the exact average is a sum with $|V|^T$ terms. Writing $p$ down is not the obstacle; summing over its support is. "Hard" on the slide means *no convenient closed form and too many terms to sum*, not "uncomputable".
+**The one-hot computation.** With target $\delta_y$ and model $q = q_\theta(\cdot \mid x)$,
 
-**Numerical difficulty is not a missing antiderivative.** A closed form may exist and still be expensive to evaluate, or an integral may have no elementary antiderivative yet be easy to compute numerically in one dimension. Whether a given expectation has a closed form depends on the pair $(p, f)$: some nonlinear functions of a Gaussian have no closed-form expectation, and some non-Gaussian expectations do. No general rule by family is claimed here.
+$$\mathrm{CE}(\delta_y, q) = -\sum_k \delta_y(k)\log q(k) = -\log q(y),$$
 
-**Link to prob08.** prob08 closed with a bridge slide: Gaussian models gave closed-form answers, many expectation integrals in more general models do not, and the remedy is to replace $\int g(x) f_X(x)\,dx$ by an average of $g$ over IID samples. This lecture takes that remedy and asks how accurate it is and what it costs.
+$$D(\delta_y \,\|\, q) = \sum_k \delta_y(k)\log\frac{\delta_y(k)}{q(k)} = -\log q(y).$$
+
+Terms with $\delta_y(k) = 0$ contribute $0$ by the convention $0 \log 0 = 0$. The entropy $H(\delta_y) = 0$, so the general identity below reduces to CE $=$ KL.
+
+**The general identity.** For distributions $P$ and $Q$ on the same space with finite terms, $\mathrm{CE}(P, Q) = H(P) + D(P \,\|\, Q)$. The convention is truth or data first, model second.
+
+**Conditional classifiers.** Over a whole data distribution, the expected per-example loss decomposes as a conditional entropy plus an expected conditional KL:
+
+$$\mathbb E\big[-\log q_\theta(Y \mid X)\big] = H_P(Y \mid X)$$
+
+$$\quad + \ \mathbb E_X\, D\big(P(\cdot \mid X) \,\|\, q_\theta(\cdot \mid X)\big),$$
+
+assuming the terms are finite. This is a statement about conditional distributions of the label given the input. It is not a KL between the joint data distribution of $(X, Y)$ and the conditional model, which live on different spaces.
+
+**Units.** With the natural logarithm the loss is in nats.
 
 **Sources.**
 
-E01: prob08's closing bridge slide, course repository at commit b20ab73. E02: Owen, *Monte Carlo theory, methods and examples*, Ch. 1-2. The $|V|^T$ count is direct counting; the language-model setting is an illustration, not a cited system.
+Course: prob02 note, Section 4.5 Theorem 3 (CE = entropy + KL), Section 6.6 Theorem 7 (one-hot CE = KL), Section 6.8 (expected-loss decomposition); `courses/deepmath/prob02-kl-crossentropy/prob02-kl-crossentropy-note.html` (evidence 2026-11-18 E01). Goodfellow, Bengio and Courville, *Deep Learning* (2016), Section 3.13, eq. (3.51), https://www.deeplearningbook.org/contents/prob.html (evidence E02). The conditional form and its scope: evidence E09.
+<!-- END S130 -->
+
+<!-- BEGIN S131 -->
+### 00. Population Loss Requires an Average [S131]
+
+**Message.** The loss of a fixed classifier over all data is an expectation, and we estimate it by averaging per-example losses on sampled labelled examples.
+
+The flow reads left to right. The first box, with a dashed red border, is the population loss $L(\theta) = \mathbb E[f(X, Y)]$, where the labelled pair $(X, Y)$ is drawn from the data distribution $P_{\text{data}}$. It averages over every possible pair, so it is the hard part. The middle box defines the per-example loss $f(x, y) = -\log q_\theta(y \mid x)$, the one-hot cross-entropy of the previous slide; it is easy for one example. The last box is the sample average $\frac1n\sum_{i=1}^n f(X_i, Y_i)$, which estimates $L(\theta)$. The same loss expression appears in all three boxes.
+
+The line under the flow names the sampling distribution: the pairs $(X_i, Y_i)$ are IID draws of labelled data from $P_{\text{data}}$, not draws from the model $q_\theta$. Two roles must not be confused: $P_{\text{data}}$ is where the samples come from, and $q_\theta$ is the fixed classifier inside $f$. The grey lines state the conditions, a fixed model and a finite mean loss, and the scope: this evaluates one expectation; it is not a training algorithm.
+
+**Details.**
+
+**Why an average is needed.** Each loss $-\log q_\theta(y \mid x)$ takes one forward pass. The integral over $P_{\text{data}}$ is usually unavailable: the data distribution is known only through samples, and the space of inputs is far too large to sum over.
+
+**The clean unbiasedness setup.** Fix $\theta$ before looking at the evaluation data, draw fresh labelled pairs IID from $P_{\text{data}}$, and assume $\mathbb E|f(X, Y)| \lt \infty$. Then the sample mean is unbiased for $L(\theta)$ and converges to it. This is the Monte Carlo estimator of the coming slides with $f$ as the integrand.
+
+**What this does not cover.** A minibatch drawn uniformly with replacement from a fixed training set estimates the empirical average over that set, not the population loss. For a model fitted on the same data, the training average is not automatically an unbiased estimate of $L(\theta)$; generalization is a separate question.
+
+**Notation.** In the Monte Carlo notation used next, the random outcome is the pair $(X, Y)$, the sampling distribution is $P_{\text{data}}$, the integrand is $f$, and the target is $\mu = L(\theta)$.
+
+**Sources.**
+
+Goodfellow, Bengio and Courville, *Deep Learning* (2016), Section 3.13, eq. (3.51), and the evidence note on fixed-model evaluation versus minibatch averages (evidence 2026-11-18 E02, E09). Sample-mean facts: Owen, *Monte Carlo theory, methods and examples*, Ch. 2 Sections 2.1-2.2, https://artowen.su.domains/mc/Ch-intro.pdf (evidence E03).
+<!-- END S131 -->
+
+<!-- BEGIN S04 -->
+### 4. Sampled Replies Estimate Pass Rate [S04]
+
+**Message.** A generative model is easy to sample, yet the expected score of its replies is hard to compute exactly.
+
+Fix one prompt and one stochastic generative model $p$. The flow has three boxes. The first is the sampler $p$: drawing one reply $X$ is easy. The second is a fixed check: $f(x) = 1$ if the reply $x$ passes a specified format check, and $0$ otherwise; checking one reply is easy. The third box, with a dashed red border, is the pass rate $\mu = \Pr_p(\text{pass}) = \mathbb E_p[f(X)]$, the probability that a reply from this model passes. It averages over every possible reply, so it is the hard part.
+
+The line under the flow marks the difference from the previous slide. There the samples were labelled data from $P_{\text{data}}$; here they are replies drawn from the model $p$ itself. The grey line gives the answer to the hard box: check a few sampled replies and average the pass indicators. The rest of Part 01 asks how accurate that average is. The roles stay fixed for the whole lecture: $X$ is the random outcome, $p$ the distribution we sample from, $f$ a fixed function we can evaluate, and $\mu$ the number we want.
+
+**Details.**
+
+**Why the exact average is hard.** A reply of $T$ tokens over a vocabulary $V$ is one of $|V|^T$ sequences, so the exact pass rate is a sum with that many terms. Writing $p$ down is not the obstacle; summing over its support is. "Hard" means too many terms to sum, not "uncomputable"; no claim is made that a closed form cannot exist for a particular $(p, f)$.
+
+**Scope of the check.** The format check is one fixed, deterministic pass/fail criterion chosen before sampling. Its pass rate is a useful example of an expectation, not a comprehensive measure of reply quality.
+
+**Sampling setup.** The estimate needs independent random draws from the fixed model $p$. A deterministic decoding rule (for example, always taking the most likely token) does not by itself supply IID draws from $p$, and no particular decoding setting is claimed to implement $p$.
+
+**No numbers.** The slide shows no performance figure; the example is an illustration of the setup, not a reported experiment.
+
+**Link to prob08.** prob08 closed with a bridge slide: Gaussian models gave closed-form answers, many expectation integrals in more general models do not, and the remedy is to replace $\int g(x) f_X(x)\,dx$ by an average of $g$ over IID samples. This lecture takes that remedy and asks how accurate it is.
+
+**Sources.**
+
+Generator-evaluation setup: evidence 2026-11-18 E10 (illustrative application, not a benchmark). Expectation and Monte Carlo average: Owen, *Monte Carlo theory, methods and examples*, Ch. 2 Sections 2.1-2.2, https://artowen.su.domains/mc/Ch-intro.pdf (evidence E03). prob08's closing bridge slide, course repository at commit b20ab73. The $|V|^T$ count is direct counting.
 <!-- END S04 -->
 
 <!-- BEGIN S06 -->
@@ -76,7 +140,7 @@ The recipe needs draws from $p$, not a formula for the density $p(x)$. A languag
 
 **Hold $f$ fixed.** The function $f$ must be chosen before the draws are made and kept the same for every draw. If $f$ is tuned after looking at the sample, the average estimates something else, and the error guarantees below do not apply.
 
-**Integrability.** The target exists only if $\mathbb E_p|f(X)| \lt \infty$. The slide states this as an assumption; slide 7 makes it part of the formal estimator.
+**Integrability.** The target exists only if $\mathbb E_p|f(X)| \lt \infty$. The slide states this as an assumption; [[S16]] makes it part of the formal estimator.
 
 **Sources.**
 
@@ -105,7 +169,7 @@ The six points are hand-chosen to show the recipe. They are not a random run, an
 
 Four hits, so $\hat\mu_6 = 4 \cdot \tfrac46 = \tfrac83$.
 
-**No inference from this run.** A hand-picked sample does not support an error bar or a confidence statement. For genuinely IID uniform draws, $Y = 4\cdot\mathbf 1\{\text{hit}\}$ has $\mathbb E[Y] = \pi$ and $\mathrm{Var}(Y) = \pi(4 - \pi) \approx 2.6968$; slides 8 and 9 use these exact values.
+**No inference from this run.** A hand-picked sample does not support an error bar or a confidence statement. For genuinely IID uniform draws, $Y = 4\cdot\mathbf 1\{\text{hit}\}$ has $\mathbb E[Y] = \pi$ and $\mathrm{Var}(Y) = \pi(4 - \pi) \approx 2.6968$; [[S19]] and [[S22]] use these exact values.
 
 **Sources.**
 
@@ -131,7 +195,7 @@ $$\hat\mu_n = \frac1n \sum_{i=1}^n f(X_i).$$
 
 **Consistency.** Under $\mathbb E|Y_1| \lt \infty$ alone, the strong law of large numbers gives $\hat\mu_n \to \mu$ with probability 1. It is imported from prob05, not reproved, and it says nothing about how fast.
 
-**Notation.** $\sigma_f^2$ is the population variance of $f(X)$ under $p$, a fixed unknown number. The observed sample spread $s_Y$ appears only on slide 10.
+**Notation.** $\sigma_f^2$ is the population variance of $f(X)$ under $p$, a fixed unknown number. The observed sample spread $s_Y$ appears only on [[S114]].
 
 **Sources.**
 
@@ -155,7 +219,7 @@ $$\mathbb E[\hat\mu_n] = \frac1n\sum_{i=1}^n \mathbb E[f(X_i)]$$
 
 $$= \frac1n \cdot n\mu = \mu.$$
 
-Independence is not used: identically distributed draws with $\mathbb E|f(X)| \lt \infty$ suffice for this identity. Independence matters for the variance on slide 9.
+Independence is not used: identically distributed draws with $\mathbb E|f(X)| \lt \infty$ suffice for this identity. Independence matters for the variance on [[S22]].
 
 **Bias and variance.** In prob07's decomposition, mean squared error is squared bias plus variance. Here the bias is zero, so all of the error is variance. That is the quantity averaging must shrink.
 
@@ -185,7 +249,7 @@ Unbiasedness makes the squared bias zero, so $\mathrm{RMSE}^2 = \mathrm{Var}(\ha
 
 **Darts numbers.** $\sigma_f^2 = \pi(4 - \pi) \approx 2.6968$, $\sigma_f \approx 1.642$. RMSE: $0.519$ at $n = 10$, $0.164$ at $10^2$, $0.0164$ at $10^4$, $0.00164$ at $10^6$.
 
-**What RMSE is not.** RMSE describes the spread over many repeated runs. It is not a bound on the error of the run in hand: a single run can miss by several RMSEs. Bounds that hold with stated probability come on slides 11 and 12.
+**What RMSE is not.** RMSE describes the spread over many repeated runs. It is not a bound on the error of the run in hand: a single run can miss by several RMSEs. Bounds that hold with stated probability come on [[S115]] and [[S24]].
 
 **Sources.**
 
@@ -193,27 +257,31 @@ E02: Owen, Ch. 1-2, Sections 2.1-2.2 (variance $\sigma_f^2/n$ under finite varia
 <!-- END S22 -->
 
 <!-- BEGIN S114 -->
-### 10. Estimating the Error Bar [S114]
+### 10. Standard Error Measures Estimator Spread [S114]
 
-**Message.** The sample itself estimates the standard error, but only the typical spread, not this run's error.
+**Message.** The standard error is the spread of the estimate across repeated samples; the sample estimates it, but not this run's error.
 
-The assumptions come first: IID evaluations, finite variance, and at least two draws. The flow then reads left to right. The observed data $Y_1, \dots, Y_n$ give the sample variance $s_Y^2 = \frac{1}{n-1}\sum_i (Y_i - \bar Y_n)^2$, and dividing its square root by $\sqrt n$ gives the estimated standard error $\widehat{\mathrm{SE}} = s_Y/\sqrt n$.
+The first line defines the term: the *standard error* (SE) is the standard deviation of the sample mean $\bar Y_n$ across repeated samples. Imagine rerunning the whole experiment many times, each time with a fresh batch of $n$ draws, and recording $\bar Y_n$ each time; the SE is the standard deviation of those recorded means. The second line gives the conditions: IID evaluations, finite variance, and at least two draws.
 
-The next line separates the two quantities. The true standard error $\sigma_f/\sqrt n$ uses the unknown population SD $\sigma_f$; the observed $s_Y$ is our estimate of it. The highlight states the limit: $\widehat{\mathrm{SE}}$ estimates how far runs typically land from $\mu$, not the error $|\hat\mu_n - \mu|$ of the run in hand.
+The flow then reads left to right. The observed data $Y_1, \dots, Y_n$ give the sample variance $s_Y^2 = \frac{1}{n-1}\sum_i (Y_i - \bar Y_n)^2$, and dividing its square root by $\sqrt n$ gives the estimated standard error $\widehat{\mathrm{SE}} = s_Y/\sqrt n$. The next line separates three quantities. The true SE is $\sigma_f/\sqrt n$; $\sigma_f$ is the outcome SD, the spread of a single evaluation $Y$, and $s_Y$ estimates it. The highlight separates both from the actual error: $\widehat{\mathrm{SE}}$ estimates how far runs typically land from $\mu$, not the error $|\hat\mu_n - \mu|$ of the run in hand.
 
 **Details.**
+
+**Outcome SD versus SE.** $s_Y$ describes how much individual evaluations vary; it does not shrink as $n$ grows. $s_Y/\sqrt n$ describes how much the average varies; it shrinks like $1/\sqrt n$. Reporting $s_Y$ as the error bar of the mean overstates the uncertainty by a factor $\sqrt n$.
 
 **Units.** $s_Y$ and $\widehat{\mathrm{SE}}$ have the units of $f$; $s_Y^2$ has squared units. Report the SE, not the variance, next to the estimate.
 
 **Why $n - 1$.** With divisor $n - 1$, $\mathbb E[s_Y^2] = \sigma_f^2$ for IID data with finite variance. That needs $n \ge 2$.
 
-**Example of the right data.** The formula applies to genuinely IID evaluations, for instance a fixed scoring rule applied to independently sampled model replies. It does not apply to the six hand-chosen darts on slide 6.
+**Example of the right data.** The formula applies to genuinely IID evaluations, for instance a fixed check applied to independently sampled model replies. It does not apply to the six hand-chosen darts on [[S26]].
 
-**Unseen tails.** $s_Y$ is always finite, because it is computed from finitely many numbers. It cannot show that $\sigma_f$ is finite. If rare draws carry very large values that the sample never hit, $s_Y$ will understate the spread.
+**Unseen tails.** $s_Y$ is always finite, because it is computed from finitely many numbers; it can even be $0$ when every draw gave the same value. It cannot show that $\sigma_f$ is finite or positive. If rare draws carry very different values that the sample never hit, $s_Y$ will understate the spread. (This qualifier was a grey line on the slide in the previous version; it now lives here.)
+
+**Next.** [[S115]] turns $\widehat{\mathrm{SE}}$ into an approximate interval and contrasts it with a finite-sample guarantee.
 
 **Sources.**
 
-E02: Owen, Ch. 1-2, Sections 2.1-2.2 and 2.7-2.8 (estimated standard error, its assumptions). E01: prob05 sample-mean variance (p. 39), commit b20ab73.
+Owen, *Monte Carlo theory, methods and examples*, Ch. 2 Sections 2.1-2.4 (finite-variance error, estimated standard error), https://artowen.su.domains/mc/Ch-intro.pdf (evidence 2026-11-18 E03). Prior-job evidence: Owen Sections 2.7-2.8; prob05 sample-mean variance (p. 39), commit b20ab73.
 <!-- END S114 -->
 
 <!-- BEGIN S115 -->
@@ -261,7 +329,7 @@ $$n \ge \frac{(b-a)^2 \ln(2/\delta)}{2\epsilon^2}.$$
 
 Darts: $(b-a)^2 = 16$, $\ln 40 = 3.688879$, so $n \ge 295{,}110.36$, rounded up to $295{,}111$. At that $n$ the bound is at most $0.05$.
 
-**Comparison.** Chebyshev with the known variance needed $539{,}354$ (slide 11), about $1.83$ times as many. Both are sufficient sample sizes from upper bounds, not minimal ones, and neither says how a particular run behaves. For scale, the RMSE at $n = 295{,}111$ is about $0.0030$.
+**Comparison.** Chebyshev with the known variance needed $539{,}354$ ([[S115]]), about $1.83$ times as many. Both are sufficient sample sizes from upper bounds, not minimal ones, and neither says how a particular run behaves. For scale, the RMSE at $n = 295{,}111$ is about $0.0030$.
 
 **Edge case.** If $Y$ is constant, $a = b$ is not allowed, but no bound is needed: $\bar Y_n = \mu$ exactly.
 
@@ -272,31 +340,61 @@ Darts: $(b-a)^2 = 16$, $\ln 40 = 3.688879$, so $n \ge 295{,}110.36$, rounded up 
 E01: Hoeffding on $[0,1]$, prob06 (p. 18), commit b20ab73; prob06 states it on $[0,1]$, and the $[a,b]$ form is the rescaling above. E17: Hoeffding sample size 295,111. Arithmetic printed by `gen/p9a_part01.py`.
 <!-- END S24 -->
 
-<!-- BEGIN S116 -->
-### 15. Rare Events Need Relative Error [S116]
+<!-- BEGIN S116a -->
+### 00. Small Absolute Error Can Hide Failure [S116a]
 
-**Message.** For a rare event the absolute error can be small while the error relative to the answer is large.
+**Message.** For a rare event, an estimate can be close in absolute terms and still miss the whole answer.
 
-Let $Y$ indicate an event of probability $\rho$, so $Y \sim \mathrm{Bernoulli}(\rho)$ and $\mu = \rho$. For a rare event, one indicator has a small variance $\rho(1-\rho)$. The useful scale is relative: $\mathrm{RMSE}/|\mu| = \sqrt{(1-\rho)/(n\rho)}$, which is small only when $n$ is large compared with $1/\rho$. At fixed $n$ and $0 \lt \rho \le 1/2$, a rarer event has a lower absolute RMSE but a higher relative RMSE. Both are distribution-level RMSEs, not the error of one realized run.
+Let $Y$ indicate an event of probability $\rho = 0.001$, so $Y \sim \mathrm{Bernoulli}(\rho)$ and the target is $\mu = \rho$. Take $n = 1000$ IID draws. The expected number of hits is $n\rho = 1$, and the chance that no draw hits the event is $0.999^{1000} \approx 0.368$, about 37%. In that case the estimate is $\hat\mu_n = 0$ while the truth is $0.001$.
 
-The plot shows per-draw spreads against the event probability $\rho$, both axes logarithmic: $\rho$ from $10^{-6}$ to $0.5$ across, values from $10^{-3}$ to $10^3$ up, with a grey dashed reference line at 1. The dashed blue curve is the absolute SD $\sigma_f = \sqrt{\rho(1-\rho)}$; it falls as the event gets rarer. The solid red curve is the relative SD $\sigma_f/\rho$; it rises. At $\rho = 1/2$ the absolute SD is $1/2$ and the relative SD is $1$, so the curves do not meet on the displayed range. Dividing either by $\sqrt n$ gives the RMSE.
+The two cards read that one run in two ways. The absolute error is $|0 - 0.001| = 0.001$, which looks tiny. The relative error divides by the target: $0.001/0.001 = 100\%$, so the estimate misses the entire quantity it was meant to measure. The grey line fixes the scope: this is one possible run, and 37% is its probability. It is not the typical error, which the next slide measures by RMSE.
 
 **Details.**
 
-**Calculation.** $Y$ is Bernoulli$(\rho)$, so $\mathrm{Var}(Y) = \rho(1-\rho)$ and
+**Relative error.** For a positive target, relative error $= |\hat\mu - \mu| / \mu$. It is undefined for $\mu = 0$.
 
-$$\frac{\mathrm{RMSE}(\hat\mu_n)}{\rho} = \sqrt{\frac{\rho(1-\rho)}{n\rho^2}}$$
+**Why "small minus small" misleads.** Any estimate between $0$ and $0.002$ has absolute error at most $0.001$, including $0$, which says the event never happens, and $0.002$, which doubles its probability. On the scale of the answer these are failures. Rare-event probabilities must be judged relative to $\rho$.
 
-$$= \sqrt{\frac{1-\rho}{n\rho}}.$$
+**A run versus repeated samples.** The zero-hit run is one outcome of the random experiment. Its probability is $(1 - \rho)^n = 0.999^{1000} = 0.3676954248$. Repeated-sample accuracy is a different quantity: the RMSE averages the squared error over all possible runs.
 
-**Two errors, two scales.** An absolute RMSE of $\sqrt{\rho(1-\rho)/n}$ looks small next to 1, but $\mu = \rho$ may be smaller still. A run of $n$ draws sees no hit with probability $(1-\rho)^n$, and then reports $\hat\mu = 0$: a small absolute error and a 100% relative error. Relative error is defined only for $\mu \ne 0$.
-
-Part 02 puts numbers on this with a concrete rare event and then changes the sampler so that the event is no longer rare.
+**Zero empirical spread.** After a zero-hit run every $Y_i = 0$, so $s_Y = 0$ and $\widehat{\mathrm{SE}} = 0$. The true per-draw variance $\rho(1 - \rho) \approx 0.000999$ is not zero. A zero error bar after no hits is a symptom of the problem, not evidence of precision.
 
 **Sources.**
 
-Our calculation (Bernoulli variance). Figure: inline SVG; curve points printed by `gen/p9a_part01.py`.
-<!-- END S116 -->
+Owen, *Monte Carlo theory, methods and examples*, Ch. 2, Bernoulli rare-event discussion (printed pp. 24-25), https://artowen.su.domains/mc/Ch-intro.pdf (evidence 2026-11-18 E03). Toy example and arithmetic: evidence E03; reproduced by `gen/p9a_part01.py` (exact, no random draws).
+<!-- END S116a -->
+
+<!-- BEGIN S116b -->
+### 00. Relative Error Needs Enough Hits [S116b]
+
+**Message.** Relative precision depends on the expected number of event hits, not just on the number of draws.
+
+The first line gives the setting, IID $Y_i \sim \mathrm{Bernoulli}(\rho)$ with $0 \lt \rho \lt 1$, and names $n\rho$ as the expected number of hits. The display gives the relative RMSE, the RMSE divided by the target: $\sqrt{(1-\rho)/(n\rho)}$. For a rare event $1 - \rho \approx 1$, so the relative RMSE is about $1/\sqrt{n\rho}$, one over the square root of the expected hits.
+
+The two cards apply it to the same $\rho = 0.001$ as the previous slide. With $n = 1000$ draws there is one expected hit and the relative RMSE is about 100%. A relative RMSE of at most 10% needs $n \ge 99{,}900$, about 100 expected hits. The grey line fixes the meaning: this is a target for the RMSE, the typical repeated-sample error. It is not a 95% confidence statement and not a bound on the error of one run.
+
+**Details.**
+
+**Absolute RMSE.** $\mathrm{Var}(Y) = \rho(1 - \rho)$ and the estimator is unbiased, so
+
+$$\mathrm{RMSE}(\hat\mu_n) = \sqrt{\frac{\rho(1-\rho)}{n}},$$
+
+$$\frac{\mathrm{RMSE}(\hat\mu_n)}{\rho} = \sqrt{\frac{\rho(1-\rho)}{n\rho^2}} = \sqrt{\frac{1-\rho}{n\rho}}.$$
+
+**Numbers for $\rho = 0.001$, $n = 1000$.** Absolute RMSE $= 0.000999499875$; relative RMSE $= 0.999499875$.
+
+**Ten percent.** $\sqrt{(1-\rho)/(n\rho)} \le 0.1$ is $n \ge (1 - \rho)/(0.01\,\rho) = 0.999/0.00001 = 99{,}900$. At that $n$ the expected number of hits is $99.9$.
+
+**Figure moved from the slide: per-draw spreads against $\rho$** (`fig/p9a-rare-sd.svg`, embedded in the HTML note). Both axes are logarithmic. Across, the event probability $\rho$ runs from $10^{-6}$ to $1/2$; up, values run from $10^{-3}$ to $10^3$, with a grey dashed reference line at 1. The dashed blue curve is the per-draw absolute SD $\sigma_f = \sqrt{\rho(1-\rho)}$: it falls as the event gets rarer, from $0.5$ at $\rho = 1/2$ to about $0.001$ at $\rho = 10^{-6}$. The solid red curve is the per-draw relative SD $\sigma_f/\rho = \sqrt{(1-\rho)/\rho}$: it rises as the event gets rarer, from $1$ at $\rho = 1/2$ to about $1000$ at $\rho = 10^{-6}$. The endpoints at $\rho = 1/2$ are unequal ($1/2$ and $1$), so the curves do not meet on the displayed range. A grey dashed vertical line marks $\rho = 0.001$, where the absolute SD is about $0.0316$ and the relative SD about $31.6$.
+
+**Reading it.** Dividing either curve by $\sqrt n$ gives the corresponding RMSE at sample size $n$; at fixed $n$ this shifts both curves down by the same factor and leaves their shapes unchanged. On $0 \lt \rho \le 1/2$, at fixed $n$, a rarer event has a lower absolute RMSE but a higher relative RMSE. The monotonic comparison is stated only on that range, and it concerns distribution-level RMSEs, not individual runs.
+
+**Applied thread.** Part 02 returns to this problem with a concrete exponential rare event and its own numbers, then changes the sampler so the event is no longer rare.
+
+**Sources.**
+
+Owen, *Monte Carlo theory, methods and examples*, Ch. 2, Bernoulli rare-event discussion (printed pp. 24-25), https://artowen.su.domains/mc/Ch-intro.pdf (evidence 2026-11-18 E03). Figure `fig/p9a-rare-sd.svg` and all numbers: `gen/p9a_part01.py` (exact formula curves, no random draws; same curve coordinates as the former on-slide plot).
+<!-- END S116b -->
 
 ## Part 2 - Change the Sampler
 

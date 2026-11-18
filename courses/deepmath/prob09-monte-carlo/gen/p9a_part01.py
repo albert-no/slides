@@ -1,10 +1,12 @@
-"""prob09 Part 01 (P1): every number and plotted coordinate on slides S26-S116.
+"""prob09 Part 01 (P1): every number and plotted coordinate on slides S26-S116b.
 
 Deterministic formula data only: no random numbers are drawn, so no seed is needed.
-Run:  python3 gen/p9a_part01.py
-Sources for the inputs: evidence.md E17 (six hand-chosen darts, darts bounds) and
-E11 (running rare event p = Exp(1), f = 1{x > 10}).
+Run:  python3 gen/p9a_part01.py          (prints the ledger; rewrites fig/p9a-rare-sd.svg)
+Sources for the inputs: prior job (2026-11-17) evidence E17 (six hand-chosen darts,
+darts bounds); job 2026-11-18 evidence E03 (generic rare-event toy rho = 0.001, n = 1000).
+The exponential rare event of Part 02 (e^-10) is computed in gen/p9b_calc.py, not here.
 """
+import os
 import math
 from statistics import NormalDist
 
@@ -61,34 +63,67 @@ print(f"  check bound at n={nh}: 2exp(-2 n eps^2/16) = {2*math.exp(-2*nh*eps**2/
 print(f"  ratio Chebyshev/Hoeffding = {math.ceil(n_cheb)/nh:.3f}")
 print(f"  RMSE at n={nh}: {sd_f/math.sqrt(nh):.5f}")
 
-# ---------- S37: schematic error vs evaluations, all constants = 1 ----------
-print("\nS37 error = N^(-2/d) (grid) and N^(-1/2) (MC); SVG x=150+100*log10 N, y=25+65*(-log10 err), clipped at err=1e-4")
-for name, slope in [("grid d=2", -1.0), ("MC", -0.5), ("grid d=8", -0.25), ("grid d=20", -0.1)]:
-    # end point at log10 N = 8 or where log10 err = -4
-    lx = min(8.0, 4.0 / -slope)
-    ly = slope * lx
-    print(f"  {name:10s} slope={slope:+.2f}  end log10N={lx:.2f} log10err={ly:.2f}  svg end=({150+100*lx:.1f},{25+65*(-ly):.1f})")
-for d in [2, 8, 20]:
-    print(f"  grid d={d}: points per axis for N=10^8: m = N^(1/d) = {10**(8/d):.3g}")
+# ---------- S116a / S116b: generic rare event, rho = 0.001, n = 1000 (job E03) ----------
+rho, n = 0.001, 1000
+print(f"\nS116a rare event: rho={rho}, n={n}")
+print(f"  expected hits n*rho = {n*rho:g}")
+p0 = (1 - rho) ** n
+print(f"  P(no hit) = (1-rho)^n = 0.999^1000 = {p0:.10f}  (~{100*p0:.0f}%)")
+print(f"  zero-hit run: estimate 0; absolute error = {abs(0-rho):g}; relative error = {abs(0-rho)/rho:.0%}")
+abs_rmse = math.sqrt(rho * (1 - rho) / n)
+rel_rmse = math.sqrt((1 - rho) / (n * rho))
+print(f"\nS116b absolute RMSE sqrt(rho(1-rho)/n) = {abs_rmse:.12f}")
+print(f"  relative RMSE sqrt((1-rho)/(n rho)) = {rel_rmse:.9f}  (~{100*rel_rmse:.0f}%); approx 1/sqrt(n rho) = {1/math.sqrt(n*rho):.4f}")
+n10 = (1 - rho) / (rho * 0.1 ** 2)
+print(f"  relative RMSE <= 0.10 needs n >= (1-rho)/(0.01 rho) = {n10:.6f} -> n >= {math.ceil(n10 - 1e-9):,}")
+print(f"  expected hits at n = 99,900: {99900*rho:.1f};  relative RMSE there = {math.sqrt((1-rho)/(99900*rho)):.6f}")
 
-# ---------- S116: rare event (E11 setup: p=Exp(1), f=1{x>10}) ----------
-rho = math.exp(-10)
-print(f"\nS116 rho = P(X>10) = e^-10 = {rho:.6e}")
-print(f"  per-draw variance rho(1-rho) = {rho*(1-rho):.6e}; SD = {math.sqrt(rho*(1-rho)):.6f}")
-print(f"  per-draw relative variance (1-rho)/rho = e^10 - 1 = {(1-rho)/rho:.7f}; relative SD = {math.sqrt((1-rho)/rho):.4f}")
-nrel = (1 - rho) / rho / 0.1**2
-print(f"  relative RMSE <= 0.1 needs n >= {nrel:.2f} -> {math.ceil(nrel)}")
-print(f"  expected hits in 1/rho draws = 1; 1/rho = {1/rho:.2f}")
-print(f"  P(no hit in n=10^4 draws) = (1-rho)^10000 = {(1-rho)**10000:.4f}")
-print("  curves: x=150+135*(log10 rho + 6) for rho in [1e-6, 0.5]; y=20+40*(3 - log10 value)")
+# ---------- S116b notes figure: per-draw absolute and relative SD vs rho (moved from old S116) ----------
+# x = 150 + 135 (log10 rho + 6) for rho in [1e-6, 1/2]; y = 20 + 40 (3 - log10 value)
+X = lambda lr: 150 + 135 * (lr + 6)
+Yc = lambda v: 20 + 40 * (3 - math.log10(v))
 def pts(fn):
     out = []
     for i in range(0, 31):
         lr = -6 + i * (math.log10(0.5) + 6) / 30
-        r = 10**lr
-        out.append(f"{150+135*(lr+6):.1f},{20+40*(3-math.log10(fn(r))):.1f}")
+        out.append(f"{X(lr):.1f},{Yc(fn(10**lr)):.1f}")
     return " ".join(out)
-print("  absolute SD sqrt(rho(1-rho)):", pts(lambda r: math.sqrt(r*(1-r))))
-print("  relative SD sqrt((1-rho)/rho):", pts(lambda r: math.sqrt((1-r)/r)))
-lr = math.log10(rho)
-print(f"  marker x={150+135*(lr+6):.1f}; abs y={20+40*(3-math.log10(math.sqrt(rho*(1-rho)))):.1f}; rel y={20+40*(3-math.log10(math.sqrt((1-rho)/rho))):.1f}")
+abs_pts = pts(lambda r: math.sqrt(r * (1 - r)))
+rel_pts = pts(lambda r: math.sqrt((1 - r) / r))
+print("\nS116b-note figure (fig/p9a-rare-sd.svg): log-log, rho in [1e-6, 1/2]")
+for r in [1e-6, 1e-3, 0.5]:
+    print(f"  rho={r:g}: absolute SD={math.sqrt(r*(1-r)):.6g}  relative SD={math.sqrt((1-r)/r):.6g}")
+print("  absolute SD points:", abs_pts)
+print("  relative SD points:", rel_pts)
+xr = X(math.log10(rho))
+svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 340" font-family="Noto Sans, Arial, sans-serif" font-size="24" role="img" aria-labelledby="t d">
+<title id="t">Per-draw absolute and relative SD of an event indicator</title>
+<desc id="d">Log-log plot against event probability rho from 10^-6 to 1/2. Absolute SD sqrt(rho(1-rho)) rises with rho from 0.001 to 0.5; relative SD sqrt((1-rho)/rho) falls from about 1000 to 1. The curves do not meet on this range. Generated by gen/p9a_part01.py.</desc>
+<!-- generated by gen/p9a_part01.py; exact formula curves, no random draws -->
+<rect width="1000" height="340" fill="#fff"/>
+<line x1="150" y1="265" x2="940" y2="265" stroke="#222" stroke-width="2.5"/>
+<line x1="150" y1="265" x2="150" y2="10" stroke="#222" stroke-width="2.5"/>
+<line x1="150" y1="140" x2="930" y2="140" stroke="#bbb" stroke-width="2" stroke-dasharray="6 6"/>
+<line x1="{xr:.1f}" y1="12" x2="{xr:.1f}" y2="265" stroke="#999" stroke-width="2" stroke-dasharray="4 6"/>
+<polyline fill="none" stroke="#c0392b" stroke-width="4.5" points="{rel_pts}"/>
+<polyline fill="none" stroke="#003876" stroke-width="4.5" stroke-dasharray="14 8" points="{abs_pts}"/>
+<g stroke="#222" stroke-width="2">
+<line x1="141" y1="20" x2="150" y2="20"/><line x1="141" y1="140" x2="150" y2="140"/><line x1="141" y1="260" x2="150" y2="260"/>
+<line x1="150" y1="265" x2="150" y2="274"/><line x1="420" y1="265" x2="420" y2="274"/><line x1="690" y1="265" x2="690" y2="274"/>
+</g>
+<g fill="#555" text-anchor="end">
+<text x="132" y="28">10³</text><text x="132" y="148">1</text><text x="132" y="268">10⁻³</text>
+</g>
+<g fill="#555" text-anchor="middle">
+<text x="150" y="300">10⁻⁶</text><text x="420" y="300">10⁻⁴</text><text x="690" y="300">10⁻²</text>
+<text x="{xr:.1f}" y="330" fill="#777">ρ = 0.001</text>
+</g>
+<text x="930" y="300" fill="#555" text-anchor="end">event probability ρ</text>
+<text x="600" y="62" fill="#c0392b" font-weight="700">relative SD √((1−ρ)/ρ)</text>
+<text x="600" y="232" fill="#003876" font-weight="700">absolute SD √(ρ(1−ρ))</text>
+</svg>
+'''
+out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "fig", "p9a-rare-sd.svg")
+with open(out, "w") as fh:
+    fh.write(svg)
+print(f"  wrote fig/p9a-rare-sd.svg; rho=0.001 guide at x={xr:.1f}")

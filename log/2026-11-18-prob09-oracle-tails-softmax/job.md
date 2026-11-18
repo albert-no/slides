@@ -7,12 +7,13 @@ id commit: c47b198f8e8d0153fee6923ce2dafe8b13f4fe77 (inherited; stable IDs alrea
 branch: 2026-11-17-prob09-major-revision (existing PR77 continuation; no second PR/branch)
 pr: 77 (open, unmerged)
 pr url: https://github.com/albert-no/slides/pull/77
-state: in-work
+state: approved
 round: 2 of 2
 current plan: plan-v1.md
-review candidate: 74ee8118731e4758c51366f11c0951b586e482a5
-latest review: review-r1.md — revise; F01/F02 blocking, F03 nonblocking
-current action: work order for F01/F02 layout simplification; await work-r2 exact pushed SHA
+review candidate: 9a7342a5ef1a90b90225f2f4e4078f45af26d070
+latest review: review-r2.md — approved; F01/F02/F03 closed
+approved commit: 9a7342a5ef1a90b90225f2f4e4078f45af26d070
+current action: await final record push; verify log-only tail, then update existing PR77
 albert decisions:
 - 2026-11-18 16:49 KST: simplify current p40, answer whether heavier tails are better on p45, and replace the difficult p47 example with a simpler one such as softmax. Earlier waiver of pacing remains. No merge order.
 verification: RO/RW mounts reconfirmed; fresh GitHub REST verifies PR77 open/unmerged at b96c606, base main b20ab73ac7e74e9489d379cf9caad7565f17e31e

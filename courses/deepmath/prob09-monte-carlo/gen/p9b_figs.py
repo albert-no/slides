@@ -5,7 +5,7 @@ Every curve is the exact closed-form density/contribution sampled on a fine grid
 mapped by one linear (or log10) transform per axis; the transform is written into each
 SVG as a comment. Math labels are HTML overlay spans in the deck; the positions the
 deck uses are printed below as (left%, top%) of the viewBox.
-Schematic dot positions (S45, S63) are hand-placed and labelled as schematic on the slide.
+Schematic dot positions (S45) and the S63a locations are hand-placed and labelled as schematic on the slide.
 No random numbers are drawn anywhere.  Run:  python3 gen/p9b_figs.py
 """
 import math, os
@@ -195,28 +195,31 @@ def fig_proposal():
     report(P, 'event label', P.X(12), P.Y(10**-6.1))
 
 
-# ---------------------------------------------------------------- S118 contribution f w (log)
+# ---------------------------------------------------------------- S118 contribution f w (log), figure-first
 def fig_contrib():
-    W, H = 620, 430
-    P = Plot(W, H, (100, 20, 600, 370), (8, 20), (-7.2, -2.5), ylog=True)
+    W, H = 1000, 330
+    P = Plot(W, H, (110, 15, 975, 280), (8, 20), (-7.3, -2.6), ylog=True)
     P.band(10, 20)
     P.axes(range(8, 21, 2), [-3, -5, -7])
     mu = math.exp(-10)
-    P.curve(lambda x: 10 * math.exp(-0.9 * x), 10, 20, GREEN)
+    P.curve(lambda x: 10 * math.exp(-0.9 * x), 10, 20, GREEN, width=5)
     y = P.Y(mu)
-    P.add(f'<line x1="{P.x0}" y1="{y:.1f}" x2="{P.x1}" y2="{y:.1f}" stroke="{BLUE}" stroke-width="3" stroke-dasharray="10 6"/>')
+    P.add(f'<line x1="{P.x0}" y1="{y:.1f}" x2="{P.x1}" y2="{y:.1f}" stroke="{BLUE}" stroke-width="3.5" stroke-dasharray="12 7"/>')
     P.vline(10)
-    P.add(f'<circle cx="{P.X(10):.1f}" cy="{P.Y(10*math.exp(-9)):.1f}" r="7" fill="{GREEN}"/>')
-    P.save('p9b-contrib.svg', 'S118: exact f(x)w(x)=10e^-0.9x for x>10 (green), 0 for x<=10; log10 y; '
-           'mu=e^-10 (blue dashed); X=100+500(x-8)/12, Y=370-350(log10 y+7.2)/4.7')
+    P.add(f'<circle cx="{P.X(10):.1f}" cy="{P.Y(10*math.exp(-9)):.1f}" r="8" fill="{GREEN}"/>')
+    P.save('p9b-contrib.svg', 'S118: exact weighted contribution f(x)w(x)=10e^-0.9x for x>10 (green solid), '
+           '0 for x<=10 (not drawable on a log axis; labelled in the white strip); log10 y; '
+           'target mean mu=e^-10 (blue dashed, a constant, not a density); X=110+865(x-8)/12, Y=280-265(log10 y+7.3)/4.7')
     print('  S118 overlays:')
     for t in (-3, -5, -7):
-        report(P, f'y tick 10^{t}', P.x0 - 36, P.Y(10**t))
-    report(P, 'mu line label', P.X(17.6), y - 24)
-    report(P, 'fw curve label', P.X(13.9), P.Y(10 * math.exp(-0.9 * 13.9)) - 45)
-    report(P, 'fw=0 left', P.X(9), P.Y(10**-5.6))
+        report(P, f'y tick 10^{t}', P.x0 - 38, P.Y(10**t))
+    report(P, 'mu line label (above line, right)', P.X(17.2), y - 24)
+    report(P, 'fw curve label (upper right)', P.X(15.6), P.Y(10**-3.05))
+    report(P, 'zero strip line 1', P.X(9), P.Y(10**-5.55))
+    report(P, 'zero strip line 2', P.X(9), P.Y(10**-6.05))
+    report(P, 'zero strip line 3', P.X(9), P.Y(10**-6.55))
     report(P, 'x', P.X(20) - 2, P.y1 + 30)
-    report(P, 'start value at 10', P.X(10) + 95, P.Y(10 * math.exp(-9)))
+    print('   x tick labels are SVG text (plain digits)')
 
 
 # ---------------------------------------------------------------- S120 sample-count bars (log)
@@ -241,47 +244,84 @@ def fig_budget():
     report(P, 'n_is value', P.X(math.log10(n_is)) + 12, 147)
 
 
-# ---------------------------------------------------------------- S57 |f|p vs p (illustration)
+# ---------------------------------------------------------------- S57 p vs |f|p (illustration)
 def fig_weighted():
-    W, H = 640, 420
+    W, H = 1000, 330
     phi = lambda x: math.exp(-x * x / 2) / math.sqrt(2 * math.pi)
-    P = Plot(W, H, (30, 20, 620, 330), (-3.5, 3.5), (-0.3, 0.42))
-    P.curve(lambda x: abs(x) * phi(x), -3.5, 3.5, BLUE, width=4, fill_to=0, fill='#d6e2f0')
-    P.curve(phi, -3.5, 3.5, GREY, width=3)
-    P.curve(lambda x: x * phi(x), -3.5, 3.5, RED, width=3, dash='10 6')
-    P.add(f'<line x1="{P.x0}" y1="{P.Y(0):.1f}" x2="{P.x1}" y2="{P.Y(0):.1f}" stroke="#333" stroke-width="2"/>')
+    P = Plot(W, H, (40, 20, 970, 250), (-3.5, 3.5), (0, 0.43))
+    P.curve(lambda x: abs(x) * phi(x), -3.5, 3.5, BLUE, width=5, fill_to=0, fill='#d6e2f0')
+    P.curve(phi, -3.5, 3.5, GREY, width=3, dash='12 7')
+    P.add(f'<line x1="{P.x0}" y1="{P.y1}" x2="{P.x1}" y2="{P.y1}" stroke="#333" stroke-width="2"/>')
     for t in (-3, -2, -1, 0, 1, 2, 3):
-        P.add(f'<line x1="{P.X(t):.1f}" y1="{P.Y(0):.1f}" x2="{P.X(t):.1f}" y2="{P.Y(0)+8:.1f}" stroke="#333" stroke-width="2"/>')
-    P.save('p9b-weighted.svg', 'S57: illustration p=N(0,1) (grey), f(x)=x: f p signed (red dashed), |f|p (blue, shaded); '
-           'X=30+590(x+3.5)/7, Y=330-310(y+0.3)/0.72')
+        P.add(f'<line x1="{P.X(t):.1f}" y1="{P.y1}" x2="{P.X(t):.1f}" y2="{P.y1+8}" stroke="#333" stroke-width="2"/>')
+        if t != 0:
+            P.text(P.X(t), P.y1 + 34, str(t).replace('-', '\u2212'), fs=24)
+    # peak markers of |x| phi at x = +-1 (exact maximizers), and the zero at x = 0
+    for t in (-1, 1):
+        P.add(f'<circle cx="{P.X(t):.1f}" cy="{P.Y(phi(1)):.1f}" r="7" fill="{BLUE}"/>')
+    P.add(f'<circle cx="{P.X(0):.1f}" cy="{P.y1:.1f}" r="7" fill="#fff" stroke="{BLUE}" stroke-width="3"/>')
+    P.save('p9b-weighted.svg', 'S57: illustration p=N(0,1) (grey dashed) and |f|p=|x|phi(x) (blue solid, shaded), f(x)=x; '
+           '|x|phi maximal at x=+-1 (value phi(1)=0.242), zero at x=0 where phi peaks (0.399); '
+           'X=40+930(x+3.5)/7, Y=250-230y/0.43. Signed f p moved to the notes.')
+    print(f'  S57 values: phi(0)={phi(0):.4f}, |x|phi max at +-1 = {phi(1):.4f}')
     print('  S57 overlays:')
-    report(P, 'p label (peak)', P.X(0), P.Y(0.399) - 20)
-    report(P, '|f|p label right lobe', P.X(1.9), P.Y(0.242) - 10)
-    report(P, 'f p label (neg lobe)', P.X(-1.0), P.Y(-0.242) + 30)
-    report(P, 'center note', P.X(0), P.Y(0) + 34)
-    report(P, 'x label', P.X(3.4), P.Y(0) + 30)
+    report(P, 'p label (right of peak)', P.X(0.95), P.Y(0.399) + 2)
+    report(P, '|f|p label right lobe', P.X(2.25), P.Y(0.20))
+    report(P, '|f|p label left lobe', P.X(-2.25), P.Y(0.20))
+    report(P, 'center note under axis', P.X(0), P.y1 + 66)
+    report(P, 'x label', P.X(3.45), P.y1 + 30)
 
 
-# ---------------------------------------------------------------- S63 oracle q*
-def fig_oracle():
-    W, H = 600, 420
-    P = Plot(W, H, (60, 30, 580, 300), (8, 18), (0, 1.1))
-    P.band(10, 18)
-    P.axes(range(8, 19, 2), [0, 1])
-    P.text(P.x0 - 14, P.Y(1) + 7, '1', anchor='end'); P.text(P.x0 - 14, P.Y(0) + 7, '0', anchor='end')
-    P.curve(lambda x: math.exp(-(x - 10)), 10, 18, BLUE, fill_to=0, fill='#d6e2f0')
-    P.add(f'<line x1="{P.x0}" y1="{P.y1-2}" x2="{P.X(10):.1f}" y2="{P.y1-2}" stroke="{BLUE}" stroke-width="4"/>')
-    P.vline(10)
-    # hand-placed schematic draw positions on a strip below the axis
-    for x in (10.2, 10.5, 10.9, 11.4, 12.1, 13.3, 15.0):
-        P.add(f'<line x1="{P.X(x):.1f}" y1="{P.y1+48}" x2="{P.X(x):.1f}" y2="{P.y1+72}" stroke="{GREEN}" stroke-width="4"/>')
-    P.add(f'<line x1="{P.x0}" y1="{P.y1+60}" x2="{P.x1}" y2="{P.y1+60}" stroke="{LGREY}" stroke-width="1.5"/>')
-    P.save('p9b-oracle.svg', 'S63: exact q*(x)=e^-(x-10) on x>10 (0 below); X=60+520(x-8)/10, Y=300-270y/1.1; '
-           'green ticks on strip y=348-372 are hand-placed schematic draws')
-    print('  S63 overlays:')
-    report(P, 'q* label', P.X(12.4), P.Y(math.exp(-2.4)) - 30)
-    report(P, 'strip label', P.X(15.6), P.y1 + 104)
-    report(P, 'x', P.X(18) - 2, P.y1 + 30)
+# ---------------------------------------------------------------- S63a identical contributions (schematic)
+def fig_identical():
+    W, H = 1000, 240
+    xs = (10.3, 11.2, 12.7, 15.0)             # schematic illustrative locations, not draws
+    mu = math.exp(-10)
+    for x in xs:                               # Y = f p / q* with q* = e^-(x-10) on x > 10
+        assert abs(math.exp(-x) / math.exp(-(x - 10)) - mu) < 1e-18
+    P = Plot(W, H, (0, 0, W, H), (0, 1), (0, 1))
+    P.add('<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">'
+          f'<path d="M0,0 L10,5 L0,10 z" fill="{GREY}"/></marker></defs>')
+    cx = [355, 525, 695, 865]; bw, bh, top = 150, 58, 8
+    for c in cx:
+        P.add(f'<rect x="{c-bw/2}" y="{top}" width="{bw}" height="{bh}" rx="10" fill="#f5f8fc" stroke="{BLUE}" stroke-width="2.5"/>')
+    yc, yw, yh = 610, 330, 62; ytop = 170
+    P.add(f'<rect x="{yc-yw/2}" y="{ytop}" width="{yw}" height="{yh}" rx="10" fill="#eaf5ee" stroke="{GREEN}" stroke-width="3"/>')
+    for i, c in enumerate(cx):
+        tx = yc - 105 + i * 70
+        P.add(f'<line x1="{c}" y1="{top+bh+4}" x2="{tx}" y2="{ytop-6}" stroke="{GREY}" stroke-width="3" marker-end="url(#ah)"/>')
+    P.save('p9b-identical.svg', 'S63a: schematic. Boxes = illustrative fixed locations x=10.3, 11.2, 12.7, 15.0 (not simulated draws) '
+           'from q*=10+Exp(1); each maps to Y=f(x)p(x)/q*(x)=e^-10 (asserted in this generator and in gen/p9b_calc.py)')
+    print('  S63a overlays:')
+    for x, c in zip(xs, cx):
+        report(P, f'x = {x}', c, top + bh / 2)
+    report(P, 'Y box', yc, ytop + yh / 2)
+    report(P, 'row label X', 140, top + bh / 2)
+    report(P, 'row label Y', 140, ytop + yh / 2)
+
+
+# ---------------------------------------------------------------- S69a per-draw variance bars
+def fig_var():
+    W, H = 1000, 200
+    P = Plot(W, H, (340, 10, 960, 150), (0, 1.1), (0, 1))
+    for t in (0, 0.5, 1):
+        x = P.X(t)
+        P.add(f'<line x1="{x:.1f}" y1="{P.y0}" x2="{x:.1f}" y2="{P.y1}" stroke="#e1e5ea" stroke-width="2"/>')
+        P.add(f'<line x1="{x:.1f}" y1="{P.y1}" x2="{x:.1f}" y2="{P.y1+8}" stroke="#333" stroke-width="2"/>')
+    P.add(f'<line x1="{P.x0}" y1="{P.y1}" x2="{P.x1}" y2="{P.y1}" stroke="#333" stroke-width="2"/>')
+    vals = [(1.0, LGREY), (5 / 27, GREEN)]
+    for i, (v, c) in enumerate(vals):
+        y = 22 + i * 64
+        P.add(f'<rect x="{P.x0}" y="{y}" width="{P.X(v)-P.x0:.1f}" height="50" fill="{c}"/>')
+    P.save('p9b-var.svg', 'S69a: exact per-draw variance of Y=f w for f=x, p=Exp(1): ordinary MC (q=p) 1, '
+           'q=Exp(1/2) 5/27=0.185; linear x-axis X=340+620v/1.1')
+    print('  S69a overlays:')
+    for t in (0, 0.5, 1):
+        report(P, f'tick {t}', P.X(t), P.y1 + 30)
+    report(P, 'row label MC', 170, 47)
+    report(P, 'row label IS', 170, 111)
+    report(P, 'value MC (inside bar end)', P.X(1.0) - 40, 47)
+    report(P, 'value IS (right of bar)', P.X(5 / 27) + 95, 111)
 
 
 # ---------------------------------------------------------------- S66 light-tailed q
@@ -309,5 +349,5 @@ def fig_light():
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     for f in (fig_tail, fig_visits, fig_ratio, fig_support, fig_proposal, fig_contrib,
-              fig_budget, fig_weighted, fig_oracle, fig_light):
+              fig_budget, fig_weighted, fig_identical, fig_light, fig_var):
         f()

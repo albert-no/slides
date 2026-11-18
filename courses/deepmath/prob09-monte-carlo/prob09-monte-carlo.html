@@ -170,45 +170,61 @@ table.p9c-cmp td.p9c-span { text-align: center; color: var(--gray-text); }
   <p class="subtitle">Why ML needs averages, and how accurate they are</p>
 </div>
 
-<!-- S130 — One-Hot Cross-Entropy Equals KL -->
+<!-- S130 — Log Loss Targets Forward KL -->
 <div class="slide" data-slide-id="S130">
-  <h2>One-Hot Cross-Entropy Equals KL</h2>
+  <h2>Log Loss Targets Forward KL</h2>
   <div class="divider"></div>
-  <p>Point: at one labelled input, the cross-entropy (CE) loss is a KL</p>
-  <p>Recall: input $x$ with label $y$; one-hot target $\delta_y$; classifier $q_\theta(\cdot \mid x)$</p>
-  <div class="math-block" style="margin:8px 0">$$\mathrm{CE}\big(\delta_y,\, q_\theta(\cdot \mid x)\big) \;=\; D\big(\delta_y \,\big\|\, q_\theta(\cdot \mid x)\big) \;=\; -\log q_\theta(y \mid x)$$</div>
-  <p class="muted">Exact because a one-hot target has entropy $0$; needs $q_\theta(y \mid x) \gt 0$</p>
-  <div class="highlight"><p>Not every CE is a KL: in general CE $=$ entropy $+$ KL</p></div>
+  <p>Point: fixed data entropy, so log loss and KL share minimizers</p>
+  <p>$P$: fixed data distribution; $Q_\theta$ with pmf $q_\theta$: the model we change</p>
+  <div class="p9a-flow">
+    <div class="p9a-box p9a-wide">
+      <p class="p9a-head">Expected log loss</p>
+      <p>$L(\theta) = \mathbb{E}_{X \sim P}\Big[\log \dfrac{1}{q_\theta(X)}\Big]$</p>
+      <p class="muted">the cross-entropy</p>
+    </div>
+    <div class="p9a-arrow">$=$</div>
+    <div class="p9a-box">
+      <p class="p9a-head">Forward KL</p>
+      <p>$D(P \,\|\, Q_\theta)$</p>
+      <p class="p9a-easy">changes with $\theta$</p>
+    </div>
+    <div class="p9a-arrow">$+$</div>
+    <div class="p9a-box">
+      <p class="p9a-head">Data entropy</p>
+      <p>$H(P)$</p>
+      <p class="muted">fixed: no $\theta$</p>
+    </div>
+  </div>
+  <div class="highlight"><p>Minimizing log loss minimizes $D(P \,\|\, Q_\theta)$, with no $p(x)$ needed</p></div>
+  <p class="muted">Population objectives; finite terms: $q_\theta \gt 0$ where $p \gt 0$, $H(P) \lt \infty$</p>
 </div>
 
-<!-- S131 — Population Loss Requires an Average -->
+<!-- S131 — Fit the Model Without Evaluating P -->
 <div class="slide" data-slide-id="S131">
-  <h2>Population Loss Requires an Average</h2>
+  <h2>Fit the Model Without Evaluating $P$</h2>
   <div class="divider"></div>
-  <p>Point: a fixed model&rsquo;s loss over all data is an expectation</p>
+  <p>Point: data samples and model values suffice; $p(X_i)$ is never used</p>
   <div class="p9a-flow">
-    <div class="p9a-box p9a-hard">
-      <p class="p9a-head">Population loss</p>
-      <p>$L(\theta) = \mathbb{E}\big[f(X, Y)\big]$</p>
-      <p>$(X, Y) \sim P_{\text{data}}$</p>
-      <p class="p9a-hardtxt">hard: all pairs</p>
+    <div class="p9a-box">
+      <p class="p9a-head">Available</p>
+      <p>data $X_i \stackrel{\text{IID}}{\sim} P$, $i \le n$</p>
+      <p>model values $q_\theta(X_i)$</p>
+      <p class="p9a-hardtxt">not needed: $p(X_i)$</p>
     </div>
     <div class="p9a-arrow">&rarr;</div>
     <div class="p9a-box p9a-wide">
-      <p class="p9a-head">Per-example loss</p>
-      <p>$f(x, y) = -\log q_\theta(y \mid x)$</p>
-      <p class="p9a-easy">easy: one example</p>
+      <p class="p9a-head">Average log loss</p>
+      <p>$\hat L_n(\theta) = \dfrac{1}{n} \displaystyle\sum_{i=1}^{n} \log \dfrac{1}{q_\theta(X_i)}$</p>
     </div>
-    <div class="p9a-arrow">&rarr;</div>
-    <div class="p9a-box">
-      <p class="p9a-head">Sample average</p>
-      <p>$\frac{1}{n} \sum_{i=1}^{n} f(X_i, Y_i)$</p>
-      <p class="p9a-easy">estimates $L(\theta)$</p>
+    <div class="p9a-arrow">$\approx$</div>
+    <div class="p9a-box p9a-wide">
+      <p class="p9a-head">Target $L(\theta)$</p>
+      <p>$\mathbb{E}_{X \sim P}\Big[\log \dfrac{1}{q_\theta(X)}\Big]$</p>
+      <p>$= D(P \,\|\, Q_\theta) + H(P)$</p>
     </div>
   </div>
-  <p>Samples: $(X_i, Y_i) \stackrel{\text{IID}}{\sim} P_{\text{data}}$, labelled data, not draws from $q_\theta$</p>
-  <p class="muted">Model $\theta$ fixed; mean loss finite</p>
-  <p class="muted">Evaluates an expectation; no training step here</p>
+  <div class="highlight"><p>Sample $P$; evaluate $Q_\theta$; minimize KL up to a fixed entropy</p></div>
+  <p class="muted">Estimates KL $+\, H(P)$, not KL alone; fixed $\theta$, finite mean: unbiased for $L(\theta)$</p>
 </div>
 
 <!-- S04 — Sampled Replies Estimate Pass Rate -->
@@ -235,7 +251,7 @@ table.p9c-cmp td.p9c-span { text-align: center; color: var(--gray-text); }
       <p class="p9a-hardtxt">hard: all possible replies</p>
     </div>
   </div>
-  <p>Samples come from the model $p$, not from labelled data</p>
+  <p>Here, sample model replies; previously, sample data from $P$</p>
   <p class="muted">Average $f$ over a few sampled replies to estimate $\mu$</p>
 </div>
 

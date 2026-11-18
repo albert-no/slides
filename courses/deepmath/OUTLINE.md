@@ -494,8 +494,9 @@ Lecture 9 — final probability deck; junior undergraduates, rigorous and
 example-led; no duration target (Albert C13, job 2026-11-18-prob09-clarity-trim).
 Answers prob08's bridge (integrals stop closing → sample them). Argument: Monte
 Carlo turns an expectation into computation; choosing the sampler changes the
-error, not the target. Opens with ML motivation (one-hot CE = KL; population
-loss is an expectation; pass rate from sampled replies). Recalls prob01
+error, not the target. Opens with ML motivation (expected log loss = forward KL + fixed entropy H(P);
+its sample average fits the model by KL from data samples alone, without
+evaluating P; pass rate from sampled replies). Recalls prob01
 LOTUS/Jensen, prob02 KL, prob04 chain rule, prob05 sample-mean mean/variance,
 LLN/Chebyshev/CLT, prob06 Hoeffding, prob07 MSE decomposition without re-proving.
 Ends with the expectation-estimator synthesis table (S109a) and the IS-identity
@@ -509,17 +510,17 @@ Generators: `prob09-monte-carlo/gen/` (`p9a_part01.py`, `p9b_calc.py`, `p9b_figs
 | # | Section | Slides | Location |
 |---|---|---|---|
 | — | Title + Contents (five parts) | 1–2 | prob09-monte-carlo/prob09-monte-carlo.html:106 |
-| 01 | Estimate an Expectation (one-hot CE = KL; population loss requires an average; sampled replies estimate pass rate; sample-evaluate-average with IID; six hand-chosen darts; sample mean; unbiased ≠ accurate with exact binomial pmf; RMSE σ_f/√n; standard error defined, estimated SE s_Y/√n; CLT interval vs Chebyshev / Hoeffding; bounded averages concentrate; rare-event toy: small absolute error hides failure, relative error needs enough hits) | 3–16 | prob09-monte-carlo/prob09-monte-carlo.html:166 |
-| 02 | Change the Sampler (rare tail P(X>10), X~Exp(1); visit useful outcomes; weights w = p/q; IS identity theorem + two-slide proof S47a–S47b; support counterexample; IS estimator; practical Exp(0.1) proposal; weighted contributions fw; relative variance and n_IS; coverage ≠ variance) | 17–31 | prob09-monte-carlo/prob09-monte-carlo.html:493 |
-| 03 | Control Proposal Risk (second moment decides; sample where contributions matter; optimal proposal q* = \|f\|p/c + two-slide proof; identical contributions → zero estimator variance for one-sign f; oracle needs normaliser; light-tailed Exp(2) → infinite second moment; consistency ≠ error bar; heavier proposal helps this integrand (5/27); heavier tails are not a requirement) | 32–45 | prob09-monte-carlo/prob09-monte-carlo.html:769 |
-| 04 | Remove the Normalizer (Bayes leaves a normalizing integral; target known up to Z; unnormalised weights; positive total; Bayesian unknown-Z example with likelihood weights; ratio of two averages; consistency; one-draw SNIS bias; normalisation does not guarantee improvement; weight dominance; ESS; healthy ESS can miss support; capability map) | 46–59 | prob09-monte-carlo/prob09-monte-carlo.html:996 |
-| 05 | Reuse Samples in RL (behaviour-policy data; IS correction; per-token ratio product; compounding toy E[w²] = 1.1^T; behaviour vs reference roles; KL is not a variance certificate; RL objectives contain expectations — scoped InstructGPT reward-plus-KL objective; PPO clipping as surrogate with advantage defined, Schulman et al. Fig. 1) | 60–68 | prob09-monte-carlo/prob09-monte-carlo.html:1338 |
-| — | Synthesis: expectation estimators (S109a); closer E_p[f] = E_q[f·p/q] | 69–70 | prob09-monte-carlo/prob09-monte-carlo.html:1547 |
+| 01 | Estimate an Expectation (log loss targets forward KL + fixed entropy; fit the model without evaluating P: average data log loss is Monte Carlo; sampled replies estimate pass rate; sample-evaluate-average with IID; six hand-chosen darts; sample mean; unbiased ≠ accurate with exact binomial pmf; RMSE σ_f/√n; standard error defined, estimated SE s_Y/√n; CLT interval vs Chebyshev / Hoeffding; bounded averages concentrate; rare-event toy: small absolute error hides failure, relative error needs enough hits) | 3–16 | prob09-monte-carlo/prob09-monte-carlo.html:166 |
+| 02 | Change the Sampler (rare tail P(X>10), X~Exp(1); visit useful outcomes; weights w = p/q; IS identity theorem + two-slide proof S47a–S47b; support counterexample; IS estimator; practical Exp(0.1) proposal; weighted contributions fw; relative variance and n_IS; coverage ≠ variance) | 17–31 | prob09-monte-carlo/prob09-monte-carlo.html:509 |
+| 03 | Control Proposal Risk (second moment decides; sample where contributions matter; optimal proposal q* = \|f\|p/c + two-slide proof; identical contributions → zero estimator variance for one-sign f; oracle needs normaliser; light-tailed Exp(2) → infinite second moment; consistency ≠ error bar; heavier proposal helps this integrand (5/27); heavier tails are not a requirement) | 32–45 | prob09-monte-carlo/prob09-monte-carlo.html:785 |
+| 04 | Remove the Normalizer (Bayes leaves a normalizing integral; target known up to Z; unnormalised weights; positive total; Bayesian unknown-Z example with likelihood weights; ratio of two averages; consistency; one-draw SNIS bias; normalisation does not guarantee improvement; weight dominance; ESS; healthy ESS can miss support; capability map) | 46–59 | prob09-monte-carlo/prob09-monte-carlo.html:1012 |
+| 05 | Reuse Samples in RL (behaviour-policy data; IS correction; per-token ratio product; compounding toy E[w²] = 1.1^T; behaviour vs reference roles; KL is not a variance certificate; RL objectives contain expectations — scoped InstructGPT reward-plus-KL objective; PPO clipping as surrogate with advantage defined, Schulman et al. Fig. 1) | 60–68 | prob09-monte-carlo/prob09-monte-carlo.html:1354 |
+| — | Synthesis: expectation estimators (S109a); closer E_p[f] = E_q[f·p/q] | 69–70 | prob09-monte-carlo/prob09-monte-carlo.html:1563 |
 
 Key theorems (unnumbered on slides): **Theorem (importance-sampling identity)**
-E_p[f] = E_q[f·p/q] when q > 0 wherever fp ≠ 0 (prob09-monte-carlo/prob09-monte-carlo.html:582, proof S47a–S47b);
+E_p[f] = E_q[f·p/q] when q > 0 wherever fp ≠ 0 (prob09-monte-carlo/prob09-monte-carlo.html:598, proof S47a–S47b);
 **Theorem (optimal proposal)** q* = \|f\|p/c minimises the IS second moment
-(prob09-monte-carlo/prob09-monte-carlo.html:810, proof S60–S61).
+(prob09-monte-carlo/prob09-monte-carlo.html:826, proof S60–S61).
 Named-not-proved, flagged: strong LLN; CLT interval as approximate; SNIS
 consistency; ESS as a heuristic diagnostic; PPO clipping and the RLHF objective
 scoped to the cited sources.

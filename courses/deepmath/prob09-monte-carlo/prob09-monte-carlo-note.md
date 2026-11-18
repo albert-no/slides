@@ -40,63 +40,79 @@ This part does not re-teach probability. It takes the expectation, the sample me
 <!-- END S03 -->
 
 <!-- BEGIN S130 -->
-### 4. One-Hot Cross-Entropy Equals KL [S130]
+### 4. Log Loss Targets Forward KL [S130]
 
-**Message.** At one labelled input, the familiar cross-entropy loss is exactly a KL divergence, and computing it is easy; the hard part is averaging it over data.
+**Message.** The expected log loss of a model is the forward KL from the fixed data distribution $P$ to the model plus the entropy $H(P)$; because that entropy does not depend on the model, log loss and KL have the same minimizers, and the log loss never asks for the pointwise probabilities $p(x)$.
 
-The slide recalls a known identity rather than proving it again. Fix one input $x$ whose label is $y$. The *target distribution* is the one-hot distribution $\delta_y$, which puts probability 1 on the class $y$ and 0 on every other class. The *model distribution* is the classifier's predicted class probabilities $q_\theta(\cdot \mid x)$. The display says that the cross-entropy (CE) of the model against the target, the KL divergence from the target to the model, and the familiar loss $-\log q_\theta(y \mid x)$ are the same number.
+The slide recalls a known identity rather than proving it again. Two distributions play different roles. $P$ is the data distribution: it is fixed, we do not choose it, and in practice we see it only through samples. $Q_\theta$, with mass function $q_\theta$, is the model; we change it by changing $\theta$, and we can evaluate $q_\theta(x)$ at any outcome $x$. The outcome $X$ is discrete, so $H(P)$ is the ordinary entropy.
 
-The grey line gives the reason and the condition. The identity is exact because a one-hot target has entropy 0, and it needs $q_\theta(y \mid x) \gt 0$; otherwise the loss is infinite. The highlight stops a common over-generalization: cross-entropy equals KL only in this one-hot case. In general cross-entropy is entropy plus KL. So the per-example loss of a labelled example is a quantity we can compute in one forward pass. The next slide asks for the loss over all data, which is an expectation.
+Figure: three boxes joined by an equals sign and a plus sign, read as one equation. First box, "Expected log loss": $L(\theta) = \mathbb E_{X \sim P}[\log(1/q_\theta(X))]$, captioned "the cross-entropy". Second box, "Forward KL": $D(P \,\|\, Q_\theta)$, captioned in green "changes with $\theta$". Third box, "Data entropy": $H(P)$, captioned in grey "fixed: no $\theta$".
+
+The first box charges the model $\log(1/q_\theta(X))$ for an outcome drawn from the data, which is large when the model gave that outcome little probability; its expectation is the cross-entropy of $Q_\theta$ against $P$. The second box is the forward KL, data first and model second; it changes with $\theta$. The third box contains no $\theta$.
+
+The point line reads "fixed data entropy, so log loss and KL share minimizers"; the highlight reads "minimizing log loss minimizes $D(P \,\|\, Q_\theta)$, with no $p(x)$ needed". Since $H(P)$ is the same number for every model, the $\theta$ that minimizes $L(\theta)$ is the $\theta$ that minimizes $D(P \,\|\, Q_\theta)$. And $L(\theta)$ involves $P$ only through the expectation: the quantity inside it, $\log(1/q_\theta(X))$, uses the model alone. So we can minimize the KL without ever evaluating $p(x)$, as long as we can average over $P$; the next slide shows that data samples are enough for that. The grey line keeps the scope: this compares two population objectives, which are expectations under $P$; it does not say that fitting a model to finitely many data points recovers $P$. The terms must be finite: the model must give positive probability wherever $P$ does, and $H(P)$ must be finite.
+
+Note the sign. The entropy is *added* to the KL: $L(\theta) = D(P \,\|\, Q_\theta) + H(P)$, equivalently $D(P \,\|\, Q_\theta) = L(\theta) - H(P)$. Writing the expected log loss as "KL minus entropy" flips the sign of the constant. The constant does not change which $\theta$ is best, but the identity as written must be right.
 
 **Details.**
 
-**The one-hot computation.** With target $\delta_y$ and model $q = q_\theta(\cdot \mid x)$,
+**Notation.** $p(x) = P(X = x)$ is the data mass function and $q_\theta(x) = Q_\theta(X = x)$ the model's. Logarithms are natural, so all three terms are in nats. The entropy is $H(P) = -\mathbb E_P[\log p(X)] = \mathbb E_P[\log(1/p(X))]$.
 
-$$\mathrm{CE}(\delta_y, q) = -\sum_k \delta_y(k)\log q(k) = -\log q(y),$$
+**The algebra.** Step 1, split one log for every $x$ with $p(x) \gt 0$:
 
-$$D(\delta_y \,\|\, q) = \sum_k \delta_y(k)\log\frac{\delta_y(k)}{q(k)} = -\log q(y).$$
+$$\log\frac{1}{q_\theta(x)} = \log\frac{p(x)}{q_\theta(x)} - \log p(x).$$
 
-Terms with $\delta_y(k) = 0$ contribute $0$ by the convention $0 \log 0 = 0$. The entropy $H(\delta_y) = 0$, so the general identity below reduces to CE $=$ KL.
+Step 2, take the expectation over $X \sim P$ on both sides:
 
-**The general identity.** For distributions $P$ and $Q$ on the same space with finite terms, $\mathrm{CE}(P, Q) = H(P) + D(P \,\|\, Q)$. The convention is truth or data first, model second.
+$$L(\theta) = \mathbb E_P\Big[\log\frac{p(X)}{q_\theta(X)}\Big] - \mathbb E_P\big[\log p(X)\big].$$
 
-**Conditional classifiers.** Over a whole data distribution, the expected per-example loss decomposes as a conditional entropy plus an expected conditional KL:
+Step 3, name the two terms. The first is $D(P \,\|\, Q_\theta)$; the second is $-\mathbb E_P[\log p(X)] = H(P)$. Therefore
 
-$$\mathbb E\big[-\log q_\theta(Y \mid X)\big] = H_P(Y \mid X)$$
+$$L(\theta) = D(P \,\|\, Q_\theta) + H(P).$$
 
-$$\quad + \ \mathbb E_X\, D\big(P(\cdot \mid X) \,\|\, q_\theta(\cdot \mid X)\big),$$
+**Conditions.** The sums run over the support of $P$. If $q_\theta(x) = 0$ at some $x$ with $p(x) \gt 0$, both $L(\theta)$ and $D(P \,\|\, Q_\theta)$ are infinite. With $q_\theta \gt 0$ on the support of $P$ and $H(P)$ and $L(\theta)$ finite, every term is finite and the split in Step 2 is legitimate.
 
-assuming the terms are finite. This is a statement about conditional distributions of the label given the input. It is not a KL between the joint data distribution of $(X, Y)$ and the conditional model, which live on different spaces.
+**Why the identity motivates Monte Carlo.** $L(\theta)$ is an expectation under $P$, and $P$ is usually available only through data. Neither $D(P \,\|\, Q_\theta)$ nor $H(P)$ can be computed from $q_\theta$ alone, because both need $p(x)$. The next slide shows that the left-hand side can still be estimated from samples.
 
-**Units.** With the natural logarithm the loss is in nats.
+**Optional context: one-hot labels.** For a classifier at one labelled input $(x, y)$ the target is the one-hot distribution $\delta_y$, whose entropy is $0$, so the cross-entropy equals $D(\delta_y \,\|\, q_\theta(\cdot \mid x)) = -\log q_\theta(y \mid x)$. Averaged over labelled data, the same decomposition holds with conditional terms, $H_P(Y \mid X) + \mathbb E_X\, D(P(\cdot \mid X) \,\|\, q_\theta(\cdot \mid X))$, assuming finite terms. The one-hot case is the identity with $H = 0$; the conditional form applies the identity at each input and averages. The lecture uses the unconditional form.
+
+**Letters used later.** Here $q_\theta$ is the model and $P$ the data. On the next pages $p$ denotes whatever distribution we sample from (on page 6, the model's reply distribution), and from Part 02 on $q$ denotes an importance-sampling proposal. These are local roles, stated where they are used.
 
 **Sources.**
 
-Course: prob02 note, Section 4.5 Theorem 3 (CE = entropy + KL), Section 6.6 Theorem 7 (one-hot CE = KL), Section 6.8 (expected-loss decomposition); `courses/deepmath/prob02-kl-crossentropy/prob02-kl-crossentropy-note.html` (evidence 2026-11-18 E01). Goodfellow, Bengio and Courville, *Deep Learning* (2016), Section 3.13, eq. (3.51), https://www.deeplearningbook.org/contents/prob.html (evidence 2026-11-18 E02). The conditional form and its scope: evidence 2026-11-18 E09.
+Course: prob02 note, Section 4.5 Theorem 3 (CE = entropy + KL, with the support condition) and the Section 4.6 summary; Section 6.6 Theorem 7 and Section 6.8 for the one-hot and conditional forms; `courses/deepmath/prob02-kl-crossentropy/prob02-kl-crossentropy-note.html` (evidence 2026-11-18 E01). Goodfellow, Bengio and Courville, *Deep Learning* (2016), Section 3.13, eq. (3.51), https://www.deeplearningbook.org/contents/prob.html (evidence 2026-11-18 E02). Conditional form and its scope: evidence 2026-11-18 E09.
 <!-- END S130 -->
 
 <!-- BEGIN S131 -->
-### 5. Population Loss Requires an Average [S131]
+### 5. Fit the Model Without Evaluating P [S131]
 
-**Message.** The loss of a fixed classifier over all data is an expectation, and we estimate it by averaging per-example losses on sampled labelled examples.
+**Message.** Samples from the data distribution $P$ and the model's own probabilities $q_\theta(X_i)$ are enough: their average log loss is a Monte Carlo estimate of $D(P \,\|\, Q_\theta) + H(P)$, so we can minimize the KL up to a fixed entropy without ever evaluating $p$, though this average does not give the KL's absolute value.
 
-The flow reads left to right. The first box, with a dashed red border, is the population loss $L(\theta) = \mathbb E[f(X, Y)]$, where the labelled pair $(X, Y)$ is drawn from the data distribution $P_{\text{data}}$. It averages over every possible pair, so it is the hard part. The middle box defines the per-example loss $f(x, y) = -\log q_\theta(y \mid x)$, the one-hot cross-entropy of the previous slide; it is easy for one example. The last box is the sample average $\frac1n\sum_{i=1}^n f(X_i, Y_i)$, which estimates $L(\theta)$. The same loss expression appears in all three boxes.
+This slide answers the question left by the previous one: how do we work with an expectation under $P$ if we cannot write $P$ down? Natural data are exactly samples from the underlying distribution; they arrive without its probability formula. The point line reads "data samples and model values suffice; $p(X_i)$ is never used".
 
-The line under the flow names the sampling distribution: the pairs $(X_i, Y_i)$ are IID draws of labelled data from $P_{\text{data}}$, not draws from the model $q_\theta$. Two roles must not be confused: $P_{\text{data}}$ is where the samples come from, and $q_\theta$ is the fixed classifier inside $f$. The grey lines state the conditions, a fixed model and a finite mean loss, and the scope: this evaluates one expectation; it is not a training algorithm.
+Figure: three boxes, left to right. First box, "Available": data $X_i$ IID from $P$ for $i \le n$; model values $q_\theta(X_i)$; and in red, "not needed: $p(X_i)$". An arrow leads to the middle box, "Average log loss": $\hat L_n(\theta) = \frac1n\sum_{i=1}^n \log(1/q_\theta(X_i))$. An approximately-equal sign leads to the last box, "Target $L(\theta)$": $\mathbb E_{X \sim P}[\log(1/q_\theta(X))] = D(P \,\|\, Q_\theta) + H(P)$.
+
+Every term of the average uses only the model; the target is the expected log loss, which by the previous slide equals the forward KL plus the data entropy. This is ordinary Monte Carlo with the integrand $f_\theta(x) = \log(1/q_\theta(x)) = -\log q_\theta(x)$ and the data distribution as sampler. The highlight states the recipe: sample $P$; evaluate $Q_\theta$; minimize KL up to a fixed entropy. The grey line keeps two limits in view. First, the average estimates KL *plus* $H(P)$, not KL alone: it supports minimizing and comparing, not reporting an absolute KL value. Second, the accuracy claim needs the clean setup: with $\theta$ fixed and a finite mean, the average is unbiased for $L(\theta)$.
 
 **Details.**
 
-**Why an average is needed.** Each loss $-\log q_\theta(y \mid x)$ takes one forward pass. The integral over $P_{\text{data}}$ is usually unavailable: the data distribution is known only through samples, and the space of inputs is far too large to sum over.
+**Map to the Monte Carlo notation.** In the notation of the coming slides, the random outcome is $X$, the sampling distribution is the data distribution $P$, the integrand is $f = f_\theta$, and the target is $\mu = L(\theta)$. The general recipe on page 7 (sample, evaluate, average) is this computation with a generic $f$.
 
-**The clean unbiasedness setup.** Fix $\theta$ before looking at the evaluation data, draw fresh labelled pairs IID from $P_{\text{data}}$, and assume $\mathbb E|f(X, Y)| \lt \infty$. Then the sample mean is unbiased for $L(\theta)$ and converges to it. This is the Monte Carlo estimator of the coming slides with $f$ as the integrand.
+**The clean unbiasedness setup.** Fix $\theta$ before looking at the evaluation data, draw $X_1, \dots, X_n$ IID from $P$, and assume $\mathbb E_P|f_\theta(X)| \lt \infty$. Then $\mathbb E[\hat L_n(\theta)] = L(\theta)$, and $\hat L_n(\theta) \to L(\theta)$ by the law of large numbers. These are the sample-mean facts of earlier lectures applied to $Y_i = f_\theta(X_i)$.
 
-**What this does not cover.** A minibatch drawn uniformly with replacement from a fixed training set estimates the empirical average over that set, not the population loss. For a model fitted on the same data, the training average is not automatically an unbiased estimate of $L(\theta)$; generalization is a separate question.
+**What can be computed, and what cannot.** The equivalence of the population objectives is exact; sampling error attaches only to the empirical mean. The mean estimates $D(P \,\|\, Q_\theta) + H(P)$. The absolute value of $D(P \,\|\, Q_\theta)$ would additionally need $H(P)$ or a different estimator, which this lecture does not cover. Differences are another matter. For two fixed candidate models under the same $P$, the entropy cancels:
 
-**Notation.** In the Monte Carlo notation used next, the random outcome is the pair $(X, Y)$, the sampling distribution is $P_{\text{data}}$, the integrand is $f$, and the target is $\mu = L(\theta)$.
+$$D(P \,\|\, Q_1) - D(P \,\|\, Q_2) = \mathbb E_P\Big[\log\frac{q_2(X)}{q_1(X)}\Big],$$
+
+so the sample average of the log-probability ratio $\log(q_2(X_i)/q_1(X_i))$ estimates a KL *difference* from data alone, again without $p$, under the same finite-term conditions.
+
+**Estimating is not optimizing.** The average estimates one number for one fixed model. Training chooses $\theta$ to make the empirical log loss small; that is the usual sample-based surrogate for minimizing $L(\theta)$, and hence $D(P \,\|\, Q_\theta)$. Finite-data fitting does not guarantee the population minimizer, and how well the fitted model does on the population is a separate question (generalization). In particular, for a model fitted on the same data, the training average is not automatically an unbiased estimate of that model's $L(\theta)$.
+
+**Minibatches.** A minibatch drawn uniformly with replacement from a fixed training set estimates the average over that set, not $L(\theta)$ directly.
 
 **Sources.**
 
-Goodfellow, Bengio and Courville, *Deep Learning* (2016), Section 3.13, eq. (3.51), and the evidence note on fixed-model evaluation versus minibatch averages (evidence 2026-11-18 E02, E09). Sample-mean facts: Owen, *Monte Carlo theory, methods and examples*, Ch. 2 Sections 2.1-2.2, https://artowen.su.domains/mc/Ch-intro.pdf (evidence 2026-11-18 E03).
+Identity: as on the previous page (evidence 2026-11-18 E01, E02). The KL-difference line is the same identity applied to $Q_1$ and $Q_2$, with $H(P)$ cancelling (our calculation). Fixed-model evaluation versus fitted-data averages and minibatches: evidence 2026-11-18 E02. Sample-mean facts: Owen, *Monte Carlo theory, methods and examples*, Ch. 2 Sections 2.1-2.2, https://artowen.su.domains/mc/Ch-intro.pdf (evidence 2026-11-18 E03).
 <!-- END S131 -->
 
 <!-- BEGIN S04 -->
@@ -106,7 +122,7 @@ Goodfellow, Bengio and Courville, *Deep Learning* (2016), Section 3.13, eq. (3.5
 
 Fix one prompt and one stochastic generative model $p$. The flow has three boxes. The first is the sampler $p$: drawing one reply $X$ is easy. The second is a fixed check: $f(x) = 1$ if the reply $x$ passes a specified format check, and $0$ otherwise; checking one reply is easy. The third box, with a dashed red border, is the pass rate $\mu = \Pr_p(\text{pass}) = \mathbb E_p[f(X)]$, the probability that a reply from this model passes. It averages over every possible reply, so it is the hard part.
 
-The line under the flow marks the difference from the previous slide. There the samples were labelled data from $P_{\text{data}}$; here they are replies drawn from the model $p$ itself. The grey line gives the answer to the hard box: check a few sampled replies and average the pass indicators. The rest of Part 01 asks how accurate that average is. The roles stay fixed for the whole lecture: $X$ is the random outcome, $p$ the distribution we sample from, $f$ a fixed function we can evaluate, and $\mu$ the number we want.
+The line under the flow marks the difference from the previous slide. There the samples were data drawn from the fixed data distribution $P$, and the model $q_\theta$ was only evaluated; here the samples are replies drawn from the model itself. On this separate example the sampler $p$ is the model's output distribution for the fixed prompt; it is not the data distribution $P$ of pages 4-5. The grey line gives the answer to the hard box: check a few sampled replies and average the pass indicators. The rest of Part 01 asks how accurate that average is. The roles stay fixed for the whole lecture: $X$ is the random outcome, $p$ the distribution we sample from, $f$ a fixed function we can evaluate, and $\mu$ the number we want.
 
 **Details.**
 

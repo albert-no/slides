@@ -881,9 +881,9 @@ Figure (schematic): three boxes. On the left, stacked: the upper box, amber, "be
 
 Fix a prompt $c$ and a reward $R(c,x)$ that does not change during the update. The samples come from $\pi_b$ but the expectation is under $\pi_\theta$: the importance-sampling setting from earlier in the lecture.
 
-Details. The behavior policy is a data-collection distribution, not automatically the reference policy a regularizer compares against (slide 80). Later slides drop $c$ by convention; every policy is then conditional on the same fixed prompt. The example is response-level, like a bandit; how a policy change alters which states or prompts are visited in a multi-step environment is outside it.
+Details. The behavior policy is a data-collection distribution, not automatically the reference policy a regularizer compares against (slide [[S129]]). Later slides drop $c$ by convention; every policy is then conditional on the same fixed prompt. The example is response-level, like a bandit; how a policy change alters which states or prompts are visited in a multi-step environment is outside it.
 
-Sources. Owen, Monte Carlo theory, methods and examples, Ch. 9, Sec. 9.1 (E04); Mohamed, Rosca, Figurnov, Mnih, JMLR 21(132), 2020 (E07); Ouyang et al., NeurIPS 2022 (E10). Diagram: original schematic.
+Sources. Owen, Monte Carlo theory, methods and examples, Ch. 9, Sec. 9.1 (E04); Ouyang et al., NeurIPS 2022 (E10). Diagram: original schematic.
 <!-- END S100 -->
 
 <!-- BEGIN S101 -->
@@ -897,9 +897,9 @@ $$\mathbb{E}_{\pi_\theta}[R(c,X)]=\mathbb{E}_{\pi_b}\big[w(X)\,R(c,X)\big],\qqua
 
 The current policy is on top, the data-generating policy underneath, both evaluated at the logged response. Coverage: $\pi_b(x\mid c)>0$ wherever $\pi_\theta(x\mid c)>0$. Estimator: $\frac1n\sum_i w(x_i)R(c,x_i)$.
 
-Details. With $\pi_b$ and $R$ fixed and differentiation under the expectation justified, $\nabla_\theta\mathbb{E}_{\pi_\theta}[R]=\mathbb{E}_{\pi_b}[w R s_\theta]$ with score $s_\theta=\nabla_\theta\ln\pi_\theta(X\mid c)$, because $\nabla_\theta w=w s_\theta$. Unbiasedness needs integrability; a useful error bar needs finite variance, which coverage alone does not give. Clipped or self-normalized versions are different estimators with separate bias and variance questions.
+Details. The behavior policy $\pi_b$, the reward $R$ and the current parameters $\theta$ are held fixed while the estimate is formed. Unbiasedness needs integrability of $wR$; a useful error bar needs finite variance, which coverage alone does not give. Clipped or self-normalized versions are different estimators with separate bias and variance questions.
 
-Sources. Owen Ch. 9, Sec. 9.1, Theorem 9.1 (E04); Mohamed et al., JMLR 2020, Secs. 4.2-4.3, 5.2-5.3 (E07).
+Sources. Owen Ch. 9, Sec. 9.1, Theorem 9.1 (E04).
 <!-- END S101 -->
 
 <!-- BEGIN S102 -->
@@ -959,27 +959,19 @@ Sources. Our calculation (E14) with the KL definition from the course prerequisi
 <!-- END S105 -->
 
 <!-- BEGIN S106 -->
-### 82. Reward Tuning Uses This Toolkit [S106]
+### 82. RL Objectives Contain Expectations [S106]
 
-**Message.** A simplified reward-plus-KL objective from reinforcement learning from human feedback (RLHF) is built from the same pieces: Monte Carlo averages, score-function gradients and a fixed reference.
+**Message.** A simplified reward-plus-KL objective from reinforcement learning from human feedback (RLHF) is a combination of expectations under the current policy, so evaluating it is a Monte Carlo problem, and an importance-sampling problem when the responses are old.
 
 $$\max_\theta\ \mathbb{E}_{X\sim\pi_\theta}[r(X)]-\beta\,D_{\mathrm{KL}}(\pi_\theta\|\pi_{\text{ref}}),\qquad \beta\ge0.$$
 
-The first term is the learned reward, held fixed; the second is the penalty against the fixed SFT reference. The prompt $c$ is fixed and dropped; $r$ is a reward model fitted to human comparisons; $\pi_{\text{ref}}$ is the supervised fine-tuned (SFT) model. Historical InstructGPT case, simplified; not a survey of current methods.
+The first term is the learned reward, held fixed; the second is the penalty against the fixed SFT reference. The prompt $c$ is fixed and dropped; $r$ is a reward model fitted to human comparisons; $\pi_{\text{ref}}$ is the supervised fine-tuned (SFT) model. Both terms are expectations under $\pi_\theta$: the reward term directly, and the KL term because $D_{\mathrm{KL}}(\pi_\theta\|\pi_{\text{ref}})=\mathbb{E}_{\pi_\theta}[\ln(\pi_\theta(X)/\pi_{\text{ref}}(X))]$ (slide [[S105]]). With fresh responses from the current policy, a plain Monte Carlo average estimates the objective; with responses logged under a behavior policy, each term is reweighted by $w=\pi_\theta/\pi_b$ as on slide [[S101]]. Historical InstructGPT case, simplified; not a survey of current methods.
 
 Details. The source objective also has $\gamma\,\mathbb{E}_{x\sim D_{\text{pretrain}}}[\log\pi_\phi^{\text{RL}}(x)]$; $\gamma=0$ gives "PPO", PPO-ptx adds the pretraining term, omitted here. The paper writes $r_\theta$ for the reward model and $\pi_\phi$ for the policy.
 
-Gradient. On a finite support with positive differentiable $\pi_\theta$, fixed positive $\pi_{\text{ref}}$, fixed $r$, $\beta$:
+Estimating the objective. At a fixed $\theta$, write $g_\theta(x)=r(x)-\beta\ln(\pi_\theta(x)/\pi_{\text{ref}}(x))$, so $J(\theta)=\mathbb{E}_{\pi_\theta}[g_\theta(X)]$. With IID responses $x_1,\dots,x_n$ from $\pi_\theta$, $\frac1n\sum_i g_\theta(x_i)$ is unbiased for $J(\theta)$ when $\mathbb{E}_{\pi_\theta}|g_\theta|<\infty$; its error bar needs finite variance, as in Part 01. With IID responses from a fixed behavior policy $\pi_b$ that covers $\pi_\theta$, $\frac1n\sum_i w(x_i)g_\theta(x_i)$ is unbiased under the conditions of slide [[S101]], and its variance can be large or infinite (slides [[S103]], [[S105]]). Estimating the objective's value is not optimizing it: how $\theta$ is updated, for example by PPO's clipped surrogate on the next slide, is a separate step this lecture does not derive.
 
-$$J(\theta)=\sum_x\pi_\theta(x)\Big(r(x)-\beta\ln\frac{\pi_\theta(x)}{\pi_{\text{ref}}(x)}\Big).$$
-
-Differentiating gives $\sum_x\nabla\pi_\theta\,r$, then $-\beta\sum_x\nabla\pi_\theta\ln(\pi_\theta/\pi_{\text{ref}})$, then $-\beta\sum_x\pi_\theta\nabla\ln\pi_\theta=-\beta\nabla 1=0$. With $\nabla\pi_\theta=\pi_\theta s_\theta$,
-
-$$\nabla J=\mathbb{E}_{\pi_\theta}\Big[\Big(r-\beta\ln\frac{\pi_\theta}{\pi_{\text{ref}}}\Big)s_\theta\Big].$$
-
-The score form holds by normalization, not by treating the log ratio as a fixed reward. A finite-difference check on a three-outcome softmax agrees to $1.2\times10^{-10}$. Continuous spaces need their own regularity assumptions. This is not a derivation of PPO's clipped surrogate.
-
-Sources. Ouyang et al., "Training language models to follow instructions with human feedback," NeurIPS 2022; arXiv:2203.02155v1, Sec. 3.5 "Models", RL paragraph, eq. (2) (E10). Mohamed et al., JMLR 2020, Secs. 4.2-4.3 (E07), Sec. 7.4.3 (E08). Our calculation (E21), checked by gen/p9e_kl_counterexample.py.
+Sources. Ouyang et al., "Training language models to follow instructions with human feedback," NeurIPS 2022; arXiv:2203.02155v1, Sec. 3.5 "Models", RL paragraph, eq. (2) (E10). Importance-sampling identity and conditions: Owen Ch. 9, Sec. 9.1, Theorem 9.1 (E04). The estimators are the lecture's own Monte Carlo and importance-sampling averages applied to this objective.
 <!-- END S106 -->
 
 <!-- BEGIN S104 -->
@@ -989,7 +981,7 @@ Sources. Ouyang et al., "Training language models to follow instructions with hu
 
 $$\min\big(r\hat A,\ \mathrm{clip}(r,1-\epsilon,1+\epsilon)\hat A\big),\qquad r=\frac{\pi_\theta(a\mid s)}{\pi_{\theta_{\text{old}}}(a\mid s)}.$$
 
-Proximal policy optimization (PPO); $\hat A$ is the estimated advantage of action $a$ in state $s$.
+Proximal policy optimization (PPO); $\hat A$ is the estimated advantage of action $a$ in state $s$: how much better ($\hat A>0$) or worse ($\hat A<0$) taking $a$ turned out than what the policy expected on average in state $s$. How $\hat A$ is estimated is outside this lecture; reading the figure needs only its sign.
 
 Figure (Schulman et al. 2017, Figure 1, unmodified): two panels plotting one term of $L^{\mathrm{CLIP}}$ against $r$, red dot at $r=1$. Left, $\hat A>0$: the term rises linearly until $r=1+\epsilon$, then is flat. Right, $\hat A<0$: the term is flat for $r<1-\epsilon$, then falls linearly. Where flat, there is no gain from moving $r$ further, but realized $r$ can still leave $[1-\epsilon,1+\epsilon]$; the clipped objective is not the exact IS identity.
 
@@ -997,7 +989,7 @@ Details. Equation (7) of the source:
 
 $$L^{\mathrm{CLIP}}(\theta)=\hat{\mathbb{E}}_t\Big[\min\big(r_t(\theta)\hat A_t,\ \mathrm{clip}(r_t(\theta),1-\epsilon,1+\epsilon)\hat A_t\big)\Big],$$
 
-with example value $\epsilon=0.2$. The ratio is per action, conditional on the state, against the old policy that collected the batch; it is not the full-sequence weight of slide 78. Clipping is sign-sensitive through the min. Section 4 describes a separate adaptive KL-penalty variant with $\mathrm{KL}[\pi_{\theta_{\text{old}}},\pi_\theta]$, against the old policy rather than a fixed reference. No universal safety claim follows.
+with example value $\epsilon=0.2$. The ratio is per action, conditional on the state, against the old policy that collected the batch; it is not the full-sequence weight of slide [[S102]]. Clipping is sign-sensitive through the min. Section 4 describes a separate adaptive KL-penalty variant with $\mathrm{KL}[\pi_{\theta_{\text{old}}},\pi_\theta]$, against the old policy rather than a fixed reference. No universal safety claim follows.
 
 Sources. Schulman, Wolski, Dhariwal, Radford, Klimov, "Proximal Policy Optimization Algorithms," arXiv:1707.06347v2 (2017), Sec. 3, eq. (7), Figure 1; Sec. 4, eq. (8) (E09). Figure: unmodified 300-dpi crops of Figure 1, page 3 of v2 (fig/p9e-ppo-fig1-pos.png, fig/p9e-ppo-fig1-neg.png).
 <!-- END S104 -->

@@ -754,7 +754,7 @@ Sources: evidence 2026-11-18 E05; evidence 2026-11-18 E04, Owen, Ch. 9, section 
 
 **Message.** The oracle is circular: writing down $q^* = fp/\mu$ already needs the answer $\mu$, and each weighted contribution $Y = fp/q^*$ just returns $\mu$. Being able to draw from $q^*$ does not by itself let us evaluate $Y$.
 
-**Slide.** Setting line: $f \ge 0$, $0 < \mu = E_p f < \infty$. A flow of three boxes, left to right: "$\mu$: the unknown answer" (filled); "$q^* = fp/\mu$: building it needs $\mu$"; "$Y = fp/q^* = \mu$: each draw returns $\mu$". A return arrow is labelled: circular, the output is the number the input already needed. Line below: sampling from $q^*$ is not evaluating $Y = fp/q^*$; that needs $\mu$. Muted line: tail toy exception, $\mu = e^{-10}$ is computable, so both are easy there.
+**Slide.** Setting line: $f \ge 0$, $0 < \mu = E_p f < \infty$. A flow of three boxes, left to right: "$\mu$: the unknown answer" (filled); "$q^* = fp/\mu$: building it needs $\mu$"; "$Y = fp/q^* = \mu$: each draw returns $\mu$". The red line beneath the flow reads: circular, the output is the number the input already needed. Line below: sampling from $q^*$ is not evaluating $Y = fp/q^*$; that needs $\mu$. Muted line: tail toy exception, $\mu = e^{-10}$ is computable, so both are easy there.
 
 The setting is the one of 39. The first box is the unknown answer. The second builds the oracle by dividing by $\mu$, so we need it before we start. The third is the contribution of one draw, which equals $\mu$. The output is exactly the number the input required.
 
@@ -864,9 +864,9 @@ Ordinary importance sampling needs the normalized ratio $p/q$. Often the target 
 
 **Message.** A softmax probability is one positive mass in the numerator over a denominator $Z$ that sums the masses of all outcomes.
 
-**Slide.** Lead line: logits $z_k$ -> masses $a_k = e^{z_k} > 0$ -> $p(k) = a_k/Z$, with $Z = \sum_j a_j$. A table with columns A, B, C. Row "logit": $0$, $\ln 2$, $\ln 4$. Row "mass": 1, 2, 4, with "sum $Z = 7$" in red. Row "$p(k)$": 1/7, 2/7, 4/7, with "sum 1". Below, one stacked bar with segments of widths 1, 2, 4; the C segment is filled blue and labelled "C: 4". Caption: $p(C)$ = one segment over the whole bar, 4/7. Highlight: easy here; with very many outcomes $Z$ needs every score, and that sum is what we skip.
+**Slide.** Lead line: logits $z_k$ -> masses $a_k = e^{z_k} > 0$ -> $p(k) = a_k/Z$, with $Z = \sum_j a_j$. A table with columns A, B, C. Row "mass $a_k$": 1, 2, 4, with "sum $Z = 7$" in red. Row "$p(k) = a_k/Z$": 1/7, 2/7, 4/7 (4/7 in blue), with "sum 1". Highlight: easy here; with very many outcomes $Z$ needs every score, and that sum is what we skip.
 
-A softmax turns real scores into probabilities. Each outcome $k$ has a logit $z_k$. Exponentiating gives a positive unnormalized mass $a_k = e^{z_k}$. Dividing by the global sum $Z$ gives probabilities that add to one. The numerator needs one score; the denominator needs every score.
+A softmax turns real scores into probabilities. Each outcome $k$ has a logit $z_k$; in the toy the logits are $0$, $\ln 2$, $\ln 4$; the table lists only masses and probabilities. Exponentiating gives a positive unnormalized mass $a_k = e^{z_k}$. Dividing by the global sum $Z$ gives probabilities that add to one. The numerator needs one score; the denominator needs every score.
 
 Here $Z$ is easy. With very many outcomes, suppose scoring all of them is expensive while the score of a sampled outcome is cheap. Then the full sum is what we would like to leave uncomputed, and this part shows how.
 
@@ -924,7 +924,7 @@ $Z$ appears above and below the bar and cancels. The estimate is a weighted aver
 
 **Message.** Sampling outcomes uniformly and normalizing their masses estimates a softmax probability without ever computing $Z$; the cancellation removes $Z$, not sampling error.
 
-**Slide.** Lead line: target $\mu = p(C)$; draws $X_i$ IID from $q = \mathrm{Uniform}\{A,B,C\}$, so $\tilde w_i = 3a_{X_i}$. Three boxes: "draw 1: A, mass 1"; "draw 2: C, mass 4" (blue); "draw 3: C, mass 4" (blue). Caption: one illustrative batch; C draws (blue) feed the numerator. Formula: $\hat\mu_{\mathrm{SN}}=\sum\tilde w_i f(X_i)/\sum\tilde w_j = 3(4+4)/(3(1+4+4)) = 8/9 \approx 0.89$, with both 3s struck out, against $\mu = 4/7 \approx 0.57$. Highlight: $Z$ cancels; sampling error remains: consistent, not exact at finite $n$.
+**Slide.** Lead line: target $\mu = p(C)$; draws $X_i$ IID from $q = \mathrm{Uniform}\{A,B,C\}$, so $\tilde w_i = 3a_{X_i}$. Three boxes: "draw 1: A, mass 1"; "draw 2: C, mass 4" (blue); "draw 3: C, mass 4" (blue). Beside them: one illustrative batch; blue C draws feed the numerator. Formula (the SNIS ratio of 50 applied to these numbers): $\hat\mu_{\mathrm{SN}} = 3(4+4)/(3(1+4+4)) = 8/9 \approx 0.89$, with both 3s struck out, against $\mu = 4/7 \approx 0.57$. Highlight: $Z$ cancels; sampling error remains: consistent, not exact at finite $n$.
 
 Keep the three outcomes of 47 with masses $a=(1,2,4)$. The target is $\mu=p(C)=E_p[f]$ with $f(k)=1\{k=C\}$. The draws come from the proposal $q$, not from the softmax. Since $q(k)=1/3$, the unnormalized weight is $\tilde w_i=\tilde p(X_i)/q(X_i)=3a_{X_i}$.
 

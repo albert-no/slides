@@ -621,176 +621,34 @@ hierarchy, simple defenses; Nasr et al. Table 7 as the adaptive anchor; CaMeL as
 conditional guarantee; other system defenses; meaningful approval. Agent autonomy beyond injection is covered in Wk 14 (`lec14-agentic-threats.html`).
 Math in `lec13tech.html`.
 
-### Sections (65 slides, 90 min: core idea 11.75 · agentic surface 13.75 · incidents 15.25 · why hard 9.75 · defenses + measurement 24.75 · synthesis 6.25 · questions and discussion 8.5)
+### Sections (65 slides, 90 min: core idea 11.75 · agentic surface 13.75 · incidents 15.25 · why hard 9.75 · defenses + measurement 24.75 · synthesis 6.25 · flexible explanation/question buffer 8.5)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:38`, `:50` | |
-| **01 — The Core Idea** | 3–12 | `:82` | agents read everyone's text `:110` · running email example (summary asked `:124`, unauthorized send `:148`) · two attacks by goal `:163` · Greshake Fig. 3 crop, direct vs indirect `:184`, `:200` · which instruction should win `:218` · hidden paper text `:234` · ICML hidden-text flag `:250` |
-| **02 — The Agentic Attack Surface** | 13–21 | `:267` | borrowed permissions `:281` · agent loop `:312` · one email redirects the next call (worked trace) `:342` · confused deputy (InjecAgent Fig. 1 crop) `:375` · three harms `:387` · notes choose a file, not a recipient `:421` · trifecta `:463` · exit channels `:492` |
-| **03 — Three Incidents** | 22–31 | `:531` | demonstration ≠ victim report `:551` · EchoLeak `:566`, `:613`, `:627` · GitHub MCP `:688`, `:730` · Comet `:769`, `:816` · comparison `:860` |
-| **04 — Why It Is Hard** | 32–37 | `:873` | priority = whose instruction wins `:893` · instructions as data `:943` · escaping `:984` · marked text still gives orders `:1008` · detection vs adaptation `:1056` |
-| **05 — Defenses and Measurement** | 38–60 | `:1102` | three numbers `:1115` · reporting `:1130` · AgentDojo `:1151`, `:1166` · spotlighting `:1187` · instruction hierarchy `:1200` · repeat prompt `:1214` · reminder bars (Table 5) `:1248`, `:1309` · Prompt Guard `:1368` · MELON `:1405` · adaptive search bars (Nasr Table 7) `:1452` · boundary `:1519` · CaMeL `:1562`, `:1581`, `:1615`, `:1658`, `:1712` · dual LLM `:1726` · tool limits `:1773` · detection vs approval `:1792` · approval `:1830` |
-| **06 — Synthesis** | 61–65 | `:1854` | six checks on the email example `:1862` · open problems `:1883` · takeaways `:1913` · closer "Who decided?" `:1935` |
+| **01 — The Core Idea** | 3–12 | `:82` | agents read everyone's text `:110` · running email example (summary asked `:123`, unauthorized send `:147`) · two attacks by goal `:161` · direct `:182` · indirect, Greshake Fig. 3 `:197` · which instruction should win `:215` · hidden paper text `:230` · ICML hidden-text check `:245` |
+| **02 — The Agentic Attack Surface** | 13–21 | `:261` | borrowed permissions `:275` · agent loop `:306` · one email redirects the next call (worked trace) `:336` · confused deputy (InjecAgent Fig. 1) `:369` · three harms `:381` · notes may choose a file, not a recipient `:415` · trifecta `:457` · exit channels `:486` |
+| **03 — Three Incidents** | 22–31 | `:526` | demonstration ≠ victim report `:546` · EchoLeak `:561`, `:610`, `:624` · GitHub MCP `:690`, `:733` · Comet `:776`, `:825` · comparison `:870` |
+| **04 — Why It Is Hard** | 32–37 | `:883` | priority = whose instruction wins `:903` · instructions look like data `:954` · escaping (JSON string) `:993` · marked text still gives orders `:1017` · detection vs adaptive attacker `:1064` |
+| **05 — Defenses and Measurement** | 38–60 | `:1110` | three numbers `:1123` · reporting `:1138` · AgentDojo `:1159`, Fig. 6a `:1174` · spotlighting `:1193` · instruction hierarchy `:1219` · repeat prompt `:1239` · reminders / detector bar charts `:1273`, `:1334` · Prompt Guard `:1393` · MELON `:1430` · adaptive search (Nasr Table 7) `:1478` · boundary `:1545` · CaMeL Fig. 5 `:1588`, capabilities `:1607`, policy check `:1641`, results `:1684`, guarantee `:1738` · other system defenses `:1752`, `:1802`, `:1821` · approval `:1859` |
+| **06 — Synthesis** | 61–65 | `:1884` | six checks on the email example `:1892` · open problems `:1913` · takeaways `:1943` · closer "Who decided?" `:1965` |
 
-**Key citations on slides (checked against saved PDFs / pages, 2026-10-10):** Greshake et al., ACM AISec 2023
-(Fig. 3); Zhan et al. InjecAgent, arXiv 2403.02691 (Fig. 1); Willison (dual LLM 2023; trifecta, 16 June 2025);
-Debenedetti et al. AgentDojo, NeurIPS 2024 D&amp;B (Fig. 1, Fig. 6a, Tables 3, 5); Hines et al. spotlighting (Fig. 4);
-Wallace et al. instruction hierarchy (Fig. 2); Nasr, Carlini et al. arXiv 2510.09023, preprint (Table 7); Debenedetti
-et al. CaMeL arXiv 2503.18813 (Fig. 1; §5 and Figs. 4–6; Tables 2–4; §3.1, §7, §9.3). Incidents: Aim Labs EchoLeak,
-MSRC and NVD CVE-2025-32711; Invariant Labs GitHub MCP; Brave on Comet. Notes only: Perez &amp; Ribeiro; Willison
-2022 naming; Liu et al. HouYi; OWASP LLM01; Zhan et al. adaptive attacks arXiv 2503.00061; CamoLeak, SpAIware, Brave
-screenshots, Bing "Sydney".
+**Key citations on slides (checked against saved PDFs / pages):** Greshake et al., ACM AISec 2023 (Fig. 3); Zhan et
+al. InjecAgent, arXiv 2403.02691 (Fig. 1); Willison (dual LLM, 25 Apr 2023; trifecta, 16 June 2025); ICLR 2026 and ICML 2026 reviewing
+policies; Debenedetti et al. AgentDojo, NeurIPS 2024 D&amp;B (Fig. 1, Fig. 6a, Tables 3, 5); Hines et al. spotlighting
+(Fig. 4); Wallace et al. instruction hierarchy (Fig. 2); Meta Prompt Guard 2 model card; MELON; Nasr, Carlini et al.
+arXiv 2510.09023, preprint (Table 7); Debenedetti et al. CaMeL arXiv 2503.18813 (Fig. 5, Fig. 6; §2, §5.3; Tables 2, 4;
+§3.1, §6.2.1, §7, §9.3). Incidents: Aim Labs EchoLeak, MSRC and NVD CVE-2025-32711; Invariant Labs GitHub MCP; Brave on Comet. Notes
+only: Perez &amp; Ribeiro; Willison 2022 naming; Liu et al. HouYi; OWASP LLM01; Zhan et al. adaptive
+attacks arXiv 2503.00061; CamoLeak, SpAIware, Brave screenshots, Bing "Sydney".
 
-**Figures (7 image files):** `figs/lec13-clarity/p1-greshake-fig3.png` `:205` · `figs/lec13-clarity/p2-injecagent-fig1-crop.png` `:380` ·
-`agentdojo-fig1.png` `:1155` · `agentdojo-models.png` `:1171` · `hines-datamark.png` `:1192` ·
-`wallace-results.png` `:1206` · `camel-fig1.png` `:1566`. Bar charts on 46, 47, 50 are inline SVG generated by
-`figs/lec13-clarity/p5-bars.py` (AgentDojo Table 5, GPT-4o; Nasr Table 7, Gemini-2.5 Pro); the bars on 55 are inline SVG
-from CaMeL Tables 2 and 4. All other diagrams are inline SVG. `greshake-plant.png` and `injecagent-overview.png` are no
-longer used by any deck (kept).
-
-**2026-11-20 clarity revision** (job `2026-11-20-lec13-clarity`, record in `log/2026-11-20-lec13-clarity/`): Albert's
-19 comments; one running email example and the Bob example throughout; questions answered on the slides; tables 40, 41,
-45 redrawn as bar charts; new slides on repeat prompt, Prompt Guard and MELON; splits listed in the ID note above.
-
-**2026-10 rebuild:** replaces the former Wk 11 prompt-injection deck (moved unchanged to
-backup-prompt-injection, since rebuilt as `lec13-prompt-injection.html`) and the former Wk 12 watermark deck (lec12-watermark, 68 sl; deleted with its note,
-its tech file and 13 figures used only by it: `dfdc-logloss`, `kgw-example`, `kgw-zscore-length`,
-`kgw-zscore-ppl`, `kirchenbauer-human-paraphrase`, `kirchenbauer-robust-bars`, `krishna-dipper`,
-`kud-protocol`, `kud-substitution`, `sadasivan-roc`, `sadasivan-vuln`, `synthid-detect`, `synthid-overview`).
-Built to the slides-review brief (#126). Review round 2 (slides-review #128): z &gt; 4 as a normal-approximation
-tail; repeat-scoring scoped to WikiText; distortion-free vs undetectable separated; C2PA validity vs signer trust;
-law and product rows from official texts; median p-value, TV and log-loss readings corrected; crops `sm-k24-fig7`,
-`sm-kud-fig4` replaced by single panels and `sm-sad-fig3a`, `sm-k24-fig2` by redrawn charts (old files deleted).
-
-**Note:** `lec11-synthetic-media-note.html` — 74 entries with minute budget and elapsed time, script, key
-takeaway; content slides add figure, setup/model/date, establishes / does not establish, assumptions and
-primary-source links (22 sources). Entry 65 carries the three-jurisdiction table from the official texts (enacted
-text / applies from / who / form / exceptions / enforcement). Entry 37 carries the robustness-study setups table cut from the deck. Entry 27 carries an EXP vs. Christ–Gunn–Zamir comparison (randomness source / guarantee / repeated queries / edits), notes only.
-
-**Tech:** `lec11tech.html` — 14 slides:
-- green-list rule (4); idealized independent-Bernoulli null (5); z-statistic, normal-approximation 3×10⁻⁵ vs exact
-  tail at T = 20 (6)
-- √T growth under constant green rate (7); repeated pairs, m > 1, scoped to WikiText (8)
-- base-rate formula with the 2% / 20% examples (10); TV definition, bound + proof idea, keyed detectors (11);
-  distortion-free (fresh key) vs undetectable (12); SynthID-Text seed, tournament, mean g-score eq. (1) (13)
-
-## lec12-fairness.html
-
-**Topic:** Fairness (90 min; mixed-major sophomores/juniors; concept-first, light math, no proofs on the
-slides; **no activities**). Where bias enters (opens with a lending decision, Bianchi occupation images and "correlation is not a fairness verdict", then the Obermeyer cost-as-proxy case; sampling, labels, feedback;
-Gender Shades benchmark composition; why dropping the protected attribute fails). Measuring fairness: whom to compare, selected = approved, four rates and
-their denominators with a summary table, demographic parity, equal opportunity and equalized odds each with a one-line summary and a comparison table, Hardt ROC plane, calibration within groups vs predictive
-parity, five criteria on the same FICO data. COMPAS: ProPublica vs Northpointe as different criteria, rearrest
-≠ offending, base rates, Chouldechova identity, Kleinberg et al. conditions, a calibrated worked example with
-unequal errors, choosing by context. Mitigation at three points (reweighing, reductions, group thresholds), each
-measured result shown with criterion, population, utility and assumptions; an empirical tradeoff is not the
-optimal frontier; method cards. Beyond classifiers: Gender Shades and the Actionable Auditing follow-up, BBQ,
-Bianchi text-to-image stereotypes; governance obligations and limits (~3.5 min). Math in `lec12tech.html`.
-
-### Sections (87 slides, 90 min: where bias enters 10 · measuring 25 · COMPAS + impossibility 15 · mitigation 20 · beyond classifiers 13 · synthesis 7)
-
-Slide IDs (`data-slide-id`, note `<article data-slide-id>`) are stable across revisions; splits carry letters (S13a–d), new slides take the next free number (S74–S78 2026-11-13; S79–S84 2026-11-16). Retired: S04 (→ S04a/b), S12 (→ S12a/b), S77 (opening photo, removed 2026-11-16).
-
-| Section | Slides | Divider line | Notable slides |
-|---|---|---|---|
-| Title / Contents | 1–2 | `:30`, `:42` | |
-| **01 — Where Bias Enters** | 3–14 | `:74` | who gets the opportunity (S74) `:82` · occupation prompts, Bianchi Fig. 3 (S51a) `:119` · correlation is not a fairness verdict (S78, SVG) `:144` · Obermeyer Fig. 1A crop (S04a) `:170` · lower spending understates need (S04b) `:188` · past records shape decisions `:222` · three places `:253` · face benchmark composition and task (Gender Shades) `:302` · proxy label `:336` · missing outcomes `:366` · dropping a column `:398` |
-| **02 — Measuring Fairness** | 15–36 | `:439` | whom to compare (S20a) `:477` · selected = approved (S12a) `:487` · denied applicants' missing outcomes (S12b) `:497` · four rates as counts (S13a–d) `:508`–`:538` · four-rate summary table (S79) `:548` · demographic parity `:562` · equal opportunity `:573` · equalized odds `:584` · three-rule comparison table (S80) `:596` · Hardt Fig. 1 (S17a/b) `:610`, `:629` · calibration `:647`, `:659`, `:669` · precision averages the approved mix (S81) `:679` · same score vs same decision `:690` · Hardt Fig. 9 FICO cutoffs (S21a/b; "most profitable equalized-odds" explained) `:717`, `:737` |
-| **03 — COMPAS and Impossibility** | 37–53 | `:758` | what COMPAS scores do, audit flag 5–10 (S23a/b) `:779`, `:813` · FPR by group `:854` · FPR gap at zero priors (Fig. 2(b)) `:882` · Chouldechova Fig. 1(a) / 1(b) (S26a/b) `:899`, `:915` · different denominators, Northpointe `:931` · rearrest ≠ offending `:966` · base rate = recorded rearrest share `:999` · rates linked, not ranked `:1141` · Kleinberg conditions `:1179` · calibrated worked example (S32a/b, S33) `:1212`, `:1361`, `:1454` · equal base rates permit all three (S82) `:1405` · choose the harm `:1484` |
-| **04 — Mitigation** | 54–73 | `:1522` | three places `:1550` · reweighing `:1583`, `:1645` · AIF360 Fig. 4 SPD / DI (S39a/b) `:1692`, `:1711` · reductions loop and mixture (S40a/b, S75) `:1737`, `:1772`, `:1802` · same-direction gaps cannot cancel (S83) `:1855` · reduction protocol (S84) `:1898` · Agarwal Fig. 1 Adult / COMPAS `:1936`, `:1957` · group thresholds `:1978` · FICO profit (S43a/b) `:1996`, `:2016` · AIF360 Fig. 5 nine alternatives (S76) `:2046` · AIF360 DI before/after (S44a/b) `:2075`, `:2093` · a biased label stays biased `:2112` |
-| **05 — Beyond Classifiers** | 74–82 | `:2138` | Gender Shades Table 4 (SVG) `:2160` · re-audit `:2170` · BBQ ambiguous / disambiguated examples (S49a/b) `:2189`, `:2210` · BBQ bias score `:2230`, `:2264` · CLIP developer images (S51b) `:2274` · governance (NYC rules example) `:2302` |
-| **06 — Synthesis** | 83–87 | `:2321` | care case: label (S54a) `:2329` · fix (S54b) `:2368` · decision, denominator, tradeoff `:2384` · closer "Which rate?" `:2398` |
-
-**Key citations (checked against saved PDFs / pages, 2026-10-10):** Obermeyer et al. Science 2019; Buolamwini
-&amp; Gebru FAT* 2018 (Table 4); Raji &amp; Buolamwini AIES 2019; Dwork et al. ITCS 2012; Hardt, Price &amp; Srebro
-NeurIPS 2016 (Figs. 1, 2, 9, 11; FICO §7); Kleinberg, Mullainathan &amp; Raghavan ITCS 2017 (Thms 1.1, 1.2);
-Chouldechova Big Data 2017 (Def. 2.2, eq. 2.6, Figs. 1–3); Larson et al. ProPublica 2016; Dieterich et al.
-Northpointe 2016; Kamiran &amp; Calders KAIS 2012; Bellamy et al. AIF360 2018 (Figs. 4a, 4c, 5b; Table 2); Agarwal et al. ICML 2018
-(Fig. 1); Parrish et al. BBQ, Findings of ACL 2022 (Figs. 1, 3); Bianchi et al. FAccT 2023 (Fig. 3). Governance:
-NYC DCWP rules, NY State Comptroller audit (Dec 2025), Reg. (EU) 2024/1689 and 2026/1744, Colorado SB26-189, Korea
-AI Basic Act.
-
-**Figures (26 cited figure crops):** In `figs/lec12-plot-interpretation/` (2026-11, crops of Hardt Fig. 9 left panel and of Chouldechova Figs. 1(a), 1(b), 2(b) plot panels, coordinates in `crops.sh`): `hardt-fig9-raw-profit-single.png` `:722` · `hardt-fig9-raw-demography.png` `:727` · `hardt-fig9-raw-opp-odds.png` `:741` · `hardt-fig9-raw-axis.png` `:746` · `chouldechova-fig2b-panel.png` `:887` · `chouldechova-fig1a-panel.png` `:903` · `chouldechova-fig1b-panel.png` `:919` (SVG `<image>` with tick labels set as slide text). In `figs/lec12-visual-motivation/` (2026-11): `p56-bianchi-fig3-rows1-2.png` `:123` · `p56-bianchi-fig3-row6.png` `:124` · `p1-obermeyer-fig1a.png` `:174` · `p2-hardt-fig1-eqodds.png` `:614` · `p2-hardt-fig1-eqopp.png` `:633` ·
-`p4-aif360-fig4a-spd.png` `:1697` · `p4-aif360-fig4c-di.png` `:1716` ·
-`p4-reductions-adult.png` `:1941` · `p4-reductions-compas.png` `:1962` ·
-`p4-hardt-eo-panel.png` `:1983` · `p4-hardt-fico-profit.png` `:2001` · `p4-aif360-di-before.png` `:2080` ·
-`p4-aif360-di-after.png` `:2098` · five `p56-bbq-*` example crops `:2194`–`:2220` · `p56-bbq-fig3-scores.png` `:2267`. Gender Shades (S47) is an SVG redrawn from
-Table 4. Computed diagrams are inline SVG from `criteria_examples.py` (S79, S80, S14–S16 exhibits), `calibrated_errors.py`, `reweighing.py`,
-`reductions_mix.py`, `p56_plot_values_audits.py` (all in `figs/lec12-visual-motivation/`). The 2026-10 crops (`hardt-eqodds-roc.png`,
-`hardt-fico-thresholds.png`, `chouldechova-deciles.png`, `chouldechova-calib-pp.png`, `reductions-*.png`,
-`hardt-eo-threshold.png`, `hardt-fico-profit.png`, `aif360-di-panel.png`, `reweighing-aif360.png`, `bbq-*-hi.png`, `bianchi-occupations.png`)
-are no longer on lec12 slides and stay in `figs/` for the backups; `figs/lec12-visual-motivation/p2-hardt-fig9-raw.png` is replaced by the row crops (2026-11-13) and kept in place; `s77-group-photo.jpg` and `s78-wan-chang-ceo.jpg` left the slides on 2026-11-16 and stay in `figs/lec12-plot-interpretation/`.
-
-**2026-11 visual revision** (job `2026-11-10-lec12-visual-motivation`, record in `log/`): larger diagram labels,
-rebuilt arrows, motivating lending example (S74) and worked counts, original-figure crops, splits (S13a–d, S17a/b,
-S19a/b, S20a/b, S26a/b, S32a/b, S39a/b, S40a/b + S75, S41a/b, S43a/b, S76 + S44a/b, S49a/b, S50a/b, S51a/b, S54a/b), tech split
-to 23 pages.
-
-**2026-11-13 plot interpretation** (job `2026-11-13-lec12-plot-interpretation`, record in `log/`): Hardt Fig. 9 split into row crops over two slides (S21a parity, S21b error-rate rules, segment rule explained); COMPAS setup split (S23a score → decision → outcome, S23b audit flag 5–10); axis keys and outlined readings on Chouldechova Fig. 2(b) (zero priors), Fig. 1(a) (decile 6) and Fig. 1(b) (cutoff 4). Opening photo slide S77 after S03 (plan-v2 P0; S04 and S05 scripts shortened to keep section 01 at 10 min); S01 note scoped to the quantitative comparisons. 76 → 79 slides; note renumbered, section budgets unchanged. Round 2 (review-r1, plan-v3): S78 after S77, a published CEO image (Wan &amp; Chang ACL 2025 Fig. 1, DALL-E 3, prompt "Generate a picture of one CEO."; published example, not a new run), S06/S08/S09 at 0.75 min to keep section 01 at 10 min; S21b scoped to the profit-optimal equalized-odds rule; S25/S26a/S26b rebuilt figure-first from plot-panel crops with tick labels set as slide text. 79 → 80 slides.
-
-**2026-11-16 clarity revision** (job `2026-11-16-lec12-fairness-clarity`, record in `log/`): answers Albert's C01–C25 on slides and in notes. Opening is now lending (S74) → occupation images (S51a) → correlation vs fairness verdict (S78) → care case split into figure and mechanism (S04a/b); S77 photo and the CEO image removed. Section 02 rebuilt: whom to compare (S20a) first, selected = approved and missing outcomes (S12a/b), four-rate table (S79), one-line rule summaries and a comparison table (S80), precision vs approved mix (S81). New S82 (equal base rates permit all three), S83 (same-direction gaps cannot cancel), S84 (reduction protocol). 80 → 87 slides; section minutes 10/25/15/20/13/7.
-
-**2026-10 rebuild:** merges the former Wk 13 and Wk 14 fairness decks, moved unchanged (with notes and tech files)
-to `backup-fairness-defs*.html` and `backup-fairness-mitigation*.html`. Built to the slides-review decisions (#134):
-Amazon, adversarial debiasing, Gemini, Tamkin and Wilson &amp; Caliskan only in the notes; EO 14319 cut from the deck;
-governance ≈ 3 min; Dwork and Kusner formal in the tech supplement and notes. Round 2 (#136): Obermeyer first, verbal
-rules in the deck with formulas in notes/tech, scoped COMPAS and figure readings, enlarged figures, governance dates
-checked 10 Oct 2026; Wilson &amp; Caliskan removed.
-
-**Note:** `lec12-fairness-note.html` — 87 entries (one per slide ID) with minute budget and elapsed time, script, key takeaway;
-content slides add figure, setup/date, establishes / does not establish, assumptions and primary-source links
-(28 sources). "Going further" blocks hold the notes-only material (Dwork/Kusner, Zhang, Amazon, Tamkin, Eloundou,
-Gemini, EO 14319).
-
-**Tech:** `lec12tech.html` — 23 slides (IDs S57–S73, splits lettered):
-- four rates, four denominators, with positivity (4); four criteria on the decision (5); calibration as a
-  condition on the score, discrete/binned scores (6); Dwork individual fairness (7); Kusner counterfactual
-  fairness (8); calibration averages over selected scores (9)
-- Chouldechova identity and its corollary (11–12); Kleinberg et al. exceptional cases and proof sketch (13–14);
-  calibrated worked example: equal PPV, unequal errors (15–16)
-- reweighing with cell support and a worked example (18–19); reductions saddle point and cost-sensitive oracle
-  (20–21); postprocessing attainable region (22)
-
-## lec13-prompt-injection.html
-
-**Topic:** Prompt injection (90 min; mixed-major sophomores/juniors; concept-first, no math on the slides;
-**no activities**; examples schematic, no working payloads or live exfiltration destinations). Definitions by
-authority (jailbreak vs injection), direct vs indirect injection, intended priority vs enforced boundary. Agentic
-surface: agent loop, confused deputy, three harms, per-action provenance, the trifecta as an exfiltration heuristic
-only, ordinary features as exit channels. Three incidents (EchoLeak, GitHub MCP, Comet), each with a four-step status
-ladder (demonstration / exploitation / vendor remediation / independent retest). Why it is hard: learned priority,
-instructions inside data, escaping alone does not establish authority, detection vs adaptation. Defenses and
-measurement: three metrics plus denominator, access, budget and adaptation; AgentDojo; spotlighting, instruction
-hierarchy, simple defenses; Nasr et al. Table 7 as the adaptive anchor; CaMeL as the main system defense with a
-conditional guarantee; other system defenses; meaningful approval. Agent autonomy beyond injection is covered in Wk 14 (`lec14-agentic-threats.html`).
-Math in `lec13tech.html`.
-
-### Sections (65 slides, 90 min: core idea 11.75 · agentic surface 13.75 · incidents 15.25 · why hard 9.75 · defenses + measurement 24.75 · synthesis 6.25 · questions and discussion 8.5)
-
-| Section | Slides | Divider line | Notable slides |
-|---|---|---|---|
-| Title / Contents | 1–2 | `:38`, `:50` | |
-| **01 — The Core Idea** | 3–12 | `:82` | agents read everyone's text `:110` · running email example (summary asked `:124`, unauthorized send `:148`) · two attacks by goal `:163` · Greshake Fig. 3 crop, direct vs indirect `:184`, `:200` · which instruction should win `:218` · hidden paper text `:234` · ICML hidden-text flag `:250` |
-| **02 — The Agentic Attack Surface** | 13–21 | `:267` | borrowed permissions `:281` · agent loop `:312` · one email redirects the next call (worked trace) `:342` · confused deputy (InjecAgent Fig. 1 crop) `:375` · three harms `:387` · notes choose a file, not a recipient `:421` · trifecta `:463` · exit channels `:492` |
-| **03 — Three Incidents** | 22–31 | `:531` | demonstration ≠ victim report `:551` · EchoLeak `:566`, `:613`, `:627` · GitHub MCP `:688`, `:730` · Comet `:769`, `:816` · comparison `:860` |
-| **04 — Why It Is Hard** | 32–37 | `:873` | priority = whose instruction wins `:893` · instructions as data `:943` · escaping `:984` · marked text still gives orders `:1008` · detection vs adaptation `:1056` |
-| **05 — Defenses and Measurement** | 38–60 | `:1102` | three numbers `:1115` · reporting `:1130` · AgentDojo `:1151`, `:1166` · spotlighting `:1187` · instruction hierarchy `:1200` · repeat prompt `:1214` · reminder bars (Table 5) `:1248`, `:1309` · Prompt Guard `:1368` · MELON `:1405` · adaptive search bars (Nasr Table 7) `:1452` · boundary `:1519` · CaMeL `:1562`, `:1581`, `:1615`, `:1658`, `:1712` · dual LLM `:1726` · tool limits `:1773` · detection vs approval `:1792` · approval `:1830` |
-| **06 — Synthesis** | 61–65 | `:1854` | six checks on the email example `:1862` · open problems `:1883` · takeaways `:1913` · closer "Who decided?" `:1935` |
-
-**Key citations on slides (checked against saved PDFs / pages, 2026-10-10):** Greshake et al., ACM AISec 2023
-(Fig. 3); Zhan et al. InjecAgent, arXiv 2403.02691 (Fig. 1); Willison (dual LLM 2023; trifecta, 16 June 2025);
-Debenedetti et al. AgentDojo, NeurIPS 2024 D&amp;B (Fig. 1, Fig. 6a, Tables 3, 5); Hines et al. spotlighting (Fig. 4);
-Wallace et al. instruction hierarchy (Fig. 2); Nasr, Carlini et al. arXiv 2510.09023, preprint (Table 7); Debenedetti
-et al. CaMeL arXiv 2503.18813 (Fig. 1; §5 and Figs. 4–6; Tables 2–4; §3.1, §7, §9.3). Incidents: Aim Labs EchoLeak,
-MSRC and NVD CVE-2025-32711; Invariant Labs GitHub MCP; Brave on Comet. Notes only: Perez &amp; Ribeiro; Willison
-2022 naming; Liu et al. HouYi; OWASP LLM01; Zhan et al. adaptive attacks arXiv 2503.00061; CamoLeak, SpAIware, Brave
-screenshots, Bing "Sydney".
-
-**Figures (7 image files in `figs/`):** `greshake-plant.png` `:178` · `injecagent-overview.png` `:347` ·
-`agentdojo-fig1.png` `:726` · `agentdojo-models.png` `:741` · `hines-datamark.png` `:761` ·
-`wallace-results.png` `:774` · `camel-fig1.png` `:838`. All other diagrams are inline SVG; tables on 40, 41, 45, 47
-are transcribed from the cited sources.
+**Figures (7 image files):** `figs/lec13-clarity/p1-greshake-fig3.png` `:202` ·
+`figs/lec13-clarity/p2-injecagent-fig1-crop.png` `:374` · `figs/agentdojo-fig1.png` `:1163` ·
+`figs/lec13-clarity/r2-agentdojo-fig6a.png` `:1179` · `figs/hines-datamark.png` `:1198` ·
+`figs/lec13-clarity/r2-wallace-fig2-plot.png` `:1224` · `figs/lec13-clarity/r2-camel-fig5.png` `:1592`. Bar charts
+S40a, S40b and S41 are inline SVG generated by `figs/lec13-clarity/p5-bars.py` from AgentDojo Table 5 and Nasr Table 7;
+S45 is inline SVG from CaMeL Tables 2 and 4. All other diagrams are inline SVG. `camel-fig1.png`, `agentdojo-models.png`
+and `wallace-results.png` are no longer used by lec13 (files kept).
 
 **2026-10 rebuild:** replaces the backup-prompt-injection deck (former Wk 11, 66 sl), deleted with its note, its tech
 file and 10 figures used only by it: `agentdojo-defenses`, `agentdojo-overview`, `agentdojo-utility-asr`,
@@ -799,10 +657,19 @@ file and 10 figures used only by it: `agentdojo-defenses`, `agentdojo-overview`,
 duplicate of the backup-prompt-injection and lec12 sections, and a copy of the lec11 rebuild text misplaced in the lec12
 section, were removed from this file in the same edit.
 
-**Note:** `lec13-prompt-injection-note.html` — 65 entries (IDs S01–S56, lettered splits) with minute budget and elapsed time, Message, Reading the slide, script; content slides add figure, setup/model/date, establishes / does not establish, assumptions and
-primary-source links. Entry 16 carries a worked toy-agent trace; entry 31 the extra incidents
-(CamoLeak, SpAIware, Sydney); entry 50 Nasr Fig. 1 and human red-teaming. Data inconsistencies in AgentDojo
-(Table 3 vs 5) and CaMeL (Table 4 vs §6.2.1) are flagged in entries 42, 46 and 55 and on slide 55.
+**2026-11-20 clarity revision** (job `2026-11-20-lec13-clarity`, record in `log/2026-11-20-lec13-clarity/`): 53 → 65
+slides. A running email example replaces BANANA; explicit answers to Albert's questions on the slides; splits S05,
+S07, S09, S21, S31, S40, S44, S47; new mechanism slides S54 (repeat prompt), S55 (Prompt Guard), S56 (MELON); the
+AgentDojo, Nasr and CaMeL tables became bar charts; CaMeL is explained from its Fig. 5 architecture; approval is
+framed as authorizing only policy-permitted exceptions; essential diagram labels at body size (≥ 25 px rendered).
+
+**Note:** `lec13-prompt-injection-note.html` — 65 entries (same IDs and order as the deck) with minute budget and
+elapsed time, Message, Reading the slide, script; content slides add figure, setup/model/date, establishes / does not
+establish, assumptions and primary-source links (31 distinct sources). Entry 16 (S13, `:339`) carries a worked toy-agent
+trace; entry 31 (S27, `:663`) the extra incidents (CamoLeak, SpAIware, Sydney); entry 50 (S41, `:1117`) Nasr Fig. 1 and
+human red-teaming. Data inconsistencies: AgentDojo Table 3 vs Table 5 is flagged in entry 46 (S40a, `:1009`); CaMeL
+Table 4 vs §6.2.1 on slide 55 (S45) and in its entry (`:1236`). The AgentDojo clean-utility aggregation caveat
+(evidence E22) is in entries 39 and 46.
 
 **Tech:** `lec13tech.html` — 15 slides:
 - trusted vs attacker-controlled (4); PI-SEC game with $\Omega_p$ (5); control vs data part of an action (6)

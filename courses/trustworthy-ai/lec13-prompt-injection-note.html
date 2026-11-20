@@ -34,10 +34,10 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <article data-slide-id="S01">
 <h2>1. Prompt Injection</h2>
 <p class="pace">The core idea · ≈0.5 min · elapsed ≈0.5 min</p>
-<p class="msg"><span class="kt">Message:</span> AI agents now read email, web pages, documents and code issues written by many different people, then act. Prompt injection is what happens when text written by someone other than the user ends up steering what the agent does. One question runs through the lecture: for every action, which input was allowed to shape it?</p>
+<p class="msg"><span class="kt">Message:</span> AI agents now read email, web pages, documents and code issues written by many different people, then act. Prompt injection tries to make lower-trust text override the instructions it should follow. We begin with indirect injection: an outsider's email steering the user's agent. One question runs through the lecture: for every action, which input was allowed to shape it?</p>
 <div class="detail">
 <h3>Script</h3>
-<p>Today is about prompt injection. Assistants that read your mail, browse for you or work in your code repository read text from many people, not only from you. Prompt injection is what happens when some of that text starts giving the orders.</p>
+<p>Today is about prompt injection. Assistants that read your mail, browse for you or work in your code repository read text from many people, not only from you. Prompt injection tries to make lower-trust text override the instructions it should follow. We begin with indirect injection: an outsider's email steering your agent.</p>
 <p>One question runs through the lecture. For every action an AI system takes, which input was allowed to shape it?</p>
 </div>
 </article>
@@ -339,13 +339,13 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <article data-slide-id="S13">
 <h2>16. One Email Redirects the Next Tool Call</h2>
 <p class="pace">The agentic attack surface · ≈2 min · elapsed ≈17 min</p>
-<p class="msg"><span class="kt">Message:</span> In an illustrative trace of the email task, the wrong transition is step 3 → step 4: the agent treats text it only read (an outside sender's email asking it to send the project plan) as a command, and makes a send call the user never requested. The authorized path is 1 → 2 → 5.</p>
+<p class="msg"><span class="kt">Message:</span> In an illustrative trace of the email task, the wrong transition is step 3 → step 4: the agent treats text it only read (an outside sender's email asking it to send the project plan) as a command, and makes a send call the user never requested. The authorized path is 1 → 2 → 3 → 5: the agent reads the inbox result in step 3 but does not obey the instruction inside it, and skips the send.</p>
 <p><strong>Reading the slide.</strong> Five rows, top to bottom, each labelled with who speaks to whom. 1 user → agent: the request. 2 agent → tool: <code>read_inbox</code>. 3 tool → agent: the "Q3 schedule update" from an outside sender, whose body also asks for the project plan to be sent outside. 4 agent → tool: <code>send_email</code> with the plan to an outside address (thick red border). 5 agent → user: a correct summary. The red bracket spanning rows 3 and 4 marks the wrong step: read data used as a command.</p>
 <div class="detail">
 <h3>Script</h3>
 <p>Same task, now as the actual sequence of tool calls. The user asks: summarize today's project emails. The agent calls <code>read_inbox</code>. The tool returns the messages. One of them, from an outside sender, looks like an ordinary project update, "Q3 schedule update". Its body also asks the assistant to send the confidential project plan to an outside address.</p>
 <p>Ask the class: which step is wrong? Not step 3. Reading that email is exactly what the user asked for. The wrong step is the transition to step 4, where the agent turns text it only read into a send call. Then it writes a correct summary in step 5.</p>
-<p>The authorized path is 1 → 2 → 5. Step 4 is extra, and the user may never notice, because the summary they see is fine. Success on the user's task does not show that no attack happened, so attack success needs its own number.</p>
+<p>The authorized path is 1 → 2 → 3 → 5. Step 3 is needed: the summary is built from the emails it returns. The difference is reading that result without obeying the instruction in it. Step 4 is extra, and the user may never notice, because the summary they see is fine. Success on the user's task does not show that no attack happened, so attack success needs its own number.</p>
 <h3>The figure</h3>
 <p>Illustrative five-step trace with the step 3 → 4 transition bracketed in red. No real address, no working payload; the malicious instruction is described in prose.</p>
 <h3>Worked trace: which value came from where</h3>
@@ -354,8 +354,8 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <li><strong>Tool input, step 2:</strong> <code>read_inbox(today, "project")</code>, chosen from the user's request.</li>
 <li><strong>Tool output, step 3:</strong> several project messages, one from an outside sender whose body asks for the confidential project plan attachment to be sent to an outside address.</li>
 <li><strong>Attacker goal:</strong> get the plan sent outside, using the user's own send access.</li>
-<li><strong>Step 4, the injected call:</strong> <code>send_email(project plan, outside address)</code>. Both the decision to send and the recipient originate in the step 3 text, not in the request.</li>
-<li><strong>Expected authorized path:</strong> step 2 → step 5, no send at all.</li>
+<li><strong>Step 4, the injected call:</strong> <code>send_email(plan, outside_addr)</code> (the project plan to an outside address). Both the decision to send and the recipient originate in the step 3 text, not in the request.</li>
+<li><strong>Expected authorized path:</strong> step 2 → step 3 → step 5, no send at all.</li>
 </ul>
 <p>A data-flow check that asks "may a value from an outside sender's email choose a recipient or trigger a send?" would block step 4 without understanding the text. This is the idea CaMeL makes concrete in Section 05.</p>
 <h3>What this does not establish</h3>
@@ -421,7 +421,7 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <h3>The covering text</h3>
 <p>The earlier version of this slide had a fourth decision: the covering text of the message, written by the model, which untrusted notes may shape in wording only. It is left off the slide because it does not change who receives data, but it has its own limit: a policy on recipients and files does not stop the notes from slanting what the message says.</p>
 <h3>The figure</h3>
-<p>Four rows: decided by → field of the send → policy check, with three allowed rows (✓) and one denied row (✗).</p>
+<p>Four rows: decided by → field of the send → policy check, with three allowed rows (“OK”) and one denied row (“Denied”).</p>
 <h3>Setup, model, date</h3>
 <p>Task adapted from CaMeL's running example (Fig. 1): "send Bob the document he requested in our last meeting". In CaMeL, values carry their sources and allowed readers, and policies check each tool call; the exact policy shown here is an illustrative choice, not a universal hardcoded CaMeL rule.</p>
 <h3>Primary sources</h3>
@@ -746,14 +746,14 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <article data-slide-id="S31a">
 <h2>35. Escaping Preserves Text as Text</h2>
 <p class="pace">Why it is hard · ≈2 min · elapsed ≈46.5 min</p>
-<p class="msg"><span class="kt">Message:</span> Escaping writes a special character so it is read as ordinary text, not as syntax. Delimiters are start and end markers that show where untrusted data begins and ends. Escaping protects the delimiters: it stops the data from faking its own end marker.</p>
-<p><strong>Reading the slide.</strong> Left: escaping. In <code>"She said \"hi\" to me"</code>, each <code>\"</code> is a quote mark that belongs to the text; without the backslash the string would end early. Right: delimiters. <code>&lt;email&gt;</code> and <code>&lt;/email&gt;</code> wrap the untrusted email so the model can tell where it starts and ends; escaping stops the email from containing a fake <code>&lt;/email&gt;</code>. Highlight: why delimiters matter. Toy examples.</p>
+<p class="msg"><span class="kt">Message:</span> Escaping writes a special character so it is read as ordinary text, not as syntax. Delimiters are start and end markers that show where untrusted data begins and ends. Escaping helps the delimiters: encode marker characters inside the data as literal text, so the email cannot contain a clean copy of the end marker. That is a syntactic boundary only for a parser; the model must still choose to respect it.</p>
+<p><strong>Reading the slide.</strong> Left: escaping in a JSON string. In <code>"She said \"hi\" to me"</code>, each <code>\"</code> is a quote mark that belongs to the text; without the backslash the string would end early. Right: delimiters. <code>&lt;email&gt;</code> and <code>&lt;/email&gt;</code> wrap the untrusted email so the model can tell where it starts and ends; encoding marker characters inside the email keeps a fake <code>&lt;/email&gt;</code> from appearing verbatim, but the model must still respect the boundary. Highlight: why delimiters matter. Toy examples.</p>
 <div class="detail">
 <h3>Script</h3>
 <p>Third reason, and the question is: can we just mark the untrusted text? First, two tools from ordinary programming.</p>
 <p>Escaping. Many formats reserve characters. In a quoted string, a quote mark means "the string ends here". If the text itself contains a quote, we write it as backslash-quote, which says: this one is just a character. Escaping keeps text as text.</p>
 <p>Delimiters. When we paste an email into a prompt we can wrap it in start and end markers, here <code>&lt;email&gt;</code> and <code>&lt;/email&gt;</code>. They tell the model where untrusted text starts and ends, so it can treat what is inside as material to summarize. That is why delimiters matter.</p>
-<p>The two work together. If the email could contain its own <code>&lt;/email&gt;</code>, it could pretend the untrusted part had ended and continue as if it were the prompt. Escaping, or choosing markers the sender cannot reproduce, prevents that.</p>
+<p>The two work together. If the email could contain its own <code>&lt;/email&gt;</code>, it could pretend the untrusted part had ended and continue as if it were the prompt. Encoding the marker characters inside the email as literal data, or using markers the sender is unlikely to guess, makes that harder. But note what kind of protection this is. A format-aware serializer and parser, like a JSON library, enforce a syntactic boundary: the parser cannot mistake an escaped quote for the string's end. Markers in a prompt are different: the model is not a parser bound by them, and nothing enforces that text inside the markers lacks authority. The model must still choose to respect the boundary, and next slide shows it does not always do so.</p>
 <h3>Answer to the review question (C14)</h3>
 <p><strong>What is escaping?</strong> Writing a special character so it is treated literally as text, not as syntax. <strong>Why do delimiters matter?</strong> They mark where untrusted data begins and ends, which helps the model see provenance. <strong>"Mark untrusted text, but not enough"?</strong> Yes: next slide.</p>
 <h3>Not the same as parameterized SQL</h3>
@@ -839,7 +839,7 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <p>Definitions follow AgentDojo §3.4: benign utility, utility under attack (the complement of untargeted ASR), and targeted ASR.</p>
 <p><strong>Denominators differ by number and by paper.</strong></p>
 <ul>
-<li>AgentDojo: clean utility counts the 97 user tasks run without an attack; utility under attack and attack success count the 629 security cases (a user task paired with an injection task).</li>
+<li>AgentDojo: clean utility is measured on user tasks run without an attack; utility under attack and attack success count the 629 security cases (a user task paired with an injection task). Clean utility is reported as in Table 5; the benchmark has 97 distinct tasks, but the aggregation behind these printed percentages is not fully specified here.</li>
 <li>Nasr et al. (slide 50): utility on all 97 tasks; attack success on an 80-case subset, where a case counts as a success if any of up to 800 queries works.</li>
 <li>CaMeL (slide 55): 949 attacked cases.</li>
 <li>Spotlighting (slide 43) reports attack success and evaluates utility separately; the instruction hierarchy (slide 44) reports robustness, the share of attacks that fail; MELON reports utility under attack.</li>
@@ -1019,7 +1019,7 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <h3>The figure</h3>
 <p>Inline SVG bar chart drawn from AgentDojo Table 5 values. Bar length is proportional to the full-precision value; labels round half up to one decimal. Generator: <code>figs/lec13-clarity/p5-bars.py</code>.</p>
 <h3>Setup, model, date</h3>
-<p>AgentDojo Table 5, GPT-4o, fixed "important message" attack. Clean utility is a percentage of the 97 user tasks; utility under attack and attack success are percentages of the 629 security cases. All five Table 5 rows (clean utility / utility under attack / attack success, %):</p>
+<p>AgentDojo Table 5, GPT-4o, fixed "important message" attack. Utility under attack and attack success are percentages of the 629 security cases. Clean utility is reported as in Table 5; the benchmark has 97 distinct tasks, but the aggregation behind these printed percentages is not fully specified here. All five Table 5 rows (clean utility / utility under attack / attack success, %):</p>
 <ul>
 <li>No defense: 69.0 / 50.0 / 57.7</li>
 <li>Delimiting: 72.7 / 55.6 / 41.7</li>
@@ -1166,19 +1166,20 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 </article>
 
 <article data-slide-id="S43">
-<h2>52. CaMeL: Program Written From the Trusted Request</h2>
+<h2>52. CaMeL Separates Planning, Parsing and Enforcement</h2>
 <p class="pace">Defenses and measurement · ≈1.5 min · elapsed ≈66.75 min</p>
-<p class="msg"><span class="kt">Message:</span> CaMeL (2025) has a planner LLM write the program of tool calls from the trusted user request, so untrusted text stays out of program generation. Untrusted data still flows through the program and can steer branches at run time; runtime policies decide which data flows are permitted.</p>
-<p><strong>Reading the slide.</strong> The figure is CaMeL's Fig. 1, unmodified; the key on the right reads its parts. The yellow box is the trusted request, which goes to the planner LLM. The red dashed box is the program it writes: which tools, in which order. The green arrows bring untrusted data in from the notes and the drive. The “Extract” steps are done by the quarantined LLM, which has no tools. The colors are the paper's (red = control flow, green = data flow); in the rest of this deck red means untrusted, so read this figure by its key. The bottom line states the split: data fills values and may steer branches; it never writes the program.</p>
+<p class="msg"><span class="kt">Message:</span> CaMeL (2025) splits the agent into three parts. A privileged LLM writes code from the trusted user query, so untrusted text stays out of program generation. A quarantined LLM with no tools parses untrusted data into structured values. The CaMeL interpreter runs the code, records each value's sources and readers, and checks security policies before any tool runs. Untrusted data can still fill arguments and steer branches at run time; the policies decide which of those flows are allowed.</p>
+<p><strong>Reading the slide.</strong> The figure is CaMeL's Fig. 5, the system architecture, cropped without its caption; the key on the right names its parts. Top left: the user query (“Find Bob's email in my last email and send him a reminder…”) goes to the Privileged LLM, which generates the code shown below it. One line of that code calls the Quarantined LLM to extract Bob's address from the email, an untrusted input. Right: the CaMeL interpreter maintains a data-flow graph, with each value's readers and sources (the address depends on the email), and enforces security policies such as “send_email: only if recipient is trusted” before a tool call executes. The bottom line states the split: data can fill values and steer branches, under policy; it never writes the code.</p>
 <div class="detail">
 <h3>Script</h3>
-<p>The main system defense: CaMeL, from Google and ETH. A planner LLM sees the user's request and writes a program of tool calls. A quarantined LLM parses untrusted text into fields, and has no tools.</p>
-<p>In the figure, the program, which tools are called in which order, is generated from the request. Untrusted text is kept out of program generation; the notes and drive files supply data, and runtime policies constrain which data flows are permitted. Execution can still branch on values from untrusted text: CaMeL's Fig. 7 forwards an email only if the quarantined LLM says it is about a meeting. In STRICT mode such a condition becomes a dependency of everything assigned inside the branch.</p>
+<p>The main system defense: CaMeL, from Google and ETH. It has three parts. A privileged LLM sees your query and writes a small program of tool calls. A quarantined LLM reads untrusted text, an email for example, and turns it into fields such as an address. It has no tools. And the interpreter, ordinary code, runs the program, remembers where every value came from, and checks a policy before each tool call.</p>
+<p>So which tools run, in which order, is decided from your query. The email can still supply a value, such as the address, and execution can branch on values from untrusted text: CaMeL's Fig. 7 forwards an email only if the quarantined LLM says it is about a meeting. That is why the policy check matters. In STRICT mode such a condition becomes a dependency of everything assigned inside the branch.</p>
 <p>This builds on Willison's dual-LLM pattern from 2023 (slide 57).</p>
 <h3>The figure</h3>
-<p>CaMeL Fig. 1: control flow derived from the user query; meeting notes and drive feed data into tool calls; either can be corrupted.</p>
-<p>What the planner sees: the user query plus a system prompt that lists the available tools and classes as Python function signatures (CaMeL §5). The slide's “trusted request → planner” is shorthand for that.</p>
-<p>Adaptation note. In the paper's Fig. 1, Bob's email address is <em>extracted from the meeting notes</em>. In this lecture's running example (slides 19 and 53–60), Bob comes from the trusted request or the user's contacts, and the notes only choose the document. Our version is the safer design; the paper's figure shows the flow that its policies must then check.</p>
+<p>CaMeL Fig. 5 (§5, “CaMeL Design”): the paper's caption reads: “First, the P-LLM generates code that expresses the submitted query. Then, the CaMeL interpreter constructs and updates a data flow graph, checks security policy based on code execution, and either executes or blocks tools. The Q-LLM is used to parse untrusted data while interpreting the code.” Cropped from the arXiv PDF at 250 dpi; the in-figure code and table text is small on the slide, so the key carries the reading.</p>
+<p>What the privileged LLM sees: the user query plus a system prompt that lists the available tools and classes as Python function signatures (CaMeL §5). The key's “from your query” is shorthand for that.</p>
+<p>The motivating problem is the paper's Fig. 1 (§2): for the query “send Bob the document he requested in our last meeting”, it draws the agent's control flow and the data flowing in from meeting notes and a drive, either of which can be corrupted. Fig. 1 illustrates the problem; it does not depict CaMeL's planner, quarantined LLM or interpreter.</p>
+<p>Adaptation note. In that Fig. 1 example, Bob's email address is <em>extracted from the meeting notes</em>. In this lecture's running example (slides 19 and 53–60), Bob comes from the trusted request or the user's contacts, and the notes only choose the document. Our version is the safer design; the paper's example shows the flow that its policies must then check.</p>
 <h3>Setup, model, date</h3>
 <p>arXiv 2503.18813v2, June 2025. The interpreter runs the planner's Python-like code; no change to the underlying LLM. Called the "first concrete instantiation of the Dual-LLM pattern".</p>
 <h3>Going further</h3>
@@ -1215,13 +1216,13 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <article data-slide-id="S44b">
 <h2>54. The Policy Checks the Proposed Send</h2>
 <p class="pace">Defenses and measurement · ≈1 min · elapsed ≈68.75 min</p>
-<p class="msg"><span class="kt">Message:</span> Before the send runs, code checks its arguments' labels against a policy. With the illustrative rule “recipient from your request, and allowed to read the file”: Bob and the meeting file pass; an outsider named in the notes is denied; a file Bob cannot read is denied. A deny can escalate to asking the user; the model cannot override it.</p>
-<p><strong>Reading the slide.</strong> The top line states the illustrative rule. Table drawn as a diagram: each row is one proposed send; the two middle columns are the two checks; the right column is the decision. Row 1, meeting file to Bob: both checks pass, allow. Row 2, the same send with an outsider the notes added: the recipient did not come from your request, deny (the second check is not needed). Row 3, a confidential plan not shared with Bob: Bob is from your request, but he may not read the file, deny. The bottom line: a deny can become a question to you, never a decision by the model.</p>
+<p class="msg"><span class="kt">Message:</span> Before the send runs, code checks its arguments' labels against a policy. With the illustrative rule “recipient from your request, and allowed to read the file”: Bob and the meeting file pass; an outsider named in the notes is denied; a file Bob cannot read is denied. The model cannot override a deny. Where the policy allows it, a deny can escalate to asking an authorized person, who may then grant a policy-permitted exception.</p>
+<p><strong>Reading the slide.</strong> The top line states the illustrative rule. Table drawn as a diagram: each row is one proposed send; the two middle columns are the two checks; the right column is the decision. Row 1, meeting file to Bob: both checks pass, allow. Row 2, the same send with an outsider the notes added: the recipient did not come from your request, deny (the second check is not needed). Row 3, a confidential plan not shared with Bob: Bob is from your request, but he may not read the file, deny. The bottom line: the model cannot override a deny; policy may let an authorized person grant an exception.</p>
 <div class="detail">
 <h3>Script</h3>
 <p>Now the check. Before any tool runs, a policy written as code looks at the labels of its arguments. Our illustrative rule has two parts: the recipient must come from your request, and the recipient must be allowed to read the file.</p>
 <p>Meeting file to Bob: both pass, allow. Same send, but the notes added an outsider: that recipient did not come from you, deny. A confidential plan that was never shared with Bob: Bob is fine, the file is not, deny.</p>
-<p>A deny can turn into a question to you; slide 60 is about when that question is worth asking. What cannot happen is the model talking its way past the check.</p>
+<p>What cannot happen is the model talking its way past the check. If the policy allows exceptions, a deny can turn into a question to someone authorized to grant one; slide 60 is about when that question is worth asking. Approval does not bypass the policy; it uses an exception the policy permits.</p>
 <h3>The figure</h3>
 <p>Illustrative policy (ours), adapted from CaMeL §2 and Fig. 6. CaMeL's policies are Python functions over tool arguments and their capabilities; Fig. 6 shows a calendar policy that checks whether the request is trusted and whether the participants can read the data. CaMeL does not prescribe this exact rule for email; policies are written per tool and per deployment.</p>
 <p>In CaMeL's own §2 example, a send to someone who is not among the document's readers “would be blocked by CaMeL (and the user asked for explicit approval)”.</p>
@@ -1330,13 +1331,13 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <article data-slide-id="S47c">
 <h2>59. Detection and Approval Check Different Things</h2>
 <p class="pace">Defenses and measurement · ≈1 min · elapsed ≈73.75 min</p>
-<p class="msg"><span class="kt">Message:</span> A detector and a human approval step sit at different points and answer different questions. The detector asks whether incoming text is an attack; it can miss attacks or block benign text. Approval asks whether a proposed action should run; it can be uninformed or rubber-stamped. Neither is a hard guarantee, and neither decides what is authorized.</p>
-<p><strong>Reading the slide.</strong> Diagram: incoming text → detector → agent → approval → action runs. Above each check, its question; below it, how it fails. The two lines define where each sits. The bottom box: neither is a hard guarantee, and neither sets what is authorized; that is the policy's job (slide 54).</p>
+<p class="msg"><span class="kt">Message:</span> A detector and a human approval step sit at different points and answer different questions. The detector asks whether incoming text is an attack; it can miss attacks or block benign text. Approval asks whether a proposed action should run; it can be uninformed or rubber-stamped. Neither is a hard guarantee. A detector grants no authority; approval may authorize only a policy-permitted exception.</p>
+<p><strong>Reading the slide.</strong> Diagram: incoming text → detector → agent → approval → action runs. Above each check, its question; below it, how it fails. The two lines define where each sits. The bottom box: a detector grants no authority; approval may authorize a policy-permitted exception. What is authorized in general is the policy's job (slide 54).</p>
 <div class="detail">
 <h3>Script</h3>
 <p>Two defenses people often lump together. A detector is a separate classifier that reads incoming text before the agent does and asks: is this an attack? It can miss attacks, and it can block real work; slides 37 and 47 showed both.</p>
 <p>Approval is a person, after the agent proposes an action, asking: should this run? It fails differently: the person may not see what is really happening, or may click yes out of habit.</p>
-<p>Neither is a hard guarantee, and neither replaces a policy that says what is authorized.</p>
+<p>Neither is a hard guarantee. A detector grants no authority at all. Approval can authorize an exception, but only one the policy permits; neither replaces the policy that says what is authorized.</p>
 <h3>The figure</h3>
 <p>Schematic (ours). The detector box is the same component as the classifier on slide 48 (separate classifier on tool output, block or permit before the agent).</p>
 <h3>Mechanism and limitation (from the earlier comparison table)</h3>
@@ -1356,13 +1357,13 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 <article data-slide-id="S48">
 <h2>60. Ask About Consequential Exceptions, Not Every Click</h2>
 <p class="pace">Defenses and measurement · ≈1.5 min · elapsed ≈75.25 min</p>
-<p class="msg"><span class="kt">Message:</span> Our recommendation: do not ask at every step. Routine authorized action: proceed. Forbidden action: deny. Consequential unresolved exception: ask, and show the facts from system records, not the agent's summary.</p>
-<p><strong>Reading the slide.</strong> Left, three tiers with one example each. Green: summarizing today's project emails is routine and authorized, so it proceeds. Red: an email asking to send the plan outside is forbidden, so it is denied without asking. Blue: you asked to send Bob the meeting document, but Bob is not yet among its readers; this is consequential and the policy cannot settle it, so the system asks. Right, a mock approval dialog for that case (illustrative): the action, the recipient and where he came from, the file and who named it, who asked, and why the system is asking; the user can deny or share once. The bottom line: the dialog's fields come from system records.</p>
+<p class="msg"><span class="kt">Message:</span> Our recommendation: do not ask at every step. Routine authorized action: proceed. Forbidden action: deny. Consequential exception the policy permits but does not settle: ask someone authorized to grant it, and show the facts from system records, not the agent's summary.</p>
+<p><strong>Reading the slide.</strong> Left, three tiers with one example each. Green: summarizing today's project emails is routine and authorized, so it proceeds. Red: an email asking to send the plan outside is forbidden, so it is denied without asking. Blue: you asked to send Bob the meeting document, but Bob is not yet among its readers; this is consequential and the policy does not settle it, so the system asks. The slide states the assumption: you may share this file, and policy allows this exception; otherwise the send is denied. Right, a mock approval dialog for that case (illustrative): the action, the recipient and where he came from, the file and who named it, who asked, and why the system is asking; the user can deny or share once. The bottom line: the dialog's fields come from system records.</p>
 <div class="detail">
 <h3>Script</h3>
-<p>So when should a system ask you at all? Not at every step. A prompt at every tool call trains people to click “Always Allow”; Invariant saw exactly that in the GitHub MCP case.</p>
+<p>So when should a system ask you at all? Not at every step. Repeated prompts can encourage blanket approval; in the GitHub MCP case, Invariant reports users choosing “Always Allow”. That is an observation, not a controlled study.</p>
 <p>Our recommendation has three tiers. Routine authorized work, like summarizing today's project emails: just do it. Forbidden actions, like the email that asks to send the plan outside: deny, do not ask. Asking would hand the attacker a chance that you click yes.</p>
-<p>Ask only for consequential exceptions the policy cannot settle. You asked to send Bob the meeting document, but Bob is not on its readers. That is a real decision, and only you can make it.</p>
+<p>Ask only for consequential exceptions the policy cannot settle. You asked to send Bob the meeting document, but Bob is not on its readers. Assume you are authorized to share this file and the policy permits this exception; then it is a real decision for you. If either is false, the send is denied and nobody is asked.</p>
 <p>When you ask, show the facts: what is being sent, to whom, where that recipient came from, and why the system is asking. Take them from the system's records, not from the agent's summary, since the summary can itself be injected.</p>
 <h3>The figure</h3>
 <p>Our design recommendation, illustrated; not a measured result and not a product's dialog. The tiers answer Albert's question on this slide (C19).</p>

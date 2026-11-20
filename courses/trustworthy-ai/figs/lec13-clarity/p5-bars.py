@@ -5,7 +5,9 @@ Usage: python3 p5-bars.py {s40a|s40b|s41}  -> prints the <svg> markup pasted int
 
 Inputs (exact pinned values, not re-derived):
   AgentDojo (Debenedetti et al., arXiv 2406.13352v3) Table 5, GPT-4o, fixed "important message" attack.
-    Clean (benign) utility, % of 97 user tasks; utility under attack and targeted ASR, % of 629 security cases.
+    Utility under attack and targeted ASR, % of 629 security cases. Clean (benign) utility as printed in
+    Table 5; the benchmark has 97 distinct user tasks, but the aggregation behind the printed clean
+    percentages is not fully specified (see evidence E22). Values unchanged.
   Nasr, Carlini et al. (arXiv 2510.09023v1) Table 7, Gemini-2.5 Pro rows: static (fixed) ASR and
     search-attack ASR, % of the 80-case attack subset.
 Bar lengths use the full-precision table values; the printed labels use the deck's rounding (one decimal

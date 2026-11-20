@@ -6,7 +6,7 @@ baseline: 9effc8ab67589f2d7e5789f04db5e92067ff46d9
 id commit: existing S01–S53, introduced at 594ebea1203aabe3b3edc56443b37dd29950e411; no new ID-only commit needed
 branch: 2026-11-20-lec13-clarity
 pr: not opened
-state: in-work
+state: approved
 round: 2 of 2
 albert decisions:
 - 2026-11-20: Revise lec13 using all 19 comments, check updated design rules, clarify answers in both slides and notes, and open a PR. No merge authorization.
@@ -36,3 +36,10 @@ Medium: many comments across the existing six-section lecture; the argument and 
 
 ## Work order, round 2
 - 2026-11-20: plan-v2.md and review-r1.md complete; issued to slides for the final medium-job round. Preserve accepted content; implement F01–F09, update exact mapping and report changed-page renders. No PR until approval. If blockers remain after round 2, escalate to Albert.
+
+## Review round 2
+- Work pointer: `78b1f81ad06540e28734aaaa79f059f37196106e`; received 2026-11-20. Exact review pin; last content commit reported as `94602e3`.
+
+- Round-2 verdict: approved in `review-r2.md`, pinned to `78b1f81ad06540e28734aaaa79f059f37196106e`. F01–F09 closed. F10 records a nonblocking decorative cross fallback in S37's external key; explicit model/value identification remains readable. No mandatory content changes remain.
+- Counts: 65 main / 65 note entries / 15 tech, 90 minutes including 8.5-minute flexible buffer. Changed slides and neighbours rendered independently; source/notes, generated charts, primary label sizing and restored OUTLINE checked.
+- Await slides' final log-only push with the copied approved review and current living files. Verify every subsequent commit changes only `log/2026-11-20-lec13-clarity/` before creating PR. No merge authorization.

@@ -101,9 +101,9 @@ def s41():
     out = [f'<svg viewBox="0 0 1080 {H}" style="width:100%;display:block;" role="img" '
            f'aria-label="Bar chart, attack success on Gemini-2.5 Pro. {label}">']
     out.append(f'<rect x="{X0}" y="6" width="34" height="22" fill="{LRED}" stroke="{RED}" stroke-width="2"/>')
-    out.append(f'<text x="{X0+44}" y="25" font-size="23" fill="#222">fixed attack</text>')
+    out.append(f'<text x="{X0+44}" y="25" font-size="25" fill="#222">fixed attack</text>')
     out.append(f'<rect x="{X0+250}" y="6" width="34" height="22" fill="{RED}"/>')
-    out.append(f'<text x="{X0+294}" y="25" font-size="23" fill="#222">search attack</text>')
+    out.append(f'<text x="{X0+294}" y="25" font-size="25" fill="#222">search attack</text>')
     out.append(f'<line x1="{X0}" y1="{Y0-6}" x2="{X0}" y2="{H-4}" stroke="{GRAY}" stroke-width="2"/>')
     for r, (name, fixed, search) in enumerate(T7):
         y = Y0 + RH * r

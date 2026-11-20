@@ -820,30 +820,33 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 
 <article data-slide-id="S42">
 <h2>42. Where Does the Boundary Sit?</h2>
-<p class="pace">Defenses and measurement · ≈1.5 min · elapsed ≈70 min</p>
+<p class="pace">Defenses and measurement · ≈1 min · elapsed ≈?</p>
 <p class="msg"><span class="kt">Message:</span> Learned resistance (spotlighting, the instruction hierarchy, detectors) lowers rates on tested attacks but draws no authorization boundary; enforced restrictions (tool filters, least privilege, dual LLM, CaMeL) use code to limit tools, scope or data flow. Ask which inputs can reach each tool call.</p>
-<p><strong>Reading the slide.</strong> Two cards. Left: learned resistance, with examples and what it does (lowers rates on tested attacks) and does not do (draw an authorization boundary). Right: enforced restrictions, with examples and what each limits in code. The bottom line is the question to ask of any system.</p>
+<p><strong>Reading the slide.</strong> Diagram: one pipeline, retrieved text → detector → model → policy check → tool runs. The dashed line marks the authorization boundary, between the model and the policy check. The gray bracket groups the detector and the model as learned resistance; the blue bracket groups the policy check and the tool as enforced restriction. The line below the figure warns that “outside the model” is not the same as “enforced”; the bottom line is the question to ask of any system.</p>
 <div class="detail">
 <h3>Script</h3>
-<p>Step back: learned resistance versus enforced restrictions. Learned resistance: spotlighting, the hierarchy, detectors. They lower the rate on tested attacks but draw no authorization boundary. Enforced restrictions: tool filters, least privilege, the dual-LLM pattern, CaMeL. Code limits which tools run, what a token reaches, or which data flows are permitted; each limits something different.</p>
+<p>Step back and put every defense on one pipeline. Learned resistance: spotlighting, the hierarchy, detectors. They lower the rate on tested attacks but draw no authorization boundary. A detector sits outside the model, but it is still a learned classifier that guesses.</p>
+<p>Enforced restrictions sit after the model, before the tool runs: tool filters, least privilege, the dual-LLM pattern, CaMeL. Code limits which tools run, what a token reaches, or which data flows are permitted; each limits something different.</p>
 <p>The system question: which inputs can reach each tool call?</p>
 <h3>The figure</h3>
-<p>Two cards: learned resistance vs enforced restrictions.</p>
+<p>Redrawn schematic (ours): one pipeline with the authorization boundary drawn between the model and a code check. Placing every defense on a single pipeline is a simplification: the dual LLM and CaMeL also change how the program is produced, not only what runs at the end (slides S43, S47a).</p>
 </div>
 </article>
 
 <article data-slide-id="S43">
 <h2>43. CaMeL: Program Written From the Trusted Request</h2>
-<p class="pace">Defenses and measurement · ≈2 min · elapsed ≈72 min</p>
-<p class="msg"><span class="kt">Message:</span> CaMeL (2025) has a planner LLM write the program of tool calls from the trusted user request alone, so untrusted text stays out of program generation. Untrusted data still flows through the program and can steer branches at run time; runtime policies decide which data flows are permitted.</p>
-<p><strong>Reading the slide.</strong> Bullets: the planner sees only the request and writes the program; the quarantined LLM parses untrusted text and has no tools. The figure (CaMeL Fig. 1): the query “send Bob the document he requested in our last meeting” produces the control flow (which tools, in which order); the meeting notes and drive files feed data into those calls; the figure marks that either flow can be corrupted. The bottom line states the split: program from trusted input; data flows constrained by policy.</p>
+<p class="pace">Defenses and measurement · ≈1.5 min · elapsed ≈?</p>
+<p class="msg"><span class="kt">Message:</span> CaMeL (2025) has a planner LLM write the program of tool calls from the trusted user request, so untrusted text stays out of program generation. Untrusted data still flows through the program and can steer branches at run time; runtime policies decide which data flows are permitted.</p>
+<p><strong>Reading the slide.</strong> The figure is CaMeL's Fig. 1, unmodified; the key on the right reads its parts. The yellow box is the trusted request, which goes to the planner LLM. The red dashed box is the program it writes: which tools, in which order. The green arrows bring untrusted data in from the notes and the drive. The “Extract” steps are done by the quarantined LLM, which has no tools. The colors are the paper's (red = control flow, green = data flow); in the rest of this deck red means untrusted, so read this figure by its key. The bottom line states the split: data fills values and may steer branches; it never writes the program.</p>
 <div class="detail">
 <h3>Script</h3>
-<p>The main system defense: CaMeL, from Google and ETH. A planner LLM sees only the user's request and writes a program of tool calls. A quarantined LLM parses untrusted text into fields, and has no tools.</p>
+<p>The main system defense: CaMeL, from Google and ETH. A planner LLM sees the user's request and writes a program of tool calls. A quarantined LLM parses untrusted text into fields, and has no tools.</p>
 <p>In the figure, the program, which tools are called in which order, is generated from the request. Untrusted text is kept out of program generation; the notes and drive files supply data, and runtime policies constrain which data flows are permitted. Execution can still branch on values from untrusted text: CaMeL's Fig. 7 forwards an email only if the quarantined LLM says it is about a meeting. In STRICT mode such a condition becomes a dependency of everything assigned inside the branch.</p>
-<p>This builds on Willison's dual-LLM pattern from 2023.</p>
+<p>This builds on Willison's dual-LLM pattern from 2023 (slide S47a).</p>
 <h3>The figure</h3>
 <p>CaMeL Fig. 1: control flow derived from the user query; meeting notes and drive feed data into tool calls; either can be corrupted.</p>
+<p>What the planner sees: the user query plus a system prompt that lists the available tools and classes as Python function signatures (CaMeL §5). The slide's “trusted request → planner” is shorthand for that.</p>
+<p>Adaptation note. In the paper's Fig. 1, Bob's email address is <em>extracted from the meeting notes</em>. In this lecture's running example (S16, S44a–S48), Bob comes from the trusted request or the user's contacts, and the notes only choose the document. Our version is the safer design; the paper's figure shows the flow that its policies must then check.</p>
 <h3>Setup, model, date</h3>
 <p>arXiv 2503.18813v2, June 2025. The interpreter runs the planner's Python-like code; no change to the underlying LLM. Called the "first concrete instantiation of the Dual-LLM pattern".</p>
 <h3>Going further</h3>
@@ -856,37 +859,58 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 </div>
 </article>
 
-<article data-slide-id="S44">
-<h2>44. CaMeL: Every Value Carries Its Origin</h2>
-<p class="pace">Defenses and measurement · ≈1.5 min · elapsed ≈73.5 min</p>
-<p class="msg"><span class="kt">Message:</span> CaMeL tags every value with capabilities, its sources and its allowed readers, and checks policies as code before each tool call. A recipient from the user request and a file Bob may read: allow. A recipient taken from untrusted notes: block, or ask the user.</p>
-<p><strong>Reading the slide.</strong> Schematic, redrawn: two values with their origin tags on the left (recipient = Bob, from the user request; a file named in the notes, from untrusted notes) flow into a policy check that runs as code. Outputs: allow (send to Bob a file Bob may read) or block-or-ask (a new recipient). The two lines below define capabilities and policies.</p>
+<article data-slide-id="S44a">
+<h2>S44a. Track Where Each Argument Came From</h2>
+<p class="pace">Defenses and measurement · ≈1 min · elapsed ≈?</p>
+<p class="msg"><span class="kt">Message:</span> Changing a value can be as dangerous as changing the program, so CaMeL attaches a capability to every value: where it came from, and who may read it. The labels are set by tools and the interpreter, not by an LLM.</p>
+<p><strong>Reading the slide.</strong> The top line defines a capability. Diagram (illustrative, ours): three values from the task “Send Bob the document from our last meeting”, one per row, each with its label. Recipient = Bob comes from your request (blue, trusted). The file name comes from the meeting notes (red, untrusted). The file contents come from the drive, which also records the file's readers: you and Bob. The bottom line says who sets the labels.</p>
 <div class="detail">
 <h3>Script</h3>
-<p>Changing values is still dangerous: the notes could choose the recipient. So CaMeL tags every value with capabilities: its sources, and who may read it. Policies are checked as code before every tool call.</p>
-<p>In the example, recipient = Bob from the user request, and a file Bob may read: allow. A recipient that came from untrusted notes: block, or ask the user.</p>
+<p>The program is fixed, but values still flow in from untrusted places: the notes could change which file is sent, or slip in a recipient. So CaMeL labels every value. A capability says where the value came from and who may read it.</p>
+<p>Take “Send Bob the document from our last meeting.” Bob comes from your request. The file name comes from the meeting notes, which are untrusted. The file itself comes from the drive, and the drive knows who it is shared with: you and Bob.</p>
+<p>Who sets these labels? Tools and the interpreter, not the language model. That is what makes them hard to forge with injected text.</p>
 <h3>The figure</h3>
-<p>Schematic, redrawn: two values with origins flow into a policy check; allow vs block-or-ask.</p>
-<h3>Setup, model, date</h3>
-<p>CaMeL §2, §5 and Figs. 4–6.</p>
+<p>Redrawn schematic, adapted from CaMeL §2 and §5.3, not a paper figure. In the paper, a capability records sources (the user, CaMeL itself, or a tool, possibly with an inner source) and readers (public or a set of users). Tools assign capabilities to their outputs; for example, a cloud-storage tool can tag a document with the people it is shared with.</p>
+<h3>Propagation</h3>
+<p>Labels follow derived values: a value computed from the file name inherits the notes as a source. In STRICT mode, a value assigned inside a branch whose condition depends on untrusted data also inherits that dependency (CaMeL §5).</p>
 <h3>Primary sources</h3>
 <ul>
-<li><a href="https://arxiv.org/abs/2503.18813">Debenedetti et al., "Defeating Prompt Injections by Design" (CaMeL), arXiv 2503.18813v2 (2025)</a> — P-LLM / Q-LLM, capabilities and policies (§5); threat model and non-goals (§3); Tables 2–4; side channels (§7); §9.3.</li>
+<li><a href="https://arxiv.org/abs/2503.18813">Debenedetti et al., "Defeating Prompt Injections by Design" (CaMeL), arXiv 2503.18813v2 (2025)</a> — §2 worked example; §5.3 capabilities (sources and readers).</li>
+</ul>
+</div>
+</article>
+
+<article data-slide-id="S44b">
+<h2>S44b. The Policy Checks the Proposed Send</h2>
+<p class="pace">Defenses and measurement · ≈1 min · elapsed ≈?</p>
+<p class="msg"><span class="kt">Message:</span> Before the send runs, code checks its arguments' labels against a policy. With the illustrative rule “recipient from your request, and allowed to read the file”: Bob and the meeting file pass; an outsider named in the notes is denied; a file Bob cannot read is denied. A deny can escalate to asking the user; the model cannot override it.</p>
+<p><strong>Reading the slide.</strong> The top line states the illustrative rule. Table drawn as a diagram: each row is one proposed send; the two middle columns are the two checks; the right column is the decision. Row 1, meeting file to Bob: both checks pass, allow. Row 2, the same send with an outsider the notes added: the recipient did not come from your request, deny (the second check is not needed). Row 3, a confidential plan not shared with Bob: Bob is from your request, but he may not read the file, deny. The bottom line: a deny can become a question to you, never a decision by the model.</p>
+<div class="detail">
+<h3>Script</h3>
+<p>Now the check. Before any tool runs, a policy written as code looks at the labels of its arguments. Our illustrative rule has two parts: the recipient must come from your request, and the recipient must be allowed to read the file.</p>
+<p>Meeting file to Bob: both pass, allow. Same send, but the notes added an outsider: that recipient did not come from you, deny. A confidential plan that was never shared with Bob: Bob is fine, the file is not, deny.</p>
+<p>A deny can turn into a question to you; slide S48 is about when that question is worth asking. What cannot happen is the model talking its way past the check.</p>
+<h3>The figure</h3>
+<p>Illustrative policy (ours), adapted from CaMeL §2 and Fig. 6. CaMeL's policies are Python functions over tool arguments and their capabilities; Fig. 6 shows a calendar policy that checks whether the request is trusted and whether the participants can read the data. CaMeL does not prescribe this exact rule for email; policies are written per tool and per deployment.</p>
+<p>In CaMeL's own §2 example, a send to someone who is not among the document's readers “would be blocked by CaMeL (and the user asked for explicit approval)”.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2503.18813">Debenedetti et al., "Defeating Prompt Injections by Design" (CaMeL), arXiv 2503.18813v2 (2025)</a> — §2 worked example; §5 policies; Fig. 6 example policy.</li>
 </ul>
 </div>
 </article>
 
 <article data-slide-id="S45">
-<h2>45. CaMeL, Measured on AgentDojo</h2>
-<p class="pace">Defenses and measurement · ≈2 min · elapsed ≈75.5 min</p>
+<h2>45. CaMeL Blocked the Fixed Attacks, at a Utility Cost</h2>
+<p class="pace">Defenses and measurement · ≈1 min · elapsed ≈?</p>
 <p class="msg"><span class="kt">Message:</span> On AgentDojo, CaMeL with policies cut successful attacks to 0 of 949 for o3 High (from 11) and Gemini 2.5 Pro (from 163), at a clean-utility cost of 7 and 32 points. Two of six models, fixed attacks only; 949 is CaMeL's attacked-case count, not the 629 of the original AgentDojo paper.</p>
-<p><strong>Reading the slide.</strong> Table: rows are model and method (native vs CaMeL + policies) for two of the six models; columns are clean utility (% of 97 tasks, Table 2), utility under attack (%, Table 3) and successful attacks (count out of 949 attacked cases, Table 4, ± as printed). Compare native with CaMeL within one model. The 949 cases are CaMeL's own denominator; do not rank these rows against slide S40 (629 cases, GPT-4o) or S41 (80 cases, search attack).</p>
+<p><strong>Reading the slide.</strong> Bar chart, two panels; gray = native model, blue = CaMeL with policies. Left: clean utility, % of 97 tasks (higher is better; dashed line = 100%). Right: successful attacks, count out of 949 attacked cases (lower is better; dashed line = 200); the CaMeL bars are 0, drawn as a thin stub. Compare native with CaMeL within one model. The line below gives the utility cost. The 949 cases are CaMeL's own denominator; do not rank these bars against slide S40 (629 cases, GPT-4o) or S41 (80 cases, search attack).</p>
 <div class="detail">
 <h3>Script</h3>
-<p>The measurement. o3 High: clean utility 84.5 native, 77.3 with CaMeL; utility under attack 79.0 → 79.8; successful attacks 11 → 0 of 949. Gemini 2.5 Pro: clean utility 73.2 → 41.2; under attack 58.0 → 45.3; attacks 163 → 0. The CaMeL rows are the policy-enabled configuration. These are two of the six models in the paper.</p>
+<p>The measurement. o3 High: clean utility 84.5 native, 77.3 with CaMeL; successful attacks 11 → 0 of 949. Gemini 2.5 Pro: clean utility 73.2 → 41.2; attacks 163 → 0. The CaMeL bars are the policy-enabled configuration. These are two of the six models in the paper.</p>
 <p>For these two models, clean utility fell by 7 and 32 points. And these are fixed attacks; Nasr et al. did not attack CaMeL adaptively, judging the attack would fail in most scenarios.</p>
 <h3>The figure</h3>
-<p>Table: two models, native vs CaMeL, three metrics.</p>
+<p>Bars drawn from the table values, the same numbers as the earlier table version of this slide. Utility under attack (Table 3) is not drawn: o3 High 79.0 → 79.8, Gemini 2.5 Pro 58.0 → 45.3.</p>
 <h3>Setup, model, date</h3>
 <p>CaMeL Table 2: clean utility in % on the 97 AgentDojo user tasks (the count is stated in the AgentDojo v3 abstract and Introduction). Tables 3–4: utility under attack and successful attacks on 949 attacked cases. Table 4 prints ±: o3 High native 11 ± 4.5, Gemini 2.5 Pro native 163 ± 140.1; CaMeL rows 0. Claude 4 Sonnet clean utility 86.6 → 74.2.</p>
 <h3>Denominators</h3>
@@ -905,7 +929,7 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 
 <article data-slide-id="S46">
 <h2>46. What CaMeL's Guarantee Covers</h2>
-<p class="pace">Defenses and measurement · ≈1.5 min · elapsed ≈77 min</p>
+<p class="pace">Defenses and measurement · ≈1 min · elapsed ≈?</p>
 <p class="msg"><span class="kt">Message:</span> CaMeL's guarantee is conditional on its policies, implementation and threat model: it covers keeping untrusted text out of program generation and blocking tool calls whose data flow breaks a stated policy. It does not cover misleading text shown to the user, side channels, wrong or missing policies, or a compromised user request.</p>
 <p><strong>Reading the slide.</strong> Two cards: what the guarantee covers (left) and what it does not (right). The bottom line states the three conditions; the cite line points to the opening answer in §9.3.</p>
 <div class="detail">
@@ -924,35 +948,102 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 </div>
 </article>
 
-<article data-slide-id="S47">
-<h2>47. Other System Defenses, Compared</h2>
-<p class="pace">Defenses and measurement · ≈1.5 min · elapsed ≈78.5 min</p>
-<p class="msg"><span class="kt">Message:</span> Each system defense restricts something different (what the planner sees, which tools, what a token reaches, which inputs pass, which actions need approval), and each has a cost. None is a general guarantee.</p>
-<p><strong>Reading the slide.</strong> Table: one row per defense; the middle column says what it limits, the right column its main cost. Read each row as a trade: the limit is only as good as the assumption behind it (e.g. the tool filter fails if the allowed tools suffice).</p>
+<article data-slide-id="S47a">
+<h2>S47a. Dual LLM Isolates the Privileged Planner</h2>
+<p class="pace">Defenses and measurement · ≈1 min · elapsed ≈?</p>
+<p class="msg"><span class="kt">Message:</span> Willison's dual-LLM pattern (2023) splits the assistant in two: a privileged LLM that plans and has tools but never reads untrusted text, and a quarantined LLM that reads it but has no tools. Plain code in between passes only variable names. The cost: the planner cannot use what the text says, and the values that come back still need checks.</p>
+<p><strong>Reading the slide.</strong> Diagram, redrawn from Willison's description; red marks untrusted text. Your request goes to the privileged LLM (blue), which sends a plan to the controller (plain code) and gets back only variable names. The controller runs tool calls; the tool returns the email text (red). The controller hands that raw text to the quarantined LLM (red), which has no tools; its result is stored by the controller under a name. The two lines below give what is isolated and what it costs.</p>
 <div class="detail">
 <h3>Script</h3>
-<p>Other system defenses. Dual LLM: isolates untrusted content from the privileged planner; costs tasks that need both. Tool filter: limits tools to those the task needs; fails if those suffice. Least privilege: limits what a token can reach; costs setup per task. Input filtering: catches known-looking attacks; adaptive bypass and false alarms. Human confirmation: stops actions running without approval; fatigue and rubber-stamping.</p>
-<p>Each enforced row restricts something different, and none is a general guarantee.</p>
+<p>Where did the planner/quarantine split come from? Simon Willison proposed it in 2023. Two language models. The privileged one takes your request and has the tools. The quarantined one reads the untrusted email and has no tools at all.</p>
+<p>Between them sits a controller, plain code. It runs the tool calls, gives the email text to the quarantined model, and stores the answer in a variable. The privileged model only ever sees the variable's name, never the email or the summary.</p>
+<p>So the planner cannot be talked into anything by the email. The cost: it also cannot reason about what the email says, and whatever comes back from the quarantined side can still be wrong or hostile when it is displayed or used. CaMeL adds labels and policies on top of exactly this split.</p>
 <h3>The figure</h3>
-<p>Table: defense, what it limits, main cost.</p>
+<p>Redrawn from Willison's text; not a figure from the post. In Willison's words, the controller is “regular software, not a language model”, and it stores results “in variables like $VAR1”. Worked example in the post: “Summarize my latest email”.</p>
+<h3>Mechanism and limitation (from the earlier comparison table)</h3>
+<p>Limits: untrusted content is kept from the privileged planner. Main cost: tasks that need both, that is, tasks where the plan itself depends on what the untrusted text says.</p>
+<h3>Setup, model, date</h3>
+<p>A design proposal in a blog post (25 Apr 2023), not an evaluated system. CaMeL (2025) calls itself the first concrete instantiation of the pattern.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://simonwillison.net/2023/Apr/25/dual-llm-pattern/">Willison, "The Dual LLM pattern for building AI assistants that can resist prompt injection" (25 Apr 2023)</a> — Privileged LLM, Quarantined LLM without tools, and a non-LLM controller passing variable handles; “The Privileged LLM only ever sees those variable names.”</li>
+<li><a href="https://arxiv.org/abs/2503.18813">Debenedetti et al., "Defeating Prompt Injections by Design" (CaMeL), arXiv 2503.18813v2 (2025)</a> — builds on the dual-LLM pattern with capabilities and policies.</li>
+</ul>
+</div>
+</article>
+
+<article data-slide-id="S47b">
+<h2>S47b. Limit Tools and Limit Their Reach</h2>
+<p class="pace">Defenses and measurement · ≈1 min · elapsed ≈?</p>
+<p class="msg"><span class="kt">Message:</span> Two cheaper restrictions: a tool filter removes tools the task does not need, and least privilege narrows what the remaining tools can reach. Both are real limits only when the host enforces them, and neither stops misuse of the tools that remain.</p>
+<p><strong>Reading the slide.</strong> The top line is the running task (illustrative): “Summarize today's project emails.” Left card, tool filter: reading mail stays; sending mail is removed, which also blocks useful sends. Right card, least privilege: reading is limited to the project folder and any send, if granted, to the team; the cost is setup for each task. The bottom box: enforcement by the host is what makes these limits real, and allowed tools can still be misused.</p>
+<div class="detail">
+<h3>Script</h3>
+<p>Back to the running example. You asked for a summary of today's project emails. One email, from an outsider, asks the assistant to send the confidential project plan to an outside address.</p>
+<p>A tool filter asks: which tools does this task need? Reading mail, yes. Sending mail, no, so it is removed, and the injected request has nothing to call. The cost: when a task does need to send, the filter is in the way.</p>
+<p>Least privilege asks: how far can each tool reach? Read only the project folder; send, if allowed at all, only to the team. The cost is setting that up for each task.</p>
+<p>Both only count if the host enforces them, not the model. And the tools that remain can still be misused: the tool filter fails when the task's own tools suffice for the attack.</p>
+<h3>The figure</h3>
+<p>Two cards on one illustrative task (ours). The tool filter is the one measured on slide S40 (AgentDojo, Table 5); its definition there is the reference.</p>
+<h3>Mechanism and limitation (from the earlier comparison table)</h3>
+<p>Tool filter: limits tools to those the task needs; fails if those suffice (AgentDojo: about 17% of cases, slide S40). Least privilege: limits what a token can reach; costs setup per task. Invariant's proposed mitigations for the GitHub MCP incident are of this kind: least privilege and one repository per session (slide S24).</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2406.13352">Debenedetti et al., "AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for LLM Agents", NeurIPS 2024 Datasets &amp; Benchmarks (arXiv 2406.13352v3)</a> — tool filter, §4.3 and Table 5.</li>
+<li><a href="https://invariantlabs.ai/blog/mcp-github-vulnerability">Invariant Labs, "GitHub MCP Exploited: Accessing private repositories via MCP" (26 May 2025)</a> — least-privilege mitigations.</li>
+</ul>
+</div>
+</article>
+
+<article data-slide-id="S47c">
+<h2>S47c. Detection and Approval Check Different Things</h2>
+<p class="pace">Defenses and measurement · ≈1 min · elapsed ≈?</p>
+<p class="msg"><span class="kt">Message:</span> A detector and a human approval step sit at different points and answer different questions. The detector asks whether incoming text is an attack; it can miss attacks or block benign text. Approval asks whether a proposed action should run; it can be uninformed or rubber-stamped. Neither is a hard guarantee, and neither decides what is authorized.</p>
+<p><strong>Reading the slide.</strong> Diagram: incoming text → detector → agent → approval → action runs. Above each check, its question; below it, how it fails. The two lines define where each sits. The bottom box: neither is a hard guarantee, and neither sets what is authorized; that is the policy's job (S44b).</p>
+<div class="detail">
+<h3>Script</h3>
+<p>Two defenses people often lump together. A detector is a separate classifier that reads incoming text before the agent does and asks: is this an attack? It can miss attacks, and it can block real work; slides S32 and S40 showed both.</p>
+<p>Approval is a person, after the agent proposes an action, asking: should this run? It fails differently: the person may not see what is really happening, or may click yes out of habit.</p>
+<p>Neither is a hard guarantee, and neither replaces a policy that says what is authorized.</p>
+<h3>The figure</h3>
+<p>Schematic (ours). The detector box is the same component as the classifier on slide S55 (separate classifier on tool output, block or permit before the agent).</p>
+<h3>Mechanism and limitation (from the earlier comparison table)</h3>
+<p>Input filtering: catches known-looking attacks; adaptive bypass and false alarms. Human confirmation: stops actions running without approval; fatigue and rubber-stamping.</p>
+<h3>Evidence</h3>
+<p>Detector failure modes: on AgentDojo with GPT-4o, the injection detector cut clean utility from 69.0% to 41.5% (Table 5, slide S40), and in Zhan et al. (2025) white-box adaptive attacks pushed two detectors' detection rates to near zero (Table 2, slide S32). Approval failure modes: Invariant observed users choosing “Always Allow”; CaMeL §9.2 discusses user fatigue from approval requests. “Uninformed” and “rubber-stamped” are our summary of those two sources, not measured rates.</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2406.13352">Debenedetti et al., "AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for LLM Agents", NeurIPS 2024 Datasets &amp; Benchmarks (arXiv 2406.13352v3)</a> — Table 5, injection detector.</li>
+<li><a href="https://arxiv.org/abs/2503.00061">Zhan et al., "Adaptive Attacks Break Defenses Against Indirect Prompt Injection Attacks on LLM Agents" (arXiv 2503.00061v2, 2025)</a> — Table 2, detectors under adaptive attack.</li>
+<li><a href="https://invariantlabs.ai/blog/mcp-github-vulnerability">Invariant Labs, "GitHub MCP Exploited: Accessing private repositories via MCP" (26 May 2025)</a> — “Always Allow”.</li>
+<li><a href="https://arxiv.org/abs/2503.18813">Debenedetti et al., "Defeating Prompt Injections by Design" (CaMeL), arXiv 2503.18813v2 (2025)</a> — §9.2, de-classification and user fatigue.</li>
+</ul>
 </div>
 </article>
 
 <article data-slide-id="S48">
-<h2>48. Meaningful Approval</h2>
-<p class="pace">Defenses and measurement · ≈1.5 min · elapsed ≈80 min</p>
-<p class="msg"><span class="kt">Message:</span> An approval prompt at every tool call trains users to pick “Always Allow”, as Invariant observed. Meaningful approval is rare and shows the actual data flow, what leaves, to whom and which input asked, and is used only where policy cannot decide.</p>
-<p><strong>Reading the slide.</strong> Two cards: weak approval (a prompt at every step, until the user picks Always Allow) and meaningful approval (rare, showing what leaves, to whom and which input asked). The two lines below give the rules of use.</p>
+<h2>48. Ask About Consequential Exceptions, Not Every Click</h2>
+<p class="pace">Defenses and measurement · ≈1.5 min · elapsed ≈?</p>
+<p class="msg"><span class="kt">Message:</span> Our recommendation: do not ask at every step. Routine authorized action: proceed. Forbidden action: deny. Consequential unresolved exception: ask, and show the facts from system records, not the agent's summary.</p>
+<p><strong>Reading the slide.</strong> Left, three tiers with one example each. Green: summarizing today's project emails is routine and authorized, so it proceeds. Red: an email asking to send the plan outside is forbidden, so it is denied without asking. Blue: you asked to send Bob the meeting document, but Bob is not yet among its readers; this is consequential and the policy cannot settle it, so the system asks. Right, a mock approval dialog for that case (illustrative): the action, the recipient and where he came from, the file and who named it, who asked, and why the system is asking; the user can deny or share once. The bottom line: the dialog's fields come from system records.</p>
 <div class="detail">
 <h3>Script</h3>
-<p>Human approval is common and weak. A prompt asking "allow tool call?" at every step trains users to click Always Allow; Invariant observed exactly that.</p>
-<p>Meaningful approval is rare and specific: what leaves, to whom, and which input asked for it. Ask only where policy cannot decide. Show the data flow, not the model's summary of it, since the summary can itself be injected.</p>
+<p>So when should a system ask you at all? Not at every step. A prompt at every tool call trains people to click “Always Allow”; Invariant saw exactly that in the GitHub MCP case.</p>
+<p>Our recommendation has three tiers. Routine authorized work, like summarizing today's project emails: just do it. Forbidden actions, like the email that asks to send the plan outside: deny, do not ask. Asking would hand the attacker a chance that you click yes.</p>
+<p>Ask only for consequential exceptions the policy cannot settle. You asked to send Bob the meeting document, but Bob is not on its readers. That is a real decision, and only you can make it.</p>
+<p>When you ask, show the facts: what is being sent, to whom, where that recipient came from, and why the system is asking. Take them from the system's records, not from the agent's summary, since the summary can itself be injected.</p>
 <h3>The figure</h3>
-<p>Two cards: weak vs meaningful approval.</p>
+<p>Our design recommendation, illustrated; not a measured result and not a product's dialog. The tiers answer Albert's question on this slide (C19).</p>
+<h3>What counts as consequential</h3>
+<p>Our working list, for discussion: the data is sensitive (confidential files, credentials, personal data); the action publishes or sends outside the organization; the action is hard to undo (deleting, paying, posting publicly); or it goes beyond what the user's request plainly covers. Routine reads and actions inside the request's scope should not prompt.</p>
+<h3>Motivation and limits</h3>
+<p>Invariant Labs (26 May 2025) observed users choosing “Always Allow” for repeated confirmations. CaMeL §2 notes that a blocked send can be turned into a request for explicit approval, and §9.2 discusses de-classification and user fatigue; capabilities let the system skip unnecessary prompts. These sources motivate the design; they do not show that every user rubber-stamps, nor measure how much fewer prompts help.</p>
+<h3>Mechanism and limitation (from the earlier comparison table)</h3>
+<p>Human confirmation stops actions from running without approval; its costs are fatigue and rubber-stamping, which this design tries to reduce by asking rarely and specifically.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://invariantlabs.ai/blog/mcp-github-vulnerability">Invariant Labs, "GitHub MCP Exploited: Accessing private repositories via MCP" (26 May 2025)</a> — public-issue injection; private data in a public PR; called an architectural issue; least-privilege mitigations.</li>
-<li><a href="https://arxiv.org/abs/2503.18813">Debenedetti et al., "Defeating Prompt Injections by Design" (CaMeL), arXiv 2503.18813v2 (2025)</a> — P-LLM / Q-LLM, capabilities and policies (§5); threat model and non-goals (§3); Tables 2–4; side channels (§7); §9.3.</li>
+<li><a href="https://arxiv.org/abs/2503.18813">Debenedetti et al., "Defeating Prompt Injections by Design" (CaMeL), arXiv 2503.18813v2 (2025)</a> — P-LLM / Q-LLM, capabilities and policies (§5); threat model and non-goals (§3); Tables 2–4; side channels (§7); §9.2 de-classification and user fatigue; §9.3.</li>
 </ul>
 </div>
 </article>

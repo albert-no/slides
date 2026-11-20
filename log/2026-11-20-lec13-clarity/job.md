@@ -6,7 +6,7 @@ baseline: 9effc8ab67589f2d7e5789f04db5e92067ff46d9
 id commit: existing S01–S53, introduced at 594ebea1203aabe3b3edc56443b37dd29950e411; no new ID-only commit needed
 branch: 2026-11-20-lec13-clarity
 pr: not opened
-state: in-work
+state: in-review
 round: 1 of 2
 albert decisions:
 - 2026-11-20: Revise lec13 using all 19 comments, check updated design rules, clarify answers in both slides and notes, and open a PR. No merge authorization.
@@ -27,3 +27,6 @@ Medium: many comments across the existing six-section lecture; the argument and 
 - 2026-11-20: plan-v1.md complete and issued to slides. C00–C19 covered; target splits and three new mechanism slides specified. Working folder is `/workspace/extra/slides-log/jobs/2026-11-20-lec13-clarity/`.
 - Targeted primary-source checks verified the requested ICML 2026 organizer probe, same-user GitHub demo, EchoLeak mechanism/provider status, and defense methods. Older incident status remains explicitly historical.
 - Baseline has all S01–S53 IDs already. slides confirmed acceptance of plan-v1 and work starting on P1–P6 from the recorded baseline on 2026-11-20; exact work commit pending.
+
+## Review round 1
+- Work pointer: `06678b4f01df7519d33f6f21e7d1d5025ae93559`; received 2026-11-20. Review pinned to this commit; content parent reported as `800151b`.

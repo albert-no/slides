@@ -541,20 +541,26 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 </article>
 
 <article data-slide-id="S29">
-<h2>29. Priority Is Learned, Not Enforced</h2>
-<p class="pace">Why it is hard · ≈2.5 min · elapsed ≈48 min</p>
-<p class="msg"><span class="kt">Message:</span> A parameterized SQL query enforces a code/data split; a language model only has role markers that training teaches it to rank, and those markers are tokens too. The ranking is a trained tendency: strong training lowers attack success, but not to zero.</p>
-<p><strong>Reading the slide.</strong> Left: a program, where code ≠ data is enforced. Right: a language model, where roles share one context and their ranking is learned. The annotation says a role tag is just tokens the model was trained to respect. The bottom line anticipates the instruction-hierarchy result on slide S39.</p>
+<h2>29. Priority Means Whose Instruction Wins</h2>
+<p class="pace">Why it is hard · ≈2 min · elapsed ≈?</p>
+<p class="msg"><span class="kt">Message:</span> Priority means whose instruction wins when two instructions conflict: an ordering of instruction authority, not a search ranking or a safety score. Inside a language model that ordering is learned compliance, so it usually holds but can fail; an action is only reliably stopped by a permission check in code outside the model.</p>
+<p><strong>Reading the slide.</strong> Left: the simplified authority layers, 1 app rules (read and summarize only), 2 the user's request (summarize today's emails), 3 a retrieved email asking to send the plan outside. Layers 1 and 3 conflict. Middle: the language model has learned to prefer the higher layer, so it usually follows 1, but it may still obey 3. Right: if the model proposes the send anyway, a permission check written in ordinary code, outside the model, sees that the task allows reading only and denies it. The line below the diagram: a role is provenance supplied by the application, so an email that types "SYSTEM:" is still email.</p>
 <div class="detail">
 <h3>Script</h3>
-<p>Some systems enforce a separation of code and data: a parameterized SQL query keeps the query apart from its parameters. A language model has no such enforced channel. It gets roles, system, user, tool, marked by special tokens, and training teaches it to rank them.</p>
-<p>But a role tag is also just tokens that the model was trained to respect. The ranking is a tendency, not a guarantee. Strong training lowers attack success; it does not make it zero.</p>
+<p>We already said the email should not win over the user. What does "priority" actually mean? It is the answer to one question: when two instructions conflict, whose instruction wins? So when I say the model ranks them, I mean an authority ordering of instructions, not search-result relevance and not a numeric safety score.</p>
+<p>Here the app rules say read and summarize only, and the email says send the plan outside. The desired ordering is app rules, then the user, then retrieved content. Lower layers can still supply information: the email's content belongs in the summary. They just should not override the higher ones.</p>
+<p>How does a model know which text came from which layer? The application tags each message with a role, through the chat format, not through words in the text. That is why an email that literally writes "SYSTEM:" does not become a system message: the role comes from where the text entered, not from what it says.</p>
+<p>Now the limitation. The model's respect for that ordering is learned. Training such as the instruction hierarchy improves compliance; it does not make every output obey. So the safeguard that must hold every time sits outside the model: a permission check in code that asks "is this action allowed for this task?" and denies the send regardless of what the model was persuaded to do.</p>
+<h3>Answer to the review question (C13)</h3>
+<p>"Priority" and "ranking" both mean the authority order among instructions from different sources (here: app rules &gt; user's request &gt; retrieved content). It is not a ranking of search results. It decides which instruction the model should follow in a conflict; it does not by itself decide which actions are permitted.</p>
 <h3>The figure</h3>
-<p>Program (code ≠ data, enforced) beside language model (roles in one context, learned).</p>
+<p>Three simplified layers feed a language model with learned priority; a proposed send then meets a permission check in code. Blue = trusted/authorized, red = untrusted, gray = the model. Larger single-row diagram replacing the earlier program-vs-model sketch.</p>
 <h3>Going further</h3>
-<p>Greshake et al. (§4.2) put it as "the data and instruction modalities are not disentangled". The instruction-hierarchy result in Section 05 is the strongest version of training the ranking, and it still stops short of 100%.</p>
+<p>The layers on the slide are a simplification. Wallace et al. evaluate the hierarchy system message &gt; user message &gt; model outputs &gt; tool outputs, fine-tuning GPT-3.5 Turbo, and report improved but incomplete resistance. Not every API uses one fixed hierarchy, and roles are a useful defense, not a useless one: the claim is only that a learned preference is not enforcement. Greshake et al. (§4.2) describe the underlying problem as "the data and instruction modalities are not disentangled". The instruction-hierarchy result in Section 05 (slide S39) is the strongest version of training the priority, and it still stops short of 100%.</p>
+<p>The earlier version of this slide contrasted the model with parameterized SQL; that comparison now sits on the escaping slides that follow (S31a, S31b), with the SQL distinction in their notes.</p>
 <h3>Primary sources</h3>
 <ul>
+<li><a href="https://arxiv.org/html/2404.13208v1">Wallace et al., "The Instruction Hierarchy: Training LLMs to Prioritize Privileged Instructions" (arXiv 2404.13208v1, 2024)</a> — §3.1 hierarchy (system &gt; user &gt; model outputs &gt; tool outputs), §4 and Fig. 2 results; aligned vs misaligned lower-privileged instructions.</li>
 <li><a href="https://arxiv.org/abs/2302.12173">Greshake et al., "Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection" (arXiv 2302.12173v2, 2023)</a> — indirect injection; Fig. 2 taxonomy; Fig. 3 planting; demonstrations on Bing Chat and GitHub Copilot. Venue AISec 2023 per a secondary citation.</li>
 </ul>
 </div>
@@ -562,58 +568,86 @@ p.msg { font-size: 1.08rem; margin: 6px 0 10px; }
 
 <article data-slide-id="S30">
 <h2>30. Instructions Look Like Data</h2>
-<p class="pace">Why it is hard · ≈2.5 min · elapsed ≈50.5 min</p>
-<p class="msg"><span class="kt">Message:</span> Real documents contain real instructions, so an agent must read instructions without obeying them, and the text alone often does not say whom an instruction is for. Helpfulness, the trained habit of following instructions, is the trait the attacker exploits.</p>
-<p><strong>Reading the slide.</strong> Bullets: commands and content are both sentences, and documents carry legitimate instructions. Example card: an email asks to send the Q3 report to finance. Whether that request is for the user or for the agent depends on who sent it and what the user asked. Illustrative example, not an incident.</p>
+<p class="pace">Why it is hard · ≈1.5 min · elapsed ≈?</p>
+<p class="msg"><span class="kt">Message:</span> Real documents contain legitimate instructions addressed to people, so an agent must be able to read, quote and extract an instruction without obeying it. Throwing away every imperative sentence would break the summary; the question is who the instruction is for. Helpfulness, the trained habit of following instructions, is the trait the attacker exploits.</p>
+<p><strong>Reading the slide.</strong> Left: an email from the project lead to the project team: "Please send the Q3 report to finance." The tag says it is meant for a human teammate. Green path: the agent reads it and reports it in the summary. Red path: the agent obeys it and sends the report itself, which nobody asked it to do. Illustrative example; the user's request was a summary of the inbox.</p>
 <div class="detail">
 <h3>Script</h3>
-<p>Second reason. "Summarize this" and "forward this" are both sentences. Real documents contain real instructions: recipes, emails, READMEs, task lists. The agent must read them, not obey them.</p>
-<p>Example: an email says "please send the Q3 report to finance". Is that for the user, or for the agent? Often the right answer depends on who sent it and what the user asked, which the text alone may not say.</p>
+<p>Second reason. "Summarize this" and "forward this" are both sentences. Real documents contain real instructions: recipes, emails, READMEs, task lists.</p>
+<p>Take this email from the project lead: "Please send the Q3 report to finance." Nothing about it is malicious. It is an instruction to a teammate. The user asked the agent for a summary, so the right behavior is to report it: "the lead asks the team to send the Q3 report to finance." The wrong behavior is to carry it out. The text alone often does not say whom an instruction is for; the answer depends on who sent it and what the user asked.</p>
+<p>Four different things: reading an instruction, quoting it, extracting it as a to-do item for the user, and obeying it. Only the last one acts on the email's authority. So the fix is not to delete imperative sentences, which would make the agent useless for exactly this kind of email.</p>
 <p>Helpfulness is the trait the attacker exploits. A model trained to follow instructions well is, by the same training, good at following the wrong ones.</p>
 <h3>The figure</h3>
-<p>Example card with an ambiguous instruction inside an email.</p>
+<p>Annotated email with its intended human recipient; one correct path (report it) and one wrong path (obey it).</p>
 <h3>Going further</h3>
 <p>AgentDojo (Section 05, Fig. 6a): several high-utility models also had high attack success; the authors relate this to inverse scaling. It is an observation for one fixed attack, not a law.</p>
 </div>
 </article>
 
-<article data-slide-id="S31">
-<h2>31. Escaping Alone Is Not Authority</h2>
-<p class="pace">Why it is hard · ≈2.5 min · elapsed ≈53 min</p>
-<p class="msg"><span class="kt">Message:</span> Parameterized queries fixed SQL injection because the parser cannot run data as code; delimiters around prompt data only help the model locate untrusted text, which it still reads. Escaping marks content; it does not decide which text has authority to command an action.</p>
-<p><strong>Reading the slide.</strong> Two cards: SQL injection, where the parser cannot run data as code, and prompt injection, where the model still reads inside the delimiters. The bullets state what markers do and do not do. The bottom line: there is no direct analog inside the model; the closest analogs are restrictions enforced in code (Section 05).</p>
+<article data-slide-id="S31a">
+<h2>S31a. Escaping Preserves Text as Text</h2>
+<p class="pace">Why it is hard · ≈2 min · elapsed ≈?</p>
+<p class="msg"><span class="kt">Message:</span> Escaping writes a special character so it is read as ordinary text, not as syntax. Delimiters are start and end markers that show where untrusted data begins and ends. Escaping protects the delimiters: it stops the data from faking its own end marker.</p>
+<p><strong>Reading the slide.</strong> Left: escaping. In <code>"She said \"hi\" to me"</code>, each <code>\"</code> is a quote mark that belongs to the text; without the backslash the string would end early. Right: delimiters. <code>&lt;email&gt;</code> and <code>&lt;/email&gt;</code> wrap the untrusted email so the model can tell where it starts and ends; escaping stops the email from containing a fake <code>&lt;/email&gt;</code>. Highlight: why delimiters matter. Toy examples.</p>
 <div class="detail">
 <h3>Script</h3>
-<p>Third reason, by contrast with SQL injection. There, parameterized queries fixed the problem: the parser cannot run data as code, by construction.</p>
-<p>For prompts, delimiters mark data, but the model still reads what is inside. Markers help a model locate untrusted text. They do not decide which text may command an action.</p>
-<p>So escaping alone does not establish authority. The fix that worked for SQL has no direct analog inside the model; the closest analogs are restrictions enforced in code, which is where Section 05 ends up.</p>
+<p>Third reason, and the question is: can we just mark the untrusted text? First, two tools from ordinary programming.</p>
+<p>Escaping. Many formats reserve characters. In a quoted string, a quote mark means "the string ends here". If the text itself contains a quote, we write it as backslash-quote, which says: this one is just a character. Escaping keeps text as text.</p>
+<p>Delimiters. When we paste an email into a prompt we can wrap it in start and end markers, here <code>&lt;email&gt;</code> and <code>&lt;/email&gt;</code>. They tell the model where untrusted text starts and ends, so it can treat what is inside as material to summarize. That is why delimiters matter.</p>
+<p>The two work together. If the email could contain its own <code>&lt;/email&gt;</code>, it could pretend the untrusted part had ended and continue as if it were the prompt. Escaping, or choosing markers the sender cannot reproduce, prevents that.</p>
+<h3>Answer to the review question (C14)</h3>
+<p><strong>What is escaping?</strong> Writing a special character so it is treated literally as text, not as syntax. <strong>Why do delimiters matter?</strong> They mark where untrusted data begins and ends, which helps the model see provenance. <strong>"Mark untrusted text, but not enough"?</strong> Yes: next slide.</p>
+<h3>Not the same as parameterized SQL</h3>
+<p>Escaping and delimiting are not synonyms for prepared statements. With a parameterized SQL query the query structure is fixed first and data values are bound separately, so a value is never parsed as part of the query. OWASP lists prepared statements as the primary defense and calls escaping all user-supplied input "strongly discouraged". Two cautions: correct parameterization protects that query's value boundary, not every SQL use or the whole application; and it is not "escaping done better", it is a different mechanism. A language model has no comparable separate channel: the email and the instructions are read as one text.</p>
 <h3>The figure</h3>
-<p>Two cards: SQL injection (parser cannot run data) and prompt injection (model still reads inside the markers).</p>
-<h3>Going further</h3>
-<p>Perez and Ribeiro found delimiters could even strengthen attacks (finding F2). Hines et al. note delimiting "could be easily subverted by an attacker who gains knowledge of our system prompt" (§5.1).</p>
+<p>Two-column comparison with one toy example each: an escaped quote and an email wrapped in start/end markers.</p>
 <h3>Primary sources</h3>
 <ul>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html">OWASP, SQL Injection Prevention Cheat Sheet</a> — "Defense Option 1: Prepared Statements (with Parameterized Queries)"; "Defense Option 4: STRONGLY DISCOURAGED: Escaping All User-Supplied Input".</li>
+<li><a href="https://arxiv.org/abs/2403.14720">Hines et al., "Defending Against Indirect Prompt Injection Attacks With Spotlighting" (Microsoft; arXiv 2403.14720, 2024)</a> — §3.2 delimiting; §5.1 an attacker who learns the system prompt can insert their own delimiters.</li>
+</ul>
+</div>
+</article>
+
+<article data-slide-id="S31b">
+<h2>S31b. Marked Text Can Still Give Orders</h2>
+<p class="pace">Why it is hard · ≈2 min · elapsed ≈?</p>
+<p class="msg"><span class="kt">Message:</span> We can mark untrusted text, and that helps, but marking alone does not enforce authority. An instruction that stays inside the markers can still be read and obeyed; stopping the action needs a separate permission or data-flow check outside the model.</p>
+<p><strong>Reading the slide.</strong> Left: the user's request, "Summarize today's project emails." Middle: the outside sender's Q3 schedule update, correctly wrapped in <code>&lt;email&gt;</code> markers; inside them it also asks the assistant to send the confidential plan to an outside address. Right: a vulnerable model writes the summary and also sends the plan. No marker was broken: the instruction worked from inside the boundary. Illustrative running example; no real address or payload.</p>
+<div class="detail">
+<h3>Script</h3>
+<p>Back to our running example. The user asks: summarize today's project emails. We do everything right with markers: the outside sender's message sits between <code>&lt;email&gt;</code> and <code>&lt;/email&gt;</code>, properly escaped. Inside it, besides the schedule update, the sender asks the assistant to send the confidential project plan to an outside address.</p>
+<p>The attacker never needs to break out of the markers. The model reads everything inside them, because it has to in order to summarize, and a vulnerable model may simply do what the text asks. It writes the summary and also sends the plan.</p>
+<p>So, to answer the question directly: yes, we can mark untrusted text; marking alone does not enforce authority. The markers help the model see where text came from. Deciding that this email may not trigger a send is a separate job, done by a permission or data-flow check outside the model.</p>
+<h3>How much do markers help?</h3>
+<p>In Hines et al.'s spotlighting tests (1,000 synthetic summarization documents, fixed attacks), delimiting cut GPT-3.5 Turbo's attack success rate by about half (Fig. 3); datamarking cut it further (Fig. 4 caption: 3.10%; the text says "below 3%"). These are fixed-attack results on one task, not an authorization guarantee. The authors themselves do not recommend delimiting alone, because an attacker who learns the system prompt can insert matching delimiters (§5.1). Perez and Ribeiro found delimiters could even strengthen attacks (finding F2). So markers are useful, not useless, and not sufficient.</p>
+<h3>The figure</h3>
+<p>Trusted request → untrusted email inside dashed start/end markers, with the injected request inside → vulnerable model's two actions: summary (green) and send (red).</p>
+<h3>Primary sources</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2403.14720">Hines et al., "Defending Against Indirect Prompt Injection Attacks With Spotlighting" (Microsoft; arXiv 2403.14720, 2024)</a> — delimiting, datamarking, encoding; Fig. 3 delimiter ASR, Fig. 4 summarization ASR; no adaptive evaluation.</li>
 <li><a href="https://arxiv.org/abs/2211.09527">Perez &amp; Ribeiro, "Ignore Previous Prompt: Attack Techniques For Language Models", NeurIPS 2022 ML Safety Workshop (arXiv 2211.09527)</a> — goal hijacking and prompt leaking on text-davinci-002; Fig. 1; 58.6% hijacking, 23.6% leaking (§5).</li>
-<li><a href="https://arxiv.org/abs/2403.14720">Hines et al., "Defending Against Indirect Prompt Injection Attacks With Spotlighting" (Microsoft; arXiv 2403.14720, 2024)</a> — delimiting, datamarking, encoding; Fig. 4 summarization ASR; no adaptive evaluation.</li>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html">OWASP, SQL Injection Prevention Cheat Sheet</a> — escaping vs. parameterized queries (see S31a).</li>
 </ul>
 </div>
 </article>
 
 <article data-slide-id="S32">
 <h2>32. Detection Meets an Adaptive Attacker</h2>
-<p class="pace">Why it is hard · ≈2 min · elapsed ≈55 min</p>
-<p class="msg"><span class="kt">Message:</span> A detector is a classifier over open-ended text, so an adaptive attacker can test variants until one passes, while false alarms block real content. In Zhan et al. (2025), white-box adaptive attacks pushed two detectors' detection rates to near zero.</p>
-<p><strong>Reading the slide.</strong> Diagram: variants 1 to n go to one detector, which blocks most; one miss suffices. The bullets list the attacker's moves and the false-alarm cost. The numbers (Zhan et al., Table 2) are in the details; white-box access is a strong assumption.</p>
+<p class="pace">Why it is hard · ≈2 min · elapsed ≈?</p>
+<p class="msg"><span class="kt">Message:</span> A detector is a classifier over open-ended text, so it makes two kinds of errors: misses (false negatives) let an attack through, false alarms (false positives) block legitimate content. An adaptive attacker can test variants until one is missed; that miss lets that attempt reach the agent, though it does not guarantee the attack succeeds.</p>
+<p><strong>Reading the slide.</strong> Left: the attacker's variants (paraphrased, translated, encoded, split up). Middle: one detector, a text classifier. Right: most variants are blocked; one is missed and reaches the agent, where it may or may not succeed. Below: the two error types, and the warning that a static test set measures yesterday's attacks. Schematic, not measured counts.</p>
 <div class="detail">
 <h3>Script</h3>
-<p>What about a detector that flags injected text? It is a classifier over open-ended text. An attacker can paraphrase, translate, encode or split the instruction, and can test variants until one passes. One miss suffices. And false alarms block legitimate content.</p>
+<p>What about a detector that flags injected text? It is a classifier over open-ended text, not a word blacklist. It can be wrong in two directions. A miss lets an attack through. A false alarm blocks a legitimate email, which costs utility.</p>
+<p>The attacker adapts. They can paraphrase, translate, encode or split the instruction, and test variants until one passes. A single miss does not mean the attack succeeds: the agent still has to follow it. But it means this attempt is not stopped at the door.</p>
 <p>A static test set measures the detector against yesterday's attacks. Zhan and colleagues broke two detectors, a fine-tuned DeBERTa classifier and an LLM-based one, with adaptive white-box attacks; detection rates fell to near zero.</p>
 <h3>The figure</h3>
-<p>Several attack variants against one detector; one miss suffices.</p>
+<p>Several attack variants against one detector; most blocked, one missed.</p>
 <h3>Setup, model, date</h3>
 <p>Zhan et al. 2025, white-box access, 100 InjecAgent cases on Vicuna-7B and Llama-3.1-8B agents. Detection rates, original → adaptive: fine-tuned detector 61 → 1 (Vicuna), 61 → 10 (Llama); LLM detector 34 → 0, 72 → 0 (Table 2).</p>
 <h3>What this does not establish</h3>
-<p>White-box access is a strong assumption; black-box results are on slide 41.</p>
+<p>White-box access is a strong assumption; black-box results are on slide 41. Neither result shows that every detector is useless; Section 05 measures detectors as one defense among several.</p>
 <h3>Primary sources</h3>
 <ul>
 <li><a href="https://arxiv.org/abs/2503.00061">Zhan et al., "Adaptive Attacks Break Defenses Against Indirect Prompt Injection Attacks on LLM Agents" (arXiv 2503.00061v2, 2025)</a> — eight defenses, all bypassed with ASR above 50% under white-box adaptive attacks (Table 1, §5.2).</li>

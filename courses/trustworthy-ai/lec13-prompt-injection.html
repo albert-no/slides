@@ -597,88 +597,225 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
   <p class="subtitle">Priority is learned, not enforced</p>
 </div>
 
-<!-- 29. Priority Is Learned, Not Enforced -->
+<style>
+/* P4 (lec13-clarity): S29–S32 full-width diagrams. 1:1 viewBox → rendered px; primary labels 25px, secondary 21px. */
+.p4-fig { width: 100%; max-width: 1080px; margin: 4px auto 0; }
+.p4-fig svg { display: block; width: 100%; height: auto; }
+.p4-fig text { font-family: inherit; }
+.p4-fig .p4-mono { font-family: 'Menlo', 'Consolas', 'Courier New', monospace; }
+.p4-key { color: var(--gray-text); margin-top: 8px; }
+.p4-esc { gap: 40px; align-items: start; }
+.p4-esc .code-block { margin: 10px 0 8px; }
+.p4-esc .code-block .kw { color: #003876; }
+</style>
+
+<!-- ?. Priority Means Whose Instruction Wins -->
 <div class="slide" data-slide-id="S29">
-  <h2>Priority Is Learned, Not Enforced</h2>
+  <h2>Priority Means Whose Instruction Wins</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div>
-  <p>Some systems <strong>enforce</strong> a code/data split, e.g. parameterized SQL.</p>
-  <ul>
-    <li>A model gets roles: system, user, tool</li>
-    <li>Training teaches it to rank them</li>
-    <li>The ranking is a tendency, not a guarantee</li>
-  </ul>
-    </div>
-    <div style="display:flex;justify-content:center;">
-      <svg viewBox="0 0 400 250" style="width:470px;max-width:100%;">
-      <rect x="10" y="10" width="180" height="100" rx="8" fill="#eaf5ee" stroke="#2e8b57" stroke-width="2"/><text x="100" y="44.95" font-size="17" fill="#2e8b57" text-anchor="middle" font-weight="700">program</text><text x="100" y="65.95" font-size="17" fill="#2e8b57" text-anchor="middle">code ≠ data</text><text x="100" y="86.95" font-size="17" fill="#2e8b57" text-anchor="middle">enforced</text>
-      <rect x="210" y="10" width="180" height="100" rx="8" fill="#fbecec" stroke="#d94040" stroke-width="2"/><text x="300" y="44.95" font-size="17" fill="#d94040" text-anchor="middle" font-weight="700">language model</text><text x="300" y="65.95" font-size="17" fill="#d94040" text-anchor="middle">roles in one context</text><text x="300" y="86.95" font-size="17" fill="#d94040" text-anchor="middle">learned</text>
-      <rect x="10" y="140" width="380" height="100" rx="8" fill="#f4f6f9" stroke="#6b7280" stroke-width="2"/><text x="200" y="185.45" font-size="17" fill="#6b7280" text-anchor="middle" font-weight="700">a role tag is also just tokens</text><text x="200" y="206.45" font-size="17" fill="#6b7280" text-anchor="middle">the model was trained to respect</text>
-      </svg>
-    </div>
+  <p><strong>Priority</strong> = instruction authority, not search ranking.</p>
+  <div class="p4-fig">
+    <svg viewBox="0 0 1080 320" role="img" aria-label="Simplified authority layers: 1 app rules, read and summarize only; 2 user's request, summarize today's emails; 3 retrieved email asking to send the plan outside. Inside the model, priority is learned: it usually follows layer 1 but may still obey layer 3. If it proposes the send, a permission check in code outside the model denies it.">
+      <defs>
+        <marker id="p4-29-n" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker>
+        <marker id="p4-29-r" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#d94040"/></marker>
+        <marker id="p4-29-g" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#2e8b57"/></marker>
+        <marker id="p4-29-b" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#003876"/></marker>
+      </defs>
+      <!-- column captions -->
+      <text x="180" y="24" font-size="21" fill="#6b7280" text-anchor="middle" font-weight="700">authority: 1 &gt; 2 &gt; 3 (simplified)</text>
+      <text x="565" y="24" font-size="21" fill="#6b7280" text-anchor="middle" font-weight="700">inside the model</text>
+      <text x="925" y="24" font-size="21" fill="#6b7280" text-anchor="middle" font-weight="700">outside the model</text>
+      <!-- layers -->
+      <rect x="1" y="40" width="358" height="82" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="22" y="73" font-size="25" fill="#003876" font-weight="700">1 · app rules</text>
+      <text x="22" y="106" font-size="21" fill="#003876">read and summarize only</text>
+      <rect x="1" y="134" width="358" height="82" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="22" y="167" font-size="25" fill="#003876" font-weight="700">2 · user's request</text>
+      <text x="22" y="200" font-size="21" fill="#003876">summarize today's emails</text>
+      <rect x="1" y="228" width="358" height="82" rx="10" fill="#fbecec" stroke="#d94040" stroke-width="2"/>
+      <text x="22" y="261" font-size="25" fill="#d94040" font-weight="700">3 · retrieved email</text>
+      <text x="22" y="294" font-size="21" fill="#d94040">asks: send the plan outside</text>
+      <!-- arrow layers → model -->
+      <line x1="362" y1="185" x2="430" y2="185" stroke="#6b7280" stroke-width="3" marker-end="url(#p4-29-n)"/>
+      <!-- model -->
+      <rect x="440" y="80" width="250" height="210" rx="10" fill="#f4f6f9" stroke="#6b7280" stroke-width="2"/>
+      <text x="565" y="122" font-size="25" fill="#374151" text-anchor="middle" font-weight="700">language model</text>
+      <text x="565" y="162" font-size="21" fill="#374151" text-anchor="middle">learned priority:</text>
+      <text x="565" y="200" font-size="21" fill="#374151" text-anchor="middle">usually follows 1</text>
+      <text x="565" y="238" font-size="21" fill="#d94040" text-anchor="middle" font-weight="700">may still obey 3</text>
+      <!-- arrow model → check -->
+      <text x="728" y="172" font-size="21" fill="#d94040" text-anchor="middle" font-weight="700">send?</text>
+      <line x1="692" y1="185" x2="760" y2="185" stroke="#d94040" stroke-width="3" marker-end="url(#p4-29-r)"/>
+      <!-- permission check -->
+      <rect x="770" y="80" width="309" height="210" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2.5"/>
+      <text x="925" y="122" font-size="25" fill="#003876" text-anchor="middle" font-weight="700">permission check</text>
+      <text x="925" y="162" font-size="21" fill="#003876" text-anchor="middle">code, not the model</text>
+      <text x="925" y="200" font-size="21" fill="#003876" text-anchor="middle">task allows read only</text>
+      <text x="925" y="238" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">send: denied</text>
+    </svg>
   </div>
-  <div class="highlight"><p>Strong training lowers attack success; it does not make it <strong>zero</strong>.</p></div>
+  <p class="p4-key">A real role comes from the app: an email that types “SYSTEM:” is still email.</p>
+  <div class="cite cite-left">Layers simplified from Wallace et al., “The Instruction Hierarchy”, arXiv 2404.13208, 2024 (paper: system &gt; user &gt; model outputs &gt; tool outputs). Scenario and permission check: illustrative.</div>
 </div>
 
-<!-- 30. Instructions Look Like Data -->
+<!-- ?. Instructions Look Like Data -->
 <div class="slide" data-slide-id="S30">
   <h2>Instructions Look Like Data</h2>
   <div class="divider"></div>
-  <p>"Summarize this" and "Forward this" are <strong>both sentences</strong>.</p>
-  <ul class="arrow">
-    <li>Real documents contain real instructions</li>
-    <li>Recipes, emails, READMEs, task lists</li>
-    <li>The agent must read them, not obey them</li>
-  </ul>
-  <div class="def-card">
-    <h3>Example</h3>
-    <p>Email: "Please send the Q3 report to finance." Is that for the user, or for the agent?</p>
+  <p>Documents carry real instructions, meant for <strong>people</strong>, not the agent.</p>
+  <div class="p4-fig">
+    <svg viewBox="0 0 1080 300" role="img" aria-label="An email from the project lead to the project team says: Please send the Q3 report to finance. It is meant for a human teammate. Right path: the agent reads and reports it in the summary. Wrong path: the agent obeys it and sends the report itself, though no one asked it to.">
+      <defs>
+        <marker id="p4-30-n" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker>
+        <marker id="p4-30-r" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#d94040"/></marker>
+        <marker id="p4-30-g" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#2e8b57"/></marker>
+        <marker id="p4-30-b" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#003876"/></marker>
+      </defs>
+      <rect x="1" y="10" width="470" height="280" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2"/>
+      <text x="24" y="48" font-size="21" fill="#6b7280">From: project lead</text>
+      <text x="24" y="80" font-size="21" fill="#6b7280">To: project team</text>
+      <line x1="24" y1="98" x2="448" y2="98" stroke="#d1d5db" stroke-width="2"/>
+      <text x="24" y="140" font-size="25" fill="#1f2937" font-weight="700">Please send the Q3 report</text>
+      <text x="24" y="174" font-size="25" fill="#1f2937" font-weight="700">to finance.</text>
+      <rect x="24" y="210" width="424" height="56" rx="8" fill="#e8ecf0" stroke="#003876" stroke-width="1.5"/>
+      <text x="236" y="245" font-size="21" fill="#003876" text-anchor="middle" font-weight="700">meant for: a human teammate</text>
+      <!-- arrows -->
+      <line x1="473" y1="110" x2="588" y2="78" stroke="#2e8b57" stroke-width="3" marker-end="url(#p4-30-g)"/>
+      <line x1="473" y1="190" x2="588" y2="222" stroke="#d94040" stroke-width="3" marker-end="url(#p4-30-r)"/>
+      <!-- right outcome -->
+      <rect x="598" y="10" width="481" height="125" rx="10" fill="#eaf5ee" stroke="#2e8b57" stroke-width="2"/>
+      <text x="622" y="50" font-size="25" fill="#2e8b57" font-weight="700">✓ read it, report it</text>
+      <text x="622" y="88" font-size="21" fill="#1f2937">summary: lead asks the team to send</text>
+      <text x="622" y="118" font-size="21" fill="#1f2937">the Q3 report to finance</text>
+      <!-- wrong outcome -->
+      <rect x="598" y="165" width="481" height="125" rx="10" fill="#fbecec" stroke="#d94040" stroke-width="2"/>
+      <text x="622" y="205" font-size="25" fill="#d94040" font-weight="700">✗ obey it</text>
+      <text x="622" y="243" font-size="21" fill="#1f2937">agent sends the report itself</text>
+      <text x="622" y="273" font-size="21" fill="#1f2937">no one asked the agent to</text>
+    </svg>
   </div>
+  <p class="p4-key">Quoting the instruction is right; carrying it out is not.</p>
   <p class="muted">Helpfulness is the trait the attacker exploits.</p>
+  <div class="cite cite-left">Illustrative example: the user asked for a summary of the inbox.</div>
 </div>
 
-<!-- 31. Escaping Alone Is Not Authority -->
-<div class="slide" data-slide-id="S31">
-  <h2>Escaping Alone Is Not Authority</h2>
+<!-- ?. Escaping Preserves Text as Text -->
+<div class="slide" data-slide-id="S31a">
+  <h2>Escaping Preserves Text as Text</h2>
   <div class="divider"></div>
-  <div class="grid-2">
-    <div class="card"><h3>SQL injection</h3>
-      <p>Parameterized queries: the parser <strong>cannot</strong> run data as code.</p></div>
-    <div class="card"><h3>Prompt injection</h3>
-      <p>Delimiters mark data, but the model still <strong>reads</strong> what is inside.</p></div>
+  <div class="grid-2 p4-esc">
+    <div>
+      <h3>Escaping</h3>
+      <p>Mark a special character as plain text.</p>
+      <div class="code-block">"She said <span class="kw">\"</span>hi<span class="kw">\"</span> to me"</div>
+      <p class="muted"><span class="kw">\"</span>&nbsp;= a quote mark, not the string's end</p>
+    </div>
+    <div>
+      <h3>Delimiters</h3>
+      <p>Start and end markers around untrusted data.</p>
+      <div class="code-block"><span class="kw">&lt;email&gt;</span>
+Q3 schedule update …
+<span class="kw">&lt;/email&gt;</span></div>
+      <p class="muted">Escaping stops the email faking&nbsp;&lt;/email&gt;</p>
+    </div>
   </div>
-  <ul>
-    <li>Markers help a model locate untrusted text</li>
-    <li>They do not decide which text may command an action</li>
-  </ul>
-  <p class="muted">The fix that worked for SQL has no direct analog in the model.</p>
+  <div class="highlight"><p>Delimiters matter: they show where untrusted text starts and ends.</p></div>
+  <div class="cite cite-left">Toy examples. OWASP SQL Injection Prevention Cheat Sheet (escaping vs. parameterized queries); Hines et al., “Spotlighting”, arXiv 2403.14720, 2024, §3.2 (delimiting).</div>
 </div>
 
-<!-- 32. Detection Meets an Adaptive Attacker -->
+<!-- ?. Marked Text Can Still Give Orders -->
+<div class="slide" data-slide-id="S31b">
+  <h2>Marked Text Can Still Give Orders</h2>
+  <div class="divider"></div>
+  <p>We can mark untrusted text; <strong>marking alone does not enforce authority</strong>.</p>
+  <div class="p4-fig">
+    <svg viewBox="0 0 1080 330" role="img" aria-label="The user's request, summarize today's project emails, goes to the model together with an email wrapped in email start and end markers. Inside the markers, an outside sender's Q3 schedule update also asks the assistant to send the confidential plan to an outside address. A vulnerable model writes the summary and also sends the plan; the instruction never broke out of the markers.">
+      <defs>
+        <marker id="p4-31b-n" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker>
+        <marker id="p4-31b-r" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#d94040"/></marker>
+        <marker id="p4-31b-g" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#2e8b57"/></marker>
+        <marker id="p4-31b-b" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#003876"/></marker>
+      </defs>
+      <text x="125" y="24" font-size="21" fill="#6b7280" text-anchor="middle" font-weight="700">trusted</text>
+      <text x="530" y="24" font-size="21" fill="#6b7280" text-anchor="middle" font-weight="700">untrusted, marked</text>
+      <text x="950" y="24" font-size="21" fill="#6b7280" text-anchor="middle" font-weight="700">vulnerable model</text>
+      <!-- user -->
+      <rect x="1" y="100" width="249" height="160" rx="10" fill="#e8ecf0" stroke="#003876" stroke-width="2"/>
+      <text x="125" y="146" font-size="25" fill="#003876" text-anchor="middle" font-weight="700">user's request</text>
+      <text x="125" y="188" font-size="21" fill="#003876" text-anchor="middle">“Summarize today's</text>
+      <text x="125" y="220" font-size="21" fill="#003876" text-anchor="middle">project emails.”</text>
+      <line x1="252" y1="180" x2="310" y2="180" stroke="#003876" stroke-width="3" marker-end="url(#p4-31b-b)"/>
+      <!-- marked email -->
+      <rect x="320" y="40" width="420" height="280" rx="10" fill="#fff" stroke="#003876" stroke-width="2.5" stroke-dasharray="9 6"/>
+      <text x="340" y="74" font-size="21" fill="#003876" font-weight="700" class="p4-mono">&lt;email&gt;</text>
+      <text x="720" y="74" font-size="21" fill="#6b7280" text-anchor="end">Q3 schedule update</text>
+      <rect x="345" y="92" width="370" height="170" rx="8" fill="#fbecec" stroke="#d94040" stroke-width="2"/>
+      <text x="530" y="134" font-size="25" fill="#d94040" text-anchor="middle" font-weight="700">outside sender asks:</text>
+      <text x="530" y="176" font-size="21" fill="#d94040" text-anchor="middle">send the confidential plan</text>
+      <text x="530" y="208" font-size="21" fill="#d94040" text-anchor="middle">to an outside address</text>
+      <text x="530" y="244" font-size="21" fill="#6b7280" text-anchor="middle">(stays inside the markers)</text>
+      <text x="340" y="302" font-size="21" fill="#003876" font-weight="700" class="p4-mono">&lt;/email&gt;</text>
+      <!-- arrows to outcomes -->
+      <line x1="742" y1="140" x2="808" y2="108" stroke="#2e8b57" stroke-width="3" marker-end="url(#p4-31b-g)"/>
+      <line x1="742" y1="220" x2="808" y2="252" stroke="#d94040" stroke-width="3" marker-end="url(#p4-31b-r)"/>
+      <!-- outcomes -->
+      <rect x="818" y="45" width="261" height="115" rx="10" fill="#eaf5ee" stroke="#2e8b57" stroke-width="2"/>
+      <text x="948" y="92" font-size="25" fill="#2e8b57" text-anchor="middle" font-weight="700">✓ writes summary</text>
+      <text x="948" y="130" font-size="21" fill="#1f2937" text-anchor="middle">task done</text>
+      <rect x="818" y="200" width="261" height="120" rx="10" fill="#fbecec" stroke="#d94040" stroke-width="2"/>
+      <text x="948" y="246" font-size="25" fill="#d94040" text-anchor="middle" font-weight="700">✗ sends the plan</text>
+      <text x="948" y="284" font-size="21" fill="#1f2937" text-anchor="middle">no marker broken</text>
+    </svg>
+  </div>
+  <p class="p4-key">Markers help the model see the source; a permission check must still stop the send.</p>
+  <div class="cite cite-left">Illustrative running example (no real address or payload). Delimiting helps but is not authorization: Hines et al., arXiv 2403.14720, 2024; OWASP SQL Injection Prevention Cheat Sheet.</div>
+</div>
+
+<!-- ?. Detection Meets an Adaptive Attacker -->
 <div class="slide" data-slide-id="S32">
   <h2>Detection Meets an Adaptive Attacker</h2>
   <div class="divider"></div>
-  <div class="grid-2" style="grid-template-columns:1fr auto;gap:28px;align-items:center;">
-    <div>
-  <p>A detector is a <strong>classifier</strong> over open-ended text.</p>
-  <ul>
-    <li>Paraphrase, translate, encode, split</li>
-    <li>Attacker can test until one passes</li>
-    <li>False alarms block legitimate content</li>
-  </ul>
-    </div>
-    <div style="display:flex;justify-content:center;">
-      <svg viewBox="0 0 400 220" style="width:480px;max-width:100%;">
-      <defs><marker id="fl-b" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#003876"/></marker><marker id="fl-r" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#d94040"/></marker><marker id="fl-g" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2e8b57"/></marker><marker id="fl-n" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6b7280"/></marker></defs>
-      <rect x="10" y="20" width="150" height="46" rx="8" fill="#fbecec" stroke="#d94040" stroke-width="2"/><text x="85" y="48.6" font-size="16" fill="#d94040" text-anchor="middle" font-weight="700">variant 1</text><rect x="10" y="86" width="150" height="46" rx="8" fill="#fbecec" stroke="#d94040" stroke-width="2"/><text x="85" y="114.6" font-size="16" fill="#d94040" text-anchor="middle" font-weight="700">variant 2</text><rect x="10" y="152" width="150" height="46" rx="8" fill="#fbecec" stroke="#d94040" stroke-width="2"/><text x="85" y="180.6" font-size="16" fill="#d94040" text-anchor="middle" font-weight="700">variant n</text>
-      <line x1="160" y1="43" x2="214" y2="100" stroke="#d94040" stroke-width="2.5" marker-end="url(#fl-r)"/><line x1="160" y1="109" x2="214" y2="109" stroke="#d94040" stroke-width="2.5" marker-end="url(#fl-r)"/><line x1="160" y1="175" x2="214" y2="118" stroke="#d94040" stroke-width="2.5" marker-end="url(#fl-r)"/>
-      <rect x="218" y="79" width="172" height="60" rx="8" fill="#fff" stroke="#6b7280" stroke-width="2" stroke-dasharray="6 4"/><text x="304" y="104.6" font-size="16" fill="#003876" text-anchor="middle" font-weight="700">detector</text><text x="304" y="124.6" font-size="16" fill="#003876" text-anchor="middle">blocks most</text>
-      <text x="304" y="175" font-size="16" fill="#d94040" text-anchor="middle" font-weight="700">one miss suffices</text>
-      </svg>
-    </div>
+  <p>A detector is a <strong>classifier</strong>: the attacker tests variants until one passes.</p>
+  <div class="p4-fig">
+    <svg viewBox="0 0 1080 320" role="img" aria-label="Attacker's variants, paraphrased, translated, encoded and split up, all go to one detector, a text classifier. Most variants are blocked. One variant is missed and reaches the agent, where it may or may not succeed.">
+      <defs>
+        <marker id="p4-32-n" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker>
+        <marker id="p4-32-r" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#d94040"/></marker>
+        <marker id="p4-32-g" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#2e8b57"/></marker>
+        <marker id="p4-32-b" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#003876"/></marker>
+      </defs>
+      <text x="130" y="24" font-size="21" fill="#6b7280" text-anchor="middle" font-weight="700">attacker's variants</text>
+      <text x="930" y="24" font-size="21" fill="#6b7280" text-anchor="middle" font-weight="700">verdict</text>
+      <rect x="1" y="40" width="259" height="56" rx="8" fill="#fbecec" stroke="#d94040" stroke-width="2"/>
+      <text x="130" y="77" font-size="25" fill="#d94040" text-anchor="middle" font-weight="700">paraphrased</text>
+      <rect x="1" y="110" width="259" height="56" rx="8" fill="#fbecec" stroke="#d94040" stroke-width="2"/>
+      <text x="130" y="147" font-size="25" fill="#d94040" text-anchor="middle" font-weight="700">translated</text>
+      <rect x="1" y="180" width="259" height="56" rx="8" fill="#fbecec" stroke="#d94040" stroke-width="2"/>
+      <text x="130" y="217" font-size="25" fill="#d94040" text-anchor="middle" font-weight="700">encoded</text>
+      <rect x="1" y="250" width="259" height="56" rx="8" fill="#fbecec" stroke="#d94040" stroke-width="2"/>
+      <text x="130" y="287" font-size="25" fill="#d94040" text-anchor="middle" font-weight="700">split up</text>
+      <line x1="262" y1="68" x2="370" y2="148" stroke="#d94040" stroke-width="2.5" marker-end="url(#p4-32-r)"/>
+      <line x1="262" y1="138" x2="370" y2="166" stroke="#d94040" stroke-width="2.5" marker-end="url(#p4-32-r)"/>
+      <line x1="262" y1="208" x2="370" y2="184" stroke="#d94040" stroke-width="2.5" marker-end="url(#p4-32-r)"/>
+      <line x1="262" y1="278" x2="370" y2="202" stroke="#d94040" stroke-width="2.5" marker-end="url(#p4-32-r)"/>
+      <rect x="380" y="115" width="280" height="120" rx="10" fill="#fff" stroke="#6b7280" stroke-width="2.5" stroke-dasharray="8 5"/>
+      <text x="520" y="165" font-size="25" fill="#374151" text-anchor="middle" font-weight="700">detector</text>
+      <text x="520" y="203" font-size="21" fill="#374151" text-anchor="middle">a text classifier</text>
+      <line x1="662" y1="150" x2="770" y2="100" stroke="#6b7280" stroke-width="3" marker-end="url(#p4-32-n)"/>
+      <line x1="662" y1="205" x2="770" y2="245" stroke="#d94040" stroke-width="3" marker-end="url(#p4-32-r)"/>
+      <rect x="780" y="45" width="299" height="105" rx="10" fill="#f4f6f9" stroke="#6b7280" stroke-width="2"/>
+      <text x="930" y="88" font-size="25" fill="#374151" text-anchor="middle" font-weight="700">blocked</text>
+      <text x="930" y="124" font-size="21" fill="#374151" text-anchor="middle">most variants</text>
+      <rect x="780" y="185" width="299" height="130" rx="10" fill="#fbecec" stroke="#d94040" stroke-width="2"/>
+      <text x="930" y="225" font-size="25" fill="#d94040" text-anchor="middle" font-weight="700">missed: one variant</text>
+      <text x="930" y="261" font-size="21" fill="#1f2937" text-anchor="middle">reaches the agent;</text>
+      <text x="930" y="293" font-size="21" fill="#1f2937" text-anchor="middle">may or may not succeed</text>
+    </svg>
   </div>
-  <p class="muted">A static test set measures the detector against yesterday's attacks.</p>
+  <p class="p4-key">Two errors: misses let attacks through; false alarms block safe text.</p>
+  <p class="muted">A static test set measures yesterday's attacks.</p>
+  <div class="cite cite-left">Schematic. Adaptive attacks on detectors: Zhan et al., arXiv 2503.00061, 2025, Table 2.</div>
 </div>
 
 <!-- 33. Divider 05 -->

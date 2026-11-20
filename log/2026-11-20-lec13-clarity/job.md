@@ -26,4 +26,4 @@ Medium: many comments across the existing six-section lecture; the argument and 
 ## Work order
 - 2026-11-20: plan-v1.md complete and issued to slides. C00–C19 covered; target splits and three new mechanism slides specified. Working folder is `/workspace/extra/slides-log/jobs/2026-11-20-lec13-clarity/`.
 - Targeted primary-source checks verified the requested ICML 2026 organizer probe, same-user GitHub demo, EchoLeak mechanism/provider status, and defense methods. Older incident status remains explicitly historical.
-- Baseline has all S01–S53 IDs already; slides creates the job-named branch from the recorded baseline and reports its exact work commit.
+- Baseline has all S01–S53 IDs already. slides confirmed acceptance of plan-v1 and work starting on P1–P6 from the recorded baseline on 2026-11-20; exact work commit pending.

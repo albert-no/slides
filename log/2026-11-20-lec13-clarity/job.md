@@ -6,8 +6,8 @@ baseline: 9effc8ab67589f2d7e5789f04db5e92067ff46d9
 id commit: existing S01–S53, introduced at 594ebea1203aabe3b3edc56443b37dd29950e411; no new ID-only commit needed
 branch: 2026-11-20-lec13-clarity
 pr: not opened
-state: in-review
-round: 1 of 2
+state: in-work
+round: 2 of 2
 albert decisions:
 - 2026-11-20: Revise lec13 using all 19 comments, check updated design rules, clarify answers in both slides and notes, and open a PR. No merge authorization.
 
@@ -30,3 +30,9 @@ Medium: many comments across the existing six-section lecture; the argument and 
 
 ## Review round 1
 - Work pointer: `06678b4f01df7519d33f6f21e7d1d5025ae93559`; received 2026-11-20. Review pinned to this commit; content parent reported as `800151b`.
+
+- Round-1 verdict: revise, `review-r1.md`; nine blocking findings. Full 65-page visual pass completed on the pinned archive. Stronger examples/mechanisms retained; corrections cover source-figure identity, approval authority, essential label size, OUTLINE duplication, trace/escaping/definition consistency, measurement metadata and missing glyphs.
+- Planner correction: `plan-v2.md` replaces the v1 CaMeL Fig. 1 choice with architecture Fig. 5, accepts 81.5 minutes plus 8.5 flexible explanation/question buffer within 90, and clarifies existing scope requirements. E21–E23 appended.
+
+## Work order, round 2
+- 2026-11-20: plan-v2.md and review-r1.md complete; issued to slides for the final medium-job round. Preserve accepted content; implement F01–F09, update exact mapping and report changed-page renders. No PR until approval. If blockers remain after round 2, escalate to Albert.

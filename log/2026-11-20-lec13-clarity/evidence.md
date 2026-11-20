@@ -125,3 +125,23 @@ Verified 2026-11-20. Append-only. These are targeted checks of requested explana
 - New method figures: prefer MELON Fig. 2 and CaMeL Figs. 5–6 when useful; source reading is required before use. A running-example adaptation may use an original diagram labeled illustrative.
 - Generated empirical charts must use the pinned table values in E13/E14 (and original CaMeL Tables 2–4 if redrawn), preserve full precision in data, and have reproducible code in the repo. slides reports paths, inputs and parameters for addition to this register before approval. No such generated artifact exists at planning time.
 - Label: source/production requirements, not a research finding.
+
+
+## E21 — Correction to E20 / plan-v1 S43: CaMeL figure identity
+- Claim: CaMeL Fig. 1 illustrates the control/data-flow problem. Fig. 5 is the system architecture: privileged planner, quarantined parser, interpreter, tool execution and policy checks.
+- Source: Debenedetti et al., 2503.18813v2, §2 Fig. 1 and §5 “CaMeL Design,” Fig. 5, https://arxiv.org/html/2503.18813v2 .
+- Limit: do not relabel Fig. 1's generic control-flow boundary as an actual planner-generated program, or its extraction nodes as explicitly depicted Q-LLM components. The v1 plan's mandated Fig. 1 was a planner error; v2 corrects it. Runtime data-dependent branches remain legitimate subject to policy.
+- Label: published figure identity; correction to planner's exhibit choice.
+
+## E22 — AgentDojo clean-utility reporting caveat (clarifies E13)
+- Claim: distinguish 97 distinct user tasks from the exact aggregation underlying the printed Table 5 percentages. §3.4 defines benign utility over user tasks, but the printed percentages/intervals do not identify a simple unweighted single run over 97 tasks.
+- Source: AgentDojo 2406.13352v3, §3.4, §4 and Tables 3/5, https://arxiv.org/html/2406.13352v3 . Author code snapshot 30e9bdebe9bb15502480babfed17bd5d0c92d24d (24 Nov 2024 or earlier), `src/agentdojo/benchmark.py:372–397` and `util_scripts/create_results_table.py:43–167`, https://github.com/ethz-spylab/agentdojo/tree/30e9bdebe9bb15502480babfed17bd5d0c92d24d . That loader has one clean result per user task, but does not resolve how the paper's older Table 5 was aggregated.
+- Our arithmetic check: 85.53% × 97 = 82.9641, not an integer count; 538/629 rounds to 85.53%. This is evidence of an aggregation ambiguity, not proof that 629 is the clean denominator. Repeated/weighted runs could also explain it.
+- Resolution: retain Table 5 values and benign-utility definition, retain benchmark counts, remove the definitive “clean utility over 97 user tasks” attribution attached to these table values. Note: “Clean utility is reported as in Table 5; the benchmark has 97 distinct tasks, but the aggregation behind these printed percentages is not fully specified here.” Do not relabel as 629 independent clean tasks or propagate this caveat to different studies without evidence.
+- Label: published results plus our calculation; exact Table 5 clean aggregation unresolved.
+
+## E23 — Round-1 generated quantitative figures
+- Inputs: AgentDojo Table 5 five triples from E13; Nasr Table 7 five Gemini-2.5 Pro fixed/search pairs from E14. Repo generator: `courses/trustworthy-ai/figs/lec13-clarity/p5-bars.py`, modes `s40a`, `s40b`, `s41`. Table 5 bar length = 2.1 × full-precision percentage; Table 7 = 7 × percentage. Labels: decimal half-up to one place for Table 5, integers for Table 7. These inputs match the pinned source values. Correct the generator's clean-denominator description per E22 without altering its values.
+- CaMeL S45: `courses/trustworthy-ai/lec13-prompt-injection.html`, inline SVG identified by S45, contains the source geometry and reproduction parameters. Inputs: utility 84.5/77.3 (o3), 73.2/41.2 (Gemini); attacks 11 ± 4.5 / 0 and 163 ± 140.1 / 0, Tables 2/4 of E17. Utility height = 1.8 × value; attack height = 0.9 × value; common baseline 255; zero shown as a thin marker with explicit 0, not a positive outcome. Source values retained; selected two of six models; 97 clean tasks versus 949 attacked cases as in that study.
+- Revision condition: report updated generator/geometry paths and parameters if round 2 changes these exhibits. Main/note/generated values must stay synchronized.
+- Label: published inputs; original chart rendering.

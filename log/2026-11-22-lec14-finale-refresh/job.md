@@ -1,0 +1,31 @@
+job: 2026-11-22-lec14-finale-refresh
+size: medium
+deck: courses/trustworthy-ai/lec14-agentic-threats.html
+audience / mode / duration: existing mixed-major undergraduate course / concept-first / 90 minutes including flexible explanation time; no activities
+baseline: 34b40ca35c9433be7c9d2ca2cc90d0d89bbdd233
+id commit: 594ebea1203aabe3b3edc56443b37dd29950e411 (existing IDs, no new ID-only commit required)
+branch: 2026-11-22-lec14-finale-refresh
+pr: not opened
+state: in-work
+round: 1 of 2
+albert decisions:
+- 2026-11-22: Albert requests a brief preparatory lec14 refresh after lec13: remove duplication, enlarge diagram type, add motivating real-world examples, explain selected recent works at high level, and add a brief course-wide take-home message. No merge order.
+
+## Sizing and boundaries
+Medium: the existing six-section argument stays. This is a bounded editorial/visual refresh, not a new deck, restructure, or literature survey. Source work is targeted verification of two concrete case reports and selected works already in lec14, with the relevant dated follow-up to one case. Do not expand into a comprehensive frontier roundup.
+
+The baseline is GitHub main confirmed through REST on 2026-11-22; no open PRs. It includes the merged lec13 clarity revision. Main deck and paired notes have S01–S51 (51 each); the optional supplement has 14 slides. Reuse these IDs, reserve S52–S54 for additions, never recycle retired IDs.
+
+Scope: lec14 main + paired instructor notes; only necessary concordance/readability changes to lec14tech; new assets/generators in a lec14-specific figure folder; lec14 leaf OUTLINE entry and dependent index/pointers. No edits to lec13, other lectures, reference/, design rules, or unrelated scripts. The known lec13tech duplicate wrapper is a separate follow-up, not part of this request.
+
+## Decisions and checks
+- Mount check: /workspace/extra/slides read-only; /workspace/extra/slides-log read-write. Reviewer writes only this working job folder, not tracked log/<job-id>/.
+- Guideline basis: current PLANNER_BRIEF and DESIGN_SYSTEM §§1,2,4,5,6,8,9,10 at the baseline; leaf course OUTLINE and root course map read. Parent courses/OUTLINE.md does not exist.
+- Resolve brief vs examples/recent works: replace repetitive material rather than append an extra survey; retain 90-minute teaching envelope, move statistical/protocol detail to notes. Counts/layouts are targets, not constraints.
+- Review exact commit only. Approval does not authorize merge. Two review rounds maximum; unresolved blockers at the limit go to Albert.
+
+## Work order — 2026-11-22
+- plan-v1.md completed and issued; requests.md and evidence.md complete for this bounded pass. Existing six sections retained, roughly 48 main slides targeted (not a cap); three added case slides, six redundant slides migrated to paired notes.
+- New case threads: Project Vend (June/December 2025) and METR real-developer trial (early-2025, explicitly caveated by February 2026 follow-up). Recent-work highlights use existing MAST and June 2026 attack-selection anchor, with high-level methods and limitations; no broad survey.
+- Target 85 minutes section teaching plus 5 minutes flexible explanation/questions, no activities.
+- Next: slides creates the named branch from frozen baseline, builds, copies reviewer files unchanged and sends exact work-r1 commit. No PR exists yet.

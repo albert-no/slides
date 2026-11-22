@@ -44,7 +44,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 10 | `lec10-jailbreak.html` | Jailbreaks: safety training, fragility, search, budget, evaluation & defenses, self-assessment monitoring | **rebuilt 2026-10**, Albert feedback round 2026-11-02 (88 sl, 90 min, concept-first, no activities; note 88 entries; tech 21 sl). Blocks: what safety training adds 3–13 (motivation 4–6, Wei example 7, safety and refusal 9–10) · fragility 14–30 · search 31–41 · attack budget 42–59 (test-time scaling 43–45, in-context learning 47) · evaluation & defenses 60–76 · self-assessment 77–85 · wrap-up 86–88 |
 | 11 | `lec11-synthetic-media.html` | Synthetic media: text watermarks, robustness, detection without a watermark, provenance (C2PA) & labelling law | **new 2026-10** (74 sl after Albert r1 2026-11, 16 cited image files + 5 tables/figures redrawn, 90 min, concept-first, no activities; note 74 entries; tech 14 sl). Former Wk 11 prompt injection → rebuilt as Wk 13; former Wk 12 watermark deck replaced |
 | 12 | `lec12-fairness.html` | Fairness: where bias enters, criteria, COMPAS and impossibility, mitigation, audits beyond classifiers | **new 2026-10; visual revision 2026-11** (87 sl, 26 cited figure crops, 90 min, concept-first, no activities; note 87 entries; tech 23 sl; stable slide IDs S01–S84 in `data-slide-id`, splits lettered; plot-interpretation revision 2026-11-13; clarity revision 2026-11-16). Merges the former Wk 13–14 fairness decks → `backup-fairness-defs.html`, `backup-fairness-mitigation.html` |
-| 13 | `lec13-prompt-injection.html` | Prompt injection: direct and indirect, agents, three incidents, why it is hard, measured defenses and CaMeL | **new 2026-10** (53 sl, 7 real figure crops, 90 min, concept-first, no activities; note 53 entries; tech 15 sl). Replaces `backup-prompt-injection.html` (deleted) |
+| 13 | `lec13-prompt-injection.html` | Prompt injection: direct and indirect, agents, three incidents, why it is hard, measured defenses and CaMeL | **new 2026-10; clarity revision 2026-11-20** (65 sl, 7 real figure crops, 4 bar charts drawn from tables, 90 min, concept-first, no activities; note 65 entries; tech 15 sl; stable slide IDs S01–S56 in `data-slide-id`, splits lettered). Replaces `backup-prompt-injection.html` (deleted) |
 | 14 | `lec14-agentic-threats.html` | Emerging agentic threats: autonomy, deception and multi-agent risks; course finale | **new 2026-10** (51 sl, 5 real figure crops, 90 min, concept-first, no activities; note 51 entries; tech 14 sl). Replaces `backup-agentic-autonomy.html` (deleted); former Wk 15 governance deck → `backup-governance.html` |
 
 Every deck has a companion **instructor note** `lecNN-…-note.html` (one `<article>` per slide,
@@ -53,7 +53,7 @@ Since the 2026-11-15 notes revision, all 14 lectures (lec01–lec14) use the sam
 entry opens with a short **Message** (`p.msg`, the slide's point with its qualifiers), then
 **Reading the slide** (what the slide, plot or diagram shows), then the details under
 **Script** (script, figure, sources, minor points). Decks and notes lec01–lec14 carry stable slide IDs in
-`data-slide-id`. lec01–lec11, lec13 and lec14 use sequential `S01…SNN` (as of 2026-11-15). lec12 uses `S01–S84` (S04, S12, S77 retired) with lettered splits such as `S39a/S39b`.
+`data-slide-id`. lec01–lec11 and lec14 use sequential `S01…SNN` (as of 2026-11-15). lec12 uses `S01–S84` (S04, S12, S77 retired) with lettered splits such as `S39a/S39b`. lec13 (clarity revision 2026-11-20) uses `S01–S56`: splits S05a/b, S07a/b, S09a/b, S21a/b, S31a/b, S40a/b, S44a/b, S47a/b/c; new S54–S56 placed in the defenses block, so ID order is not page order.
 The same revision corrected 84 main slides across lec01–lec14 so slide and note agree (qualifiers, scoped claims, source setups). No slide was added, removed or split. Three titles changed: lec07 S70 "One Shape, Four Faces", lec10 S06 "…Shared and Stay Online for Months", lec11 S34 "Small Full-Text Distribution Distance Limits Detection". A follow-up accuracy pass on the same date (job round 4) corrected 31 further main slides in lec01–lec06, lec08, lec13 and lec14 (DP δ qualifiers, evaluation scopes, source locators, label placement); again no slide was added, removed or split, and one title changed: lec06 S08 "A Fluent Medical Term Was Wrong".
 Every lecture also has an optional **technical supplement** `lecNNtech.html` — see below.
 
@@ -621,31 +621,34 @@ hierarchy, simple defenses; Nasr et al. Table 7 as the adaptive anchor; CaMeL as
 conditional guarantee; other system defenses; meaningful approval. Agent autonomy beyond injection is covered in Wk 14 (`lec14-agentic-threats.html`).
 Math in `lec13tech.html`.
 
-### Sections (53 slides, 90 min: core idea 10 · agentic surface 20 · incidents 15 · why hard 10 · defenses + measurement 25 · synthesis 10)
+### Sections (65 slides, 90 min: core idea 11.75 · agentic surface 13.75 · incidents 15.25 · why hard 9.75 · defenses + measurement 24.75 · synthesis 6.25 · flexible explanation/question buffer 8.5)
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
 | Title / Contents | 1–2 | `:38`, `:50` | |
-| **01 — The Core Idea** | 3–9 | `:82` | one context `:90` · BANANA example `:121` · jailbreak vs injection `:144` · Greshake Fig. 3 `:165` · priority ≠ boundary `:185` · hidden text `:208` |
-| **02 — The Agentic Attack Surface** | 10–18 | `:243` | chatbot → agent `:251` · agent loop `:283` · end to end `:316` · confused deputy (InjecAgent) `:338` · three harms `:354` · per-action provenance `:367` · trifecta `:383` · exit channels `:412` |
-| **03 — Three Incidents** | 19–27 | `:441` | reading a report `:449` · EchoLeak `:464`, `:482` · GitHub MCP `:506`, `:524` · Comet `:545`, `:563` · comparison `:579` |
-| **04 — Why It Is Hard** | 28–32 | `:593` | learned priority `:601` · instructions as data `:625` · escaping ≠ authority `:642` · detection vs adaptation `:659` |
-| **05 — Defenses and Measurement** | 33–48 | `:685` | three numbers `:693` · reporting `:708` · AgentDojo `:722`, `:736` · spotlighting `:756` · instruction hierarchy `:769` · simple defenses `:784` · adaptive (Nasr) `:803` · boundary `:820` · CaMeL `:833`, `:853`, `:876`, `:895` · other defenses `:909` · approval `:924` |
-| **06 — Synthesis** | 49–53 | `:940` | checklist `:948` · open problems `:962` · takeaways `:976` · closer "Who decided?" `:990` |
+| **01 — The Core Idea** | 3–12 | `:82` | agents read everyone's text `:110` · running email example (summary asked `:123`, unauthorized send `:147`) · two attacks by goal `:161` · direct `:182` · indirect, Greshake Fig. 3 `:197` · which instruction should win `:215` · hidden paper text `:230` · ICML hidden-text check `:245` |
+| **02 — The Agentic Attack Surface** | 13–21 | `:261` | borrowed permissions `:275` · agent loop `:306` · one email redirects the next call (worked trace) `:336` · confused deputy (InjecAgent Fig. 1) `:369` · three harms `:381` · notes may choose a file, not a recipient `:415` · trifecta `:457` · exit channels `:486` |
+| **03 — Three Incidents** | 22–31 | `:526` | demonstration ≠ victim report `:546` · EchoLeak `:561`, `:610`, `:624` · GitHub MCP `:690`, `:733` · Comet `:776`, `:825` · comparison `:870` |
+| **04 — Why It Is Hard** | 32–37 | `:883` | priority = whose instruction wins `:903` · instructions look like data `:954` · escaping (JSON string) `:993` · marked text still gives orders `:1017` · detection vs adaptive attacker `:1064` |
+| **05 — Defenses and Measurement** | 38–60 | `:1110` | three numbers `:1123` · reporting `:1138` · AgentDojo `:1159`, Fig. 6a `:1174` · spotlighting `:1193` · instruction hierarchy `:1219` · repeat prompt `:1239` · reminders / detector bar charts `:1273`, `:1334` · Prompt Guard `:1393` · MELON `:1430` · adaptive search (Nasr Table 7) `:1478` · boundary `:1545` · CaMeL Fig. 5 `:1588`, capabilities `:1607`, policy check `:1641`, results `:1684`, guarantee `:1738` · other system defenses `:1752`, `:1802`, `:1821` · approval `:1859` |
+| **06 — Synthesis** | 61–65 | `:1884` | six checks on the email example `:1892` · open problems `:1913` · takeaways `:1943` · closer "Who decided?" `:1965` |
 
-**Key citations on slides (checked against saved PDFs / pages, 2026-10-10):** Greshake et al., ACM AISec 2023
-(Fig. 3); Zhan et al. InjecAgent, arXiv 2403.02691 (Fig. 1); Willison (dual LLM 2023; trifecta, 16 June 2025);
-Debenedetti et al. AgentDojo, NeurIPS 2024 D&amp;B (Fig. 1, Fig. 6a, Tables 3, 5); Hines et al. spotlighting (Fig. 4);
-Wallace et al. instruction hierarchy (Fig. 2); Nasr, Carlini et al. arXiv 2510.09023, preprint (Table 7); Debenedetti
-et al. CaMeL arXiv 2503.18813 (Fig. 1; §5 and Figs. 4–6; Tables 2–4; §3.1, §7, §9.3). Incidents: Aim Labs EchoLeak,
-MSRC and NVD CVE-2025-32711; Invariant Labs GitHub MCP; Brave on Comet. Notes only: Perez &amp; Ribeiro; Willison
-2022 naming; Liu et al. HouYi; OWASP LLM01; Zhan et al. adaptive attacks arXiv 2503.00061; CamoLeak, SpAIware, Brave
-screenshots, Bing "Sydney".
+**Key citations on slides (checked against saved PDFs / pages):** Greshake et al., ACM AISec 2023 (Fig. 3); Zhan et
+al. InjecAgent, arXiv 2403.02691 (Fig. 1); Willison (dual LLM, 25 Apr 2023; trifecta, 16 June 2025); ICLR 2026 and ICML 2026 reviewing
+policies; Debenedetti et al. AgentDojo, NeurIPS 2024 D&amp;B (Fig. 1, Fig. 6a, Tables 3, 5); Hines et al. spotlighting
+(Fig. 4); Wallace et al. instruction hierarchy (Fig. 2); Meta Prompt Guard 2 model card; MELON; Nasr, Carlini et al.
+arXiv 2510.09023, preprint (Table 7); Debenedetti et al. CaMeL arXiv 2503.18813 (Fig. 5, Fig. 6; §2, §5.3; Tables 2, 4;
+§3.1, §6.2.1, §7, §9.3). Incidents: Aim Labs EchoLeak, MSRC and NVD CVE-2025-32711; Invariant Labs GitHub MCP; Brave on Comet. Notes
+only: Perez &amp; Ribeiro; Willison 2022 naming; Liu et al. HouYi; OWASP LLM01; Zhan et al. adaptive
+attacks arXiv 2503.00061; CamoLeak, SpAIware, Brave screenshots, Bing "Sydney".
 
-**Figures (7 image files in `figs/`):** `greshake-plant.png` `:178` · `injecagent-overview.png` `:347` ·
-`agentdojo-fig1.png` `:726` · `agentdojo-models.png` `:741` · `hines-datamark.png` `:761` ·
-`wallace-results.png` `:774` · `camel-fig1.png` `:838`. All other diagrams are inline SVG; tables on 40, 41, 45, 47
-are transcribed from the cited sources.
+**Figures (7 image files):** `figs/lec13-clarity/p1-greshake-fig3.png` `:202` ·
+`figs/lec13-clarity/p2-injecagent-fig1-crop.png` `:374` · `figs/agentdojo-fig1.png` `:1163` ·
+`figs/lec13-clarity/r2-agentdojo-fig6a.png` `:1179` · `figs/hines-datamark.png` `:1198` ·
+`figs/lec13-clarity/r2-wallace-fig2-plot.png` `:1224` · `figs/lec13-clarity/r2-camel-fig5.png` `:1592`. Bar charts
+S40a, S40b and S41 are inline SVG generated by `figs/lec13-clarity/p5-bars.py` from AgentDojo Table 5 and Nasr Table 7;
+S45 is inline SVG from CaMeL Tables 2 and 4. All other diagrams are inline SVG. `camel-fig1.png`, `agentdojo-models.png`
+and `wallace-results.png` are no longer used by lec13 (files kept).
 
 **2026-10 rebuild:** replaces the backup-prompt-injection deck (former Wk 11, 66 sl), deleted with its note, its tech
 file and 10 figures used only by it: `agentdojo-defenses`, `agentdojo-overview`, `agentdojo-utility-asr`,
@@ -654,10 +657,19 @@ file and 10 figures used only by it: `agentdojo-defenses`, `agentdojo-overview`,
 duplicate of the backup-prompt-injection and lec12 sections, and a copy of the lec11 rebuild text misplaced in the lec12
 section, were removed from this file in the same edit.
 
-**Note:** `lec13-prompt-injection-note.html` — 53 entries (IDs S01–S53) with minute budget and elapsed time, Message, Reading the slide, script; content slides add figure, setup/model/date, establishes / does not establish, assumptions and
-primary-source links (23 sources). Entry 13 carries a worked toy-agent trace; entry 27 the extra incidents
-(CamoLeak, SpAIware, Sydney); entry 41 Nasr Fig. 1 and human red-teaming. Data inconsistencies in AgentDojo
-(Table 3 vs 5) and CaMeL (Table 4 vs §6.2.1) are flagged on slides 40 and 45 and in their entries.
+**2026-11-20 clarity revision** (job `2026-11-20-lec13-clarity`, record in `log/2026-11-20-lec13-clarity/`): 53 → 65
+slides. A running email example replaces BANANA; explicit answers to Albert's questions on the slides; splits S05,
+S07, S09, S21, S31, S40, S44, S47; new mechanism slides S54 (repeat prompt), S55 (Prompt Guard), S56 (MELON); the
+AgentDojo, Nasr and CaMeL tables became bar charts; CaMeL is explained from its Fig. 5 architecture; approval is
+framed as authorizing only policy-permitted exceptions; essential diagram labels at body size (≥ 25 px rendered).
+
+**Note:** `lec13-prompt-injection-note.html` — 65 entries (same IDs and order as the deck) with minute budget and
+elapsed time, Message, Reading the slide, script; content slides add figure, setup/model/date, establishes / does not
+establish, assumptions and primary-source links (31 distinct sources). Entry 16 (S13, `:339`) carries a worked toy-agent
+trace; entry 31 (S27, `:663`) the extra incidents (CamoLeak, SpAIware, Sydney); entry 50 (S41, `:1117`) Nasr Fig. 1 and
+human red-teaming. Data inconsistencies: AgentDojo Table 3 vs Table 5 is flagged in entry 46 (S40a, `:1009`); CaMeL
+Table 4 vs §6.2.1 on slide 55 (S45) and in its entry (`:1236`). The AgentDojo clean-utility aggregation caveat
+(evidence E22) is in entries 39 and 46.
 
 **Tech:** `lec13tech.html` — 15 slides:
 - trusted vs attacker-controlled (4); PI-SEC game with $\Omega_p$ (5); control vs data part of an action (6)

@@ -696,10 +696,10 @@ S43, S45 and S50 note entries); S52–S53 (Vend) follow S04; S54a/b (developer t
 | Title / Contents | 1–2 | `:38`, `:50` | |
 | **01 — What Changes With Autonomy** | 3–8 | `:82` | trust must survive longer tasks `:104` · Vend shop photo `:138` · Vend net worth `:158` · autonomy dials `:175` · small errors accumulate (generated curve) `:198` |
 | **02 — Measuring Autonomy** | 9–19 | `:230` | test before delegation (Shevlane, ARC Evals) `:238` · horizon = task difficulty `:267` · tasks → horizon `:292` · METR Fig. 1 `:320` · depends on setup `:338` · not safe runtime `:366` · developer trial `:380`, 2026 update `:401` · RepliBench Fig. 1 `:417` · parts ≠ whole `:438` |
-| **03 — Against the Overseer** | 20–27 | `:469` | setup / behavior / inference `:484` · scheming setup `:516`, oversight disabled `:554` · sandbagging definition `:580` · van der Weij Fig. 4 `:611` · planted threat `:627` · other explanations `:655` |
-| **04 — Many Agents** | 28–35 | `:683` | Hammond taxonomy Fig. 1 `:718` · MAST Fig. 1 `:736` · verification example `:753` · one agent carries an attack `:782` · Prompt Infection Fig. 6 `:813` · steganographic collusion `:826` · evidence strengths `:856` |
-| **05 — Control** | 36–45 | `:871` | alignment vs control `:911` · setup Fig. 1 `:928` · the game `:946` · trusted monitoring `:962` · 15% vs 62% bars `:990` · defer / edit `:1028` · Pareto Fig. 2 zoom `:1053` · attack selection Fig. 1 `:1072` · evaluation boundaries `:1089` |
-| **06 — Synthesis and Frontiers** | 46–51 | `:1104` | three open questions `:1128` · persuasion (Salvi Fig. 1) `:1141` · companion use (Fang Fig. 1) `:1158` · course checklist `:1170` · closer "What would earn your trust?" `:1185` |
+| **03 — Against the Overseer** | 20–27 | `:469` | setup / behavior / inference `:484` · scheming setup `:516`, oversight disabled `:554` · sandbagging definition `:580` · van der Weij Fig. 4 `:611` · planted threat `:628` · other explanations `:656` |
+| **04 — Many Agents** | 28–35 | `:684` | Hammond taxonomy Fig. 1 `:719` · MAST Fig. 1 `:737` · verification example `:754` · one agent carries an attack `:783` · Prompt Infection Fig. 6 `:814` · steganographic collusion `:827` · evidence strengths `:857` |
+| **05 — Control** | 36–45 | `:872` | alignment vs control `:912` · setup Fig. 1 `:929` · the game `:947` · trusted monitoring `:963` · 15% vs 62% bars `:991` · defer / edit `:1029` · Pareto Fig. 2 zoom `:1054` · attack selection Fig. 1 `:1073` · evaluation boundaries `:1090` |
+| **06 — Synthesis and Frontiers** | 46–51 | `:1105` | three open questions `:1129` · persuasion (Salvi Fig. 1) `:1142` · companion use (Fang Fig. 1) `:1159` · course checklist `:1171` · closer "What would earn your trust?" `:1186` |
 
 **Key citations on slides:** Anthropic Project Vend (27 Jun 2025) and Phase two (18 Dec 2025); Shevlane et al. arXiv
 2305.15324 (Table 1, §4); Kwa et al. (METR) arXiv 2503.14499 v4 (Fig. 1, §2–§3, §3.2, §5–6, App. B.2/C.3); METR
@@ -707,18 +707,18 @@ modelling-assumptions note (20 Mar 2026); Becker, Rush, Barnes, Rein (METR) arXi
 "We are Changing our Developer Productivity Experiment Design" (24 Feb 2026); Black et al. RepliBench arXiv
 2504.18565v2 (Fig. 1, §5.1, §6); Meinke et al. (Apollo) arXiv 2412.04984v2 (Tables 1, 2, 4, 6, §3.6); van der Weij
 et al. ICLR 2025 (§2, Fig. 4); Hammond et al. arXiv 2502.14143 (Fig. 1); Cemri et al. MAST, NeurIPS 2025 D&amp;B
-(Fig. 1, §4); Lee &amp; Tiwari arXiv 2410.07283v1, preprint (Figs. 2, 4, 6, §5); Motwani et al. arXiv 2402.07510v5
+(Fig. 1, §4); Lee &amp; Tiwari arXiv 2410.07283v1, preprint (Figs. 2, 4, 6, §5); Motwani et al. NeurIPS 2024 (arXiv 2402.07510v5, revised 2025)
 (§3, Fig. 1, Table 3); Greenblatt et al. AI Control, ICML 2024 (Figs. 1–2, Table 2, §1–§3, §2.4, §5.1); Ge-Wang, Crosse
 et al. arXiv 2606.06529v1, preprint (Fig. 1 A–B, Table 2, §4.4, App. A); Terekhov et al. arXiv 2510.09462v2; Salvi et
 al. Nature Human Behaviour (2025, corrected 3 Sep 2026; Fig. 1); Fang et al. arXiv 2503.17473v2, preprint (Fig. 1).
 Notes only: Lynch et al. (agentic misalignment), Cohen et al. Morris-II, Terekhov Defer-to-Resample.
 
 **Figures (16 image files):** in `figs/`: `metr-horizon-fig1.png` `:324` · `replibench-fig1-compute.png` `:421` ·
-`replibench-fig1-weights.png` `:422` · `control-setup-fig1.png` `:932` · `control-pareto-fig2-zoom.png` `:1057`.
+`replibench-fig1-weights.png` `:422` · `control-setup-fig1.png` `:933` · `control-pareto-fig2-zoom.png` `:1058`.
 In `figs/lec14-finale-refresh/` (provenance in `p1-PROVENANCE.md` … `p5-PROVENANCE.md`): `p1-vend1-shop.png` `:142` · `p1-vend2-networth.png`
-`:162` · `p1-metr-forecast-vs-observed.png` `:385` · `p2-weij-fig4-claude3.png` `:615` · `p3-hammond-fig1.png` `:722` ·
-`p3-mast-fig1.png` `:741` · `p3-prompt-infection-fig6a.png` `:818` · `p3-prompt-infection-fig6b.png` `:819` ·
-`p4-gewang-fig1-ab.png` `:1076` · `p5-salvi-fig1.png` `:1145` · `p5-fang-fig1.png` `:1162`. Generators:
+`:162` · `p1-metr-forecast-vs-observed.png` `:385` · `p2-weij-fig4-claude3.png` `:615` · `p3-hammond-fig1.png` `:723` ·
+`p3-mast-fig1.png` `:742` · `p3-prompt-infection-fig6a.png` `:819` · `p3-prompt-infection-fig6b.png` `:820` ·
+`p4-gewang-fig1-ab.png` `:1077` · `p5-salvi-fig1.png` `:1146` · `p5-fang-fig1.png` `:1163`. Generators:
 `p1-gen-curves.py` (S06 compounding curve, S09 schematic), `p4-gen-s40-bars.py` (S40 bars from Greenblatt Table 2).
 Other diagrams are inline SVG or HTML. `mast-taxonomy-fig1.png` and `control-pareto-fig2-legend.png` are no longer
 used by any deck.

@@ -19,13 +19,12 @@ All source images were retrieved on 2026-11-22. Processing was crop and resize o
 
 - Source: METR, "Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity", 10 Jul 2025, https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/. Forecast-versus-observed chart; it is also Fig. 1 of Becker, Rush, Barnes, Rein, arXiv 2507.09089. Licence: CC-BY (stated on the image footer "metr.org | CC-BY").
 - File: https://metr.org/assets/images/downlift/forecasted-vs-observed.png (2562×1540).
-- Crop box (source pixels): left 0, top 310, width 2562, height 1110 (rows 310–1419). Then resized to width 1200 (1200×520).
+- Crop box (source pixels): left 0, top 310, width 2562, height 1113 (rows 310–1422), so the "+40%" tick label is whole (review r1 F06). The tick label's last rows (1420–1422) share rows with the tops of the source category labels, which start at x = 424. Columns 0–399 are taken through row 1422; columns 400–2561 through row 1419, with the last 3 rows left white (the source background there is white, RGB 255). No source pixel is altered; the 3 label-top rows are omitted, as the labels themselves are. Then resized to width 1200 (1200×521).
 - Removed: the title and subtitle block, the METR logo, the bottom category labels, and the footer "metr.org | CC-BY". Kept: all five groups, the y axis with tick labels and axis title, the speedup and slowdown arrows, and the error bars.
-- Known clip: the bottom 3 source rows of the "+40%" tick label (rows 1420–1422) fall outside the crop.
 - The five category labels (economics experts, ML experts, developers before, developers after, measured) are re-set in HTML below the image. Their column centres are at 23.2%, 39.4%, 55.6%, 71.8% and 89.3% of the image width, measured on the source.
 
 ## p1-gen-curves.py (slides S06 and S09)
 
 - Command: `python3 p1-gen-curves.py` (standard library only). It prints the SVG path data used inline on the slides.
-- S06: the exact values 0.95^n for n = 0..20, endpoint 0.95^20 ≈ 0.3585. Plot mapping X = 80 + 25.5n, Y = 340 − 300p. On the slide the y coordinates are then compressed to 40 + (Y − 40) × 0.85 so the chart fits.
+- S06: the exact values 0.95^n for n = 0..20, endpoint 0.95^20 ≈ 0.3585. Plot mapping at the final slide geometry X = 80 + 25.5n, Y = 295 − 255p (p = 1 at y = 40, p = 0 at y = 295); the script output is the inline path unchanged (review r1 F07).
 - S09: a schematic logistic p = 1/(1 + exp((x − 575)/70)) for x = 110..1040, step 10, with Y = 270 − 230p. It is not fitted to any data.

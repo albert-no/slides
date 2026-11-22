@@ -113,3 +113,26 @@ Cutoff for this bounded refresh: 2026-11-22. These are selected case/source chec
 
 ## Generated-figure record
 No new empirical redraw is required. Prefer source crops with enlarged external keys. If slides instead generates a chart from source numbers, append a new evidence entry before final acceptance with the source table, exact rows/columns/denominator/units, plotting transformations, uncertainty treatment and repo-relative reproducible generator path. Retained illustrative S06 curve follows E02. A causal teaching schematic must say illustrative and must not invent empirical values.
+
+## E20 — conversational persuasion beyond answer correctness
+- Claim: profile-informed GPT-4 produced stronger shifts in agreement than the non-personalized human-opponent baseline in a controlled debate study.
+- Source/version/locator: Salvi, Horta Ribeiro, Gallotti & West, Nature Human Behaviour 2025, corrected version of record; https://www.nature.com/articles/s41562-025-02194-6 ; accessible full text https://pmc.ncbi.nlm.nih.gov/articles/PMC12367540/ ; “Experimental design”, Fig.1, Results / “Aggregate results”, Discussion.
+- Setup: preregistered online experiment, 900 participants; opinion surveys before/after short debates. No headline percentage required.
+- Limits: immediate stated agreement, not real-world voting or durable belief change. Personalization's separate contribution is not conclusively established (E21). Label: published result.
+
+## E21 — substantive correction to the persuasion comparison
+- Claim: the direct comparison of personalized and non-personalized GPT-4 was not statistically significant after correcting the reference-category calculation.
+- Source/version/locator: Salvi et al., Author Correction, 3 Sep 2026, https://www.nature.com/articles/s41562-026-02588-0 ; complete substantive correction also at https://pmc.ncbi.nlm.nih.gov/articles/PMC13683042/ .
+- Setup: corrected P=.0678 (rounded .07), replacing .04; applies to that specific contrast.
+- Limits: not a retraction; does not remove the personalized-GPT-4 versus human-baseline finding. Do not attribute the advantage solely to personalization. Label: published result (correction).
+
+## E22 — human–AI relationships and emotional dependence
+- Claim: greater voluntary use was associated with worse psychosocial outcomes in a four-week chatbot study; the duration relationship does not establish causation.
+- Source/version/locator: Fang et al., https://arxiv.org/html/2503.17473v2 (2 Oct 2025); abstract; “More Time Spent with Chatbot is Associated with Worse Psychosocial Outcomes and Mediates Effects of Modality and Conversation Types”; Figs.1/6; limitations.
+- Setup: 981 participants, GPT-4o; randomized modality/conversation type, not usage duration. Four outcomes: loneliness, human socialization, dependence, problematic use.
+- Limits: no no-chatbot control; US English-speaking sample and short follow-up. Do not infer that use causes loneliness, all companions harm users, voice is categorically safer, or a clinical treatment effect. The v2 abstract says no significant condition effects; body contains marginal unadjusted contrasts, so do not build a categorical condition-ranking headline. Label: published result (preprint).
+
+## E23 — novelty check for C06
+- Claim: these two introductions extend the taught course from system/data/output/action risks to influence on users and longer-term human–AI relationships.
+- Source/locator: baseline34b40ca course lecture index and lec01–lec14 main-slide content; optional backup-sycophancy is not one of the 14 taught lectures.
+- Setup/limits: conceptual extension, not a claim that no earlier sentence mentioned social consequences. Do not re-teach sycophancy or synthetic-media detection. Label: illustrative example / curricular synthesis.

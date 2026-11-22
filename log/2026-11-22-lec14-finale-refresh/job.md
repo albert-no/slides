@@ -11,6 +11,8 @@ round: 1 of 2
 albert decisions:
 - 2026-11-22: Albert requests a brief preparatory lec14 refresh after lec13: remove duplication, enlarge diagram type, add motivating real-world examples, explain selected recent works at high level, and add a brief course-wide take-home message. No merge order.
 
+- 2026-11-22 follow-up (C06): Albert permits brief new topics beyond the 14 taught lectures. Active work order is plan-v2.md: two short previews, AI persuasion and AI companionship/emotional dependence, within the existing ending. Reserve new S55/S56; 50-slide target before optional splits, 90 minutes unchanged. This supersedes v1’s restriction to existing topic coverage; no broad survey or new core section.
+
 ## Sizing and boundaries
 Medium: the existing six-section argument stays. This is a bounded editorial/visual refresh, not a new deck, restructure, or literature survey. Source work is targeted verification of two concrete case reports and selected works already in lec14, with the relevant dated follow-up to one case. Do not expand into a comprehensive frontier roundup.
 

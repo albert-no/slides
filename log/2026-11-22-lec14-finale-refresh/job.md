@@ -5,8 +5,8 @@ audience / mode / duration: existing mixed-major undergraduate course / concept-
 baseline: 34b40ca35c9433be7c9d2ca2cc90d0d89bbdd233
 id commit: 594ebea1203aabe3b3edc56443b37dd29950e411 (existing IDs, no new ID-only commit required)
 branch: 2026-11-22-lec14-finale-refresh
-pr: not opened
-state: approved
+pr: 79 — https://github.com/albert-no/slides/pull/79
+state: pr-open
 round: 2 of 2
 albert decisions:
 - 2026-11-22: Albert requests a brief preparatory lec14 refresh after lec13: remove duplication, enlarge diagram type, add motivating real-world examples, explain selected recent works at high level, and add a brief course-wide take-home message. No merge order.
@@ -44,3 +44,9 @@ Scope: lec14 main + paired instructor notes; only necessary concordance/readabil
 ## Final review — 2026-11-22
 - Approved exact58e37fdf517799b978f042551f56c9c5dd7713ef, review-r2.md. F01–F08 closed; optionalF09 taken. C01–C06 done. E30 appended for final geometry/crop verification.
 - Await slides copying final review/living records and pushing. Every post-review commit must be job-log-only before PR creation against main. No merge authorization.
+
+## PR opened — 2026-11-22
+- PR #79: https://github.com/albert-no/slides/pull/79, open against main; GitHub REST returned 201. Not merged.
+- Approved content remains 58e37fdf517799b978f042551f56c9c5dd7713ef. Confirmed reviewed commit is an ancestor of pushed 97813dc49e60ed497596e523aa9bb45eefe658be; its sole subsequent commit touches only this job’s tracked log directory. All seven reviewer-owned records matched the working files byte-for-byte before this state update.
+- GitHub branch head matched the pushed SHA and main remained baseline34b40ca35c9433be7c9d2ca2cc90d0d89bbdd233; no existing open PR for this branch. Created PR head/base confirmed through the API response.
+- Refresh this living job.md in the tracked record unchanged; any subsequent commit must remain job-log-only. Await Albert’s final check; no merge authorization.

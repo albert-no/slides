@@ -6,7 +6,7 @@ baseline: 34b40ca35c9433be7c9d2ca2cc90d0d89bbdd233
 id commit: 594ebea1203aabe3b3edc56443b37dd29950e411 (existing IDs, no new ID-only commit required)
 branch: 2026-11-22-lec14-finale-refresh
 pr: not opened
-state: in-work
+state: approved
 round: 2 of 2
 albert decisions:
 - 2026-11-22: Albert requests a brief preparatory lec14 refresh after lec13: remove duplication, enlarge diagram type, add motivating real-world examples, explain selected recent works at high level, and add a brief course-wide take-home message. No merge order.
@@ -38,3 +38,9 @@ Scope: lec14 main + paired instructor notes; only necessary concordance/readabil
 - Exact reviewed content: ad77502e7f1c47f0a067a275f6ffb542e80676d9. Verdict revise; review-r1.md is the round2 work order. State in-review → revise → in-work; next submission is final allowed round2.
 - Eight blockers: control scope, essential label size, two overflowing note tables, no-U baseline label, Motwani date, METR crop clipping, S06 generator consistency, unfamiliar acronym explanations. One optional narration cleanup.
 - Accepted51-slide split,85+5-minute schedule, S55/S56 sources and provenance; E24–E29 appended. Leave unused assets and lec13tech alone. No plan-v3 or scope expansion.
+
+- Round2 received 2026-11-22: exact commit58e37fdf517799b978f042551f56c9c5dd7713ef, fixes1f9f8c3. Re-review changes/neighbours only; verdict pending.
+
+## Final review — 2026-11-22
+- Approved exact58e37fdf517799b978f042551f56c9c5dd7713ef, review-r2.md. F01–F08 closed; optionalF09 taken. C01–C06 done. E30 appended for final geometry/crop verification.
+- Await slides copying final review/living records and pushing. Every post-review commit must be job-log-only before PR creation against main. No merge authorization.

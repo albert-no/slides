@@ -7,11 +7,13 @@ id commit: 594ebea1203aabe3b3edc56443b37dd29950e411 (existing IDs, no new ID-onl
 branch: 2026-11-22-lec14-finale-refresh
 pr: not opened
 state: in-work
-round: 1 of 2
+round: 2 of 2
 albert decisions:
 - 2026-11-22: Albert requests a brief preparatory lec14 refresh after lec13: remove duplication, enlarge diagram type, add motivating real-world examples, explain selected recent works at high level, and add a brief course-wide take-home message. No merge order.
 
 - 2026-11-22 follow-up (C06): Albert permits brief new topics beyond the 14 taught lectures. Active work order is plan-v2.md: two short previews, AI persuasion and AI companionship/emotional dependence, within the existing ending. Reserve new S55/S56; 50-slide target before optional splits, 90 minutes unchanged. This supersedes v1’s restriction to existing topic coverage; no broad survey or new core section.
+
+- Review round 1 received 2026-11-22: exact commit ad77502e7f1c47f0a067a275f6ffb542e80676d9. Work-r1 reports 51 main/notes, S54a/S54b split and 90-minute total. Review against baseline34b40ca35c9433be7c9d2ca2cc90d0d89bbdd233 and active plan-v2; no verdict yet.
 
 ## Sizing and boundaries
 Medium: the existing six-section argument stays. This is a bounded editorial/visual refresh, not a new deck, restructure, or literature survey. Source work is targeted verification of two concrete case reports and selected works already in lec14, with the relevant dated follow-up to one case. Do not expand into a comprehensive frontier roundup.
@@ -31,3 +33,8 @@ Scope: lec14 main + paired instructor notes; only necessary concordance/readabil
 - New case threads: Project Vend (June/December 2025) and METR real-developer trial (early-2025, explicitly caveated by February 2026 follow-up). Recent-work highlights use existing MAST and June 2026 attack-selection anchor, with high-level methods and limitations; no broad survey.
 - Target 85 minutes section teaching plus 5 minutes flexible explanation/questions, no activities.
 - Next: slides creates the named branch from frozen baseline, builds, copies reviewer files unchanged and sends exact work-r1 commit. No PR exists yet.
+
+## Review r1 disposition — 2026-11-22
+- Exact reviewed content: ad77502e7f1c47f0a067a275f6ffb542e80676d9. Verdict revise; review-r1.md is the round2 work order. State in-review → revise → in-work; next submission is final allowed round2.
+- Eight blockers: control scope, essential label size, two overflowing note tables, no-U baseline label, Motwani date, METR crop clipping, S06 generator consistency, unfamiliar acronym explanations. One optional narration cleanup.
+- Accepted51-slide split,85+5-minute schedule, S55/S56 sources and provenance; E24–E29 appended. Leave unused assets and lec13tech alone. No plan-v3 or scope expansion.

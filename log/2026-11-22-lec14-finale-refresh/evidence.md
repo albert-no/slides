@@ -136,3 +136,35 @@ No new empirical redraw is required. Prefer source crops with enlarged external 
 - Claim: these two introductions extend the taught course from system/data/output/action risks to influence on users and longer-term human–AI relationships.
 - Source/locator: baseline34b40ca course lecture index and lec01–lec14 main-slide content; optional backup-sycophancy is not one of the 14 taught lectures.
 - Setup/limits: conceptual extension, not a claim that no earlier sentence mentioned social consequences. Do not re-teach sycophancy or synthetic-media detection. Label: illustrative example / curricular synthesis.
+
+## E24 — generated teaching curves, round-1 provenance
+- Claims/labels: S06 is **our calculation**, not measured reliability; S09 is an **illustrative example**, not a fitted empirical curve. This supplements E02/E07.
+- Repo generator: `courses/trustworthy-ai/figs/lec14-finale-refresh/p1-gen-curves.py`.
+- S06 inputs: n=0…20, p(n)=0.95^n, fixed independent success and no recovery; endpoint 0.3584859224. Reviewed inline geometry uses X=80+25.5n and Y≈295−255p. The generator currently emits Y=340−300p; the slide was subsequently compressed around Y=40 by factor .85. Algebra and direction are correct, but the generator does not reproduce the final coordinates. F07 requires bringing the generator/comment/provenance into agreement; do not alter the probability model.
+- S09 inputs: x=110…1040 by 10, p=1/(1+exp((x−575)/70)), Y=270−230p; x is a schematic log-human-duration coordinate, not observed hours. The emitted path exactly matches S09 in the reviewed commit.
+- Limits: neither curve supplies empirical agent failure rates or deployment safety.
+
+## E25 — generated S40 comparison, round-1 provenance
+- Source: Greenblatt et al., ICML 2024, [arXiv v5 Table 2](https://arxiv.org/html/2312.06942v5), rows Upfront auditing and Trusted monitoring. Published result, redrawn from table.
+- Inputs: safety 15%, 62%; usefulness 100%, 97%, respectively. Safety is no submitted backdoor over a 5,000-problem run against the best attack found; usefulness is correctness normalized between GPT-3.5 and GPT-4. Audit budget 2%. Not accuracy or deployment reliability.
+- Repo generator: `courses/trustworthy-ai/figs/lec14-finale-refresh/p4-gen-s40-bars.py`; provenance `p4-PROVENANCE.md` in the same folder. Separate panels, zero-based linear scales: 2.9 viewBox units per percentage point, starts X=300/680, row tops Y=62/142, bar height52. No uncertainty added because the table does not report it. Generator SVG and reviewed inline SVG match after XML normalization.
+
+## E26 — S55/S56 source figures, accepted provenance
+- S55: E20/E21; Salvi et al. Fig.1, experimental design, not result data. Full original [publisher image](https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41562-025-02194-6/MediaObjects/41562_2025_2194_Fig1_HTML.png). Asset `courses/trustworthy-ai/figs/lec14-finale-refresh/p5-salvi-fig1.png`, 1531×1089; SHA256 `f13eee21693efbda403a853282280e3c517ae71fc2e06b771f791758a84601f9`. Published source figure, CC BY4.0; unmodified, external a–c key. The September2026 correction concerns the contrast interpretation, not this design image; its limitation is visible on S55.
+- S56: E22; Fang et al. v2 Fig.1, conceptual study framework, not result data. Full original [arXiv image](https://arxiv.org/html/2503.17473v2/Figures/OpenAI-teaser-4.png). Asset `courses/trustworthy-ai/figs/lec14-finale-refresh/p5-fang-fig1.png`, 2174×722; SHA256 `79306e4e2403f6074f5a9acdcd67aa6595c490bfc77230218dfce211ab79e137`. Published preprint figure, CC BY4.0; unmodified, four large outcome labels external. Duration was voluntary, not randomized; no no-chatbot group. Figure6 is deliberately not used.
+- Exact capture details: repo `courses/trustworthy-ai/figs/lec14-finale-refresh/p5-PROVENANCE.md`. Both are accepted for the short high-level previews; not evidence for causal personalization or causal psychosocial harm.
+
+## E27 — carried note-only claims checked in round 1
+- Morris-II: [Cohen et al. v2](https://arxiv.org/html/2403.02817v2), abstract, §I ethical considerations and §V. TPR1.0/FPR.015 are the authors' guardrail results, not universal robustness; experiments used their own lab email-assistant application, not attacks on deployed applications. Bug-bounty disclosure is explicit. Published result (preprint); retain note-only.
+- Lynch: [v2](https://arxiv.org/html/2510.05179v2), abstract and §1. Sixteen models, constructed corporate dilemmas, no real-deployment evidence claimed. Published result (preprint); retain note-only.
+- Terekhov: [v2](https://arxiv.org/abs/2510.09462v2), abstract. Monitor-output attacks and Defer-to-Resample amplification are supported in the studied settings; not all imaginable control protocols. Supplements E17.
+- RepliBench's simulation/refusal/termination limits remain supported by the pinned v2 §6 in E08; no fresh field-wide assertion is authorized.
+
+## E28 — correct Motwani's publication/date framing
+- Supplements E14. [Official NeurIPS proceedings](https://proceedings.neurips.cc/paper_files/paper/2024/hash/861f7dad098aec1c3560fb7add468d41-Abstract-Conference.html) confirms **NeurIPS 2024**, main conference. [arXiv v5](https://arxiv.org/html/2402.07510v5) is a July2025 revision, not evidence that experiments occurred in2025.
+- Table3 and AppendicesG/H support the separate capability results retained in notes. Label: published result. Use venue2024 with inspected version/date separately; replace claims of “2025 tests” with an undated, model-cohort-scoped description. No claim about later models or deployment prevalence.
+
+## E29 — control comparisons must keep their distinct scope
+- Supplements E15/E16. [Greenblatt v5](https://arxiv.org/html/2312.06942v5), §1, §3.1.1, §3.2 and Table2: the trusted-monitoring attacker already seeks favorable backdoor opportunities. Do not describe every prior protocol as indiscriminate. Its no-U baseline uses H for the first2% and T afterwards; “T only” is not that 2%-usefulness point.
+- [Ge-Wang v1](https://arxiv.org/html/2606.06529v1), §2–3, Fig.1 and App.A: the new high-level contrast is task-level start and turn-level stop selection in multistep agentic tests. Do not confuse this conditional safety estimator with Greenblatt's whole-run probability, or say selection is untested after presenting these tests.
+- Labels: published results (Ge-Wang preprint). Each result has its own task/attacker/budget envelope; a change beyond one evaluation may already have been tested in another, without establishing deployment safety.

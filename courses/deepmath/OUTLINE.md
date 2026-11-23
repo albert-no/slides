@@ -42,9 +42,9 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE, generative models as MLE? (LLMs, DDPM) | prob 1563–1911 | done (130 slides) |
 | 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (154 slides) |
 | 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, RL sample reuse | new material | done (70 slides) |
-| 10 | `opt01-svd-lowrank/` — rank/range/null, SVD, pseudo-inverse, spectral & nuclear norms, Eckart–Young–Mirsky, Netflix | opt 1–435 | done — **68 slides, 150 min** (restructured 2026-11-23); full / extended 119 in backup/ |
+| 10 | `opt01-svd-lowrank/` — rank/nullity, vector/spectral/Frobenius norms, SVD and Eckart–Young–Mirsky | opt 1–435 | done — **68 slides, 150 min** (restructured 2026-11-23); full / extended 119 in backup/ |
 | 11 | `opt02-regression-erm/` — least squares θ\*=A†B (full proof), ERM/Bayes risk, ridge + closed form | opt 436–794, 1463–1517 | done (110 slides) — **backup-only in 2026**, not taught; index in `backup/OUTLINE.md` |
-| 12 | `opt03-convexity-gd/` — convexity, L-smoothness, co-coercivity, strong convexity, PL, GD O(1/T) + linear rate | opt 795–1319 | done — **51 slides, 90 min** (restructured 2026-11-23); full / extended 134 in backup/ |
+| 12 | `opt03-convexity-gd/` — fixed-step GD, smoothness/descent, nonconvex stationarity, convex function-gap and strongly convex geometric rates | opt 795–1319 | done — **51 slides, 90 min** (restructured 2026-11-23); full / extended 134 in backup/ |
 | 13 | `opt04-sgd/` — SGD O(1/√K) proof, mini-batching, strongly-convex SGD O(log k/k) | opt 1320–1462, 1520–1600 | done (117 slides, 2026-09 diagram pass) — **backup-only in 2026**, not taught; index in `backup/OUTLINE.md` |
 
 Exam-review deck (not one of the 13): `midterm26-review/` — midterm 2026 solutions lecture (74 slides).

@@ -77,87 +77,86 @@ Lecture 10 of Deep Learning Math (150 minutes). The lecture asks one question: g
 <!-- END S120 -->
 
 <!-- BEGIN S80 -->
-### 4. The Compression Question [S80]
+### 4. A Smaller Matrix, Controlled Error [S80]
 
-#### 7.1 The problem and the candidate
+**Message.** Low-rank approximation replaces a fully observed matrix $A$ by a matrix $B$ of rank at most $k$ and judges the result by the size of the residual $A - B$.
 
-Fix $A \in \mathbb{R}^{m \times n}$ of rank $r$ and an integer $k < r$. The problem is
+The setting: $A \in \mathbb{R}^{m\times n}$ is given and every entry is observed; we choose $B$ with $\operatorname{rank}(B) \le k$. The slide shows one equation drawn as three boxed matrices: the data $A = \left[\begin{smallmatrix}3 & 0\\ 4 & 5\end{smallmatrix}\right]$ (rank 2, grey box) equals a rank-1 candidate $B = \left[\begin{smallmatrix}1.5 & 1.5\\ 4.5 & 4.5\end{smallmatrix}\right]$ (blue box) plus the residual $A - B = \left[\begin{smallmatrix}1.5 & -1.5\\ -0.5 & 0.5\end{smallmatrix}\right]$ (red dashed box). The decomposition $A = B + (A - B)$ holds for any $B$; what changes from one candidate to another is how big the residual is, and that size will be measured by a matrix norm (Part 2). This sets up the two questions for the lecture: which rank-$k$ matrix is closest, and how small can the error be. At this point $B$ is just one candidate; nothing yet says it is the best one.
 
-$$ \min_{B \,:\, \operatorname{rank}(B) \,\leq\, k} \ \|A - B\| $$
+Storage is a reason to want low rank, but not automatically a saving: a rank-$k$ matrix can be stored as two factors with $k(m+n)$ numbers, which beats the $mn$ entries of $A$ only when $k(m+n) \lt mn$. For the $2\times 2$ example with $k = 1$ both counts are $4$, so there is no saving at all; the gain appears for large matrices and small $k$.
 
-for a unitarily invariant norm. The feasible set is *not* convex: $\operatorname{diag}(1,0)$ and $\operatorname{diag}(0,1)$ both have rank $1$, but their midpoint $\tfrac12 I_2$ has rank $2$. So nothing from convex optimization applies, and yet the problem has a clean closed-form solution. That is the surprise.
+**Details.** **Full observation versus completion.** Here every entry of $A$ is known and the residual is computed over all entries. Matrix completion is a different problem: only some entries are observed, the fit is measured on those, and the low-rank assumption fills in the rest. The methods of this lecture do not directly solve completion.
 
-The candidate is the **truncated SVD**
+**Why the problem is not convex.** The feasible set $\{B : \operatorname{rank}(B) \le k\}$ is not convex: $\operatorname{diag}(1,0)$ and $\operatorname{diag}(0,1)$ both have rank 1, but their midpoint $\tfrac12 I_2$ has rank 2. So convex-optimization guarantees do not apply; the lecture still reaches an exact answer through the SVD.
 
-$$ A_k \;:=\; \sum_{i=1}^{k}\sigma_i u_i v_i^\top \;=\; U\Sigma_k V^\top, \qquad \Sigma_k = \operatorname{diag}(\sigma_1, \dots, \sigma_k, 0, \dots, 0), $$
+**Check of the example.** $B + (A - B) = \left[\begin{smallmatrix}1.5+1.5 & 1.5-1.5\\ 4.5-0.5 & 4.5+0.5\end{smallmatrix}\right] = \left[\begin{smallmatrix}3 & 0\\ 4 & 5\end{smallmatrix}\right] = A$. Both columns of $B$ equal $(1.5, 4.5)$, so $\operatorname{rank}(B) = 1$.
 
-which has rank exactly $k$, its nonzero singular values being $\sigma_1, \dots, \sigma_k$. Its errors are read off immediately from Theorems 6 and 7 applied to $A - A_k = \sum_{i > k}\sigma_i u_i v_i^\top$:
-
-$$ \|A - A_k\|_2 = \sigma_{k+1}, \qquad \|A - A_k\|_F = \Big(\sum_{i > k}\sigma_i^2\Big)^{1/2}, \qquad \|A - A_k\|_* = \sum_{i > k}\sigma_i . $$
-
-The theorem is that no other matrix of rank at most $k$ does better, in any of the three norms.
+**Sources.** Problem statement: Wilkinson, *Multivariate Statistics* (MATH3030 notes), Section 3.5 "Low-rank approximation". The matrices $A$, $B$ and $A - B$ are our illustration (evidence E08); the storage count $k(m+n)$ is our arithmetic.
 <!-- END S80 -->
 
 <!-- BEGIN S12 -->
-### 5. Definition -- Span & Range [S12]
+### 5. Recall: Span and Range [S12]
 
-#### 2.1 Span, independence, basis; dimension is well defined
+**Message.** Every output $Ax$ is a linear combination of the columns of $A$, so the set of all outputs is the span of those columns.
 
-**Definitions.** For $v_1, \dots, v_k \in \mathbb{R}^n$, $\operatorname{span}\{v_1, \dots, v_k\} = \{\sum_i \alpha_i v_i : \alpha_i \in \mathbb{R}\}$. The list is *linearly independent* if $\sum_i \alpha_i v_i = 0$ forces every $\alpha_i = 0$. A *subspace* $W \subseteq \mathbb{R}^n$ is a nonempty set closed under addition and scalar multiplication. A *basis* of $W$ is an independent list spanning $W$, and $\dim W$ is the length of a basis.
+Write $A = [\,a_1 \cdots a_n\,] \in \mathbb{R}^{m\times n}$ with columns $a_j \in \mathbb{R}^m$, and take an input $x \in \mathbb{R}^n$. Multiplying out gives $Ax = x_1a_1 + \cdots + x_na_n$, a vector in $\mathbb{R}^m$: the entries of $x$ are the weights on the columns. The range (column space) collects every possible output, $\operatorname{range}(A) = \{Ax : x \in \mathbb{R}^n\} = \operatorname{span}\{a_1, \dots, a_n\}$, a subspace of the output space $\mathbb{R}^m$. The figure shows the case $m = n = 2$ with $a_1 = (2,1)$ and $a_2 = (1,2)$ as two blue arrows from the origin; the amber arrow is $Ax$ for $x = (1,1)$, the diagonal of the dashed parallelogram spanned by $a_1$ and $a_2$, i.e. $a_1 + a_2 = (3,3)$.
 
-That last definition needs a theorem to be legitimate: two bases of the same subspace could a priori have different lengths.
+**Details.** The span of $v_1, \dots, v_k$ is the set of all combinations $\sum_i \alpha_i v_i$. A subspace is a nonempty set closed under addition and scalar multiplication; $\operatorname{range}(A)$ is one because $Ax + Ay = A(x+y)$ and $\alpha Ax = A(\alpha x)$. A basis is a linearly independent spanning list, and the dimension is its length (well defined by the Steinitz exchange lemma, proved in the backup note).
 
-**Lemma 2.1 (Steinitz exchange).** If $w_1, \dots, w_p$ are linearly independent and all lie in $\operatorname{span}\{v_1, \dots, v_q\}$, then $p \leq q$.
-
-*Proof.* Induct on $p$, exchanging one vector at a time. Suppose after $j$ steps we have a spanning list consisting of $w_1, \dots, w_j$ together with $q - j$ of the $v$'s; this is true for $j = 0$. If $j < p$, write $w_{j+1}$ in that spanning list:
-
-$$ w_{j+1} = \sum_{i \leq j} \alpha_i w_i + \sum_{\ell} \beta_\ell v_{i_\ell} . $$
-
-Not every $\beta_\ell$ can vanish, or $w_{j+1}$ would be a combination of $w_1, \dots, w_j$, contradicting independence; in particular the list of remaining $v$'s is nonempty, which already forces $q - j \geq 1$, that is, $j < q$. Pick $\ell$ with $\beta_\ell \neq 0$, solve for $v_{i_\ell}$, and swap it out for $w_{j+1}$: the new list still spans. After $p$ steps we have used $p$ distinct $v$'s, so $p \leq q$. **End of proof.**
-
-Applying the lemma in both directions to two bases of $W$ gives equal lengths, so $\dim W$ is well defined. The same lemma gives the two facts used repeatedly below: any independent list in $W$ has at most $\dim W$ elements and extends to a basis of $W$, and any spanning list contains a basis.
-
-#### 2.2 Range, null space, rank
-
-**Definitions.** For $A \in \mathbb{R}^{m \times n}$ with columns $a_1, \dots, a_n$: $\operatorname{range}(A) = \{Ax : x \in \mathbb{R}^n\} = \operatorname{span}\{a_1, \dots, a_n\} \subseteq \mathbb{R}^m$, using $Ax = \sum_i x_i a_i$; $\operatorname{null}(A) = \{x \in \mathbb{R}^n : Ax = 0\} \subseteq \mathbb{R}^n$; $\operatorname{row}(A) = \operatorname{range}(A^\top) \subseteq \mathbb{R}^n$; and $\operatorname{rank}(A) = \dim \operatorname{range}(A)$. Both $\operatorname{range}(A)$ and $\operatorname{null}(A)$ are subspaces, immediately from linearity of $x \mapsto Ax$.
+**Sources.** Deisenroth, Faisal & Ong, *Mathematics for Machine Learning* (CUP 2020), Section 2.7.3, Definition 2.23 and eq. (2.124): $\operatorname{Im}(A) = \{Ax\} = \operatorname{span}[a_1, \dots, a_n] \subseteq \mathbb{R}^m$. Figure: our illustration.
 <!-- END S12 -->
 
 <!-- BEGIN S14 -->
-### 6. Definition -- Rank [S14]
+### 6. Rank Counts Independent Directions [S14]
 
-#### 2.2 Range, null space, rank (continued)
+**Message.** The rank of $A$ is the dimension of its range: the number of independent output directions.
 
-The parenthetical remark "row rank $=$ column rank" is a real theorem; here is the two-line proof.
+Definition: $\operatorname{rank}(A) = \dim \operatorname{range}(A)$, the number of vectors in any basis of the range. The block diagram shows what this means for the shape of $A$: if $r = \operatorname{rank}(A)$ and $u_1, \dots, u_r$ is a basis of the range, then $A$ (a wide grey $m\times n$ block) factors as $U$ (a tall thin blue $m\times r$ block whose columns are the $u_i$) times $C$ (a short amber $r\times n$ block). Column $j$ of $C$ holds the coordinates of $a_j$ in that basis. The block sizes are schematic, not to scale. Rank is not the number of nonzero entries and not the number of columns: $\left[\begin{smallmatrix}1 & 1\\ 2 & 2\end{smallmatrix}\right]$ has four nonzero entries and two columns, yet both columns point along $(1,2)$, so its rank is 1.
 
-**Proposition 2.2.** $\operatorname{rank}(A^\top) = \operatorname{rank}(A)$.
+**Details.** **The factorization.** Each column $a_j$ lies in $\operatorname{range}(A)$, so $a_j = Uc_j$ for a unique $c_j \in \mathbb{R}^r$. Stacking the columns gives $A = UC$ with $C = [c_1 \cdots c_n]$. Equivalently $A = \sum_{i=1}^r u_i \tilde c_i^\top$, a sum of $r$ rank-one matrices, where $\tilde c_i^\top$ is row $i$ of $C$.
 
-*Proof.* Let $r = \operatorname{rank}(A)$ and let $u_1, \dots, u_r$ be a basis of $\operatorname{range}(A)$; write $U_0 = [u_1 \cdots u_r] \in \mathbb{R}^{m \times r}$. Each column $a_j$ lies in $\operatorname{range}(A)$, so $a_j = U_0 c_j$ for some $c_j \in \mathbb{R}^r$; stacking these, $A = U_0 C$ with $C = [c_1 \cdots c_n] \in \mathbb{R}^{r \times n}$. Then $A^\top = C^\top U_0^\top$, so every column of $A^\top$ is a combination of the $r$ columns of $C^\top$, giving $\operatorname{rank}(A^\top) \leq r$. Applying the same bound to $A^\top$ in place of $A$ gives $\operatorname{rank}(A) \leq \operatorname{rank}(A^\top)$. **End of proof.**
+Row rank equals column rank ($\operatorname{rank}(A^\top) = \operatorname{rank}(A)$) follows from the same factorization; the proof and the four-subspace picture are in the backup note.
 
-The factorization $A = U_0 C$ produced in that proof is worth naming: **every rank-$r$ matrix is a product of an $m \times r$ and an $r \times n$ matrix**, that is, a sum of $r$ rank-one matrices. That is the abstract form of the recommender factorization $R = TG$ of Section 8, and the reason a rank-$r$ matrix costs $r(m+n)$ numbers rather than $mn$.
+**Sources.** Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 2.6.2 (rank as the number of linearly independent columns) and Section 2.7.3, eq. (2.124) ($\operatorname{rk}(A) = \dim \operatorname{Im}(A)$). The factorization $A = UC$ is our derivation from the definition.
 <!-- END S14 -->
 
 <!-- BEGIN S13 -->
-### 7. Worked -- a Collapsing Matrix [S13]
+### 7. Two Inputs Collapse to One Direction [S13]
+
+**Message.** The matrix $C = \left[\begin{smallmatrix}1 & 1\\ 2 & 2\end{smallmatrix}\right]$ sends every input onto the single line through $(1,2)$, so its rank is 1.
+
+Both columns of $C$ equal $(1,2)$, so $Cx = x_1(1,2) + x_2(1,2) = (x_1 + x_2)(1,2)$: whatever the input, the output is a multiple of $(1,2)$. The figure has two coordinate panels joined by an arrow labelled $C$. The left (input) panel marks $e_1$ and $e_2$ as blue dots and $(1,1)$ as an amber square. The right (output) panel shows the range as a dashed light-blue line through the origin with slope 2; $e_1$ and $e_2$ both land on the same blue dot $(1,2)$, and $(1,1)$ lands on the amber square $(2,4)$, further out on the same line. All points are drawn at their exact coordinates. Two independent inputs produce only one output direction: $\operatorname{range}(C) = \operatorname{span}\{(1,2)\}$ and $\operatorname{rank}(C) = 1$.
+
+**Details.** Image calculation: $Ce_1 = (1,2)$, $Ce_2 = (1,2)$, $C(1,1) = (2,4) = 2\cdot(1,2)$. Since every output is $(x_1 + x_2)(1,2)$ and $x_1 + x_2$ can be any real number, the range is the whole line $\operatorname{span}\{(1,2)\}$, not just a segment. A basis of the range is $\{(1,2)\}$, so the dimension is 1.
+
+**Sources.** Our worked example (evidence E09).
 <!-- END S13 -->
 
 <!-- BEGIN S16 -->
-### 8. Definition -- Null Space [S16]
+### 8. Null Space Means Lost Directions [S16]
+
+**Message.** The null space collects the input directions that $A$ sends to zero; for $C$ it is the line spanned by $(1,-1)$.
+
+Definition: $\operatorname{null}(A) = \{x \in \mathbb{R}^n : Ax = 0\}$, a set of inputs. For $C$, $Cx = (x_1 + x_2)(1,2)$ vanishes exactly when $x_1 + x_2 = 0$, so $\operatorname{null}(C) = \operatorname{span}\{(1,-1)\}$. The figure repeats the two panels of the previous slide. In the input panel a solid red line of slope $-1$ through the origin is the null space; a dashed red arrow from $e_2$ to $e_1$ is the vector $e_1 - e_2 = (1,-1)$, which lies along that line. In the output panel the origin is a red dot labelled $C(1,-1) = 0$, and $Ce_1 = Ce_2$ is a single blue dot on the dashed range line. The point: $e_1$ and $e_2$ differ by a null vector, so $C$ cannot tell them apart. The null space lives in the input space $\mathbb{R}^n$; it is not a set of outputs and not part of the range.
+
+**Details.** $\operatorname{null}(A)$ is a subspace: if $Ax = 0$ and $Ay = 0$ then $A(x + y) = 0$ and $A(\alpha x) = 0$. Inputs differing by a null vector give the same output: $A(x + z) = Ax$ when $z \in \operatorname{null}(A)$. For $C$, solving $x_1 + x_2 = 0$ gives $x = t(1,-1)$, $t \in \mathbb{R}$; one free parameter, so $\dim \operatorname{null}(C) = 1$.
+
+**Sources.** Definition: Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 2.7.3, Definition 2.23 (kernel/null space). Example: our calculation (evidence E09).
 <!-- END S16 -->
 
 <!-- BEGIN S18 -->
-### 9. Theorem 1 -- Rank-Nullity [S18]
+### 9. Rank and Nullity Add Up [S18]
 
-#### 2.4 Theorem 1 (rank-nullity), proved
+**Message.** For any $A \in \mathbb{R}^{m\times n}$ the kept directions and the lost directions add up to the number of columns $n$, so low rank forces a large null space.
 
-**Theorem 1.** For $A \in \mathbb{R}^{m \times n}$, $\operatorname{rank}(A) + \dim \operatorname{null}(A) = n$, the number of *columns*.
+Rank-nullity theorem: for every $A \in \mathbb{R}^{m\times n}$, square or rectangular, $\operatorname{rank}(A) + \dim \operatorname{null}(A) = n$. The count is over columns, i.e. input dimensions, not rows. The bar below the theorem splits all $n$ input dimensions into a solid blue part labelled "rank: kept" and a dashed red part labelled "nullity: lost"; the widths are schematic. Check on $C$: rank 1 plus nullity 1 equals 2 columns. For a wide matrix $A \in \mathbb{R}^{2\times 3}$ the rank is at most 2 (the range sits inside $\mathbb{R}^2$), so the nullity is at least 1: some nonzero input is always lost. This is the fact used later for an arbitrary competitor $B$: if $\operatorname{rank}(B) \le k$ then $\dim \operatorname{null}(B) \ge n - k$.
 
-*Proof.* Let $x_1, \dots, x_t$ be a basis of $\operatorname{null}(A)$ and extend it to a basis $x_1, \dots, x_t, y_1, \dots, y_s$ of $\mathbb{R}^n$, so $t + s = n$. It suffices to show that $Ay_1, \dots, Ay_s$ is a basis of $\operatorname{range}(A)$.
+**Details.** **Proof.** Let $x_1, \dots, x_t$ be a basis of $\operatorname{null}(A)$ and extend it to a basis $x_1, \dots, x_t, y_1, \dots, y_s$ of $\mathbb{R}^n$, so $t + s = n$. It suffices to show that $Ay_1, \dots, Ay_s$ is a basis of $\operatorname{range}(A)$. Spanning: any $x = \sum_i \alpha_i x_i + \sum_j \beta_j y_j$ has $Ax = \sum_j \beta_j Ay_j$, because $Ax_i = 0$. Independence: if $\sum_j \beta_j Ay_j = 0$ then $\sum_j \beta_j y_j \in \operatorname{null}(A)$, so it equals some $\sum_i \alpha_i x_i$; this is a linear relation among basis vectors of $\mathbb{R}^n$, so every $\beta_j = 0$. Hence $\operatorname{rank}(A) = s = n - t$. $\blacksquare$
 
-*Spanning.* Any $Ax$ with $x = \sum_i \alpha_i x_i + \sum_j \beta_j y_j$ satisfies $Ax = \sum_j \beta_j A y_j$, because $Ax_i = 0$.
+**Corollary used later.** $\operatorname{rank}(B) \le k$ gives $\dim \operatorname{null}(B) = n - \operatorname{rank}(B) \ge n - k$.
 
-*Independence.* If $\sum_j \beta_j A y_j = 0$ then $A(\sum_j \beta_j y_j) = 0$, so $\sum_j \beta_j y_j \in \operatorname{null}(A)$ and thus equals $\sum_i \alpha_i x_i$ for some $\alpha$. Then $\sum_j \beta_j y_j - \sum_i \alpha_i x_i = 0$ is a relation among basis vectors of $\mathbb{R}^n$, so every $\beta_j = 0$. Hence $\operatorname{rank}(A) = s = n - t$. **End of proof.**
+**Sources.** Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 2.7.3, Theorem 2.24 (rank-nullity, stated for a linear map $V \to W$: $\dim \ker + \dim \operatorname{Im} = \dim V$; here $V = \mathbb{R}^n$ and the map is $x \mapsto Ax$). Proof: standard basis-extension argument, retained from the previous version of this note.
 <!-- END S18 -->
-
 <!-- REGION P1a END -->
 
 <!-- REGION P1b BEGIN -->
@@ -169,154 +168,110 @@ The factorization $A = U_0 C$ produced in that proof is worth naming: **every ra
 <!-- END S25 -->
 
 <!-- BEGIN S27 -->
-### 11. Definition -- Norm [S27]
+### 11. What Makes a Norm? [S27]
 
-#### 3.1 The axioms, and what follows from them
+**Message.** A norm is a size function that is zero only at zero, scales with $|\alpha|$, and obeys the triangle inequality.
 
-**Definition.** A function $\|\cdot\| : \mathbb{R}^n \to \mathbb{R}$ is a *norm* if for all $x, y$ and all $\alpha \in \mathbb{R}$:
+Definition: a norm on $\mathbb{R}^n$ is a function $\|\cdot\| : \mathbb{R}^n \to [0,\infty)$ such that for all $x, y \in \mathbb{R}^n$ and $\alpha \in \mathbb{R}$: $\|x\| = 0$ if and only if $x = 0$; $\|\alpha x\| = |\alpha|\,\|x\|$ (the absolute value means flipping the sign does not change the size); and $\|x + y\| \le \|x\| + \|y\|$. The sketch shows the triangle inequality: a solid blue arrow $x$ followed by a solid blue arrow $y$ (the detour), and a dashed amber arrow $x + y$ from the start of $x$ to the tip of $y$ (the direct route). The direct route is never longer than the detour. These three rules are all we need in this lecture; we use norms to measure residuals, not to study them for their own sake.
 
-- (N1) $\|x + y\| \leq \|x\| + \|y\|$;
-- (N2) $\|\alpha x\| = |\alpha| \, \|x\|$;
-- (N3) $\|x\| = 0$ if and only if $x = 0$.
+**Details.** **Norm versus squared norm.** The squared Euclidean norm $\|x\|_2^2$ is not a norm. It fails homogeneity, since $\|2x\|_2^2 = 4\|x\|_2^2$ rather than $2\|x\|_2^2$, and it fails the triangle inequality: for $x = y = e_1$, $\|x + y\|_2^2 = 4 \gt 2 = \|x\|_2^2 + \|y\|_2^2$. Squared norms are still useful as objectives (they are smooth and minimized by the same point), which is why the Frobenius "energy" is often written squared later.
 
-Nonnegativity is not an extra axiom -- it follows: $0 = \|x + (-x)\| \leq \|x\| + \|-x\| = 2\|x\|$ by (N1) and (N2). Two consequences are used later. The *reverse triangle inequality* $\big|\, \|x\| - \|y\| \,\big| \leq \|x - y\|$, obtained by applying (N1) to $x = (x - y) + y$ and symmetrically. And the fact that every norm on $\mathbb{R}^n$ is a continuous function, immediate from the reverse triangle inequality together with $\|x\| \leq \sum_i |x_i| \, \|e_i\|$. Continuity is what makes the maximum in the induced-norm definition of Section 6.1 attained rather than merely a supremum.
+**Nonnegativity follows from the other rules:** $0 = \|x + (-x)\| \le \|x\| + \|-x\| = 2\|x\|$. A consequence used for continuity arguments is the reverse triangle inequality $\big|\|x\| - \|y\|\big| \le \|x - y\|$.
+
+**Sources.** Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 3.1, Definition 3.1 (absolutely homogeneous, triangle inequality, positive definite). Squared-norm counterexample: our calculation.
 <!-- END S27 -->
 
 <!-- BEGIN S28 -->
-### 12. The $\ell_p$ Family [S28]
+### 12. Three Familiar Vector Norms [S28]
 
-#### 3.2 The $\ell_p$ family is a family of norms, for $p \geq 1$
+**Message.** The $\ell_1$, $\ell_2$ and $\ell_\infty$ norms measure different aspects of the same coordinate vector.
 
-For $\|x\|_p = (\sum_i |x_i|^p)^{1/p}$, axioms (N2) and (N3) are obvious. Axiom (N1), Minkowski's inequality, is not, and its standard proof runs through Holder's inequality, which is worth having explicitly because the Cauchy-Schwarz argument of lecture 11 is the case $p = 2$.
+For $x = (x_1, \dots, x_n) \in \mathbb{R}^n$ the slide shows three side-by-side cards. $\ell_1$, the absolute sum $\|x\|_1 = \sum_i |x_i|$: the distance walked along the coordinate axes. $\ell_2$, the Euclidean norm $\|x\|_2 = (\sum_i x_i^2)^{1/2}$: the straight-line length. $\ell_\infty$, the maximum $\|x\|_\infty = \max_i |x_i|$: the largest single coordinate. Only $\ell_2$ is geometric length. Do not confuse it with the sum of absolute coordinates: $x = (1,1)$ has $\|x\|_1 = 2$ but $\|x\|_2 = \sqrt{2}$.
 
-**Lemma 3.1 (Young).** For $a, b \geq 0$ and conjugate exponents $p, q > 1$ with $\tfrac1p + \tfrac1q = 1$,
+**Details.** These are three members of the $\ell_p$ family $\|x\|_p = (\sum_i |x_i|^p)^{1/p}$ for $p \ge 1$, with $\ell_\infty$ the limit as $p \to \infty$. For $p \lt 1$ the formula is not a norm: with $p = \tfrac12$, $x = (1,0)$, $y = (0,1)$ we get $\|x\|_{1/2} = \|y\|_{1/2} = 1$ but $\|x+y\|_{1/2} = (1+1)^2 = 4 \gt 2$. The proof that $\ell_p$ is a norm for $p \ge 1$ (Young, Holder, Minkowski) is in the backup note.
 
-$$ ab \leq \frac{a^p}{p} + \frac{b^q}{q} . $$
-
-*Proof.* For $a, b > 0$ apply concavity of the logarithm -- Jensen's inequality from the lecture-1 note [20], at two points with weights $\tfrac1p$ and $\tfrac1q$ summing to $1$:
-
-$$ \log\Big(\tfrac1p a^p + \tfrac1q b^q\Big) \geq \tfrac1p \log a^p + \tfrac1q \log b^q = \log(ab) ; $$
-
-now exponentiate. If $a$ or $b$ is $0$ the inequality is trivial. **End of proof.**
-
-**Lemma 3.2 (Holder).** $\sum_i |x_i y_i| \leq \|x\|_p \|y\|_q$ for conjugate $p, q$. For $p = q = 2$ this is Cauchy-Schwarz.
-
-*Proof.* If either factor is $0$ both sides vanish. Otherwise put $a_i = |x_i| / \|x\|_p$ and $b_i = |y_i| / \|y\|_q$, and sum Young's inequality over $i$:
-
-$$ \sum_i a_i b_i \leq \tfrac1p \sum_i a_i^p + \tfrac1q \sum_i b_i^q = \tfrac1p + \tfrac1q = 1 . $$
-
-Multiply through by $\|x\|_p \|y\|_q$. **End of proof.**
-
-**Lemma 3.3 (Minkowski).** $\|x + y\|_p \leq \|x\|_p + \|y\|_p$ for $p \geq 1$.
-
-*Proof.* The case $p = 1$ is the scalar triangle inequality summed. For $p > 1$, with $q = p/(p-1)$,
-
-$$ \|x+y\|_p^p \;\leq\; \sum_i |x_i| \, |x_i + y_i|^{p-1} + \sum_i |y_i| \, |x_i + y_i|^{p-1} , $$
-
-and applying Holder to each of the two sums bounds this by
-
-$$ \big(\|x\|_p + \|y\|_p\big) \Big( \sum_i |x_i + y_i|^{(p-1)q} \Big)^{1/q} . $$
-
-Since $(p-1)q = p$, the last factor is $\|x+y\|_p^{p/q}$. If $\|x+y\|_p = 0$ we are done; otherwise divide by it and use $p - p/q = 1$. **End of proof.**
-
-#### 3.3 Why $p \geq 1$: an explicit failure at $p < 1$
-
-The lecture states the restriction; here is the witness. Take $p = \tfrac12$ and the vectors $x = (1,0)$ and $y = (0,1)$ in $\mathbb{R}^2$. Then $\|x\|_{1/2} = \|y\|_{1/2} = 1$, but $\|x + y\|_{1/2} = (1 + 1)^2 = 4 > 2$. So (N1) fails, decisively.
-
-The quantity $\|x\|_0 := \#\{i : x_i \neq 0\}$, used in Sections 6 and 8 in the identity "rank $= \|\sigma\|_0$", is not a norm either: it violates (N2), since $\|2x\|_0 = \|x\|_0 \neq 2\|x\|_0$ in general. Calling these "the $\ell_{1/2}$ norm" and "the $\ell_0$ norm" is standard abuse of language. The passage from $\|\sigma\|_0$ to $\|\sigma\|_1$ in Section 8 is precisely the move from a non-norm to the nearest convex norm.
-
-#### 3.4 $\ell_\infty$ as a limit, and the ordering
-
-**Proposition 3.4.** $\|x\|_p \to \max_i |x_i| =: \|x\|_\infty$ as $p \to \infty$, and for every $x \in \mathbb{R}^n$,
-
-$$ \|x\|_\infty \;\leq\; \|x\|_2 \;\leq\; \|x\|_1 \;\leq\; \sqrt{n}\, \|x\|_2 \;\leq\; n \, \|x\|_\infty . $$
-
-*Proof.* Let $M = \|x\|_\infty$. Then $M^p \leq \sum_i |x_i|^p \leq n M^p$, so $M \leq \|x\|_p \leq n^{1/p} M$, and $n^{1/p} \to 1$. For the chain: $\|x\|_\infty^2 = \max_i x_i^2 \leq \sum_i x_i^2$ gives the first inequality; squaring $\|x\|_1$ gives $\sum_i x_i^2 + \sum_{i \neq j} |x_i||x_j| \geq \|x\|_2^2$, the second; Cauchy-Schwarz against the all-ones vector, $\sum_i |x_i| \cdot 1 \leq \sqrt n \|x\|_2$, the third; and $\|x\|_2^2 \leq n \|x\|_\infty^2$ the fourth. **End of proof.**
+**Sources.** $\ell_1$ (Manhattan) and $\ell_2$ (Euclidean): Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 3.1, Examples 3.1 and 3.2. $\ell_p$: Wilkinson, MATH3030 notes, Section 2.3.1, Definition 2.9. $\ell_\infty = \max_i |x_i|$: standard definition, not found in either evidence source (flagged). The $(1,1)$ and $p = \tfrac12$ numbers: our calculation.
 <!-- END S28 -->
 
 <!-- BEGIN S29 -->
-### 13. Worked -- One Vector, Three Norms [S29]
+### 13. One Vector, Three Answers: 7, 5, 4 [S29]
 
-#### 3.4 $\ell_\infty$ as a limit, and the ordering (continued)
+**Message.** For $x = (3,4)$ the three norms report three different sizes, 7, 5 and 4, so the choice of norm is part of the question.
 
-The worked example is $x = (3,4)$: $\|x\|_1 = 7$, $\|x\|_2 = 5$, $\|x\|_\infty = 4$, consistent with $4 \leq 5 \leq 7$. The same ordering reappears in Section 6.5 applied to the vector of singular values, where it becomes $\|A\|_2 \leq \|A\|_F \leq \|A\|_*$.
+Arithmetic: $\|x\|_1 = |3| + |4| = 7$; $\|x\|_2 = \sqrt{9 + 16} = 5$; $\|x\|_\infty = \max(3, 4) = 4$. The figure is drawn to scale on a grid with the origin at bottom left and the point $x = (3,4)$ marked. The amber dashed path walks 3 to the right and then 4 up: its total length, $3 + 4 = 7$, is $\ell_1$. The solid blue diagonal from the origin straight to $x$ has length 5: that is $\ell_2$. A red bracket beside the vertical leg marks the longer coordinate, 4: that is $\ell_\infty$. For every vector, $\|x\|_\infty \le \|x\|_2 \le \|x\|_1$, here $4 \le 5 \le 7$.
+
+**Details.** **Why the ordering always holds.** $\|x\|_\infty^2 = \max_i x_i^2 \le \sum_i x_i^2 = \|x\|_2^2$. And $\|x\|_1^2 = \sum_i x_i^2 + \sum_{i \ne j} |x_i||x_j| \ge \|x\|_2^2$. Taking square roots of nonnegative quantities gives $\|x\|_\infty \le \|x\|_2 \le \|x\|_1$.
+
+Interpretation: $\ell_1$ adds up every coordinate, $\ell_\infty$ looks only at the worst one, and $\ell_2$ sits between them. The same contrast between "worst case" and "total" reappears for matrices as spectral norm versus Frobenius norm.
+
+**Sources.** Our worked example (evidence E09: 7, 5, 4). Ordering proof: our derivation.
 <!-- END S29 -->
 
 <!-- BEGIN S30 -->
-### 14. Unit Balls -- the Norms as Shapes [S30]
+### 14. Unit Balls Reveal the Metric [S30]
+
+**Message.** The unit ball $\{x : \|x\| \le 1\}$ is the set of vectors a norm calls at most 1, and its shape shows how the norm measures.
+
+The figure has three panels in the plane, all at the same scale with axes crossing at the centre. Left: the $\ell_1$ ball is a diamond with corners on the axes at $(\pm1, 0)$ and $(0, \pm1)$. Middle: the $\ell_2$ ball is a round disc of radius 1. Right: the $\ell_\infty$ ball is a square with corners at $(\pm1, \pm1)$. Each panel marks one boundary point with an amber dot: $(1,0)$ on the diamond ($|1| + |0| = 1$), $(\tfrac{1}{\sqrt2}, \tfrac{1}{\sqrt2})$ on the circle ($\tfrac12 + \tfrac12 = 1$ under the square root), and the corner $(1,1)$ on the square ($\max(1,1) = 1$). Each marked point has norm exactly 1 in its own panel's norm. The shapes are nested: diamond inside circle inside square. The panels are labelled by shape name as well as by norm, so the identification does not rely on colour.
+
+**Details.** **Nesting.** From $\|x\|_\infty \le \|x\|_2 \le \|x\|_1$: if $\|x\|_1 \le 1$ then $\|x\|_2 \le 1$, and if $\|x\|_2 \le 1$ then $\|x\|_\infty \le 1$. So the $\ell_1$ ball lies inside the $\ell_2$ ball, which lies inside the $\ell_\infty$ ball. The point $(1,1)$ is in the square but not in the circle ($\|(1,1)\|_2 = \sqrt2 \gt 1$).
+
+**Sources.** Our illustration, drawn to scale (evidence E09 for the norms used). The unit-ball shapes follow directly from the definitions on the previous slides.
 <!-- END S30 -->
 
 <!-- BEGIN S31 -->
-### 15. Definition -- Orthogonal Matrix [S31]
+### 15. Orthogonal Maps Preserve Geometry [S31]
 
-#### 3.5 Orthogonal matrices: the equivalent characterizations
+**Message.** A square matrix $Q$ with $Q^\top Q = I$ turns vectors without changing their Euclidean length.
 
-**Proposition 3.5.** For *square* $U \in \mathbb{R}^{n \times n}$ the following are equivalent:
+Definition: $Q \in \mathbb{R}^{n\times n}$ is orthogonal if $Q^\top Q = I = QQ^\top$; equivalently its columns are orthonormal, and $Q^{-1} = Q^\top$. The figure shows a dashed grey unit circle. A blue arrow is $e_1$; an amber arrow is $Qe_1$ for the $45^\circ$ rotation $Q = \tfrac{1}{\sqrt2}\left[\begin{smallmatrix}1 & -1\\ 1 & 1\end{smallmatrix}\right]$, so $Qe_1 = (\tfrac{1}{\sqrt2}, \tfrac{1}{\sqrt2})$; a small arc marks the $45^\circ$ angle between them. Both tips sit on the unit circle: the direction changed, the Euclidean length stayed 1. Squareness matters. The tall matrix $W = [e_1\; e_2] \in \mathbb{R}^{3\times 2}$ has orthonormal columns, so $W^\top W = I_2$, but $WW^\top = \operatorname{diag}(1,1,0) \ne I_3$; it is not an orthogonal matrix. And the protection is for $\ell_2$ only, not every norm (next slide).
 
-1. $U^\top U = I$;
-2. $UU^\top = I$;
-3. the columns of $U$ are orthonormal;
-4. the rows of $U$ are orthonormal;
-5. $\|Ux\|_2 = \|x\|_2$ for all $x$;
-6. $(Ux)^\top(Uy) = x^\top y$ for all $x, y$.
+**Details.** For square $Q$, $Q^\top Q = I$ already implies $QQ^\top = I$ (a square matrix with a left inverse is invertible, and the inverse is that left inverse). Further equivalent characterizations, orthonormal rows, $\det Q = \pm1$, and Gram-Schmidt are in the backup note. Check of the example: the columns $\tfrac{1}{\sqrt2}(1,1)$ and $\tfrac{1}{\sqrt2}(-1,1)$ each have length 1 and dot product $\tfrac12(-1+1) = 0$.
 
-*Proof.* Statement 1 is equivalent to statement 3 by the entry-wise reading of $U^\top U$, whose $(i,j)$ entry is $u_i^\top u_j$; likewise 2 is equivalent to 4.
-
-For 1 implies 2: $U^\top U = I$ means $U^\top$ is a left inverse of the square matrix $U$; a square matrix with a left inverse is invertible, being injective and hence surjective by Theorem 1, and then $U^\top = U^\top(UU^{-1}) = (U^\top U)U^{-1} = U^{-1}$, so $UU^\top = I$. Symmetrically, 2 implies 1.
-
-For 1 implies 6: $(Ux)^\top(Uy) = x^\top U^\top U y = x^\top y$. For 6 implies 5: take $y = x$. For 5 implies 6: use polarization, $x^\top y = \tfrac12(\|x+y\|^2 - \|x\|^2 - \|y\|^2)$. For 6 implies 1: $x^\top(U^\top U - I)y = 0$ for all $x, y$ forces the matrix $U^\top U - I$ to be $0$, taking $x = e_i$ and $y = e_j$. **End of proof.**
-
-Squareness is essential, and the lecture flags why: the thin factor $U_c \in \mathbb{R}^{m \times r}$ of Section 4.4 satisfies $U_c^\top U_c = I_r$ but not $U_c U_c^\top = I_m$ when $r < m$ -- the proof that 1 implies 2 used a left inverse of a *square* matrix.
-
-Two further standard facts. Orthogonal matrices form a group under multiplication: if $U^\top U = V^\top V = I$ then $(UV)^\top(UV) = V^\top U^\top U V = I$. And $\det U = \pm 1$, from $1 = \det I = \det(U^\top U) = (\det U)^2$; the value $+1$ is a rotation, and $-1$ a rotation composed with a reflection. The matrix $V$ appearing in the running example is $\tfrac{1}{\sqrt2}$ times the matrix with first row $(1, -1)$ and second row $(1, 1)$; its determinant is $\tfrac12(1 + 1) = 1$, so it is a genuine rotation, by $45$ degrees.
+**Sources.** Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 3.4, Definition 3.8 (orthogonal matrix: square, $AA^\top = I = A^\top A$). Rotation and $W$ examples: our illustration.
 <!-- END S31 -->
 
 <!-- BEGIN S33 -->
-### 16. Theorem 4 -- Orthogonal Maps Preserve Length [S33]
+### 16. Why Length Is Preserved [S33]
 
-#### 3.5 Orthogonal matrices: the equivalent characterizations (continued)
+**Message.** One line of algebra using $Q^\top Q = I$ shows that a square orthogonal $Q$ preserves the Euclidean norm of every vector.
 
-**Theorem 4.** If $U$ is orthogonal then $\|Ux\|_2 = \|x\|_2$ for all $x$. Conversely, a square $U$ preserving the $\ell_2$ norm is orthogonal.
+Claim: for square $Q \in \mathbb{R}^{n\times n}$ with $Q^\top Q = I$ and every $x \in \mathbb{R}^n$, $\|Qx\|_2 = \|x\|_2$. Proof: $\|Qx\|_2^2 = (Qx)^\top(Qx) = x^\top Q^\top Q x = x^\top x = \|x\|_2^2$, where the middle step uses $Q^\top Q = I$; both norms are nonnegative, so taking square roots gives the claim. The same step with two vectors gives $(Qx)^\top(Qy) = x^\top y$, so inner products, and hence angles, are preserved too. The protection is specific to the Euclidean norm: for the $45^\circ$ rotation, $\|Qe_1\|_1 = \tfrac{1}{\sqrt2} + \tfrac{1}{\sqrt2} = \sqrt2$, while $\|e_1\|_1 = 1$.
 
-*Proof.* Both directions are the equivalence of statements 1 and 5 in Proposition 3.5. **End of proof.**
+**Details.** The proof uses only $Q^\top Q = I$, not squareness, so it also shows that a tall matrix with orthonormal columns (like $W$ on the previous slide) preserves Euclidean length. Squareness is needed for the converse direction and for $QQ^\top = I$. Conversely, a square $Q$ with $\|Qx\|_2 = \|x\|_2$ for all $x$ is orthogonal, by the polarization identity $x^\top y = \tfrac12(\|x+y\|_2^2 - \|x\|_2^2 - \|y\|_2^2)$; details in the backup note.
+
+**Sources.** Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 3.4, Definition 3.8 and eqs. (3.31) (length preserved) and (3.32) (angles preserved). $\ell_1$ counterexample: our calculation.
 <!-- END S33 -->
 
 <!-- BEGIN S66 -->
-### 17. Definition -- Induced (Operator) Norm [S66]
+### 17. Spectral Norm: Worst Stretch [S66]
 
-#### 6.1 Induced norms: definition, attainment, submultiplicativity
+**Message.** The spectral norm of a matrix is the largest factor by which it stretches any unit-length input.
 
-**Definition.** For a vector norm $\|\cdot\|_p$, the induced (operator) norm is
+Definition: for $A \in \mathbb{R}^{m\times n}$, $\|A\|_2 = \max_{x \in \mathbb{R}^n,\ \|x\|_2 = 1} \|Ax\|_2$. It is one number for the whole matrix. The figure uses the running example $A = \left[\begin{smallmatrix}3 & 0\\ 4 & 5\end{smallmatrix}\right]$. On the left is the input unit circle (drawn three times larger than the output scale so it is visible), with one input $x^\star$ marked by a blue radius. An arrow labelled $A$ leads to the right panel, where the image of the circle under $A$ is a tall, tilted ellipse drawn to scale. The red radius from the centre to the ellipse's farthest point is $Ax^\star$, the longest image: its length is $\|A\|_2$. The picture is only intuition for "worst direction"; how to compute that length comes later in the lecture. Keep three things apart: $\|A\|_2$ is a matrix norm; $\|x\|_2$ is the length of a vector; and the $\ell_2$ norm of all entries of $A$ is a different matrix norm, the Frobenius norm (next slide).
 
-$$ \|A\|_p := \max_{\|x\|_p = 1} \|Ax\|_p = \max_{x \neq 0} \frac{\|Ax\|_p}{\|x\|_p} . $$
+**Details.** **Figure geometry.** The ellipse is the exact image $\{A(\cos t, \sin t)\} = \{(3\cos t,\ 4\cos t + 5\sin t)\}$. The marked input is $x^\star = (1,1)/\sqrt2$, and $Ax^\star = (3, 9)/\sqrt2$; a numerical scan of $t$ confirms this is where $\|A(\cos t, \sin t)\|_2$ is largest. The numerical value is deliberately not stated on the slide; it is derived with the singular values later.
 
-The maximum is attained, not merely approached: $x \mapsto \|Ax\|_p$ is continuous by Section 3.1 and the unit sphere is compact. The two expressions agree by homogeneity, $\|A(x/\|x\|)\| = \|Ax\|/\|x\|$.
+The maximum is attained because $x \mapsto \|Ax\|_2$ is continuous and the unit sphere is compact. Equivalently $\|A\|_2 = \max_{x \ne 0} \|Ax\|_2 / \|x\|_2$, by homogeneity. Other induced norms ($p = 1, \infty$) and submultiplicativity $\|AB\|_2 \le \|A\|_2\|B\|_2$ are in the backup note.
 
-Induced norms satisfy the norm axioms -- (N1) from $\|(A+B)x\| \leq \|Ax\| + \|Bx\|$ pointwise, then maximizing; (N3) because $\|A\| = 0$ forces $Ae_i = 0$ for all $i$ -- and additionally the two properties that make them useful for error analysis:
-
-$$ \|Ax\|_p \leq \|A\|_p \|x\|_p \quad \text{(consistency)}, \qquad \|AB\|_p \leq \|A\|_p \|B\|_p \quad \text{(submultiplicativity)}. $$
-
-Consistency is the definition rescaled; submultiplicativity follows by applying it twice, $\|ABx\| \leq \|A\| \|Bx\| \leq \|A\| \|B\| \|x\|$, then maximizing over $\|x\| = 1$. Also $\|I\|_p = 1$ for every induced norm -- a property the Frobenius norm lacks, since $\|I_n\|_F = \sqrt n$, which is the first sign that $\|\cdot\|_F$ is not induced by any vector norm for $n > 1$.
-
-#### 6.2 The $p = 1$ and $p = \infty$ formulas
-
-Not covered in the lecture but standard, and useful as a contrast to how much harder $p = 2$ is:
-
-$$ \|A\|_1 = \max_j \sum_i |a_{ij}| \quad \text{(largest absolute column sum)}, \qquad \|A\|_\infty = \max_i \sum_j |a_{ij}| \quad \text{(largest absolute row sum)}. $$
-
-*Proof of the first.* $\|Ax\|_1 = \sum_i |\sum_j a_{ij}x_j| \leq \sum_j |x_j| \sum_i |a_{ij}| \leq (\max_j \sum_i |a_{ij}|)\|x\|_1$, with equality at $x = e_{j^\star}$ for the maximizing column. The second is the same argument transposed.
-
-Both are read off the entries in $O(mn)$ time, whereas $\|A\|_2$ requires the SVD, which is $O(mn\min(m,n))$ -- the practical reason the Frobenius norm is often used as a cheap proxy.
+**Sources.** Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 4.6, Definition 4.23 (spectral norm, eq. (4.93)); Wilkinson, MATH3030 notes, Section 3.5.1, Definition 3.2 (matrix $p$-norms, here $p = 2$). Figure: our running example (evidence E08), computed exactly.
 <!-- END S66 -->
 
 <!-- BEGIN S72 -->
-### 18. Definition -- Frobenius Norm [S72]
+### 18. Frobenius Norm: Total Energy [S72]
 
-#### 6.4 The Frobenius norm and Theorem 7
+**Message.** The Frobenius norm adds up every squared entry, so $\|A - B\|_F^2$ is the total squared error over all entries.
 
-Define $\|A\|_F := (\sum_{i,j} a_{ij}^2)^{1/2}$: the Euclidean norm of the matrix read as a vector in $\mathbb{R}^{mn}$. Hence it is a norm for free, being $\ell_2$ under that identification, and it comes with an inner product $\langle A, B \rangle = \operatorname{tr}(A^\top B) = \sum_{i,j} a_{ij}b_{ij}$, so that $\|A\|_F^2 = \operatorname{tr}(A^\top A)$.
+Definition: $\|A\|_F = (\sum_{i=1}^m \sum_{j=1}^n a_{ij}^2)^{1/2}$, and for a residual $\|A - B\|_F^2 = \sum_{i,j} (a_{ij} - b_{ij})^2$. The figure is a $2\times 2$ grid of tiles, one per entry of the residual $A - B$ from the opening example, each showing its square: the top row $1.5^2 = 2.25$ and $(-1.5)^2 = 2.25$ in dark red solid tiles, the bottom row $(-0.5)^2 = 0.25$ and $0.5^2 = 0.25$ in pale red dashed tiles; darker means a larger contribution. The sum is $5$, so $\|A - B\|_F = \sqrt5$. Qualifiers: every entry is observed and counts equally (no weights), and the Frobenius norm is not the spectral norm in general. For the identity $I_2$, $\|I_2\|_2 = 1$ (it stretches nothing) but $\|I_2\|_F = \sqrt2$.
+
+**Details.** **Square root versus square.** The norm is the square root, which makes it a norm (it is the Euclidean norm of the matrix read as a vector of $mn$ numbers). The squared version is the "energy": it is additive over entries, which is why least-squares objectives use it.
+
+**Trace form (optional).** $\|A\|_F^2 = \operatorname{tr}(A^\top A)$, since the diagonal entries of $A^\top A$ are the squared column lengths.
+
+**Arithmetic.** $2.25 + 2.25 + 0.25 + 0.25 = 5$; $\sqrt5 \approx 2.236$.
+
+**Sources.** Wilkinson, MATH3030 notes, Section 3.5.1, Definition 3.1 ($\|A\|_F = (\sum_{i,j} |a_{ij}|^2)^{1/2} = (\operatorname{tr} A^\top A)^{1/2}$). Residual numbers: our calculation on the running example (evidence E08).
 <!-- END S72 -->
-
 <!-- REGION P1b END -->
 
 <!-- REGION P2 BEGIN -->

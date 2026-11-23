@@ -34,6 +34,32 @@
 .o1-fig .fl-red   { color: #c0392b; }
 .o1-fig .fl-amber { color: #a06a10; }
 /* --- o1a- scoped CSS --- */
+.o1a-def { padding: 14px 26px; }
+.o1a-def p { margin: 4px 0; }
+.o1a-def .math-block { background: var(--white); margin: 8px 0; padding: 12px 20px; }
+.o1a-flow { display: flex; align-items: center; justify-content: center; gap: 22px; margin: 10px 0 6px; }
+.o1a-term { text-align: center; }
+.o1a-term p { margin: 4px 0 0; color: var(--gray-text); }
+.o1a-mat { font-size: 1.7rem; padding: 10px 18px; border-radius: 10px; border: 3px solid #555; background: var(--light); }
+.o1a-mat-b { border-color: var(--yonsei-blue); background: #dce6f2; }
+.o1a-mat-r { border-color: #c0392b; border-style: dashed; background: #fbecea; }
+.o1a-op { font-size: 2.4rem; font-weight: 700; color: var(--charcoal); }
+.o1a-cols { gap: 28px; align-items: center; flex: 0 1 auto; }
+.o1a-cols p { margin: 8px 0; }
+.o1a-g3 { margin: 6px 0; }
+.o1a-nc { padding: 12px 16px; text-align: center; }
+.o1a-nc h3 { margin: 0 0 4px; }
+.o1a-nc .math-block { background: var(--white); margin: 6px 0; padding: 10px 8px; }
+.o1a-nc p { margin: 2px 0; color: var(--gray-text); }
+.o1a-left { text-align: left; }
+.o1a-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 470px; }
+.o1a-cell { padding: 26px 10px; text-align: center; font-size: 1.55rem; border-radius: 8px; border: 2px solid #c0392b; }
+.o1a-hi { background: #e9a99f; }
+.o1a-lo { background: #fbecea; border-style: dashed; }
+.o1a-mb { padding: 10px 24px; margin: 8px 0; }
+.o1a-mb .katex-display, .o1a-def .katex-display { margin: 0; }
+.o1a-nc { display: flex; flex-direction: column; }
+.o1a-nc .math-block { flex: 1; display: flex; align-items: center; justify-content: center; }
 /* --- end o1a- --- */
 /* --- o1b- scoped CSS --- */
 /* --- end o1b- --- */
@@ -115,90 +141,181 @@
 </div>
 
 <div class="slide" data-slide-id="S80">
-  <h2>The Compression Question</h2>
+  <h2>A Smaller Matrix, Controlled Error</h2>
   <div class="divider"></div>
-  <p>Store $A \in \mathbb{R}^{10^4 \times 10^4}$: $10^8$ numbers. Rank-$20$ version:</p>
-  <div class="math-block" style="margin:8px 0">$$\sum_{i=1}^{20} \sigma_i u_i v_i^{\top}:
-    \quad 20 \times (10^4 + 10^4) = 4 \times 10^5 \text{ numbers} \;\; (0.4\%)$$</div>
-  <ul>
-    <li>Question 1: among rank-$k$ matrices, which is <strong>closest</strong> to $A$?</li>
-    <li>Question 2: how large is the unavoidable error?</li>
-  </ul>
+  <p><strong>Given</strong> $A \in \mathbb{R}^{m\times n}$, every entry observed &nbsp;&middot;&nbsp; <strong>choose</strong> $B$ with $\operatorname{rank}(B) \le k$</p>
+  <div class="o1a-flow">
+    <div class="o1a-term"><div class="o1a-mat">$\begin{bmatrix} 3 &amp; 0 \\ 4 &amp; 5 \end{bmatrix}$</div><p>data $A$ (rank 2)</p></div>
+    <div class="o1a-op">=</div>
+    <div class="o1a-term"><div class="o1a-mat o1a-mat-b">$\begin{bmatrix} 1.5 &amp; 1.5 \\ 4.5 &amp; 4.5 \end{bmatrix}$</div><p>candidate $B$ (rank 1)</p></div>
+    <div class="o1a-op">+</div>
+    <div class="o1a-term"><div class="o1a-mat o1a-mat-r">$\begin{bmatrix} 1.5 &amp; -1.5 \\ -0.5 &amp; 0.5 \end{bmatrix}$</div><p>residual $A - B$</p></div>
+  </div>
+  <p><strong>Quality</strong> = size of the residual $A - B$, measured by a matrix norm</p>
+  <p>Two questions: which $B$ is closest, and how small can the error be?</p>
+  <p class="muted">Rank-$k$ factors store $k(m+n)$ numbers: smaller than $mn$ only when $k(m+n) \lt mn$</p>
+  <div class="cite">Problem: Wilkinson, <em>Multivariate Statistics</em> (MATH3030), &sect;3.5. Matrices: our illustration ($k = 1$); $B$ is one rank-1 candidate, not yet shown to be best.</div>
 </div>
 
 <div class="slide" data-slide-id="S12">
-  <h2>Definition &mdash; Span &amp; Range</h2>
+  <h2>Recall: Span and Range</h2>
   <div class="divider"></div>
-  <p><strong>Recall.</strong> Span = all linear combinations of given vectors</p>
-  <div class="card">
-    <h3>Definition (range / column space).</h3>
-    <div class="math-block" style="margin:8px 0">$$\operatorname{range}(A) = \Big\{ \textstyle\sum_{i=1}^{n} \alpha_i\, a_i \;:\; \alpha_i \in \mathbb{R} \Big\} \subseteq \mathbb{R}^m$$</div>
+  <p>$A = [\,a_1 \; \cdots \; a_n\,] \in \mathbb{R}^{m\times n}$ has columns $a_j \in \mathbb{R}^m$; input $x \in \mathbb{R}^n$:</p>
+  <div class="math-block o1a-mb">$$Ax = x_1 a_1 + x_2 a_2 + \cdots + x_n a_n \;\in \mathbb{R}^m$$</div>
+  <div class="card o1a-def">
+    <p><strong>Range</strong> (column space): everything $A$ can output</p>
+    <div class="math-block">$$\operatorname{range}(A) = \{ Ax : x \in \mathbb{R}^n \} = \operatorname{span}\{a_1, \dots, a_n\} \subseteq \mathbb{R}^m$$</div>
   </div>
-  <p class="muted">Everything $A$ can output &mdash; a subspace of $\mathbb{R}^m$</p>
+  <div class="cols o1a-cols">
+    <div class="o1-fig" style="max-width:300px;">
+      <!-- exact: origin (50,180), 45 px per unit. a1 = (2,1) -> (140,135); a2 = (1,2) -> (95,90);
+           x = (1,1): Ax = a1 + a2 = (3,3) -> (185,45). -->
+      <svg viewBox="0 0 300 210">
+        <line x1="20" y1="180" x2="280" y2="180" stroke="#ddd" stroke-width="2"/>
+        <line x1="50" y1="205" x2="50" y2="10" stroke="#ddd" stroke-width="2"/>
+        <line x1="140" y1="135" x2="185" y2="45" stroke="#9aa4af" stroke-width="2.5" stroke-dasharray="7 5"/>
+        <line x1="95" y1="90" x2="185" y2="45" stroke="#9aa4af" stroke-width="2.5" stroke-dasharray="7 5"/>
+        <line x1="50" y1="180" x2="132" y2="139" stroke="#003876" stroke-width="4"/>
+        <polygon points="140,135 125,134 131,146" fill="#003876"/>
+        <line x1="50" y1="180" x2="91" y2="98" stroke="#003876" stroke-width="4"/>
+        <polygon points="95,90 84,100 96,105" fill="#003876"/>
+        <line x1="50" y1="180" x2="179" y2="51" stroke="#a06a10" stroke-width="4"/>
+        <polygon points="185,45 170,51 179,60" fill="#a06a10"/>
+      </svg>
+      <span class="fl fl-blue" style="left:57%;top:73%">$a_1$</span>
+      <span class="fl fl-blue" style="left:22%;top:40%">$a_2$</span>
+      <span class="fl fl-amber fl-l" style="left:65%;top:18%">$a_1 + a_2$</span>
+    </div>
+    <div>
+      <p>Example: $x = (1,1)$ gives $Ax = a_1 + a_2$</p>
+      <p class="muted">Span = all linear combinations; the range is a subspace of the output space $\mathbb{R}^m$</p>
+    </div>
+  </div>
+  <div class="cite">Deisenroth, Faisal &amp; Ong, <em>Mathematics for Machine Learning</em> (CUP 2020), &sect;2.7.3, eq. (2.124). Figure: our illustration with $m = n = 2$.</div>
 </div>
 
 <div class="slide" data-slide-id="S14">
-  <h2>Definition &mdash; Rank</h2>
+  <h2>Rank Counts Independent Directions</h2>
   <div class="divider"></div>
-  <p><strong>Recall.</strong> Dimension of a subspace = size of a basis = max independent vectors</p>
-  <div class="card">
-    <h3>Definition (rank).</h3>
-    <div class="math-block" style="margin:8px 0">$$\operatorname{rank}(A) = \dim\big( \operatorname{range}(A) \big)$$</div>
+  <p><strong>Definition.</strong> $\operatorname{rank}(A) = \dim \operatorname{range}(A)$: the size of any basis of the range</p>
+  <div class="o1-fig" style="max-width:860px;margin:8px auto 4px;">
+    <!-- schematic block shapes: A (m x n) = U (m x r) times C (r x n); widths not to scale -->
+    <svg viewBox="0 0 760 220">
+      <rect x="40"  y="20" width="240" height="160" fill="#eef1f5" stroke="#555" stroke-width="2.5"/>
+      <rect x="370" y="20" width="56"  height="160" fill="#dce6f2" stroke="#003876" stroke-width="3"/>
+      <rect x="460" y="20" width="240" height="56"  fill="#fbefd9" stroke="#a06a10" stroke-width="3"/>
+    </svg>
+    <span class="fl fl-big" style="left:21.1%;top:45.5%">$A$</span>
+    <span class="fl fl-sub fl-grey" style="left:21.1%;top:93%">$m \times n$</span>
+    <span class="fl fl-big" style="left:42.1%;top:45.5%">$=$</span>
+    <span class="fl fl-big fl-blue" style="left:52.4%;top:45.5%">$U$</span>
+    <span class="fl fl-sub fl-blue" style="left:52.4%;top:93%">$m \times r$</span>
+    <span class="fl fl-big fl-amber" style="left:76.3%;top:22.3%">$C$</span>
+    <span class="fl fl-sub fl-amber" style="left:76.3%;top:47%">$r \times n$</span>
   </div>
-  <p class="muted">Fact (stated): row space has the <strong>same</strong> dimension &mdash; row rank = column rank</p>
+  <p>Columns of $U$: a basis $u_1, \dots, u_r$ of the range &nbsp;&middot;&nbsp; $C$: each column's coordinates</p>
+  <p class="muted">Not nonzero entries, not columns: $\left[\begin{smallmatrix}1 &amp; 1\\ 2 &amp; 2\end{smallmatrix}\right]$ has 4 and 2, yet rank 1</p>
+  <div class="cite">Definition: Deisenroth, Faisal &amp; Ong, <em>MML</em> (CUP 2020), &sect;2.7.3 (rk$(A)=\dim \operatorname{Im}$). Factorization $A = UC$: our derivation (see note). Block sizes schematic.</div>
 </div>
 
 <div class="slide" data-slide-id="S13">
-  <h2>Worked &mdash; a Collapsing Matrix</h2>
+  <h2>Two Inputs Collapse to One Direction</h2>
   <div class="divider"></div>
-  <div class="cols">
-    <div>
-      <div class="math-block" style="margin:8px 0">$$C = \begin{bmatrix} 1 &amp; 1 \\ 2 &amp; 2 \end{bmatrix},
-        \quad a_1 = a_2 = \begin{bmatrix} 1 \\ 2 \end{bmatrix}$$</div>
-      <ul>
-        <li>Both columns on <strong>one line</strong></li>
-        <li>$\operatorname{range}(C) = \operatorname{span}\{(1,2)\}$</li>
-        <li>All outputs collapse onto that line</li>
-      </ul>
-    </div>
-    <div class="o1-fig" style="max-width:440px;">
-      <svg viewBox="0 0 440 340">
-        <line x1="20" y1="280" x2="420" y2="280" stroke="#ccc" stroke-width="2"/>
-        <line x1="60" y1="330" x2="60" y2="20"  stroke="#ccc" stroke-width="2"/>
-        <!-- span line through the origin, slope 2 (screen: down 2 per right 1) -->
-        <line x1="30" y1="340" x2="200" y2="0" stroke="#9fb4cc" stroke-width="2.5" stroke-dasharray="8 6"/>
-        <line x1="60" y1="280" x2="170" y2="60" stroke="#003876" stroke-width="4"/>
-        <polygon points="170,60 156,76 170,80" fill="#003876"/>
-      </svg>
-      <span class="fl fl-l fl-blue" style="left:42.5%;top:15.9%">$(1,2)$</span>
-      <span class="fl fl-sub fl-l fl-grey" style="left:49%;top:32.4%">$\operatorname{range}(C)$: a line</span>
-    </div>
+  <div class="math-block o1a-mb">$$C = \begin{bmatrix} 1 &amp; 1 \\ 2 &amp; 2 \end{bmatrix}: \qquad
+    Cx = x_1 \begin{bmatrix} 1 \\ 2 \end{bmatrix} + x_2 \begin{bmatrix} 1 \\ 2 \end{bmatrix} = (x_1 + x_2) \begin{bmatrix} 1 \\ 2 \end{bmatrix}$$</div>
+  <div class="o1-fig" style="max-width:860px;margin:4px auto 0;">
+    <!-- exact geometry. input panel: X = 170 + 70*x1, Y = 190 - 70*x2.
+         output panel: X = 700 + 45*y1, Y = 250 - 45*y2; range line = t*(1,2), t in [-0.5, 2.6].
+         C e1 = C e2 = (1,2) -> (745,160); C(1,1) = (2,4) -> (790,70). -->
+    <svg viewBox="0 0 1000 320">
+      <line x1="40"  y1="190" x2="330" y2="190" stroke="#ccc" stroke-width="2"/>
+      <line x1="170" y1="300" x2="170" y2="50"  stroke="#ccc" stroke-width="2"/>
+      <line x1="590" y1="250" x2="900" y2="250" stroke="#ccc" stroke-width="2"/>
+      <line x1="700" y1="310" x2="700" y2="10"  stroke="#ccc" stroke-width="2"/>
+      <line x1="677.5" y1="295" x2="817" y2="16" stroke="#9fb4cc" stroke-width="3" stroke-dasharray="9 7"/>
+      <line x1="380" y1="170" x2="555" y2="170" stroke="#555" stroke-width="3"/>
+      <polygon points="570,170 552,161 552,179" fill="#555"/>
+      <circle cx="240" cy="190" r="9" fill="#003876"/>
+      <circle cx="170" cy="120" r="9" fill="#003876"/>
+      <rect x="231" y="111" width="18" height="18" fill="#a06a10"/>
+      <circle cx="745" cy="160" r="10" fill="#003876"/>
+      <rect x="781" y="61" width="18" height="18" fill="#a06a10"/>
+    </svg>
+    <span class="fl fl-sub fl-grey" style="left:25%;top:7%">input plane</span>
+    <span class="fl fl-sub fl-grey" style="left:63%;top:7%">output plane</span>
+    <span class="fl fl-blue" style="left:26.8%;top:68%">$e_1$</span>
+    <span class="fl fl-blue" style="left:13.8%;top:34%">$e_2$</span>
+    <span class="fl fl-l fl-amber" style="left:26.2%;top:30%">$(1,1)$</span>
+    <span class="fl" style="left:47.2%;top:43%">$C$</span>
+    <span class="fl fl-l fl-blue" style="left:77%;top:54%">$Ce_1 = Ce_2 = (1,2)$</span>
+    <span class="fl fl-l fl-amber" style="left:81.5%;top:23%">$C(1,1) = (2,4)$</span>
+    <span class="fl fl-sub fl-r fl-grey" style="left:66.5%;top:90%">$\operatorname{range}(C)$</span>
   </div>
+  <p>Every output lies on the line $\operatorname{span}\{(1,2)\}$, so $\operatorname{rank}(C) = 1$</p>
+  <div class="cite">Our worked example; the plotted points are exact images under $C$.</div>
 </div>
 
 <div class="slide" data-slide-id="S16">
-  <h2>Definition &mdash; Null Space</h2>
+  <h2>Null Space Means Lost Directions</h2>
   <div class="divider"></div>
-  <div class="card">
-    <h3>Definition (null space).</h3>
-    <div class="math-block" style="margin:8px 0">$$\operatorname{null}(A) = \{ x \in \mathbb{R}^{n} : Ax = 0 \}$$</div>
+  <p><strong>Definition.</strong> $\operatorname{null}(A) = \{ x \in \mathbb{R}^n : Ax = 0 \}$: the inputs sent to zero</p>
+  <p>For $C$: $Cx = (x_1 + x_2)(1,2)$ vanishes exactly when $x_1 + x_2 = 0$</p>
+  <div class="o1-fig" style="max-width:900px;margin:4px auto 0;">
+    <!-- exact geometry, same transforms as the collapse slide.
+         input: X = 170 + 70*x1, Y = 190 - 70*x2; null line t*(1,-1), t in [-1.7, 1.6].
+         e2 -> e1 arrow is the vector (1,-1). output: origin (700,250), range line dashed. -->
+    <svg viewBox="0 0 1000 320">
+      <line x1="40"  y1="190" x2="330" y2="190" stroke="#ccc" stroke-width="2"/>
+      <line x1="170" y1="300" x2="170" y2="50"  stroke="#ccc" stroke-width="2"/>
+      <line x1="590" y1="250" x2="900" y2="250" stroke="#ccc" stroke-width="2"/>
+      <line x1="700" y1="310" x2="700" y2="10"  stroke="#ccc" stroke-width="2"/>
+      <line x1="51" y1="71" x2="282" y2="302" stroke="#c0392b" stroke-width="4"/>
+      <line x1="677.5" y1="295" x2="817" y2="16" stroke="#9fb4cc" stroke-width="3" stroke-dasharray="9 7"/>
+      <line x1="170" y1="120" x2="229" y2="179" stroke="#c0392b" stroke-width="3" stroke-dasharray="6 5"/>
+      <polygon points="240,190 223,183 233,173" fill="#c0392b"/>
+      <circle cx="240" cy="190" r="9" fill="#003876"/>
+      <circle cx="170" cy="120" r="9" fill="#003876"/>
+      <line x1="380" y1="170" x2="555" y2="170" stroke="#555" stroke-width="3"/>
+      <polygon points="570,170 552,161 552,179" fill="#555"/>
+      <circle cx="700" cy="250" r="10" fill="#c0392b"/>
+      <circle cx="745" cy="160" r="10" fill="#003876"/>
+    </svg>
+    <span class="fl fl-sub fl-grey" style="left:25%;top:7%">input plane</span>
+    <span class="fl fl-sub fl-grey" style="left:63%;top:7%">output plane</span>
+    <span class="fl fl-l fl-red" style="left:4%;top:16%">$\operatorname{null}(C)$</span>
+    <span class="fl fl-blue" style="left:26.8%;top:68%">$e_1$</span>
+    <span class="fl fl-blue" style="left:13.8%;top:34%">$e_2$</span>
+    <span class="fl fl-sub fl-l fl-red" style="left:21.5%;top:41%">$e_1 - e_2 = (1,-1)$</span>
+    <span class="fl" style="left:47.2%;top:43%">$C$</span>
+    <span class="fl fl-l fl-red" style="left:72%;top:89%">$C(1,-1) = 0$</span>
+    <span class="fl fl-l fl-blue" style="left:77%;top:54%">$Ce_1 = Ce_2$</span>
   </div>
-  <ul>
-    <li>The inputs $A$ <strong>destroys</strong></li>
-    <li>Lives in the <em>input</em> space $\mathbb{R}^n$; range lives in $\mathbb{R}^m$</li>
-  </ul>
+  <p class="muted">$\operatorname{null}(C) = \operatorname{span}\{(1,-1)\}$: an <strong>input</strong> direction in $\mathbb{R}^n$, not an output</p>
+  <div class="cite">Definition: Deisenroth, Faisal &amp; Ong, <em>MML</em> (CUP 2020), &sect;2.7.3, Def. 2.23. Example: our calculation.</div>
 </div>
 
 <div class="slide" data-slide-id="S18">
-  <h2>Theorem 1 &mdash; Rank&ndash;Nullity</h2>
+  <h2>Rank and Nullity Add Up</h2>
   <div class="divider"></div>
-  <div class="card">
-    <h3>Theorem 1 (rank&ndash;nullity).</h3>
-    <p>For $A \in \mathbb{R}^{m\times n}$ ($n$ = number of columns):</p>
-    <div class="math-block" style="margin:8px 0">$$\operatorname{rank}(A) + \dim\big( \operatorname{null}(A) \big) = n$$</div>
+  <div class="card o1a-def">
+    <p><strong>Theorem (rank&ndash;nullity).</strong> For every $A \in \mathbb{R}^{m\times n}$, square or not:</p>
+    <div class="math-block">$$\operatorname{rank}(A) + \dim \operatorname{null}(A) = n \quad (\text{number of columns})$$</div>
   </div>
-  <p>Every input dimension either <strong>survives</strong> (rank) or <strong>dies</strong> (nullity)</p>
-  <p class="muted">Stated, not proved (as in source) &mdash; it powers Theorem 8, Step 1</p>
+  <div class="o1-fig" style="max-width:860px;margin:6px auto 0;">
+    <!-- schematic: n input dimensions split into rank (kept) and nullity (sent to 0); widths illustrative -->
+    <svg viewBox="0 0 860 130">
+      <rect x="20"  y="14" width="500" height="56" fill="#dce6f2" stroke="#003876" stroke-width="3"/>
+      <rect x="520" y="14" width="320" height="56" fill="#f6dcd8" stroke="#c0392b" stroke-width="3" stroke-dasharray="10 6"/>
+      <path d="M20,84 v12 h820 v-12" fill="none" stroke="#555" stroke-width="2"/>
+    </svg>
+    <span class="fl fl-blue" style="left:31.4%;top:32.3%">$\operatorname{rank}(A)$: kept</span>
+    <span class="fl fl-red" style="left:79%;top:32.3%">$\dim \operatorname{null}(A)$: lost</span>
+    <span class="fl fl-sub fl-grey" style="left:50%;top:91%">all $n$ input dimensions</span>
+  </div>
+  <p>Check on $C$: rank $1$ + nullity $1$ = $2$ columns</p>
+  <p>Wide $A \in \mathbb{R}^{2\times 3}$: rank $\le 2$, so a null direction always exists</p>
+  <p class="muted">Used later: $\operatorname{rank}(B) \le k$ forces $\dim \operatorname{null}(B) \ge n - k$</p>
+  <div class="cite">Deisenroth, Faisal &amp; Ong, <em>MML</em> (CUP 2020), &sect;2.7.3, Theorem 2.24 (for the map $x \mapsto Ax$). Proof in the note. Bar widths schematic.</div>
 </div>
 
 <!-- ===== REGION P1a END ===== -->
@@ -212,120 +329,232 @@
 </div>
 
 <div class="slide" data-slide-id="S27">
-  <h2>Definition &mdash; Norm</h2>
+  <h2>What Makes a Norm?</h2>
   <div class="divider"></div>
-  <div class="card">
-    <h3>Definition (norm on $\mathbb{R}^n$).</h3>
-    <p>$\|\cdot\| : \mathbb{R}^n \to [0,\infty)$ with, for all $x, y \in \mathbb{R}^n$, $\alpha \in \mathbb{R}$:</p>
-    <div class="math-block" style="margin:8px 0">$$\|x+y\| \leq \|x\| + \|y\|, \qquad
-      \|\alpha x\| = |\alpha| \|x\|, \qquad
-      \|x\| = 0 \iff x = 0$$</div>
+  <div class="card o1a-def">
+    <p><strong>Definition.</strong> A norm is $\|\cdot\| : \mathbb{R}^n \to [0, \infty)$ with, for all $x, y \in \mathbb{R}^n$ and $\alpha \in \mathbb{R}$:</p>
+    <div class="math-block">$$\|x\| = 0 \iff x = 0, \qquad \|\alpha x\| = |\alpha|\, \|x\|, \qquad \|x + y\| \le \|x\| + \|y\|$$</div>
   </div>
-  <p class="muted">Triangle inequality &middot; absolute homogeneity &middot; definiteness</p>
+  <div class="cols o1a-cols">
+    <div class="o1-fig" style="max-width:470px;">
+      <!-- schematic triangle: x from (40,170) to (300,130); y from (300,130) to (420,40); x+y from (40,170) to (420,40) -->
+      <svg viewBox="0 0 470 200">
+        <line x1="40" y1="170" x2="290" y2="131.5" stroke="#003876" stroke-width="4"/>
+        <polygon points="300,130 285,124 288,140" fill="#003876"/>
+        <line x1="300" y1="130" x2="413" y2="45.3" stroke="#003876" stroke-width="4"/>
+        <polygon points="420,40 404,43 414,56" fill="#003876"/>
+        <line x1="40" y1="170" x2="409" y2="43.8" stroke="#a06a10" stroke-width="4" stroke-dasharray="11 7"/>
+        <polygon points="420,40 403,38 408,53" fill="#a06a10"/>
+        <circle cx="40" cy="170" r="6" fill="#555"/>
+      </svg>
+      <span class="fl fl-blue" style="left:36%;top:92%">$x$</span>
+      <span class="fl fl-blue" style="left:84%;top:58%">$y$</span>
+      <span class="fl fl-amber" style="left:38%;top:30%">$x + y$</span>
+    </div>
+    <div>
+      <p>Zero only at zero &middot; scaling by $|\alpha|$, sign ignored</p>
+      <p>Triangle: the direct route is never longer than the detour</p>
+    </div>
+  </div>
+  <div class="cite">Deisenroth, Faisal &amp; Ong, <em>Mathematics for Machine Learning</em> (CUP 2020), &sect;3.1, Definition 3.1. Triangle sketch schematic.</div>
 </div>
 
 <div class="slide" data-slide-id="S28">
-  <h2>The $\ell_p$ Family</h2>
+  <h2>Three Familiar Vector Norms</h2>
   <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$\|x\|_2 = \sqrt{x^{\top}x} = \sqrt{x_1^2 + \cdots + x_n^2},
-    \qquad
-    \|x\|_p = \Big( |x_1|^p + \cdots + |x_n|^p \Big)^{1/p}$$</div>
-  <ul>
-    <li>$p \geq 1$ required &mdash; <em>below 1 the triangle inequality fails</em></li>
-    <li>Limit case: $\|x\|_{\infty} = \max_i |x_i|$</li>
-  </ul>
+  <p>For a coordinate vector $x = (x_1, \dots, x_n) \in \mathbb{R}^n$:</p>
+  <div class="grid-3 o1a-g3">
+    <div class="card o1a-nc">
+      <h3>$\ell_1$: absolute sum</h3>
+      <div class="math-block">$$\|x\|_1 = \sum_{i=1}^n |x_i|$$</div>
+      <p>walk along the axes</p>
+    </div>
+    <div class="card o1a-nc">
+      <h3>$\ell_2$: Euclidean</h3>
+      <div class="math-block">$$\|x\|_2 = \Big(\sum_{i=1}^n x_i^2\Big)^{1/2}$$</div>
+      <p>straight-line length</p>
+    </div>
+    <div class="card o1a-nc">
+      <h3>$\ell_\infty$: max</h3>
+      <div class="math-block">$$\|x\|_\infty = \max_{i} |x_i|$$</div>
+      <p>largest single coordinate</p>
+    </div>
+  </div>
+  <p class="muted">Only $\ell_2$ is length: $x = (1,1)$ has $\|x\|_1 = 2$ but $\|x\|_2 = \sqrt{2}$</p>
+  <div class="cite">$\ell_1$, $\ell_2$: Deisenroth, Faisal &amp; Ong, <em>MML</em> (CUP 2020), &sect;3.1, Examples 3.1&ndash;3.2. $\ell_\infty$: standard definition (not in the cited text).</div>
 </div>
 
 <div class="slide" data-slide-id="S29">
-  <h2>Worked &mdash; One Vector, Three Norms</h2>
+  <h2>One Vector, Three Answers: 7, 5, 4</h2>
   <div class="divider"></div>
-  <p>Take $x = (3, 4)$:</p>
-  <div class="math-block" style="margin:8px 0">$$\|x\|_1 = 3 + 4 = 7, \qquad
-    \|x\|_2 = \sqrt{9 + 16} = 5, \qquad
-    \|x\|_{\infty} = 4$$</div>
-  <ul>
-    <li>Always ordered: $\|x\|_{\infty} \leq \|x\|_2 \leq \|x\|_1$</li>
-    <li>Same vector, three sizes &mdash; the <strong>norm is a choice</strong></li>
-  </ul>
+  <div class="cols o1a-cols">
+    <div>
+      <p>Take $x = (3, 4)$:</p>
+      <div class="math-block o1a-mb o1a-left">$$\begin{aligned}
+        \|x\|_1 &amp;= |3| + |4| = 7 \\
+        \|x\|_2 &amp;= \sqrt{3^2 + 4^2} = 5 \\
+        \|x\|_\infty &amp;= \max(|3|, |4|) = 4
+      \end{aligned}$$</div>
+      <p>Same vector; the norm decides the size</p>
+      <p class="muted">Always $\|x\|_\infty \le \|x\|_2 \le \|x\|_1$</p>
+    </div>
+    <div class="o1-fig" style="max-width:440px;">
+      <!-- exact: origin (60,300), 55 px per unit; x=(3,4) -> (225,80).
+           l1 = axis walk (60,300)->(225,300)->(225,80); l2 = diagonal; linf = bracket on the length-4 leg. -->
+      <svg viewBox="0 0 440 350">
+        <line x1="40" y1="300" x2="300" y2="300" stroke="#ccc" stroke-width="2"/>
+        <line x1="60" y1="320" x2="60" y2="50" stroke="#ccc" stroke-width="2"/>
+        <polyline points="60,300 225,300 225,80" fill="none" stroke="#a06a10" stroke-width="5" stroke-dasharray="12 7"/>
+        <line x1="60" y1="300" x2="225" y2="80" stroke="#003876" stroke-width="5"/>
+        <path d="M245,300 h12 v-220 h-12" fill="none" stroke="#c0392b" stroke-width="3.5"/>
+        <circle cx="225" cy="80" r="8" fill="#003876"/>
+      </svg>
+      <span class="fl" style="left:51%;top:15%">$x = (3,4)$</span>
+      <span class="fl fl-blue fl-r" style="left:29%;top:51%">$\ell_2$: $5$</span>
+      <span class="fl fl-amber" style="left:32%;top:93%">$\ell_1$: $3 + 4$</span>
+      <span class="fl fl-red fl-l" style="left:61%;top:54%">$\ell_\infty$: $4$</span>
+    </div>
+  </div>
+  <div class="cite">Our worked example; figure drawn to scale.</div>
 </div>
 
 <div class="slide" data-slide-id="S30">
-  <h2>Unit Balls &mdash; the Norms as Shapes</h2>
+  <h2>Unit Balls Reveal the Metric</h2>
   <div class="divider"></div>
+  <p>Unit ball $\{x : \|x\| \le 1\}$: every vector the norm calls &ldquo;at most 1&rdquo;</p>
   <div class="o1-fig" style="max-width:1020px;margin:6px auto;">
+    <!-- exact: 95 px per unit, panel origins (170,145), (510,145), (850,145).
+         marked boundary points: (1,0) for l1; (1/sqrt2, 1/sqrt2) -> (577.2,77.8) for l2; (1,1) -> (945,50) for linf. -->
     <svg viewBox="0 0 1020 320">
-      <!-- l1 diamond -->
       <line x1="40"  y1="145" x2="300" y2="145" stroke="#ddd" stroke-width="2"/>
       <line x1="170" y1="20"  x2="170" y2="270" stroke="#ddd" stroke-width="2"/>
       <polygon points="170,50 265,145 170,240 75,145" fill="#dce6f2" fill-opacity="0.7" stroke="#003876" stroke-width="3"/>
-      <!-- l2 circle -->
       <line x1="380" y1="145" x2="640" y2="145" stroke="#ddd" stroke-width="2"/>
       <line x1="510" y1="20"  x2="510" y2="270" stroke="#ddd" stroke-width="2"/>
       <circle cx="510" cy="145" r="95" fill="#dce6f2" fill-opacity="0.7" stroke="#003876" stroke-width="3"/>
-      <!-- l-inf square -->
       <line x1="720" y1="145" x2="980" y2="145" stroke="#ddd" stroke-width="2"/>
       <line x1="850" y1="20"  x2="850" y2="270" stroke="#ddd" stroke-width="2"/>
       <rect x="755" y="50" width="190" height="190" fill="#dce6f2" fill-opacity="0.7" stroke="#003876" stroke-width="3"/>
+      <circle cx="265" cy="145" r="7" fill="#a06a10"/>
+      <circle cx="577.2" cy="77.8" r="7" fill="#a06a10"/>
+      <circle cx="945" cy="50" r="7" fill="#a06a10"/>
     </svg>
+    <span class="fl fl-sub fl-amber" style="left:28.4%;top:54%">$(1,0)$</span>
+    <span class="fl fl-sub fl-amber fl-l" style="left:57.8%;top:18%">$\big(\tfrac{1}{\sqrt 2}, \tfrac{1}{\sqrt 2}\big)$</span>
+    <span class="fl fl-sub fl-amber" style="left:92.6%;top:8.5%">$(1,1)$</span>
     <span class="fl" style="left:16.7%;top:91.9%">$\ell_1$: diamond</span>
     <span class="fl" style="left:50.0%;top:91.9%">$\ell_2$: circle</span>
     <span class="fl" style="left:83.3%;top:91.9%">$\ell_\infty$: square</span>
   </div>
-  <p class="muted">$\ell_1$'s corners sit on the axes &mdash; corners will mean <strong>sparsity</strong> (&sect;06, nuclear norm)</p>
+  <p class="muted">Marked points: norm exactly 1 &nbsp;&middot;&nbsp; diamond $\subset$ circle $\subset$ square</p>
+  <div class="cite">Our illustration, drawn to scale. Unit-ball shapes: standard; nesting from $\|x\|_\infty \le \|x\|_2 \le \|x\|_1$ (proof in the note).</div>
 </div>
 
 <div class="slide" data-slide-id="S31">
-  <h2>Definition &mdash; Orthogonal Matrix</h2>
+  <h2>Orthogonal Maps Preserve Geometry</h2>
   <div class="divider"></div>
-  <div class="card">
-    <h3>Definition (orthogonal matrix).</h3>
-    <p>$U \in \mathbb{R}^{n\times n}$ is orthogonal if any (hence all) of:</p>
-    <div class="math-block" style="margin:8px 0">$$U^{\top}U = I \quad\iff\quad UU^{\top} = I$$</div>
-    <div class="math-block" style="margin:8px 0">$$\iff\quad \text{columns orthonormal} \quad\iff\quad \text{rows orthonormal}$$</div>
+  <div class="cols o1a-cols">
+    <div>
+      <div class="card o1a-def">
+        <p><strong>Orthogonal:</strong> square $Q \in \mathbb{R}^{n\times n}$ with</p>
+        <div class="math-block">$$Q^\top Q = I = Q Q^\top$$</div>
+        <p>Columns orthonormal; $Q^{-1} = Q^\top$</p>
+      </div>
+      <p>Rotations turn vectors; the length stays 1</p>
+      <p class="muted">Tall $W = [e_1 \; e_2] \in \mathbb{R}^{3\times 2}$: $W^\top W = I_2$ but $W W^\top \ne I_3$, so not orthogonal</p>
+    </div>
+    <div class="o1-fig" style="max-width:400px;">
+      <!-- exact: origin (170,160), 120 px per unit. Q = (1/sqrt2)[[1,-1],[1,1]] (rotation by 45 deg).
+           e1 -> (290,160); Qe1 = (1/sqrt2, 1/sqrt2) -> (254.85,75.15). -->
+      <svg viewBox="0 0 340 320">
+        <line x1="30" y1="160" x2="310" y2="160" stroke="#ddd" stroke-width="2"/>
+        <line x1="170" y1="20" x2="170" y2="300" stroke="#ddd" stroke-width="2"/>
+        <circle cx="170" cy="160" r="120" fill="none" stroke="#9aa4af" stroke-width="2.5" stroke-dasharray="8 6"/>
+        <line x1="170" y1="160" x2="280" y2="160" stroke="#003876" stroke-width="5"/>
+        <polygon points="290,160 274,151 274,169" fill="#003876"/>
+        <line x1="170" y1="160" x2="247.8" y2="82.2" stroke="#a06a10" stroke-width="5"/>
+        <polygon points="254.85,75.15 236.5,80.8 249.2,93.5" fill="#a06a10"/>
+        <path d="M215,160 A45,45 0 0 0 201.8,128.2" fill="none" stroke="#555" stroke-width="2.5"/>
+      </svg>
+      <span class="fl fl-blue" style="left:85%;top:58%">$e_1$</span>
+      <span class="fl fl-amber" style="left:83%;top:19%">$Q e_1$</span>
+      <span class="fl fl-sub" style="left:74%;top:44%">$45^\circ$</span>
+      <span class="fl fl-sub fl-grey" style="left:50%;top:97%">unit circle</span>
+    </div>
   </div>
-  <p class="muted">Square only &mdash; the thin SVD factors will <em>not</em> qualify (&sect;04)</p>
+  <div class="cite">Deisenroth, Faisal &amp; Ong, <em>MML</em> (CUP 2020), &sect;3.4, Definition 3.8. Figure: our illustration, to scale.</div>
 </div>
 
 <div class="slide" data-slide-id="S33">
-  <h2>Theorem 4 &mdash; Orthogonal Maps Preserve Length</h2>
+  <h2>Why Length Is Preserved</h2>
   <div class="divider"></div>
-  <div class="card">
-    <h3>Theorem 4 (orthogonal invariance).</h3>
-    <p>$U$ orthogonal $\Rightarrow$ for all $x \in \mathbb{R}^n$: &nbsp;$\|Ux\|_2 = \|x\|_2$</p>
+  <div class="card o1a-def">
+    <p><strong>Claim.</strong> Square $Q \in \mathbb{R}^{n\times n}$ with $Q^\top Q = I$. For every $x \in \mathbb{R}^n$: $\;\|Qx\|_2 = \|x\|_2$ (Euclidean norm)</p>
   </div>
-  <p><strong>Proof.</strong></p>
-  <div class="math-block" style="margin:8px 0">$$\|Ux\|_2^2 = (Ux)^{\top}(Ux) = x^{\top} U^{\top} U\, x
-    \;\stackrel{(U^{\top}U = I)}{=}\; x^{\top} x = \|x\|_2^2 \qquad \blacksquare$$</div>
-  <p class="muted">One line &mdash; the source states it, the proof is free</p>
+  <div class="math-block o1a-mb">$$\|Qx\|_2^2 = (Qx)^\top (Qx) = x^\top \underbrace{Q^\top Q}_{=\,I}\, x = x^\top x = \|x\|_2^2$$</div>
+  <p>Both sides are $\ge 0$; take square roots. $\blacksquare$</p>
+  <p>Same step with two vectors: $(Qx)^\top (Qy) = x^\top y$, so angles are kept</p>
+  <p class="muted">Only $\ell_2$ is protected: $\|Qe_1\|_1 = \sqrt{2} \ne 1 = \|e_1\|_1$ for the $45^\circ$ rotation</p>
+  <div class="cite">Deisenroth, Faisal &amp; Ong, <em>MML</em> (CUP 2020), &sect;3.4, Definition 3.8 and eqs. (3.31)&ndash;(3.32).</div>
 </div>
 
 <div class="slide" data-slide-id="S66">
-  <h2>Definition &mdash; Induced (Operator) Norm</h2>
+  <h2>Spectral Norm: Worst Stretch</h2>
   <div class="divider"></div>
-  <div class="card">
-    <h3>Definition.</h3>
-    <p>For $A \in \mathbb{R}^{m\times n}$ and $p \geq 1$:</p>
-    <div class="math-block" style="margin:8px 0">$$\|A\|_p \;=\; \max_{x \neq 0} \frac{\|Ax\|_p}{\|x\|_p}
-      \;=\; \max_{\|x\|_p = 1} \|Ax\|_p$$</div>
+  <div class="card o1a-def">
+    <p><strong>Definition.</strong> For a matrix $A \in \mathbb{R}^{m\times n}$:</p>
+    <div class="math-block">$$\|A\|_2 = \max_{x \in \mathbb{R}^n,\ \|x\|_2 = 1} \|Ax\|_2$$</div>
   </div>
-  <ul>
-    <li>Biggest amplification factor over all inputs</li>
-    <li>Scale-free: doubling $x$ doubles $Ax$, ratio unchanged</li>
-  </ul>
+  <div class="cols o1a-cols">
+    <div class="o1-fig" style="max-width:700px;flex:3;">
+      <!-- exact, running example A = [[3,0],[4,5]].
+           input: unit circle, centre (110,150), 60 px per unit (3x the output scale).
+           output: image ellipse X = 430 + 20*(3c), Y = 150 - 20*(4c + 5s), c = cos t, s = sin t.
+           worst input x* = (1,1)/sqrt2 -> (152.4,107.6); A x* -> (472.4,22.7); |A x*| = sqrt(45). -->
+      <svg viewBox="0 0 700 300">
+        <circle cx="110" cy="150" r="60" fill="#dce6f2" fill-opacity="0.7" stroke="#003876" stroke-width="3"/>
+        <line x1="110" y1="150" x2="152.4" y2="107.6" stroke="#003876" stroke-width="4"/>
+        <circle cx="152.4" cy="107.6" r="6" fill="#003876"/>
+        <line x1="200" y1="150" x2="330" y2="150" stroke="#555" stroke-width="3"/>
+        <polygon points="345,150 327,141 327,159" fill="#555"/>
+        <polyline points="490.0,70.0 489.8,61.6 489.1,53.9 488.0,46.8 486.4,40.6 484.4,35.2 482.0,30.7 479.1,27.1 476.0,24.4 472.4,22.7 468.6,22.0 464.4,22.2 460.0,23.4 455.4,25.6 450.5,28.7 445.5,32.7 440.4,37.6 435.2,43.4 430.0,50.0 424.8,57.4 419.6,65.4 414.5,74.1 409.5,83.4 404.6,93.2 400.0,103.4 395.6,114.0 391.4,124.8 387.6,135.9 384.0,147.0 380.9,158.2 378.0,169.3 375.6,180.2 373.6,191.0 372.0,201.4 370.9,211.4 370.2,221.0 370.0,230.0 370.2,238.4 370.9,246.1 372.0,253.2 373.6,259.4 375.6,264.8 378.0,269.3 380.9,272.9 384.0,275.6 387.6,277.3 391.4,278.0 395.6,277.8 400.0,276.6 404.6,274.4 409.5,271.3 414.5,267.3 419.6,262.4 424.8,256.6 430.0,250.0 435.2,242.6 440.4,234.6 445.5,225.9 450.5,216.6 455.4,206.8 460.0,196.6 464.4,186.0 468.6,175.2 472.4,164.1 476.0,153.0 479.1,141.8 482.0,130.7 484.4,119.8 486.4,109.0 488.0,98.6 489.1,88.6 489.8,79.0 490.0,70.0" fill="#dce6f2" fill-opacity="0.7" stroke="#003876" stroke-width="3"/>
+        <line x1="430" y1="150" x2="472.4" y2="22.7" stroke="#c0392b" stroke-width="4"/>
+        <circle cx="472.4" cy="22.7" r="6" fill="#c0392b"/>
+      </svg>
+      <span class="fl fl-blue" style="left:28%;top:30%">$x^\star$</span>
+      <span class="fl" style="left:38.6%;top:42%">$A$</span>
+      <span class="fl fl-sub fl-grey" style="left:15.7%;top:80%">unit circle (&times;3)</span>
+      <span class="fl fl-red fl-l" style="left:70.5%;top:9%">$A x^\star$: longest</span>
+      <span class="fl fl-sub fl-grey fl-l" style="left:72%;top:62%">image $\{Ax\}$</span>
+    </div>
+    <div>
+      <p>$\|A\|_2$: one number for the whole matrix</p>
+      <p class="muted">Not the vector $\|x\|_2$; not entrywise $\ell_2$ (that is Frobenius)</p>
+    </div>
+  </div>
+  <div class="cite">Deisenroth, Faisal &amp; Ong, <em>MML</em> (CUP 2020), &sect;4.6, Definition 4.23; Wilkinson, MATH3030, &sect;3.5.1, Definition 3.2 ($p = 2$). Figure: our running $A$, to scale.</div>
 </div>
 
 <div class="slide" data-slide-id="S72">
-  <h2>Definition &mdash; Frobenius Norm</h2>
+  <h2>Frobenius Norm: Total Energy</h2>
   <div class="divider"></div>
-  <div class="card">
-    <h3>Definition.</h3>
-    <div class="math-block" style="margin:8px 0">$$\|A\|_F \;=\; \sqrt{\sum_{i=1}^{m} \sum_{j=1}^{n} A_{ij}^2}
-      \;=\; \sqrt{\operatorname{tr}(A^{\top}A)}$$</div>
+  <div class="math-block o1a-mb">$$\|A\|_F = \Big(\sum_{i=1}^m \sum_{j=1}^n a_{ij}^2\Big)^{1/2}, \qquad
+    \|A - B\|_F^2 = \sum_{i,j} (a_{ij} - b_{ij})^2$$</div>
+  <div class="cols o1a-cols">
+    <div class="o1a-grid">
+      <div class="o1a-cell o1a-hi">$1.5^2 = 2.25$</div>
+      <div class="o1a-cell o1a-hi">$(-1.5)^2 = 2.25$</div>
+      <div class="o1a-cell o1a-lo">$(-0.5)^2 = 0.25$</div>
+      <div class="o1a-cell o1a-lo">$0.5^2 = 0.25$</div>
+    </div>
+    <div>
+      <p>Residual $A - B$ (opening example), squared</p>
+      <p>Sum $= 5$, so $\|A - B\|_F = \sqrt{5}$</p>
+      <p class="muted">Every entry counts, unweighted</p>
+      <p class="muted">Differs from spectral: $\|I_2\|_2 = 1$, $\|I_2\|_F = \sqrt{2}$</p>
+    </div>
   </div>
-  <ul>
-    <li>Flatten the matrix, take the $\ell_2$ norm of the $mn$ numbers</li>
-    <li>Total "energy" &mdash; every entry counts, not just the worst direction</li>
-  </ul>
+  <div class="cite">Wilkinson, MATH3030, &sect;3.5.1, Definition 3.1. Numbers: our calculation on the running example.</div>
 </div>
 
 <!-- ===== REGION P1b END ===== -->

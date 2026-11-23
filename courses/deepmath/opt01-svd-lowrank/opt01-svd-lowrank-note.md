@@ -1,48 +1,14 @@
 # Deep Learning Math 10: SVD and Low-Rank Approximation -- Notes
 
-**About this file.** This is the linear-text edition of the companion note for lecture 10 of Deep Learning Math, covering the singular value decomposition and low-rank approximation. It carries the full mathematical content of that note: every definition, theorem, proof, worked number and reference. Figures and tables have been replaced by prose descriptions placed where they occurred, matrices are written out entry by entry in text, and cross-references to the accompanying presentation have been removed. Section numbering matches the original note, so a reference such as "Section 7.4" points to the same material here. Nothing else is needed to read it.
+**About this file.** This is the text-only, screen-reader-friendly edition of the Lecture 10 companion note. It has one section per slide, in slide order, each headed by the slide number, title and slide ID in brackets; the HTML note `opt01-svd-lowrank-note.html` has the same sections. Every figure and table is described in words or linearized into lists, and all mathematics is written in LaTeX. Nothing else is needed to read it.
 
-**How to use it.** There is one section per baseline slide, in slide order, each headed by the slide number and baseline title. The former section and subsection numbers are kept in the subsection headings (a subsection split across slides is marked "continued"), so a reference such as "Section 7.4" still finds its material; the References list follows the last slide section.
+Companion to `opt01-svd-lowrank.html` (68 slides, 150 minutes). Audience: junior undergraduate AI majors who know matrix multiplication, the Euclidean inner product and the eigendecomposition of a symmetric matrix. Each section opens with a one-sentence message, then explains the slide well enough to teach it, then gives details (derivations, worked numbers, figure provenance) and sources.
 
-**Convention.** Throughout, $A \in \mathbb{R}^{m \times n}$ is a real matrix with $\operatorname{rank}(A) = r$. Its singular values are written $\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_{\min(m,n)} \geq 0$, with $\sigma_i = 0$ for $i > r$. Everything is stated over the real numbers; the complex case requires only the replacements "orthogonal" to "unitary" and transpose ${}^\top$ to conjugate transpose ${}^*$. A norm bar with no subscript, $\|\cdot\|$, means the Euclidean norm $\|\cdot\|_2$.
+**What the lecture does.** Five parts: why a low-rank matrix is useful (slides 3-9); two ways to measure the error of an approximation, the spectral and Frobenius norms (slides 10-18); reading an SVD as rotate, stretch, rotate (slides 19-40); the Eckart-Young-Mirsky theorem, which says the truncated SVD is the best rank-k approximation in both norms (slides 41-61); and reading every number off one worked matrix (slides 62-67).
 
-**The running example.** One $2 \times 2$ matrix recurs from Section 4.6 onward. It is called $A$ and has first row $(3, 0)$ and second row $(4, 5)$. A second, singular, matrix called $C$ has first row $(1, 1)$ and second row $(2, 2)$.
+**Conventions.** $A \in \mathbb{R}^{m \times n}$ is a real matrix of rank $r$, with singular values $\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_{\min(m,n)} \geq 0$ and $\sigma_i = 0$ for $i > r$. $Q$ denotes an orthogonal matrix, $A = U\Sigma V^\top$ the full SVD and $A = U_r \Sigma_r V_r^\top$ the compact one. $A_k = \sum_{i \leq k} \sigma_i u_i v_i^\top$ is the rank-$k$ truncated SVD and $B$ a competing matrix of rank at most $k$. $\|\cdot\|_2$ is the Euclidean vector norm or the spectral matrix norm; $\|\cdot\|_F$ is the Frobenius norm. Results are cited by name, not number. The running example is $A$ with first row $(3, 0)$ and second row $(4, 5)$.
 
-**Notation.**
-
-- $\operatorname{span}\{v_1, \dots, v_k\}$: the set of all linear combinations of $v_1, \dots, v_k$.
-- $\operatorname{range}(A) = \{Ax : x \in \mathbb{R}^n\} \subseteq \mathbb{R}^m$, the column space.
-- $\operatorname{null}(A) = \{x : Ax = 0\} \subseteq \mathbb{R}^n$, the null space or kernel.
-- $\operatorname{row}(A) = \operatorname{range}(A^\top) \subseteq \mathbb{R}^n$, the row space.
-- $\operatorname{rank}(A) = \dim \operatorname{range}(A)$.
-- $W^\perp$: the orthogonal complement of a subspace $W$.
-- $\langle x, y \rangle = x^\top y$; $\delta_{ij}$ is $1$ if $i = j$ and $0$ otherwise.
-- $\|x\|_p = (\sum_i |x_i|^p)^{1/p}$; $\|x\|_\infty = \max_i |x_i|$; $\|x\|_0 = \#\{i : x_i \neq 0\}$.
-- $\|A\|_2 = \sigma_1$ (spectral norm), $\|A\|_F = (\sum_{i,j} a_{ij}^2)^{1/2}$ (Frobenius norm), $\|A\|_* = \sum_i \sigma_i$ (nuclear norm).
-- $A^\dagger$: the Moore-Penrose pseudo-inverse.
-- $A_k = \sum_{i \leq k} \sigma_i u_i v_i^\top$: the rank-$k$ truncated SVD.
-- $U_c, \Sigma_c, V_c$: the thin (compact) SVD factors, of sizes $m \times r$, $r \times r$, $n \times r$.
-- $\operatorname{tr}(X)$: the trace; $\operatorname{diag}(\dots)$: the diagonal matrix with the listed entries.
-- $\succeq 0$ after a matrix: positive semidefinite.
-
-**Background used.** This is Lecture 10 (opt01), the first of the four optimization lectures: opt01, opt02, opt03, opt04 are lectures 10 through 13. From the probability half of the course: Jensen's inequality (Lecture 1, prob01), used once in Lemma 3.1; the eigendecomposition of a covariance matrix (Lecture 8, prob08), which is the symmetric positive-semidefinite special case of Section 4.5. Maximum likelihood and the minimum-mean-squared-error estimator (Lecture 7, prob07) and empirical risk minimization (Lecture 6, prob06) are the problems this half of the course solves. The only mathematical result imported without proof is the **spectral theorem** for real symmetric matrices (Section 4.1); two further results are cited rather than proved because their proofs are outside the lecture's scope (the convex-envelope theorem of Fazel, Theorem 6.3, and the exact-recovery theorem for matrix completion, Theorem 10).
-
-**What this edition adds.** Nothing mathematical: the content is that of the original companion note, which already proves everything the lecture states without proof. What is added is linearization. The two matrix displays that were laid out as grids, and the four-row table of fundamental subspaces in Section 4.4, are given as bullet lists. Small matrices that appeared inline as $2 \times 2$ arrays are written as "first row ..., second row ...". A tick mark used in the original to signal "this number was checked" is rendered as the word *checked* at the end of the sentence.
-
-**Contents.**
-
-1. Why the optimization half
-2. Background: subspaces, dimension, rank
-3. Norms and orthogonal matrices
-4. The singular value decomposition
-5. The Moore-Penrose pseudo-inverse
-6. Matrix norms
-7. Low-rank approximation: Eckart-Young-Mirsky
-8. Matrix completion and the nuclear-norm relaxation
-9. What the lecture leaves out
-10. References
-
-**Summary of what is proved here.** The linear-algebra background the lecture assumes -- that dimension is well defined, the dimension formula $\dim(W_1 + W_2) + \dim(W_1 \cap W_2) = \dim W_1 + \dim W_2$, and row rank $=$ column rank -- is proved from scratch in Section 2. Theorem 1 (rank-nullity), Theorem 2 (orthogonal decomposition, with uniqueness), Theorem 3 (the four fundamental subspaces) and Theorem 5 (existence of the SVD), all four of which the lecture states without proof, are proved in Sections 2 and 4. The $\ell_p$ norm axioms are verified through Young's, Holder's and Minkowski's inequalities in Section 3.2, with an explicit counterexample showing the triangle inequality fails for $p < 1$. The Moore-Penrose pseudo-inverse is shown well defined and characterized by Penrose's four equations in Section 5, together with the discontinuity of the map $A \mapsto A^\dagger$ that the clean $2 \times 2$ examples hide. The nuclear norm is *proved* to be a norm, via the variational identity $\|A\|_* = \max_{\|Z\|_2 \leq 1} \operatorname{tr}(Z^\top A)$, in Section 6.5. The Frobenius case of Eckart-Young-Mirsky -- the one real gap in the lecture, where the source gives only a sketch -- is proved in full in Section 7.4, via Courant-Fischer for singular values and Weyl's additive inequality, both proved first in Sections 7.2 and 7.4. Section 7.6 settles the uniqueness question: with $A = \operatorname{diag}(2,1)$ and $k = 1$, *every* $B = \operatorname{diag}(a, 0)$ with $a \in [1,3]$ is a spectral-norm minimizer, so the source's uniqueness claim is false as stated; in the Frobenius norm the minimizer is unique exactly when $\sigma_k > \sigma_{k+1}$. Every number in the lecture has been recomputed from scratch -- $A^\top A$ with rows $(25, 20)$ and $(20, 25)$, eigenvalues $45$ and $5$, singular values $3\sqrt5$ and $\sqrt5$, the pseudo-inverse $\tfrac{1}{15}$ times the matrix with rows $(5, 0)$ and $(-4, 3)$, $\|A\|_F = 5\sqrt2$, $\|A\|_* = 4\sqrt5$, the $90\%$ energy figure, the recommender toy example's count of $18$ against $20$ -- and all of them check out.
+**Extended edition.** The pre-2026-11 lecture (119 slides: pseudo-inverse, four fundamental subspaces, nuclear norm, matrix completion, and the full set of background proofs) is archived with the same slide IDs as `backup/opt01-svd-lowrank-full.html`, with notes `backup/opt01-svd-lowrank-full-note.html` and `backup/opt01-svd-lowrank-full-note.md`.
 
 <!-- REGION Opening BEGIN -->
 
@@ -307,7 +273,7 @@ Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge Univer
 
 **Message.** Every real matrix, of any shape and rank, factors as an orthogonal matrix times a nonnegative diagonal stretch times an orthogonal matrix.
 
-The theorem card states Theorem 5 for every $A \in \mathbb R^{m\times n}$ of rank $r$, with no assumption of squareness, symmetry or invertibility. The display reads $A = U\Sigma V^\top$ with $U \in \mathbb R^{m\times m}$ and $V \in \mathbb R^{n\times n}$ orthogonal. The last card line says $\Sigma \in \mathbb R^{m\times n}$ has $\Sigma_{ii} = \sigma_i$, zeros off the diagonal, $\sigma_1 \ge \dots \ge \sigma_r \gt 0$, and the remaining diagonal slots equal to $0$. A muted line under the card names the construction: eigenvectors of $A^\top A$ give $V$, then $u_i = Av_i/\sigma_i$.
+The theorem card states the SVD theorem for every $A \in \mathbb R^{m\times n}$ of rank $r$, with no assumption of squareness, symmetry or invertibility. The display reads $A = U\Sigma V^\top$ with $U \in \mathbb R^{m\times m}$ and $V \in \mathbb R^{n\times n}$ orthogonal. The last card line says $\Sigma \in \mathbb R^{m\times n}$ has $\Sigma_{ii} = \sigma_i$, zeros off the diagonal, $\sigma_1 \ge \dots \ge \sigma_r \gt 0$, and the remaining diagonal slots equal to $0$. A muted line under the card names the construction: eigenvectors of $A^\top A$ give $V$, then $u_i = Av_i/\sigma_i$.
 
 **Details.**
 
@@ -315,7 +281,7 @@ The theorem card states Theorem 5 for every $A \in \mathbb R^{m\times n}$ of ran
 
 **Uniqueness.** The singular values are unique. The vectors are unique up to sign when the $\sigma_i$ are distinct and positive; repeated values allow any orthonormal basis of the shared subspace. The full existence and uniqueness proof is kept in the archived full note.
 
-**Numbering.** This is Theorem 5 of the lecture; Theorems 6 and 7 below read the two norms off $\Sigma$.
+**Naming.** The deck cites its results by name, not number: the SVD theorem here, then the spectral-norm and Frobenius-norm identities read off $\Sigma$.
 
 **Sources.**
 
@@ -547,7 +513,7 @@ The first display splits $A$ into its two layers: $A_1 = \sigma_1 u_1 v_1^\top =
 
 **Arithmetic.** $\sigma_1 u_1 v_1^\top = 3\sqrt5 \cdot \frac{1}{\sqrt{10}}(1,3) \cdot \frac{1}{\sqrt2}(1,1)^\top = \frac{3}{2}\begin{bmatrix}1 & 1\\ 3 & 3\end{bmatrix}$, entries summing in squares to $\frac94(1+1+9+9) = 45$. $\sigma_2 u_2 v_2^\top = \sqrt5 \cdot \frac{1}{\sqrt{10}}(-3,1) \cdot \frac{1}{\sqrt2}(-1,1)^\top = \frac12\begin{bmatrix}3 & -3\\ -1 & 1\end{bmatrix}$, squared entries $\frac14(9+9+1+1) = 5$. The two layers add to $A$ entry by entry. $\|A\|_F^2 = 9 + 0 + 16 + 25 = 50$.
 
-**Why the energies add.** The layers are orthogonal in the Frobenius inner product because $u_1 \perp u_2$; Theorem 7 below states the general identity $\|A\|_F^2 = \sum_i \sigma_i^2$.
+**Why the energies add.** The layers are orthogonal in the Frobenius inner product because $u_1 \perp u_2$; The Frobenius-norm identity below states the general identity $\|A\|_F^2 = \sum_i \sigma_i^2$.
 
 **Forward pointer.** That $A_1$ is the best rank-one approximation, in both the spectral and Frobenius norms, is the Eckart-Young-Mirsky theorem, later in the lecture.
 
@@ -581,7 +547,7 @@ Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge Univer
 
 **Message.** The spectral norm, the largest stretch of any unit vector, equals the largest singular value $\sigma_1$; the proof needs an upper bound and a witness.
 
-The theorem card states Theorem 6 for every $A \in \mathbb R^{m\times n}$ with largest singular value $\sigma_1$: $\|A\|_2 = \max_{\|x\|_2 = 1}\|Ax\|_2 = \sigma_1$. Below, two columns name the proof tasks: 1, an upper bound $\|Ax\|_2 \le \sigma_1$ for every unit $x$; 2, a witness, one unit $x$ with $\|Ax\|_2 = \sigma_1$.
+The theorem card states the spectral-norm identity for every $A \in \mathbb R^{m\times n}$ with largest singular value $\sigma_1$: $\|A\|_2 = \max_{\|x\|_2 = 1}\|Ax\|_2 = \sigma_1$. Below, two columns name the proof tasks: 1, an upper bound $\|Ax\|_2 \le \sigma_1$ for every unit $x$; 2, a witness, one unit $x$ with $\|Ax\|_2 = \sigma_1$.
 
 **Details.**
 
@@ -593,7 +559,7 @@ The theorem card states Theorem 6 for every $A \in \mathbb R^{m\times n}$ with l
 
 **Sources.**
 
-Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6, Definition 4.23 and Theorem 4.24 (proof left as an exercise there). R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3.5-lowrank.html, Proposition 3.11.
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6, Definition 4.23 and Theorem 4.24 (proof left as an exercise there). R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html, Proposition 3.11.
 <!-- END S68 -->
 
 <!-- BEGIN S69 -->
@@ -613,7 +579,7 @@ The first line takes any unit $x \in \mathbb R^n$ and sets $y = V^\top x$, which
 
 **Sources.**
 
-Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6, Theorem 4.24 (exercise). R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3.5-lowrank.html, Proposition 3.11.
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6, Theorem 4.24 (exercise). R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html, Proposition 3.11.
 <!-- END S69 -->
 
 <!-- BEGIN S70 -->
@@ -633,7 +599,7 @@ The slide takes the unit witness $x = v_1$. The first display computes $Av_1 = U
 
 **Sources.**
 
-Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6, Theorem 4.24 (exercise). R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3.5-lowrank.html, Proposition 3.11.
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6, Theorem 4.24 (exercise). R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html, Proposition 3.11.
 <!-- END S70 -->
 
 <!-- BEGIN S73 -->
@@ -641,7 +607,7 @@ Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge Univer
 
 **Message.** The total energy $\|A\|_F^2$, the sum of all squared entries, equals the sum of all squared singular values.
 
-The theorem card states Theorem 7 for every $A \in \mathbb R^{m\times n}$ of rank $r$: $\|A\|_F^2 = \sum_{i,j} a_{ij}^2 = \sum_{i=1}^r \sigma_i^2$. A contrast line follows: $\|A\|_2 = \sigma_1$ measures the worst single direction while $\|A\|_F$ measures total energy. The muted line checks the worked example: $\|A\|_F^2 = 9 + 0 + 16 + 25 = 50 = 45 + 5$.
+The theorem card states the Frobenius-norm identity for every $A \in \mathbb R^{m\times n}$ of rank $r$: $\|A\|_F^2 = \sum_{i,j} a_{ij}^2 = \sum_{i=1}^r \sigma_i^2$. A contrast line follows: $\|A\|_2 = \sigma_1$ measures the worst single direction while $\|A\|_F$ measures total energy. The muted line checks the worked example: $\|A\|_F^2 = 9 + 0 + 16 + 25 = 50 = 45 + 5$.
 
 **Details.**
 
@@ -651,7 +617,7 @@ The theorem card states Theorem 7 for every $A \in \mathbb R^{m\times n}$ of ran
 
 **Sources.**
 
-R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3.5-lowrank.html, Proposition 3.10.
+R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html, Proposition 3.10.
 <!-- END S73 -->
 
 <!-- BEGIN S74 -->
@@ -671,7 +637,7 @@ The first line fixes orthogonal $Q$ and $W$ and a matrix $B$ with columns $b_j$.
 
 **Sources.**
 
-R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3.5-lowrank.html, Proposition 3.10 (proof via $\|U^\top A V\|_F = \|\Sigma\|_F$).
+R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html, Proposition 3.10 (proof via $\|U^\top A V\|_F = \|\Sigma\|_F$).
 <!-- END S74 -->
 
 <!-- REGION P2 END -->
@@ -875,7 +841,7 @@ The geometry is exact, not sketched. $S_1 = \{z = 0\}$, and $S_2 = \operatorname
 
 **Sources.**
 
-Figure computed for this deck (generator script `gen/o1c_planes.py`).
+Figure computed for this deck (generator script `figs/o1c_planes.py`).
 <!-- END S87 -->
 
 <!-- BEGIN S88 -->
@@ -1053,7 +1019,7 @@ Reading the chain end to end: every rank-$\leq k$ matrix has spectral error at l
 
 **Details.**
 
-The compact written proof is in the article for the spectral theorem (Section 7.3).
+The compact written proof is in section 45, which states the spectral theorem.
 
 **Sources.**
 
@@ -1273,8 +1239,8 @@ The closing slide shows the SVD as a sum of rank-one layers and opens questions.
 13. B. Recht, M. Fazel, and P. A. Parrilo. "Guaranteed minimum-rank solutions of linear matrix equations via nuclear norm minimization." *SIAM Review* 52(3):471-501, 2010. arXiv:0706.4138 -- https://arxiv.org/abs/0706.4138. Includes the semidefinite-program formulation quoted in Section 8.3.
 14. J.-F. Cai, E. J. Candes, and Z. Shen. "A singular value thresholding algorithm for matrix completion." *SIAM Journal on Optimization* 20(4):1956-1982, 2010. arXiv:0810.3286 -- https://arxiv.org/abs/0810.3286
 15. M. Hardt, R. Meka, P. Raghavendra, and B. Weitz. "Computational limits for matrix completion." *COLT* 2014. arXiv:1402.2331 -- https://arxiv.org/abs/1402.2331. The hardness statement of Theorem 9.
-16. R. D. Wilkinson. MATH3030 lecture notes, section 3.5, "Low-rank approximation." https://rich-d-wilkinson.github.io/MATH3030/3.5-lowrank.html. The proof reference cited in the source; the Frobenius case is proved independently in Section 7.4 above.
-17. Y. Koren, R. Bell, and C. Volinsky. "Matrix factorization techniques for recommender systems." *IEEE Computer* 42(8):30-37, 2009. doi:10.1109/MC.2009.263 -- https://doi.org/10.1109/MC.2009.263. By the Netflix Prize winners; the practical counterpart to Section 8.4.
+16. R. D. Wilkinson. MATH3030 lecture notes, section 3.5, "Low-rank approximation." https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html. The proof reference cited in the source; the Frobenius case is proved independently in Section 7.4 above.
+17. Y. Koren, R. Bell, and C. Volinsky. "Matrix factorization techniques for recommender systems." *IEEE Computer* 42(8):30-37, 2009. doi:10.1109/MC.2009.263 -- https://doi.org/10.1109/MC.2009.263. By the Netflix Prize winners; the practical counterpart to the matrix-completion slides of the extended edition (`backup/opt01-svd-lowrank-full.html`).
 18. E. J. Hu et al. "LoRA: Low-Rank Adaptation of Large Language Models." *ICLR* 2022. arXiv:2106.09685 -- https://arxiv.org/abs/2106.09685
 19. N. Halko, P. G. Martinsson, and J. A. Tropp. "Finding structure with randomness: probabilistic algorithms for constructing approximate matrix decompositions." *SIAM Review* 53(2):217-288, 2011. arXiv:0909.4061 -- https://arxiv.org/abs/0909.4061
-20. Companion notes in this series: prob01 through prob09 cover the probability half (lectures 1 through 9). Jensen's inequality, used in Lemma 3.1, is in prob01; the covariance eigendecomposition, the symmetric positive-semidefinite special case of Section 4.5, is in prob08. The notes opt02, opt03 and opt04 (lectures 11 through 13) cover regression, convexity, and stochastic gradient methods. Each lives at `../<name>/<name>-note.md` in this accessible edition, or `-note.html` in the original.
+20. Companion notes in this series: prob01 through prob09 cover the probability half (lectures 1 through 9); the covariance eigendecomposition, the symmetric positive-semidefinite special case of the SVD, is in prob08. The opt03 note covers gradient descent. The regression and SGD notes (opt02, opt04) are extended material, listed in `../backup/OUTLINE.md`. Each lives at `../<name>/<name>-note.md` in this accessible edition, or `-note.html` in the original.

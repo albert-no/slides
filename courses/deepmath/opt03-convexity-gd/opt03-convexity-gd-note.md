@@ -12,6 +12,8 @@ Companion to the slide deck `opt03-convexity-gd.html` (51 slides, 90 minutes). A
 
 <!-- REGION Opening BEGIN -->
 
+## Opening
+
 <!-- BEGIN S01 -->
 ### 1. Gradient Descent: Three Guarantees [S01]
 
@@ -36,6 +38,8 @@ Lecture 12 of Deep Learning Math (90 minutes). It studies one algorithm, gradien
 <!-- REGION Opening END -->
 
 <!-- REGION P4a BEGIN -->
+
+## Part 1: One Update
 
 <!-- BEGIN S79 -->
 ### 3. Part 1: One Update [S79]
@@ -164,6 +168,8 @@ Our calculation (illustrative example; evidence E08, E09).
 <!-- REGION P4a END -->
 
 <!-- REGION P4b BEGIN -->
+
+## Part 2: One Descent Inequality
 
 <!-- BEGIN S25 -->
 ### 10. Part 2: One Descent Inequality [S25]
@@ -329,6 +335,8 @@ Our calculation (illustrative example; evidence E09).
 
 <!-- REGION P4c BEGIN -->
 
+## Part 3: Nonconvex: Stationarity
+
 <!-- BEGIN S135 -->
 ### 19. Part 3: Nonconvex: Stationarity [S135]
 
@@ -460,6 +468,8 @@ Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Convergence of GD", https:/
 <!-- REGION P4c END -->
 
 <!-- REGION P4d BEGIN -->
+
+## Part 4: Convex: Optimality
 
 <!-- BEGIN S09 -->
 ### 26. Part 4: Convex: Optimality [S09]
@@ -743,6 +753,8 @@ The proof uses no co-coercivity, no PL condition and no two-sided sandwich of $\
 
 <!-- REGION P4e BEGIN -->
 
+## Part 5: Strongly Convex: Geometric Decay
+
 <!-- BEGIN S63 -->
 ### 38. Part 5: Strongly Convex: Geometric Decay [S63]
 
@@ -986,6 +998,8 @@ The guarantee is a worst case over all such functions; one example can do better
 
 <!-- REGION P4f BEGIN -->
 
+## Part 6: Three Guarantees
+
 <!-- BEGIN S130 -->
 ### 48. Part 6: Three Guarantees [S130]
 
@@ -1048,6 +1062,8 @@ The earlier version of this lecture proved the convex rate through co-coercivity
 
 <!-- REGION Closing BEGIN -->
 
+## Closing
+
 <!-- BEGIN S134 -->
 ### 51. Closing: One Update [S134]
 
@@ -1058,7 +1074,7 @@ The update is the same throughout the lecture: $x_{t+1} = x_t - \tfrac{1}{L}\nab
 
 <!-- REGION Closing END -->
 
-## 10 References
+## References
 
 Section numbers and the theorem, corollary and lemma numbers in the annotations below (Theorems 8 and 10, Corollary 6.3) refer to the extended edition's note, `backup/opt03-convexity-gd-full-note.md`.
 

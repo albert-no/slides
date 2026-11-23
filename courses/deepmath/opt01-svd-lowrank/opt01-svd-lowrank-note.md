@@ -12,6 +12,8 @@ The lecture has 68 sections and runs 150 minutes. Audience: junior undergraduate
 
 <!-- REGION Opening BEGIN -->
 
+## Opening
+
 <!-- BEGIN S01 -->
 ### 1. SVD and Best Low-Rank Approximation [S01]
 
@@ -35,6 +37,8 @@ Lecture 10 of Deep Learning Math (150 minutes). The lecture asks one question: g
 <!-- REGION Opening END -->
 
 <!-- REGION P1a BEGIN -->
+
+## Part 1: Why Low Rank?
 
 <!-- BEGIN S120 -->
 ### 3. Part 1: Why Low Rank? [S120]
@@ -126,6 +130,8 @@ Rank-nullity theorem: for every $A \in \mathbb{R}^{m\times n}$, square or rectan
 <!-- REGION P1a END -->
 
 <!-- REGION P1b BEGIN -->
+
+## Part 2: Measuring Error
 
 <!-- BEGIN S25 -->
 ### 10. Part 2: Measuring Error [S25]
@@ -241,6 +247,8 @@ Definition: $\|A\|_F = (\sum_{i=1}^m \sum_{j=1}^n a_{ij}^2)^{1/2}$, and for a re
 <!-- REGION P1b END -->
 
 <!-- REGION P2 BEGIN -->
+
+## Part 3: Reading an SVD
 
 <!-- BEGIN S35 -->
 ### 19. Part 3: Reading an SVD [S35]
@@ -651,6 +659,8 @@ R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1
 <!-- REGION P2 END -->
 
 <!-- REGION P3a BEGIN -->
+
+## Part 4: Best Low-Rank Approximation
 
 <!-- BEGIN S79 -->
 ### 41. Part 4: Best Low-Rank Approximation [S79]
@@ -1108,6 +1118,8 @@ R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [1
 
 <!-- REGION P3b BEGIN -->
 
+## Part 5: Read the Answer
+
 <!-- BEGIN S116 -->
 ### 62. Part 5: Read the Answer [S116]
 
@@ -1239,6 +1251,8 @@ M. P. Deisenroth, A. A. Faisal and C. S. Ong, *Mathematics for Machine Learning*
 
 <!-- REGION Closing BEGIN -->
 
+## Closing
+
 <!-- BEGIN S119 -->
 ### 68. Closing: $A = \sum_i \sigma_i u_i v_i^{\top}$ [S119]
 
@@ -1249,7 +1263,7 @@ The lecture closes on the SVD written as a sum of rank-one layers, $A = \sum_i \
 
 <!-- REGION Closing END -->
 
-## 10 References
+## References
 
 Theorem and section numbers in the annotations below (Theorem 5.1, Theorem 6.3) refer to the extended edition's note, `backup/opt01-svd-lowrank-full-note.md`.
 
@@ -1265,10 +1279,10 @@ Theorem and section numbers in the annotations below (Theorem 5.1, Theorem 6.3) 
 10. E. J. Candes and B. Recht. "Exact matrix completion via convex optimization." *Foundations of Computational Mathematics* 9:717-772, 2009. arXiv:0805.4471 -- https://arxiv.org/abs/0805.4471
 11. E. J. Candes and T. Tao. "The power of convex relaxation: near-optimal matrix completion." *IEEE Transactions on Information Theory* 56(5):2053-2080, 2010. arXiv:0903.1476 -- https://arxiv.org/abs/0903.1476
 12. M. Fazel. *Matrix Rank Minimization with Applications.* PhD thesis, Stanford University, 2002. The convex-envelope result, Theorem 6.3.
-13. B. Recht, M. Fazel, and P. A. Parrilo. "Guaranteed minimum-rank solutions of linear matrix equations via nuclear norm minimization." *SIAM Review* 52(3):471-501, 2010. arXiv:0706.4138 -- https://arxiv.org/abs/0706.4138. Includes the semidefinite-program formulation quoted in Section 8.3.
+13. B. Recht, M. Fazel, and P. A. Parrilo. "Guaranteed minimum-rank solutions of linear matrix equations via nuclear norm minimization." *SIAM Review* 52(3):471-501, 2010. arXiv:0706.4138 -- https://arxiv.org/abs/0706.4138. Includes the semidefinite-program formulation quoted in Section 8.3 of the extended-edition note (`backup/opt01-svd-lowrank-full-note.md`).
 14. J.-F. Cai, E. J. Candes, and Z. Shen. "A singular value thresholding algorithm for matrix completion." *SIAM Journal on Optimization* 20(4):1956-1982, 2010. arXiv:0810.3286 -- https://arxiv.org/abs/0810.3286
 15. M. Hardt, R. Meka, P. Raghavendra, and B. Weitz. "Computational limits for matrix completion." *COLT* 2014. arXiv:1402.2331 -- https://arxiv.org/abs/1402.2331. The hardness statement of Theorem 9.
-16. R. D. Wilkinson. MATH3030 lecture notes, section 3.5, "Low-rank approximation." https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html. The proof reference cited in the source; the Frobenius case is proved independently in Section 7.4 above.
+16. R. D. Wilkinson. MATH3030 lecture notes, section 3.5, "Low-rank approximation." https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html. The proof reference cited in the source; the Frobenius case is proved independently in section 60 above (Eckart-Young-Mirsky: Frobenius Error).
 17. Y. Koren, R. Bell, and C. Volinsky. "Matrix factorization techniques for recommender systems." *IEEE Computer* 42(8):30-37, 2009. doi:10.1109/MC.2009.263 -- https://doi.org/10.1109/MC.2009.263. By the Netflix Prize winners; the practical counterpart to the matrix-completion slides of the extended edition (`backup/opt01-svd-lowrank-full.html`).
 18. E. J. Hu et al. "LoRA: Low-Rank Adaptation of Large Language Models." *ICLR* 2022. arXiv:2106.09685 -- https://arxiv.org/abs/2106.09685
 19. N. Halko, P. G. Martinsson, and J. A. Tropp. "Finding structure with randomness: probabilistic algorithms for constructing approximate matrix decompositions." *SIAM Review* 53(2):217-288, 2011. arXiv:0909.4061 -- https://arxiv.org/abs/0909.4061

@@ -1,47 +1,14 @@
-# Deep Learning Math 12. Convexity, Smoothness and Gradient Descent
+# Deep Learning Math 12: Gradient Descent -- Three Guarantees -- Notes
 
-**About this file.** This is the accessible Markdown edition of the lecture note for Lecture 12 (opt03), written to be read linearly by a screen reader or a braille display. Every figure and every table of the original has been replaced by prose carrying the same information, every matrix is written out row by row, and all mathematics is in LaTeX. The section numbering matches the original note exactly, so a reference to "Section 6.2" means the same thing in both. Nothing else is needed to read it.
+**About this file.** This is the text-only, screen-reader-friendly edition of the Lecture 12 companion note. It has one section per slide, in slide order, each headed by the slide number, title and slide ID in brackets; the HTML note `opt03-convexity-gd-note.html` has the same sections. Every figure and table is described in words or linearized into lists, and all mathematics is written in LaTeX. Nothing else is needed to read it.
 
-**Convention.** $f:\mathbb{R}^n\to\mathbb{R}$ is differentiable unless stated otherwise; $\|\cdot\|$ is the Euclidean norm and $\langle\cdot,\cdot\rangle$ the standard inner product. The phrase "$L$-smooth" always means *the gradient $\nabla f$ is $L$-Lipschitz*, never "$f$ is $L$-Lipschitz"; these are different conditions and Section 3.1 separates them. $x^\star$ denotes a global minimizer and $f^\star = f(x^\star)$. For symmetric matrices, $P\succeq Q$ means $P-Q$ is positive semidefinite. Gradient descent is the iteration $x_{i+1}=x_i-\alpha\nabla f(x_i)$ with a constant step $\alpha>0$.
+Companion to `opt03-convexity-gd.html` (51 slides, 90 minutes). Audience: junior undergraduate AI majors who know gradients, Taylor's first-order approximation and the Euclidean inner product. The lecture is self-contained; it assumes nothing from the regression lecture. Each section opens with a one-sentence message, then explains the slide well enough to teach it, then gives details (derivations, worked numbers, figure provenance) and sources.
 
-**The running example.** Throughout,
+**What the lecture does.** One algorithm, gradient descent with the fixed step $1/L$, and three guarantees earned by three assumptions. The update and $L$-smoothness (slides 3-9); one descent inequality, $f(x_{t+1}) \leq f(x_t) - \frac{1}{2L}\|\nabla f(x_t)\|^2$ (slides 10-18); nonconvex $f$ bounded below: a small squared gradient at rate $O(1/T)$, which means approximate stationarity, not a local minimum (slides 19-25); convex $f$ with an attained minimum: function gap $O(1/T)$ (slides 26-37); $\mu$-strongly convex $f$: geometric (linear) decay of the distance and the function gap (slides 38-47); and the three results side by side (slides 48-50).
 
-$ f(x)=2x_1^2+\tfrac12 x_2^2,\qquad \nabla f(x)=(4x_1,\;x_2), $
+**Conventions.** $f:\mathbb{R}^n \to \mathbb{R}$ is differentiable and $L$-smooth; $x_{t+1} = x_t - \frac{1}{L}\nabla f(x_t)$. $f_{\text{low}}$ is a lower bound on $f$; when a minimizer $x^*$ exists, $f^* = f(x^*)$. $\mu > 0$ is the strong-convexity constant. $\|\cdot\|$ is the Euclidean norm. The running example is $f(x) = 2x_1^2 + \frac12 x_2^2$ on $\mathbb{R}^2$, with $L = 4$. Results are cited by name, not number.
 
-and the Hessian $\nabla^2 f$ is the constant matrix with first row $(4,0)$ and second row $(0,1)$, that is $\operatorname{diag}(4,1)$. So $L=4$, $\mu=1$, $x^\star=0$, $f^\star=0$, and the condition number is $\kappa=L/\mu=4$.
-
-**Notation.**
-
-- $\nabla f$, $\nabla^2 f$: gradient and Hessian.
-- $L$: smoothness constant; $\mu$: strong-convexity constant; $\kappa = L/\mu$: condition number.
-- $\alpha$: step size; $x_i$: the $i$-th gradient-descent iterate; $T$: number of iterations.
-- $\|M\|_2$: spectral norm of a matrix, the largest absolute eigenvalue for symmetric $M$.
-- $\operatorname{diag}(a,b)$: the diagonal matrix with those diagonal entries.
-- $e_1$, $e_2$: the standard basis vectors.
-- $\varphi_{x,d}(t)=f(x+td)$: the restriction of $f$ to the line through $x$ in direction $d$.
-- PL: the Polyak-Lojasiewicz inequality of Section 5.5.
-- $I$: identity matrix; $P\succ 0$: positive definite.
-
-**Background used.** Multivariable calculus: the chain rule, the fundamental theorem of calculus along a segment, the mean value theorem, Taylor's theorem, and Fermat's rule that a differentiable local minimizer is stationary. From linear algebra: symmetric matrices, eigenvalues, the spectral norm, and the positive semidefinite order, all as set up in Lecture 10 (opt01). From Lecture 11 (opt02): the least-squares objective $\tfrac12\|A\theta-B\|^2$, which is the convex objective this lecture optimizes. No probability is used until Section 9.6.
-
-**What this edition adds.** Nothing mathematical. The only changes are linearization: the three-tier rate table of Section 1 and the iterate table of Section 6.3 turned into bullet lists, matrices written out row by row, boxed statements turned into bold-labelled paragraphs.
-
-**Contents.**
-
-1. What this lecture actually claims
-2. Convexity
-3. Smoothness
-4. Smooth and convex: co-coercivity
-5. Strong convexity
-6. Gradient descent
-7. Rate I: the $O(1/T)$ rate for smooth convex $f$
-8. Rate II: linear convergence under strong convexity
-9. What the lecture leaves out
-10. References
-
-**Summary of what is proved here.** Proposition 2.1, that a local minimizer of a convex function is global; Theorem 2.2, the first-order (tangent-floor) characterization, in both directions; Corollary 2.3, that stationary implies global for convex $f$; Lemma 2.4, restriction to a line, and Lemma 2.5, the scalar Hessian test, combining into Theorem 1 (the Hessian test); Lemma 3.1, the descent lemma, in its two-sided form; Theorem 3.2, that $L$-smoothness is equivalent to a spectral-norm bound on the Hessian, in both directions; Theorem 3, the sandwich inequality; Theorem 4 of the lecture, co-coercivity, both parts, and the four-way equivalence of Section 4.4; Theorem 4 on strong convexity and the Hessian; existence and uniqueness of $x^\star$ under strong convexity; Lemma 3, the Polyak-Lojasiewicz inequality, and the fact that strong convexity implies it; Theorems 5 and 6, monotonicity of the gradient; the exact spectral analysis of gradient descent on a quadratic, showing the step-size cliff at $2/L$ is sharp; Theorem 7 and its nonconvex corollary; Theorem 8, the $O(1/T)$ rate, with Fejer monotonicity upgrading it to iterate convergence; Theorem 9, extended co-coercivity, including the isotropic case the original derivation divides away; and Theorem 10, linear convergence, with the optimal step size $\alpha=2/(\mu+L)$.
-
-**How to use.** One article per baseline slide, in slide order, headed by slide number and title. Section references (Section N, Section N.M) point to the original section headings, kept as subheadings inside the article where that material now sits.
+**Extended edition.** The pre-2026-11 lecture (134 slides, with the Hessian tests, co-coercivity, the Polyak-Lojasiewicz condition, step sizes other than $1/L$ and the full legacy proofs) is archived with the same slide IDs as `backup/opt03-convexity-gd-full.html`, with notes `backup/opt03-convexity-gd-full-note.html` and `backup/opt03-convexity-gd-full-note.md`.
 
 <!-- REGION Opening BEGIN -->
 
@@ -1075,6 +1042,8 @@ The closing slide repeats the update $x_{t+1} = x_t - \tfrac{1}{L}\nabla f(x_t)$
 
 ## 10 References
 
+Section numbers and the theorem, corollary and lemma numbers in the annotations below (Theorems 8 and 10, Corollary 6.3) refer to the extended edition's note, `backup/opt03-convexity-gd-full-note.md`.
+
 1. S. Boyd and L. Vandenberghe, *Convex Optimization*, Cambridge University Press, 2004. Free PDF: https://web.stanford.edu/~boyd/cvxbook/. Chapter 3 is the standard reference for the convexity-preserving operations of Section 2.3; Chapter 9 for unconstrained descent methods and line search.
 2. R. T. Rockafellar, *Convex Analysis*, Princeton University Press, 1970. The source for subdifferentials, conjugacy, and the nonsmooth theory referenced in Section 9.3.
 3. Y. Nesterov, *Lectures on Convex Optimization*, 2nd edition, Springer, 2018. doi:10.1007/978-3-319-91578-4. The canonical treatment of everything in this lecture: smoothness classes, the $O(1/T)$ and linear rates, acceleration, and the lower bounds.
@@ -1094,4 +1063,4 @@ The closing slide repeats the update $x_{t+1} = x_t - \tfrac{1}{L}\nabla f(x_t)$
 17. L. Bottou, F. E. Curtis and J. Nocedal, "Optimization Methods for Large-Scale Machine Learning," *SIAM Review* 60(2), 223-311, 2018. arXiv:1606.04838, https://arxiv.org/abs/1606.04838. The survey bridging Sections 9.2 and 9.6 with practice.
 18. J. Nocedal and S. J. Wright, *Numerical Optimization*, 2nd edition, Springer, 2006. doi:10.1007/978-0-387-40065-5. Line search (Section 9.2), Newton and quasi-Newton methods (Section 9.5).
 19. S. Ghadimi and G. Lan, "Stochastic First- and Zeroth-order Methods for Nonconvex Stochastic Programming," *SIAM Journal on Optimization* 23(4), 2341-2368, 2013. arXiv:1309.5549, https://arxiv.org/abs/1309.5549. The stochastic analogue of Corollary 6.3, and the reference point for the next lecture.
-20. Companion notes in this series, in the same accessible Markdown edition: `../opt01-svd-lowrank/opt01-svd-lowrank-note.md` (SVD, pseudoinverse, low-rank approximation), `../opt02-regression-erm/opt02-regression-erm-note.md` (least squares, ERM, ridge, where the convex objective $\tfrac12\|A\theta-B\|^2$ optimized here comes from), and `../opt04-sgd/opt04-sgd-note.md` (stochastic gradient descent, the sequel to Section 9.6). The probability half of the course is covered by prob01 through prob09.
+20. Companion notes in this series, in the same accessible Markdown edition: `../opt01-svd-lowrank/opt01-svd-lowrank-note.md` (SVD and best low-rank approximation). The regression and SGD notes (opt02, opt04) are extended material, listed in `../backup/OUTLINE.md`. The probability half of the course is covered by prob01 through prob09.

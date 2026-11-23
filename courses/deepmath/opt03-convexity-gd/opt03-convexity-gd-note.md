@@ -497,131 +497,271 @@ Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Convergence of GD", https:/
 <!-- END S09 -->
 
 <!-- BEGIN S10 -->
-### 27. Definition -- Convex Function [S10]
+### 27. Convexity Puts Chords Above [S10]
 
-#### 2.1 Convex sets and convex functions
+**Message.** A function is convex when its graph lies on or below every chord, and for such a function every local minimum is global.
 
-A set $C\subseteq\mathbb{R}^n$ is **convex** if for all $x,y\in C$ and $t\in[0,1]$ we have $tx+(1-t)y\in C$: the segment joining any two points of $C$ stays in $C$. A function $f:C\to\mathbb{R}$ on a convex domain is **convex** if
+The definition: $f:\mathbb{R}^n\to\mathbb{R}$ is convex if, for all $x,y\in\mathbb{R}^n$ and all $\theta\in[0,1]$,
 
-$ f\bigl(tx+(1-t)y\bigr)\;\le\;t f(x)+(1-t)f(y)\qquad\text{for all }x,y\in C,\;t\in[0,1]. \tag{2.1} $
+$$f\big(\theta x+(1-\theta)y\big)\le\theta f(x)+(1-\theta)f(y).$$
 
-This is the **chord** definition: the graph lies below or on every chord. It is **strictly convex** if the inequality is strict for $x\ne y$ and $t\in(0,1)$. Note that (2.1) requires *no* differentiability; it is the definition of record, and every other characterization below is a theorem relative to it.
+The left side is $f$ at a point of the segment from $y$ to $x$; the right side is the height of the straight chord between $(y,f(y))$ and $(x,f(x))$ at that same point. The weight is called $\theta$ because $t$ counts iterations later in the lecture.
 
-The domain matters, and the lecture suppresses it. Convexity of $f$ is a statement about a convex domain; $f(x)=1/x$ is convex on $(0,\infty)$ and concave on $(-\infty,0)$, and the union of those two intervals is not convex, so "$1/x$ is convex" is only true once you name the domain. Throughout, when no domain is named, it is $\mathbb{R}^n$.
+The figure draws the parabola $f(u)=u^2$, marks $y$ at $u=-1$ and $x$ at $u=3/2$, and joins them with a blue chord. At the midpoint $\theta=1/2$ (so $u=1/4$) a dashed vertical line connects the chord value $13/8$ above with the function value $1/16$ on the curve below.
+
+The payoff is the one property the convex part of the lecture needs: a convex function has no bad local minima. The inequality is $\le$, not $\lt$, so flat pieces and many minimizers are allowed; linear functions are convex. This is not strict convexity.
+
+**Details.**
+
+**Local implies global.** Let $x$ be a local minimizer and suppose some $y$ has $f(y)\lt f(x)$. For every $\theta\in(0,1]$, convexity gives $f\big(x+\theta(y-x)\big)\le(1-\theta)f(x)+\theta f(y)\lt f(x)$. Taking $\theta$ small puts these points arbitrarily close to $x$, which contradicts local minimality. So no such $y$ exists.
+
+**Strict convexity** asks for strict inequality whenever $x\ne y$ and $\theta\in(0,1)$; it rules out two distinct minimizers. The lecture never assumes it.
+
+**Figure check.** The chord at $u=1/4$ has height $\tfrac12(1)+\tfrac12(9/4)=13/8$, and $f(1/4)=1/16$. The plot maps $X=320+130u$, $Y=280-60u^2$ (viewBox units), so the dots sit at $(352.5,182.5)$ and $(352.5,276.25)$.
+
+The domain matters in general: convexity is a statement on a convex set. Here the domain is always $\mathbb{R}^n$. Convex sets, examples and operations that preserve convexity are in the backup note.
+
+**Sources.**
+
+- S. Boyd and L. Vandenberghe, *Convex Optimization*, Cambridge University Press, 2004, Chapter 3.
+- Our calculation. Plot adapted from the earlier version of this deck.
 <!-- END S10 -->
 
 <!-- BEGIN S15 -->
-### 28. First-Order Characterization [S15]
+### 28. The Tangent Lies Below [S15]
 
-#### 2.4 First-order characterization (tangent floor)
+**Message.** For a differentiable convex function, the tangent plane at any point lies below the whole graph.
 
-The lecture states that for differentiable $f$, convexity is equivalent to the graph lying above every tangent plane, and says it "follows directly from the chord definition." It does, but the argument runs in two directions and only one of them is a one-liner. Here is the full statement and proof.
+If $f$ is convex and differentiable, then for all $x,y\in\mathbb{R}^n$
 
-**Theorem 2.2 (first-order characterization).** Let $f$ be differentiable on $\mathbb{R}^n$. Then $f$ is convex if and only if
+$$f(y)\ge f(x)+\langle\nabla f(x),y-x\rangle.$$
 
-$ f(y)\;\ge\;f(x)+\langle\nabla f(x),\,y-x\rangle\qquad\text{for all }x,y. \tag{2.2} $
+One gradient, computed at one point, gives a lower bound on $f$ everywhere. Smoothness gave the opposite side: $f(y)\le f(x)+\langle\nabla f(x),y-x\rangle+\tfrac L2\|y-x\|^2$. So a convex $L$-smooth function sits between its tangent plane and a quadratic above it. Setting $\nabla f(x)=0$ shows that a stationary point of a convex function is a global minimizer.
 
-*Proof, forward direction.* Assume $f$ convex, fix $x,y$, and let $t\in(0,1]$. By (2.1) with the roles arranged so that the increment sits at $x$,
+The figure shows the parabola $f(u)=u^2$, a point $x$ at $u=-1$, and the blue tangent line there, $v=-1-2u$. The line touches the curve at $x$ and stays below it everywhere else.
 
-$ f\bigl(x+t(y-x)\bigr)\;=\;f\bigl((1-t)x+ty\bigr)\;\le\;(1-t)f(x)+tf(y). $
+**Details.**
 
-Subtract $f(x)$ and divide by $t>0$:
+**From the chord definition.** Fix $x,y$ and $\theta\in(0,1]$. Convexity gives $f\big(x+\theta(y-x)\big)\le(1-\theta)f(x)+\theta f(y)$. Subtract $f(x)$ and divide by $\theta\gt0$:
 
-$ \frac{f\bigl(x+t(y-x)\bigr)-f(x)}{t}\;\le\;f(y)-f(x). $
+$$\frac{f\big(x+\theta(y-x)\big)-f(x)}{\theta}\le f(y)-f(x).$$
 
-The left side is a difference quotient of the one-dimensional function $t\mapsto f(x+t(y-x))$, whose derivative at $t=0$ is $\langle\nabla f(x),y-x\rangle$ by the chain rule. Letting $t\to0^+$ gives (2.2). The limit exists because $f$ is differentiable; convexity additionally makes the quotient *nondecreasing* in $t$, so the limit is also an infimum, a fact used repeatedly below.
+As $\theta\to0^+$ the left side tends to the directional derivative $\langle\nabla f(x),y-x\rangle$, which gives the tangent bound. The converse (tangent bound for all $x,y$ implies convexity) is proved in the backup note.
 
-*Proof, converse direction.* Assume (2.2). Fix $x,y$ and $t\in[0,1]$, and set $z=tx+(1-t)y$. Apply (2.2) twice, anchored at $z$:
+**Figure check.** $u^2-(-1-2u)=(u+1)^2\ge0$, with equality only at $u=-1$. With $X=320+130u$, $Y=280-60v$, the tangent runs from $(60,100)$ at $u=-2$ to $(320,340)$ at $u=0$.
 
-$ f(x)\;\ge\;f(z)+\langle\nabla f(z),x-z\rangle,\qquad f(y)\;\ge\;f(z)+\langle\nabla f(z),y-z\rangle. $
+**Sources.**
 
-Multiply the first by $t\ge0$, the second by $1-t\ge0$, and add:
-
-$ tf(x)+(1-t)f(y)\;\ge\;f(z)+\bigl\langle\nabla f(z),\;t x+(1-t)y-z\bigr\rangle\;=\;f(z)+\langle\nabla f(z),0\rangle\;=\;f(z), $
-
-because $tx+(1-t)y=z$ exactly. This is (2.1). **End of proof.**
-
-The "anchor at the intermediate point and add two copies" move in the converse direction is the single most reused trick in this lecture: it reappears in the proof of monotonicity (Theorem 5, Section 5.6 here) and in co-coercivity. It is worth internalizing as a pattern rather than re-deriving it each time.
-
-**Corollary 2.3 (stationary implies global, for convex $f$).** If $f$ is convex and differentiable and $\nabla f(x)=0$, then $x$ is a global minimizer.
-
-*Proof.* Put this $x$ into (2.2): $f(y)\ge f(x)+\langle 0,y-x\rangle=f(x)$ for every $y$. **End of proof.**
-
-This corollary is the formal content of the slogan "for convex functions, stationary is enough." Note how much weaker the proof is than Proposition 2.1's, one substitution, and note that it requires differentiability, which Proposition 2.1 does not.
+- S. Boyd and L. Vandenberghe, *Convex Optimization*, Cambridge University Press, 2004, Chapter 3.
+- Our calculation. Plot adapted from the earlier version of this deck.
 <!-- END S15 -->
 
 <!-- BEGIN S95 -->
-### 29. Assumptions and Goal [S95]
+### 29. Assume an Optimum Exists [S95]
+
+**Message.** The convex rate is measured from a minimizer, so we assume one exists; it does not have to be unique.
+
+From here on, assume some $x^\star\in\arg\min f$ exists and write $f^\star=f(x^\star)$. Two quantities track the iterates: the function gap $\Delta_t=f(x_t)-f^\star\ge0$ and the squared distance $D_t=\|x_t-x^\star\|^2$.
+
+Existence is a real assumption. The function $f(u)=\log(1+e^u)$ is convex and $\tfrac14$-smooth, and its infimum $0$ is never attained, so there is no $x^\star$ and no $D_0$.
+
+Uniqueness is not assumed. If several minimizers exist, every one of them gives a valid bound; the one closest to $x_0$ gives the smallest $D_0$.
+
+The figure plots $f(u)=\max(|u|-1,0)^2$, which is convex and smooth and is minimized on the whole interval $[-1,1]$ (thick blue). The chosen minimizer $x^\star$ is the right end $u=1$. The iterate $x_t$ sits at $u=2.9$; a dashed vertical segment shows the gap $\Delta_t$ and a grey bracket on the axis shows the distance $\sqrt{D_t}$.
+
+**Details.**
+
+**Contrast with the nonconvex part.** There the guarantee used only a lower bound $f\ge f_{\text{low}}$; $f_{\text{low}}$ did not need to be attained or even to equal the infimum. Here the proof measures distance to an actual point $x^\star$, so attainment is needed.
+
+**Example checks.** $\log(1+e^u)\gt0$ tends to $0$ as $u\to-\infty$; its second derivative is $\sigma(u)(1-\sigma(u))\le\tfrac14$ with $\sigma$ the logistic function. For the plotted $f$: it is $g(|u|-1)$ with $g(s)=\max(s,0)^2$ convex and nondecreasing, so $f$ is convex; $f'(u)=2\max(|u|-1,0)\,\mathrm{sign}(u)$ is $2$-Lipschitz. At $u=2.9$: $\Delta_t=1.9^2=3.61$ and $\sqrt{D_t}=1.9$.
+
+Figure coordinates: `figs/o3b_figs.py` in this deck folder (exact inputs in its docstring).
+
+**Sources.**
+
+- Our calculation.
 <!-- END S95 -->
 
 <!-- BEGIN S96 -->
-### 30. Theorem 8 -- $O(1/T)$ Convergence [S96]
+### 30. Convex: O(1/T) Function Gap [S96]
 
-#### 7.1 Theorem 8, proved
+**Message.** For a convex $L$-smooth function with a minimizer, gradient descent with step $1/L$ has function gap at most $L\|x_0-x^\star\|^2/(2T)$ after $T$ steps.
 
-**Theorem 8 (Theorem 7.1 in this numbering).** Let $f$ be convex and $L$-smooth with a global minimizer $x^\star$, and run gradient descent with $0<\alpha\le 1/L$. Then for every $T\ge1$,
+Read the statement part by part. Domain: $f:\mathbb{R}^n\to\mathbb{R}$ with the Euclidean norm. Assumptions: $f$ differentiable, convex, $L$-smooth, and a minimizer $x^\star$ exists. Algorithm: $x_{t+1}=x_t-\tfrac1L\nabla f(x_t)$ from any $x_0$. Quantifier: for every $T\ge1$,
 
-$ f(x_T)-f^\star\;\le\;\frac{\|x_0-x^\star\|^2}{2\alpha T}. \tag{7.1} $
+$$f(x_T)-f^\star\le\frac{L\|x_0-x^\star\|^2}{2T}.$$
 
-*Proof.* **Step 1, per-step decrease.** The lid of Lemma 3.1 at $x_i$ with $\delta=-\alpha\nabla f(x_i)$ gives, as in Theorem 6.2(a),
+The measured quantity is the function-value gap at the last iterate. The theorem says nothing directly about $\|x_T-x^\star\|$. The rate is sublinear: to reach gap $\varepsilon$ the bound needs $T\ge LD_0/(2\varepsilon)$, that is $O(1/\varepsilon)$ steps.
 
-$ f(x_{i+1})\;\le\;f(x_i)-\alpha\Bigl(1-\tfrac{\alpha L}{2}\Bigr)\|\nabla f(x_i)\|^2\;\le\;f(x_i)-\frac{\alpha}{2}\|\nabla f(x_i)\|^2, $
+**Details.**
 
-where the last step uses that $\alpha\le1/L$ forces $\alpha L/2\le\tfrac12$ and hence $1-\tfrac{\alpha L}{2}\ge\tfrac12$. This is the only place the restriction $\alpha\le1/L$, rather than $\alpha<2/L$, is used.
+The next six slides prove this theorem. The bound is stated for any minimizer $x^\star$; with several minimizers, use the one nearest $x_0$.
 
-**Step 2, bring in the optimum, via convexity.** The tangent floor (2.2) with the pair $(x_i,x^\star)$ reads $f^\star\ge f(x_i)+\langle\nabla f(x_i),x^\star-x_i\rangle$, that is,
+The earlier version of this lecture numbered this result Theorem 8 and proved it with co-coercivity; that proof is in the backup note. The route used now needs only the descent inequality and the tangent bound.
 
-$ f(x_i)-f^\star\;\le\;\langle\nabla f(x_i),\,x_i-x^\star\rangle. $
+**Sources.**
 
-This is the step that fails without convexity; it is what ties the value gap to a quantity the algorithm can control.
-
-**Step 3, combine and complete the square.** Chaining Steps 1 and 2,
-
-$ f(x_{i+1})-f^\star\;\le\;\langle\nabla f(x_i),x_i-x^\star\rangle-\frac{\alpha}{2}\|\nabla f(x_i)\|^2. $
-
-Now recognize the right-hand side as a telescoping difference. Writing $g_i=\nabla f(x_i)$, expanding $\|x_i-x^\star-\alpha g_i\|^2=\|x_i-x^\star\|^2-2\alpha\langle g_i,x_i-x^\star\rangle+\alpha^2\|g_i\|^2$ and using $x_{i+1}-x^\star=x_i-x^\star-\alpha g_i$,
-
-$ \frac{1}{2\alpha}\Bigl(\|x_i-x^\star\|^2-\|x_{i+1}-x^\star\|^2\Bigr)\;=\;\langle g_i,x_i-x^\star\rangle-\frac{\alpha}{2}\|g_i\|^2. $
-
-The two sides of the previous display therefore match exactly:
-
-$ f(x_{i+1})-f^\star\;\le\;\frac{1}{2\alpha}\Bigl(\|x_i-x^\star\|^2-\|x_{i+1}-x^\star\|^2\Bigr). \tag{7.2} $
-
-**Step 4, telescope.** Sum (7.2) for $i=0,\dots,T-1$; the right side collapses:
-
-$ \sum_{i=1}^{T}\bigl(f(x_i)-f^\star\bigr)\;\le\;\frac{1}{2\alpha}\Bigl(\|x_0-x^\star\|^2-\|x_T-x^\star\|^2\Bigr)\;\le\;\frac{\|x_0-x^\star\|^2}{2\alpha}. $
-
-**Step 5, use monotonicity of the values.** By Step 1 the sequence $f(x_i)$ is nonincreasing, so $f(x_T)-f^\star\le f(x_i)-f^\star$ for every $i\le T$, hence $T\bigl(f(x_T)-f^\star\bigr)\le\sum_{i=1}^{T}(f(x_i)-f^\star)$. Divide by $T$. **End of proof.**
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
 <!-- END S96 -->
 
 <!-- BEGIN S97 -->
-### 31. Proof Overview [S97]
+### 31. Proof Plan: Spend Distance [S97]
+
+**Message.** The proof pays for each step's function gap with a drop in squared distance, and the initial distance $D_0$ is the total budget.
+
+Target: $\Delta_T\le LD_0/(2T)$. Five moves get there.
+
+1. Descent: smoothness lowers $f$ by $\tfrac1{2L}\|\nabla f(x_t)\|^2$ each step. 2. Tangent at $x_t$: convexity bounds the gap $\Delta_t$ by an inner product with the gradient. 3. Distance identity: plain algebra of the update turns the two together into $\tfrac L2(D_t-D_{t+1})$. 4. Telescope over $t=0,\dots,T-1$. 5. Last iterate: gaps never increase, so the last one is at most the average.
+
+Steps 1 and 5 use smoothness only; step 2 is the only place convexity enters; steps 3 and 4 are algebra.
+
+**Details.**
+
+No co-coercivity and no Polyak-Lojasiewicz (PL) condition is needed; both appear in other textbook proofs, but this route avoids them. The same five moves, with one extra term, prove the strongly convex rate in the next part.
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
+- Our calculation. (arrangement of the steps)
 <!-- END S97 -->
 
 <!-- BEGIN S98 -->
-### 32. Step 1 -- Guaranteed Decrease [S98]
+### 32. Recall: One-Step Decrease [S98]
+
+**Message.** Smoothness alone gives the one-step decrease $\Delta_{t+1}\le\Delta_t-\tfrac1{2L}\|g_t\|^2$.
+
+Write $g_t=\nabla f(x_t)$. The descent inequality, proved earlier in the lecture for any $L$-smooth $f$ and the step $1/L$, says
+
+$$f(x_{t+1})\le f(x_t)-\frac1{2L}\|g_t\|^2.$$
+
+Subtracting $f^\star$ from both sides rewrites it in terms of gaps. Nothing here uses convexity.
+
+**Details.**
+
+**Re-derivation.** The smoothness upper bound at $x=x_t$, $y=x_{t+1}=x_t-g_t/L$ gives $f(x_{t+1})\le f(x_t)-\tfrac1L\|g_t\|^2+\tfrac L2\cdot\tfrac1{L^2}\|g_t\|^2=f(x_t)-\tfrac1{2L}\|g_t\|^2$.
+
+Two consequences are used later: the gaps are nonincreasing, $\Delta_{t+1}\le\Delta_t$ (slide 36), and each step removes at least $\|g_t\|^2/(2L)$ of gap.
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
 <!-- END S98 -->
 
 <!-- BEGIN S99 -->
-### 33. Step 2 -- Bring In the Optimum [S99]
+### 33. Use the Tangent at x_t [S99]
+
+**Message.** Convexity's tangent bound at $x_t$, evaluated at $x^\star$, bounds the gap by $\langle g_t,x_t-x^\star\rangle$.
+
+Take the tangent bound with $x=x_t$ and $y=x^\star$: $f^\star\ge f(x_t)+\langle g_t,x^\star-x_t\rangle$. Moving terms gives $\Delta_t\le\langle g_t,x_t-x^\star\rangle$.
+
+Put this into the descent step from the previous slide:
+
+$$\Delta_{t+1}\le\langle g_t,x_t-x^\star\rangle-\frac1{2L}\|g_t\|^2.$$
+
+This is the only use of convexity in the proof, and it is plain convexity, not strong convexity.
+
+**Details.**
+
+By Cauchy-Schwarz the same step gives $\Delta_t\le\|g_t\|\sqrt{D_t}$: a convex function cannot have a large gap where both the gradient and the distance to $x^\star$ are small.
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
 <!-- END S99 -->
 
 <!-- BEGIN S101 -->
-### 34. Step 3 -- the Distance Identity [S101]
+### 34. Expand the Squared Distance [S101]
+
+**Message.** Expanding $\|x_{t+1}-x^\star\|^2$ shows that the right side of the last bound equals $\tfrac L2(D_t-D_{t+1})$, so $\Delta_{t+1}\le\tfrac L2(D_t-D_{t+1})$.
+
+The update gives $x_{t+1}-x^\star=(x_t-x^\star)-\tfrac1Lg_t$. Expanding the square,
+
+$$D_{t+1}=D_t-\frac2L\langle g_t,x_t-x^\star\rangle+\frac1{L^2}\|g_t\|^2.$$
+
+Multiplying by $L/2$ and rearranging gives $\tfrac L2(D_t-D_{t+1})=\langle g_t,x_t-x^\star\rangle-\tfrac1{2L}\|g_t\|^2$, exactly the right side of the tangent-plus-descent bound. Therefore
+
+$$\Delta_{t+1}\le\frac L2\big(D_t-D_{t+1}\big).$$
+
+The gap after step $t$ is paid for by the drop in squared distance during step $t$.
+
+**Details.**
+
+**Index check.** The right side uses $g_t$, $D_t$ and $D_{t+1}$; the left side is the gap at $x_{t+1}$, one index ahead of the gradient.
+
+**A by-product.** Because $\Delta_{t+1}\ge0$, the inequality forces $D_{t+1}\le D_t$: under convexity, the iterates never move away from any minimizer.
+
+**Example.** For $f=2x_1^2+\tfrac12x_2^2$, $x_0=(2,2)$, $x_1=(0,3/2)$: $\Delta_1=9/8$ and $\tfrac L2(D_0-D_1)=2(8-9/4)=23/2$, consistent with the bound.
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
+- Our calculation.
 <!-- END S101 -->
 
 <!-- BEGIN S104 -->
-### 35. Step 4 -- Telescope [S104]
+### 35. Distances Telescope [S104]
+
+**Message.** Summing the per-step bound over $t=0,\dots,T-1$ cancels the middle distances and leaves $\sum_{t=1}^T\Delta_t\le\tfrac L2D_0$.
+
+Write the bound for $t=0,1,\dots,T-1$ and add the $T$ inequalities. The left sides add to $\Delta_1+\dots+\Delta_T$. On the right, each $D_t$ with $1\le t\le T-1$ appears once with a plus sign and once with a minus sign, so
+
+$$\sum_{t=1}^T\Delta_t\le\frac L2\big(D_0-D_T\big)\le\frac L2D_0,$$
+
+where the last step drops $D_T\ge0$.
+
+**Details.**
+
+**Off-by-one check.** There are $T$ inequalities, $T$ gaps $\Delta_1,\dots,\Delta_T$ on the left, and the distance terms run from $D_0$ to $D_T$. The gap $\Delta_0$ never appears.
+
+**Example.** In the running quadratic with $T=2$: $\Delta_1+\Delta_2=9/8+81/128=225/128\approx1.76$, against $\tfrac L2D_0=16$.
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
+- Our calculation.
 <!-- END S104 -->
 
 <!-- BEGIN S105 -->
-### 36. Step 5 -- From Sum to Last Iterate [S105]
+### 36. The Last Gap Is Smallest [S105]
 
-Step 5 is worth pausing on. The telescoping in Step 4 naturally bounds the *sum*, which controls the *average* or the *best* iterate; getting the bound for the *last* iterate $x_T$ requires the monotonicity from Step 1. In stochastic gradient descent, where per-step monotonicity fails, this is exactly why guarantees are stated for the averaged iterate $\bar x_T=\tfrac1T\sum x_i$, a point the next lecture returns to.
+**Message.** Gaps never increase, so $T$ times the last gap is at most their sum, which proves the theorem.
+
+The descent inequality gives $\Delta_{t+1}\le\Delta_t$, so $\Delta_T$ is the smallest of $\Delta_1,\dots,\Delta_T$. Hence
+
+$$T\Delta_T\le\sum_{t=1}^T\Delta_t\le\frac L2D_0,\qquad\text{so}\qquad f(x_T)-f^\star\le\frac{L\|x_0-x^\star\|^2}{2T}.$$
+
+Monotonicity comes from the descent inequality, not from convexity. It is what lets the theorem speak about the last iterate.
+
+**Details.**
+
+**Contrast with the nonconvex guarantee.** Under smoothness and a lower bound alone, the guarantee is $\min_{0\le t\lt T}\|\nabla f(x_t)\|^2\le2L(f(x_0)-f_{\text{low}})/T$: a bound on the smallest gradient among the first $T$ iterates, not on the last iterate and not on a function gap.
+
+Without monotonicity the same sum would bound only the average or the best gap; that is the form stochastic methods usually get.
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
+- Cornell CS4787/5777, Fall 2026, Lecture 5 notes, section "Convergence of GD". https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html (checked 2026-11-23).
 <!-- END S105 -->
 
 <!-- BEGIN S106 -->
-### 37. Proof Summary -- the Skeleton [S106]
+### 37. The Convex Proof in One Chain [S106]
+
+**Message.** The whole convex proof is one chain from $T\Delta_T$ to $\tfrac L2D_0$, using only the descent inequality and the tangent bound; the rate is sublinear.
+
+The recap chain, with each step labelled:
+
+$$T\Delta_T\overset{\text{monotone}}{\le}\sum_{t=0}^{T-1}\Delta_{t+1}\overset{\text{descent+tangent}}{\le}\sum_{t=0}^{T-1}\Big(\langle g_t,x_t-x^\star\rangle-\tfrac1{2L}\|g_t\|^2\Big)\overset{\text{identity}}{=}\tfrac L2\sum_{t=0}^{T-1}(D_t-D_{t+1})\overset{\text{telescope}}{=}\tfrac L2(D_0-D_T)\le\tfrac L2D_0.$$
+
+$O(1/T)$ is sublinear, not linear: doubling $T$ only halves the bound, and reaching gap $\varepsilon$ takes $O(1/\varepsilon)$ steps.
+
+**Details.**
+
+The proof uses no co-coercivity, no PL condition and no two-sided sandwich of $\nabla f$. The highlight box on the slide is the takeaway to say aloud.
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
 <!-- END S106 -->
 
 <!-- REGION P4d END -->
@@ -635,108 +775,228 @@ Step 5 is worth pausing on. The telescoping in Step 4 naturally bounds the *sum*
 <!-- END S63 -->
 
 <!-- BEGIN S64 -->
-### 39. Definition -- $\mu$-Strongly Convex [S64]
+### 39. Add a Quadratic Floor [S64]
 
-#### 5.1 Definition and equivalent forms
+**Message.** Strong convexity strengthens the tangent bound by a quadratic bowl $\tfrac\mu2\|y-x\|^2$.
 
-$f$ is **$\mu$-strongly convex** (with $\mu>0$) if
+A differentiable $f:\mathbb{R}^n\to\mathbb{R}$ is $\mu$-strongly convex, $\mu\gt0$, if for all $x,y$
 
-$ f(y)\;\ge\;f(x)+\langle\nabla f(x),\,y-x\rangle+\frac{\mu}{2}\|y-x\|^2\qquad\text{for all }x,y. \tag{5.1} $
+$$f(y)\ge f(x)+\langle\nabla f(x),y-x\rangle+\frac\mu2\|y-x\|^2.$$
 
-Compare the tangent floor (2.2): convexity puts the graph above the tangent *plane*; strong convexity puts it above a tangent *paraboloid* of curvature $\mu$. Equivalently, and this is the formulation that makes several proofs trivial, $f$ is $\mu$-strongly convex if and only if
+It is the tangent bound plus a quadratic of curvature $\mu$. If $f$ is also $L$-smooth, then $\mu\le L$, so from here on $0\lt\mu\le L$.
 
-$ h(x)\;:=\;f(x)-\tfrac{\mu}{2}\|x\|^2\quad\text{is convex.} \tag{5.2} $
+It is stronger than having a unique minimizer: $f(u)=u^4$ has the unique minimizer $0$, yet $u^4\ge\tfrac\mu2u^2$ fails for small $u$ whatever $\mu\gt0$ is. A positive second derivative at one point is not enough either; the bowl must hold at every $x$.
 
-*Proof that (5.1) and (5.2) are equivalent.* We have $\nabla h(x)=\nabla f(x)-\mu x$. Apply the first-order characterization (Theorem 2.2) to $h$: $h$ is convex if and only if $h(y)\ge h(x)+\langle\nabla f(x)-\mu x,\,y-x\rangle$ for all $x,y$, that is,
+**Details.**
 
-$ f(y)-\tfrac\mu2\|y\|^2\;\ge\;f(x)-\tfrac\mu2\|x\|^2+\langle\nabla f(x),y-x\rangle-\mu\langle x,y-x\rangle. $
+**Why $\mu\le L$.** For $y\ne x$, the remainder $r=f(y)-f(x)-\langle\nabla f(x),y-x\rangle$ satisfies $\tfrac\mu2\|y-x\|^2\le r\le\tfrac L2\|y-x\|^2$, which forces $\mu\le L$.
 
-Collect the quadratic terms: $-\tfrac\mu2\|y\|^2+\tfrac\mu2\|x\|^2+\mu\langle x,y-x\rangle=-\tfrac\mu2\bigl(\|y\|^2-2\langle x,y\rangle+\|x\|^2\bigr)=-\tfrac\mu2\|y-x\|^2$, and moving it across gives exactly (5.1). **End of proof.**
+**Existence.** With $x=0$: $f(y)\ge f(0)+\langle\nabla f(0),y\rangle+\tfrac\mu2\|y\|^2\to\infty$ as $\|y\|\to\infty$. So a sublevel set is bounded and closed, and the continuous $f$ attains its minimum on it.
 
-Strong convexity is a strictly stronger condition than strict convexity: $f(x)=x^4$ is strictly convex but not $\mu$-strongly convex for any $\mu>0$, since near the origin its curvature vanishes, so no fixed paraboloid fits underneath. It is also stronger than convexity by a quantitative margin, and that margin is precisely what turns the $O(1/T)$ rate into a linear one.
+**Uniqueness.** If $x^\star$ and $y^\star$ are both minimizers, the bound at $x=x^\star$ (where $\nabla f(x^\star)=0$) gives $f(y^\star)\ge f(x^\star)+\tfrac\mu2\|y^\star-x^\star\|^2$, so $y^\star=x^\star$.
+
+Equivalent forms and further examples are in the backup note.
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.2, Theorem 3.6 and Remark 3.7. https://arxiv.org/abs/2301.11235v3
+- Our calculation.
 <!-- END S64 -->
 
 <!-- BEGIN S65 -->
-### 40. The Two-Parabola Sandwich [S65]
+### 40. Curvature Is Bounded Below [S65]
 
-Note also that a $\mu$-strongly convex, $L$-smooth function necessarily has $\mu\le L$: inequality (5.1) and the lid of Lemma 3.1 sandwich the quantity $f(y)-f(x)-\langle\nabla f(x),y-x\rangle$ between $\tfrac\mu2\|y-x\|^2$ and $\tfrac L2\|y-x\|^2$, so $\mu\le L$. The ratio $\kappa=L/\mu\ge1$ is the **condition number** and it governs everything in Section 8.
+**Message.** Strong convexity and smoothness together trap the remainder above the tangent between $\tfrac\mu2\|y-x\|^2$ and $\tfrac L2\|y-x\|^2$.
 
-#### 5.4 What strong convexity buys, geometrically
+Let $r(y)=f(y)-f(x)-\langle\nabla f(x),y-x\rangle$ be the height of $f$ above its tangent at $x$. Then
 
-Under both hypotheses, $f$ is trapped between two paraboloids of curvature $\mu$ and $L$ anchored at every point of its graph. That is a very rigid picture: the function is a quadratic up to a factor $\kappa$ in curvature. Gradient descent is exactly optimal on an isotropic quadratic, where $\kappa=1$ and one step with $\alpha=1/L$ reaches the minimum, and $\kappa$ measures how far a problem is from that ideal. All of the preconditioning, feature-normalization and adaptive-step-size machinery of practical deep learning is, in this language, an attempt to reduce an effective $\kappa$.
+$$\frac\mu2\|y-x\|^2\le r(y)\le\frac L2\|y-x\|^2.$$
+
+The curvature of $f$ is at least $\mu$ and at most $L$ in every direction.
+
+The figure uses the running example $f=2x_1^2+\tfrac12x_2^2$ ($\mu=1$, $L=4$), restricted to the diagonal line $x=s(1,1)/\sqrt2$, where it becomes $1.25s^2$ (black). At the anchor $s=-1$ the green curve is the tangent plus $\tfrac12(s+1)^2$ (curvature $\mu=1$) and the dashed blue curve is the tangent plus $2(s+1)^2$ (curvature $L=4$). All three touch at the anchor; the green floor stays below $f$ and the blue curve stays above it.
+
+**Details.**
+
+**Example check.** For this quadratic $r=2h_1^2+\tfrac12h_2^2$ with $h=y-x$, and $\tfrac12\|h\|^2\le2h_1^2+\tfrac12h_2^2\le2\|h\|^2$, so $\mu=1$ and $L=4$. Along the diagonal, $f=2\cdot\tfrac{s^2}2+\tfrac12\cdot\tfrac{s^2}2=1.25s^2$, whose curvature $2.5$ lies between $1$ and $4$.
+
+Figure coordinates: `figs/o3b_figs.py` in this deck folder (exact inputs in its docstring). The script asserts floor $\le f\le$ upper curve on a fine grid; the upper curve is clipped at the top of the plot.
+
+**Sources.**
+
+- Our calculation.
 <!-- END S65 -->
 
 <!-- BEGIN S116 -->
-### 41. Theorem 10 -- Linear Convergence [S116]
+### 41. Strongly Convex: Geometric Convergence [S116]
 
-#### 8.3 Theorem 10, proved, with the optimal step size
+**Message.** Under strong convexity and smoothness, gradient descent with step $1/L$ shrinks the squared distance to the minimizer by the factor $q=1-\mu/L$ every step.
 
-**Theorem 10 (Theorem 8.2 in this numbering).** Let $f$ be $\mu$-strongly convex and $L$-smooth with minimizer $x^\star$, unique by Proposition 5.2, and run gradient descent with $0<\alpha\le\dfrac{2}{\mu+L}$. Then
+Statement: $f:\mathbb{R}^n\to\mathbb{R}$ is $\mu$-strongly convex and $L$-smooth, $0\lt\mu\le L$, with unique minimizer $x^\star$ (it exists and is unique by strong convexity). Gradient descent uses step $1/L$ from any $x_0$. For every $T\ge1$,
 
-$ \|x_{i+1}-x^\star\|^2\;\le\;c\,\|x_i-x^\star\|^2,\qquad c\;=\;1-\frac{2\alpha\mu L}{\mu+L}\;\in[0,1), $
+$$\|x_T-x^\star\|^2\le\Big(1-\frac\mu L\Big)^T\|x_0-x^\star\|^2.$$
 
-hence $\|x_T-x^\star\|^2\le c^T\|x_0-x^\star\|^2$ and the error decays **geometrically**.
+The factor $q=1-\mu/L$ lies in $[0,1)$. If $q=0$, that is $\mu=L$, a single step lands on $x^\star$. To get $D_T\le\varepsilon$ it suffices that $T\ge\tfrac L\mu\ln(D_0/\varepsilon)$.
 
-*Proof.* **Step 1.** Since $\nabla f(x^\star)=0$, the update can be written relative to $x^\star$: $x_{i+1}-x^\star=(x_i-x^\star)-\alpha\bigl(\nabla f(x_i)-\nabla f(x^\star)\bigr)$. Put $\Delta x=x_i-x^\star$ and $\Delta g=\nabla f(x_i)-\nabla f(x^\star)$.
+The step is the same $1/L$ as in every other part of the lecture. Other step sizes give other theorems, not used here.
 
-**Step 2, expand.** $\|x_{i+1}-x^\star\|^2=\|\Delta x\|^2-2\alpha\langle\Delta g,\Delta x\rangle+\alpha^2\|\Delta g\|^2$.
+**Details.**
 
-**Step 3, apply Theorem 9.** Since $-2\alpha<0$, substituting the lower bound (8.1) gives an upper bound:
+**The case $\mu=L$.** Then the remainder bounds coincide, $r(y)=\tfrac L2\|y-x\|^2$ exactly, so $f$ is a quadratic with Hessian $LI$ and $x_0-\tfrac1L\nabla f(x_0)$ is its minimizer.
 
-$ \|x_{i+1}-x^\star\|^2\;\le\;\|\Delta x\|^2-\frac{2\alpha}{L+\mu}\|\Delta g\|^2-\frac{2\alpha\mu L}{L+\mu}\|\Delta x\|^2+\alpha^2\|\Delta g\|^2. $
+**Iteration count.** $q^T\le e^{-\mu T/L}$ (slide 44), and $e^{-\mu T/L}D_0\le\varepsilon$ when $T\ge\tfrac L\mu\ln(D_0/\varepsilon)$.
 
-**Step 4, group.** The coefficient of $\|\Delta x\|^2$ is $c=1-\frac{2\alpha\mu L}{\mu+L}$, and the remaining terms collect into a multiple of $\|\Delta g\|^2$:
+The earlier version of this lecture stated this as Theorem 10 with step $2/(\mu+L)$ and a co-coercivity proof; see the backup note.
 
-$ \|x_{i+1}-x^\star\|^2\;\le\;c\,\|\Delta x\|^2\;+\;\alpha\Bigl(\alpha-\frac{2}{L+\mu}\Bigr)\|\Delta g\|^2. $
+**Sources.**
 
-**Step 5, discard.** The hypothesis $\alpha\le\tfrac{2}{\mu+L}$ makes the bracket $\alpha-\tfrac{2}{L+\mu}$ nonpositive, so the second term is at most $0$ and may be dropped. Iterating the resulting contraction $T$ times gives the stated bound. Finally $c<1$ because $\alpha,\mu,L>0$, and $c\ge0$ because $\alpha\le\tfrac{2}{\mu+L}$ gives $c\ge1-\tfrac{4\mu L}{(\mu+L)^2}=\bigl(\tfrac{L-\mu}{L+\mu}\bigr)^2\ge0$. **End of proof.**
-
-**Optimal step size.** The factor $c$ is decreasing in $\alpha$ on the admissible range, so the best allowed choice is the endpoint
-
-$ \alpha^\star=\frac{2}{\mu+L},\qquad c^\star=1-\frac{4\mu L}{(\mu+L)^2}=\Bigl(\frac{L-\mu}{L+\mu}\Bigr)^2=\Bigl(\frac{\kappa-1}{\kappa+1}\Bigr)^2,\qquad \kappa=\frac{L}{\mu}. $
-
-This is exactly the square of the contraction factor $\rho(\alpha^\star)$ computed independently in Proposition 6.1 for quadratics, as it must be, since Theorem 8.2 measures squared distance. The agreement is a useful check that neither bound is lossy at the optimum: **Theorem 10 is tight, and quadratics are the worst case.**
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.2, Theorem 3.6 and Remark 3.7. https://arxiv.org/abs/2301.11235v3
+- Our calculation.
 <!-- END S116 -->
 
 <!-- BEGIN S138 -->
-### 42. S138 (new) [S138]
+### 42. Keep the Extra Curvature Term [S138]
+
+**Message.** With strong convexity the tangent step carries an extra $-\tfrac\mu2D_t$, and it survives into the per-step bound.
+
+Strong convexity at $x=x_t$, $y=x^\star$ gives $f^\star\ge f(x_t)+\langle g_t,x^\star-x_t\rangle+\tfrac\mu2D_t$, so
+
+$$\Delta_t\le\langle g_t,x_t-x^\star\rangle-\frac\mu2D_t.$$
+
+The descent inequality and the distance identity are unchanged from the convex proof, so
+
+$$\Delta_{t+1}\le\langle g_t,x_t-x^\star\rangle-\tfrac1{2L}\|g_t\|^2-\tfrac\mu2D_t=\tfrac L2(D_t-D_{t+1})-\tfrac\mu2D_t.$$
+
+Setting $\mu=0$ gives back the convex step exactly.
+
+**Details.**
+
+No PL condition is used. PL is the inequality $\tfrac12\|\nabla f(x)\|^2\ge\mu(f(x)-f^\star)$, an assumption about gradients rather than a quadratic lower bound; it appears in other proofs of linear rates.
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.2, Theorem 3.6 and Remark 3.7. https://arxiv.org/abs/2301.11235v3
+- Our calculation. (derivation chain)
+- H. Karimi, J. Nutini and M. Schmidt, "Linear Convergence of Gradient and Proximal-Gradient Methods Under the Polyak-Lojasiewicz Condition," ECML-PKDD 2016, arXiv:1608.04636.
 <!-- END S138 -->
 
 <!-- BEGIN S139 -->
-### 43. S139 (new) [S139]
+### 43. Nonnegative Gap Forces Contraction [S139]
+
+**Message.** Because the next gap is nonnegative, the per-step bound forces $D_{t+1}\le(1-\mu/L)D_t$.
+
+Since $x^\star$ minimizes $f$, $\Delta_{t+1}\ge0$, so the previous slide gives
+
+$$0\le\frac L2(D_t-D_{t+1})-\frac\mu2D_t.$$
+
+Multiply by $2/L$: $0\le D_t-D_{t+1}-\tfrac\mu LD_t$, that is $D_{t+1}\le(1-\tfrac\mu L)D_t=qD_t$. Every step shrinks the squared distance by at least the factor $q$.
+
+**Details.**
+
+The argument throws away the gap $\Delta_{t+1}$ and keeps only distances; that is one reason the bound can be loose (slide 47).
+
+**Example.** In the running quadratic, $D_1/D_0=(9/4)/8=9/32\le3/4$.
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.2, Theorem 3.6 and Remark 3.7. https://arxiv.org/abs/2301.11235v3
+- Our calculation.
 <!-- END S139 -->
 
 <!-- BEGIN S122 -->
-### 44. Step 4 -- Unroll [S122]
+### 44. Repeat the Same Contraction [S122]
+
+**Message.** Applying the one-step contraction $T$ times gives $D_T\le q^TD_0$.
+
+Chain the contraction: $D_T\le qD_{T-1}\le q^2D_{T-2}\le\dots\le q^TD_0$.
+
+The statement is for $T\ge1$, which also covers $q=0$: then $D_1=0$, so $x_1=x^\star$ and all later iterates stay there, with no $0^0$ to interpret.
+
+Since $1-u\le e^{-u}$ for every real $u$, $q^T\le e^{-\mu T/L}$: the error falls by a constant factor every step.
+
+**Details.**
+
+**Induction.** Base case $T=1$ is the previous slide at $t=0$. If $D_T\le q^TD_0$, then $D_{T+1}\le qD_T\le q^{T+1}D_0$; multiplying the inequality by $q$ is allowed because $q\ge0$, which holds since $\mu\le L$.
+
+**The exponential bound.** $u\mapsto e^{-u}$ is convex with tangent $1-u$ at $u=0$, so the tangent bound gives $e^{-u}\ge1-u$. With $u=\mu/L$ and $q\ge0$, raising to the power $T$ gives $q^T\le e^{-\mu T/L}$.
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.2, Theorem 3.6 and Remark 3.7. https://arxiv.org/abs/2301.11235v3
+- Our calculation.
 <!-- END S122 -->
 
 <!-- BEGIN S123 -->
-### 45. Step 5 -- Function Values Follow [S123]
+### 45. Function Values Follow Distance [S123]
+
+**Message.** Smoothness at the minimizer converts the distance bound into the function-gap bound $\Delta_T\le\tfrac L2q^TD_0$.
+
+Use the smoothness upper bound at $x=x^\star$, where $\nabla f(x^\star)=0$, with $y=x_T$: $f(x_T)\le f^\star+\tfrac L2\|x_T-x^\star\|^2$. With the previous slide,
+
+$$f(x_T)-f^\star\le\frac L2\|x_T-x^\star\|^2\le\frac L2q^T\|x_0-x^\star\|^2.$$
+
+Both the iterates and the function values converge to the optimum, the unique minimizer. This is much more than the nonconvex conclusion, which only finds a point with small gradient.
+
+**Details.**
+
+The prefactor is $\tfrac L2D_0$. A bound of the form $\Delta_T\le q^T\Delta_0$ would need a separate function-gap contraction argument, which this lecture does not prove.
+
+**Example.** In the running quadratic, $\Delta_2=81/128\approx0.63$ against $\tfrac L2q^2D_0=2\cdot\tfrac9{16}\cdot8=9$.
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.2, Theorem 3.6 and Remark 3.7. https://arxiv.org/abs/2301.11235v3
 <!-- END S123 -->
 
 <!-- BEGIN S110 -->
-### 46. The Goal -- From $1/T$ to $c^{\,T}$ [S110]
+### 46. Linear Means Geometric [S110]
+
+**Message.** In optimization, linear convergence means the error shrinks geometrically, like $q^T$; the convex $O(1/T)$ rate is sublinear.
+
+A rate is called linear when the error after $T$ steps is at most $Cq^T$ with $q\lt1$. The name comes from the log scale: $\log(Cq^T)=\log C+T\log q$ is a straight line in $T$. Geometric and exponential mean the same thing here.
+
+A rate like $1/T$ is sublinear: on a log scale its curve flattens out. The convex rate $O(1/T)$ is sublinear, not linear; the strongly convex rate is linear.
+
+The figure plots the two bound shapes on a logarithmic vertical axis for $T=1,\dots,24$: grey $1/T$ and blue $(3/4)^T$, where $3/4$ is $q$ for the running example. The blue curve is a straight line falling to about $10^{-3}$ at $T=24$; the grey curve flattens near $0.04$. For $T=2$ to $6$ the blue curve is slightly higher; from $T=7$ on it is lower and the gap widens.
+
+The plot shows bounds, not measured run times. Each iteration is the same gradient step in both settings.
+
+**Details.**
+
+**Error versus iteration count.** These are two readings of one bound. Error after $T$ steps: $q^T$ against $1/T$. Steps needed for error $\varepsilon$: $O(\log(1/\varepsilon))$ against $O(1/\varepsilon)$. Keep them apart: a linear rate is an error statement, and $\log(1/\varepsilon)$ is the matching iteration count.
+
+**Plot numbers.** $(3/4)^{24}=e^{24\ln0.75}\approx e^{-6.90}\approx1.0\times10^{-3}$; $1/24\approx0.042$. Crossing: $(3/4)^6\approx0.178\gt1/6$, $(3/4)^7\approx0.133\lt1/7\approx0.143$.
+
+Figure coordinates: `figs/o3b_figs.py` in this deck folder (exact inputs in its docstring).
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.2, Theorem 3.6 and Remark 3.7. https://arxiv.org/abs/2301.11235v3 (Remark 3.7 on the terminology)
+- Our calculation.
 <!-- END S110 -->
 
 <!-- BEGIN S126 -->
-### 47. Running Example -- Contraction, Measured [S126]
+### 47. The Example Beats Its Bound [S126]
 
-#### 8.4 The running example, verified, including a tightness bonus
+**Message.** On $f=2x_1^2+\tfrac12x_2^2$, the iterates beat the guarantee: after the first step the squared distance falls by $9/16$ per step, below the bound factor $q=3/4$.
 
-With $\mu=1$, $L=4$ and $\alpha=\tfrac14$: the admissible range is $\alpha\le\tfrac{2}{5}=0.4$, which is satisfied, and
+Here $\nabla f=(4x_1,x_2)$, $L=4$, $\mu=1$, $q=3/4$, and the step $1/4$ maps $(x_1,x_2)$ to $(0,\tfrac34x_2)$. From $x_0=(2,2)$:
 
-$ c\;=\;1-\frac{2\cdot\tfrac14\cdot1\cdot4}{1+4}\;=\;1-\frac{2}{5}\;=\;0.6. $
+$x_0=(2,2)$, $D_0=8$; $x_1=(0,3/2)$, $D_1=9/4$, ratio $9/32$; $x_2=(0,9/8)$, $D_2=81/64$, ratio $9/16$. The bound $q^tD_0$ gives $8$, $6$, $9/2$.
 
-Four iterations, each given as: index $i$; the bound $c^i\cdot8$; the actual squared distance $\|x_i-x^\star\|^2$.
+The first step is special: it zeroes the steep first coordinate at once. After that only the second coordinate is left; its distance shrinks by $3/4$ per step, so the squared distance shrinks by $(3/4)^2=9/16$.
 
-- $i=1$; bound $4.8$; actual $2.25$.
-- $i=2$; bound $2.88$; actual $1.2656$.
-- $i=3$; bound $1.728$; actual $0.7119$.
-- $i=4$; bound $1.0368$; actual $0.4004$.
+The guarantee is a worst case over all such functions; one example can do better.
 
-All four bound values reproduce, and the observed per-step ratio from $i\ge1$ is $\bigl(\tfrac34\bigr)^2=0.5625\le0.6$. Checked. It is close to the bound but not equal, because $\alpha=\tfrac14$ is not the optimal step for this problem.
+**Details.**
 
-**Bonus the lecture misses.** Rerun at the optimal $\alpha^\star=\tfrac25$. Theorem 10 then predicts $c^\star=\bigl(\tfrac{4-1}{4+1}\bigr)^2=\bigl(\tfrac35\bigr)^2=0.36$. The actual iteration sends $x_1$ to $(1-4\cdot\tfrac25)x_1=-\tfrac35x_1$ and $x_2$ to $(1-\tfrac25)x_2=\tfrac35x_2$, so *both* coordinates contract by exactly $\tfrac35$ in magnitude and the squared distance contracts by exactly $0.36=c^\star$ at every step, from every starting point. So on this example, at the optimal step size, Theorem 10 holds with **equality**: the bound is not merely correct but exact. This is the concrete face of the tightness claim in Section 8.3, and it is a good sanity check that the constant $\tfrac{2\alpha\mu L}{\mu+L}$ has not been derived too generously.
+**Function values.** $f(x_0)=10$, $f(x_1)=9/8$, $f(x_2)=81/128$; later ratios are also $9/16$. The strongly convex bound $\tfrac L2q^tD_0=16(3/4)^t$ gives $12$ and $9$ at $t=1,2$; the convex bound $LD_0/(2T)=16/T$ gives $16$ and $8$.
+
+**Distance versus squared distance.** The theorem bounds the squared distance by $q^t$, which corresponds to $\sqrt q$ per step for the distance. In this example the distance itself shrinks by $3/4=q$, so the squared distance shrinks by $q^2$: the bound is loose by a square here.
+
+**Sources.**
+
+- Our calculation.
 <!-- END S126 -->
 
 <!-- REGION P4e END -->
@@ -750,27 +1010,53 @@ All four bound values reproduce, and the observed per-step ratio from $i\ge1$ is
 <!-- END S130 -->
 
 <!-- BEGIN S131 -->
-### 49. Every Tool, One Line Each [S131]
+### 49. Three Assumptions, Three Guarantees [S131]
 
-#### 9.1 Acceleration, and the lower bounds that make it optimal
+**Message.** One algorithm, three assumption levels, three guarantees: a small gradient, then an $O(1/T)$ function gap, then geometric convergence to the minimizer.
 
-The most consequential omission. Gradient descent's $O(1/T)$ and $O(\kappa\log\tfrac1\varepsilon)$ are *not* the best a first-order method can do. Nesterov's accelerated gradient method [14] adds one momentum term,
+All three rows use gradient descent with step $1/L$ on an $L$-smooth $f:\mathbb{R}^n\to\mathbb{R}$.
 
-$ y_{i+1}=x_i-\tfrac1L\nabla f(x_i),\qquad x_{i+1}=y_{i+1}+\beta_i\,(y_{i+1}-y_i), $
+Nonconvex, with $f\ge f_{\text{low}}$: $\min_{t\lt T}\|\nabla f(x_t)\|^2\le2L(f(x_0)-f_{\text{low}})/T$. This is stationarity only. It does not promise a local minimum: $f(u)=1-\cos u$ is $1$-smooth, and gradient descent started at $u=\pi$, a strict local maximum, never moves.
 
-and attains $f(x_T)-f^\star=O\bigl(L\|x_0-x^\star\|^2/T^2\bigr)$ for smooth convex $f$, and $O\bigl(\exp(-T/\sqrt\kappa)\bigr)$ with $\beta_i=\tfrac{\sqrt\kappa-1}{\sqrt\kappa+1}$ for strongly convex $f$. The improvements are $\kappa\to\sqrt\kappa$ and $1/T\to1/T^2$; for $\kappa=10^4$ that is a hundredfold reduction in iterations, from the same gradient oracle. Nemirovski and Yudin [15] proved matching lower bounds, $\Omega(1/T^2)$ and $\Omega(\exp(-T/\sqrt\kappa))$, for any method whose iterates lie in the span of observed gradients, so acceleration is optimal, not merely better. See [3, Chapter 2] for the standard treatment. Momentum in deep learning is the practical descendant of this idea, though the theory transfers only loosely to the stochastic nonconvex setting.
+Convex, with a minimizer: $\Delta_T\le LD_0/(2T)$, a sublinear rate on the last function gap.
 
-#### 9.3 Nonsmooth objectives
+$\mu$-strongly convex: $D_T\le q^TD_0$ and $\Delta_T\le\tfrac L2q^TD_0$ with $q=1-\mu/L$, a linear, that is geometric, rate.
 
-$L$-smoothness fails for the $\ell_1$ penalty, the hinge loss, and ReLU networks, that is, for much of what one actually optimizes. Two replacements. **Subgradient descent** replaces $\nabla f(x)$ by any element $g$ of the subdifferential $\partial f(x)=\{g:f(y)\ge f(x)+\langle g,y-x\rangle\text{ for all }y\}$; with $G$-Lipschitz $f$ and a decaying step it achieves $O(1/\sqrt T)$, genuinely slower, and no descent lemma is available, so the values are not monotone. **Proximal gradient** handles $f=\ell+r$ with $\ell$ smooth and $r$ simple by iterating $x_{i+1}=\operatorname{prox}_{\alpha r}(x_i-\alpha\nabla \ell(x_i))$, and recovers the full $O(1/T)$ and linear rates; for $r=\lambda\|\cdot\|_1$ the prox is soft-thresholding and the method is ISTA, accelerated to FISTA. Beck [5] is the reference; Rockafellar [2] is the source for subdifferential calculus.
+This is the lecture's one global recap; each row measures a different quantity, so compare what is guaranteed, not only the speed.
 
-#### 9.4 Constraints
+**Details.**
 
-Minimizing over a convex set $C$ replaces the update with **projected gradient descent**, $x_{i+1}=\Pi_C\bigl(x_i-\alpha\nabla f(x_i)\bigr)$. Because $\Pi_C$ is nonexpansive, every proof in Sections 7 and 8 survives essentially verbatim: the projection can only shrink distances to a point of $C$, and $x^\star\in C$. The optimality condition changes from $\nabla f(x^\star)=0$ to the variational inequality $\langle\nabla f(x^\star),y-x^\star\rangle\ge0$ for all $y\in C$. The unconstrained framing of the lecture hides that these are the same theorems. See [1, Chapter 4] and [16].
+**Example check.** For $1-\cos u$: $f'(u)=\sin u$ is $1$-Lipschitz, $f'(\pi)=0$, $f''(\pi)=-1$.
+
+Constants and alternative step sizes are deliberately left off the slide.
+
+**Sources.**
+
+- Cornell CS4787/5777, Fall 2026, Lecture 5 notes, section "Convergence of GD". https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html (checked 2026-11-23).
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.2, Theorem 3.6 and Remark 3.7. https://arxiv.org/abs/2301.11235v3
 <!-- END S131 -->
 
 <!-- BEGIN S140 -->
-### 50. S140 (new) [S140]
+### 50. No Extra Conditions Needed [S140]
+
+**Message.** The convex and strongly convex proofs need only the descent inequality, one distance identity and the tangent bound with its $\mu$ term: no co-coercivity and no PL condition.
+
+The flow on the slide: descent inequality, then the distance identity, then the tangent bound with $-\tfrac\mu2D_t$. With $\mu=0$ the result telescopes to $O(1/T)$; with $\mu\gt0$ it contracts by $q$ each step.
+
+The answers, explicitly. Co-coercivity of $\nabla f$: not needed. Polyak-Lojasiewicz (PL) condition: not needed. Strong convexity: kept, because it supplies the $\mu$ term that produces the contraction.
+
+Co-coercivity and PL are useful tools in other proofs and other settings. They are not prerequisites for the results in this lecture.
+
+**Details.**
+
+The earlier version of this lecture proved the convex rate through co-coercivity and listed PL among the conditions; that material is in the backup note.
+
+**Sources.**
+
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
+- Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.2, Theorem 3.6 and Remark 3.7. https://arxiv.org/abs/2301.11235v3
+- H. Karimi, J. Nutini and M. Schmidt, "Linear Convergence of Gradient and Proximal-Gradient Methods Under the Polyak-Lojasiewicz Condition," ECML-PKDD 2016, arXiv:1608.04636.
 <!-- END S140 -->
 
 <!-- REGION P4f END -->

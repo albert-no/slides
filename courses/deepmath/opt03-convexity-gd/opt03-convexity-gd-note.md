@@ -43,15 +43,24 @@ and the Hessian $\nabla^2 f$ is the constant matrix with first row $(4,0)$ and s
 
 **How to use.** One article per baseline slide, in slide order, headed by slide number and title. Section references (Section N, Section N.M) point to the original section headings, kept as subheadings inside the article where that material now sits.
 
-### 1. Convexity & Gradient Descent
+<!-- BEGIN S01 -->
+### 1. Convexity & Gradient Descent [S01]
+<!-- END S01 -->
 
-### 2. Contents
+<!-- BEGIN S02 -->
+### 2. Contents [S02]
+<!-- END S02 -->
 
-### 3. Why Convexity?
+<!-- BEGIN S03 -->
+### 3. Why Convexity? [S03]
+<!-- END S03 -->
 
-### 4. When the Formula Runs Out
+<!-- BEGIN S04 -->
+### 4. When the Formula Runs Out [S04]
+<!-- END S04 -->
 
-### 5. Three Questions About One Update
+<!-- BEGIN S05 -->
+### 5. Three Questions About One Update [S05]
 
 #### 1 What This Lecture Actually Claims
 
@@ -60,8 +69,10 @@ The lecture answers one question, *when does gradient descent work, and how fast
 1. **Convexity** buys you that a stationary point is a global minimum. Without it, $\nabla f(x)=0$ tells you almost nothing: $x$ could be a maximum, a saddle, or a point on a flat ridge.
 2. **Smoothness**, meaning an $L$-Lipschitz gradient, buys you a *quadratic upper lid* on $f$. This is what makes a fixed step size safe: it tells you how far you can trust the linear model $f(x)+\langle\nabla f(x),\delta\rangle$ before curvature can betray you. Everything about step-size choice traces back to this one lemma.
 3. **Strong convexity** buys you a *quadratic lower floor*. Sandwiched between a floor and a lid, the function is within a constant factor of a quadratic, and gradient descent contracts geometrically.
+<!-- END S05 -->
 
-### 6. Today's Three Results
+<!-- BEGIN S06 -->
+### 6. Today's Three Results [S06]
 
 The resulting three-tier picture is worth stating up front, because the rest of the lecture is just filling in the rows. Each entry below names the assumptions, the guarantee, and the number of iterations needed to reach accuracy $\varepsilon$.
 
@@ -70,16 +81,24 @@ The resulting three-tier picture is worth stating up front, because the rest of 
 - *$L$-smooth and $\mu$-strongly convex.* Guarantee: $\|x_T-x^\star\|^2\le c^T\|x_0-x^\star\|^2$ with $c<1$ (Theorem 10). Iterations: $O(\kappa\log(1/\varepsilon))$.
 
 Two honest caveats. First, *deep networks satisfy none of the convexity assumptions*; what survives into the nonconvex world is exactly the first row, plus the descent lemma, plus, where it happens to hold, the Polyak-Lojasiewicz inequality of Section 5.5, which delivers linear convergence *without* convexity. Second, the rates in rows two and three are not the best achievable by a first-order method; Section 9.1 gives the accelerated rates and the matching lower bounds, so that "$O(1/T)$" is not mistaken for "the truth about first-order optimization."
+<!-- END S06 -->
 
-### 7. The Constants Are Learning-Rate Theory
+<!-- BEGIN S07 -->
+### 7. The Constants Are Learning-Rate Theory [S07]
+<!-- END S07 -->
 
-### 8. Route Map
+<!-- BEGIN S08 -->
+### 8. Route Map [S08]
+<!-- END S08 -->
 
-### 9. Convexity
+<!-- BEGIN S09 -->
+### 9. Convexity [S09]
 
 #### 2 Convexity
+<!-- END S09 -->
 
-### 10. Definition -- Convex Function
+<!-- BEGIN S10 -->
+### 10. Definition -- Convex Function [S10]
 
 #### 2.1 Convex sets and convex functions
 
@@ -90,12 +109,18 @@ $ f\bigl(tx+(1-t)y\bigr)\;\le\;t f(x)+(1-t)f(y)\qquad\text{for all }x,y\in C,\;t
 This is the **chord** definition: the graph lies below or on every chord. It is **strictly convex** if the inequality is strict for $x\ne y$ and $t\in(0,1)$. Note that (2.1) requires *no* differentiability; it is the definition of record, and every other characterization below is a theorem relative to it.
 
 The domain matters, and the lecture suppresses it. Convexity of $f$ is a statement about a convex domain; $f(x)=1/x$ is convex on $(0,\infty)$ and concave on $(-\infty,0)$, and the union of those two intervals is not convex, so "$1/x$ is convex" is only true once you name the domain. Throughout, when no domain is named, it is $\mathbb{R}^n$.
+<!-- END S10 -->
 
-### 11. Chord Above the Graph
+<!-- BEGIN S11 -->
+### 11. Chord Above the Graph [S11]
+<!-- END S11 -->
 
-### 12. Convex vs. Nonconvex
+<!-- BEGIN S12 -->
+### 12. Convex vs. Nonconvex [S12]
+<!-- END S12 -->
 
-### 13. Why AI Cares
+<!-- BEGIN S13 -->
+### 13. Why AI Cares [S13]
 
 #### 2.2 Why convexity is the right dividing line
 
@@ -112,10 +137,14 @@ Since $x_t\to x^\star$ as $t\to 0^+$, every neighbourhood of $x^\star$ contains 
 This is what "no bad local minima" means, and it is the entire practical payoff of convexity. Everything else in the lecture, smoothness, strong convexity, rates, is about *speed*. Convexity is about *correctness*: it is the hypothesis under which a local search algorithm is solving the problem you asked it to solve.
 
 A second structural fact, not in the lecture, explains why convexity interacts well with constraints: if $f$ is convex then every **sublevel set** $S_c=\{x: f(x)\le c\}$ is convex. Indeed if $f(x)\le c$ and $f(y)\le c$ then $f(tx+(1-t)y)\le tf(x)+(1-t)f(y)\le tc+(1-t)c=c$. The converse is false. Functions with all sublevel sets convex are called *quasiconvex*, and quasiconvex functions, for instance $f(x)=\sqrt{|x|}$, can have the flat plateaus and slow gradients that convexity rules out.
+<!-- END S13 -->
 
-### 14. The Gradient, Recalled
+<!-- BEGIN S14 -->
+### 14. The Gradient, Recalled [S14]
+<!-- END S14 -->
 
-### 15. First-Order Characterization
+<!-- BEGIN S15 -->
+### 15. First-Order Characterization [S15]
 
 #### 2.4 First-order characterization (tangent floor)
 
@@ -152,16 +181,26 @@ The "anchor at the intermediate point and add two copies" move in the converse d
 *Proof.* Put this $x$ into (2.2): $f(y)\ge f(x)+\langle 0,y-x\rangle=f(x)$ for every $y$. **End of proof.**
 
 This corollary is the formal content of the slogan "for convex functions, stationary is enough." Note how much weaker the proof is than Proposition 2.1's, one substitution, and note that it requires differentiability, which Proposition 2.1 does not.
+<!-- END S15 -->
 
-### 16. Tangent Below the Graph
+<!-- BEGIN S16 -->
+### 16. Tangent Below the Graph [S16]
+<!-- END S16 -->
 
-### 17. Why -- the 1D Picture
+<!-- BEGIN S17 -->
+### 17. Why -- the 1D Picture [S17]
+<!-- END S17 -->
 
-### 18. The Hessian, Recalled
+<!-- BEGIN S18 -->
+### 18. The Hessian, Recalled [S18]
+<!-- END S18 -->
 
-### 19. Recall -- PSD
+<!-- BEGIN S19 -->
+### 19. Recall -- PSD [S19]
+<!-- END S19 -->
 
-### 20. Theorem 1 -- Second-Order Characterization
+<!-- BEGIN S20 -->
+### 20. Theorem 1 -- Second-Order Characterization [S20]
 
 #### 2.5 Theorem 1: the Hessian test, proved
 
@@ -188,8 +227,10 @@ Forward direction: suppose $\varphi$ convex, so by Theorem 2.2, $\varphi(t)\ge\v
 *Proof.* Combine the three equivalences: $f$ is convex if and only if every $\varphi_{x,d}$ is convex (Lemma 2.4), if and only if $\varphi_{x,d}''(t)\ge0$ for all $x,d,t$ (Lemma 2.5), if and only if $d^\top\nabla^2 f(y)d\ge0$ for all $y,d$ (by (2.3)), if and only if $\nabla^2 f(y)\succeq0$ for all $y$. The step from "all $x,d,t$" to "all $y,d$" uses that every $y$ is reachable as $x+td$, for instance with $t=0$ and $x=y$. **End of proof.**
 
 **One-way warning.** $\nabla^2 f\succ0$, strictly positive definite everywhere, implies strict convexity, but *not* conversely: $f(x)=x^4$ is strictly convex on $\mathbb{R}$ with $f''(0)=0$. So the natural "strict" analogue of Theorem 1 is only an implication, and the lecture is right not to claim the equivalence. This asymmetry is exactly why strong convexity (Section 5), which *is* equivalent to a uniform Hessian bound, is the useful strengthening rather than strict convexity.
+<!-- END S20 -->
 
-### 21. Worked -- Is It Convex?
+<!-- BEGIN S21 -->
+### 21. Worked -- Is It Convex? [S21]
 
 #### 2.3 Operations that preserve convexity
 
@@ -201,22 +242,32 @@ The lecture verifies convexity Hessian by Hessian. In practice one almost never 
 - **Composition.** If $g$ is convex and nondecreasing and $h$ is convex, then $g\circ h$ is convex. The monotonicity hypothesis is essential: $h(x)=x^2$ is convex and $g(u)=-u$ is both convex and concave, and $g\circ h$ is concave.
 
 Crucially, *the composition of two convex functions need not be convex*, which is precisely why a deep network, an alternating composition of affine maps and convex nonlinearities, is not convex in its parameters even though every layer is. The affine map's coefficients are themselves variables, so "affine precomposition" does not apply. Bilinearity, not the nonlinearity, is what breaks convexity.
+<!-- END S21 -->
 
-### 22. Worked -- a Saddle Is Not Convex
+<!-- BEGIN S22 -->
+### 22. Worked -- a Saddle Is Not Convex [S22]
 
 #### 2.6 Running example and the standard non-example
 
 For $f(x)=2x_1^2+\tfrac12x_2^2$ the Hessian is the constant matrix $\operatorname{diag}(4,1)$, with eigenvalues $4$ and $1$, both positive; so $f$ is convex, indeed strongly convex (Section 5). The contrasting example is the saddle $g(x)=x_1^2-x_2^2$, with $\nabla^2 g=\operatorname{diag}(2,-2)$: the eigenvalue $-2$ certifies non-convexity, and the origin is a stationary point that is a minimum along $e_1$ and a maximum along $e_2$. Along the line $x=t e_2$ the restriction is $\varphi(t)=-t^2$, which Lemma 2.4 already disqualifies; one bad line is enough. This is the concrete form of "$\nabla f(x)=0$ tells you nothing without convexity."
+<!-- END S22 -->
 
-### 23. The Running Example
+<!-- BEGIN S23 -->
+### 23. The Running Example [S23]
+<!-- END S23 -->
 
-### 24. Running Example -- Contours
+<!-- BEGIN S24 -->
+### 24. Running Example -- Contours [S24]
+<!-- END S24 -->
 
-### 25. Smoothness
+<!-- BEGIN S25 -->
+### 25. Smoothness [S25]
 
 #### 3 Smoothness
+<!-- END S25 -->
 
-### 26. Lipschitz Continuity
+<!-- BEGIN S26 -->
+### 26. Lipschitz Continuity [S26]
 
 #### 3.1 Two different Lipschitz conditions
 
@@ -226,12 +277,16 @@ Lipschitz continuity and $L$-smoothness are introduced on adjacent slides, and i
 - $f$ is **$L$-smooth** if $\|\nabla f(x)-\nabla f(y)\|\le L\|x-y\|$. This bounds the *curvature*.
 
 Neither implies the other. $f(x)=|x|$ is $1$-Lipschitz but not $L$-smooth for any $L$, since its gradient jumps. $f(x)=x^2$ is $2$-smooth but not $G$-Lipschitz for any $G$, since its gradient is unbounded. The rest of the lecture uses only $L$-smoothness; $G$-Lipschitzness is the assumption behind *subgradient* methods, which converge at the slower rate $O(1/\sqrt{T})$ and which this lecture does not cover (Section 9.3).
+<!-- END S26 -->
 
-### 27. Definition -- $L$-Smooth
+<!-- BEGIN S27 -->
+### 27. Definition -- $L$-Smooth [S27]
 
 Throughout, "$L$-smooth" is a statement about a specific $L$; a function that is $L$-smooth is also $L'$-smooth for any $L'\ge L$. The *smoothness constant* means the smallest such $L$, which by Theorem 3.2 below equals $\sup_x\|\nabla^2f(x)\|_2$.
+<!-- END S27 -->
 
-### 28. Theorem 2 -- Bounded Hessian
+<!-- BEGIN S28 -->
+### 28. Theorem 2 -- Bounded Hessian [S28]
 
 #### 3.3 Theorem 2, proved rigorously, and its converse
 
@@ -250,20 +305,30 @@ As $t\to0$ the left-hand vector converges to the directional derivative of $\nab
 $ \nabla f(y)-\nabla f(x)\;=\;\int_0^1\nabla^2 f\bigl(x+t(y-x)\bigr)\,(y-x)\,dt. $
 
 Taking norms and using $\|\nabla^2f(\cdot)(y-x)\|\le\|\nabla^2f(\cdot)\|_2\|y-x\|\le L\|y-x\|$ pointwise gives $\|\nabla f(y)-\nabla f(x)\|\le\int_0^1 L\|y-x\|\,dt=L\|y-x\|$. **End of proof.**
+<!-- END S28 -->
 
-### 29. Proof Sketch -- as in the Notes
+<!-- BEGIN S29 -->
+### 29. Proof Sketch -- as in the Notes [S29]
 
 **Why the sketch is not yet a proof.** The lecture's argument divides the smoothness inequality by $\|td\|$ and passes to the limit, which is the right idea and is Step 1 above, but the honest version has to say *which* limit object appears, namely the directional derivative of the gradient map, and it has to invoke continuity of $\nabla^2f$ to identify it with $\nabla^2f(x)d$. Without $C^2$ the statement still holds almost everywhere by Rademacher's theorem, but the clean pointwise version needs the smoothness of the second derivative. This is exactly the kind of step that is easy to wave through and worth writing down once.
+<!-- END S29 -->
 
-### 30. Running Example -- $L = 4$
+<!-- BEGIN S30 -->
+### 30. Running Example -- $L = 4$ [S30]
 
 **Running example.** $\nabla^2f=\operatorname{diag}(4,1)$ has spectral norm $4$, so $f$ is $4$-smooth and not $L$-smooth for any $L<4$. The constant $L=4$ used throughout is the exact smoothness constant, not a loose bound. Concretely, the gradient map $x\mapsto(4x_1,x_2)$ stretches the $e_1$ direction by exactly $4$.
+<!-- END S30 -->
 
-### 31. Technique Review -- Restrict to a Segment
+<!-- BEGIN S31 -->
+### 31. Technique Review -- Restrict to a Segment [S31]
+<!-- END S31 -->
 
-### 32. Technique Review -- Cauchy-Schwarz
+<!-- BEGIN S32 -->
+### 32. Technique Review -- Cauchy-Schwarz [S32]
+<!-- END S32 -->
 
-### 33. Lemma 1 -- the Descent Lemma
+<!-- BEGIN S33 -->
+### 33. Lemma 1 -- the Descent Lemma [S33]
 
 #### 3.2 The descent lemma (Lemma 1 of the lecture)
 
@@ -288,24 +353,40 @@ $ f(x+\delta)-f(x)-\langle\nabla f(x),\delta\rangle \;=\;\int_0^1\bigl\langle\na
 $ \bigl|\langle\nabla f(x+t\delta)-\nabla f(x),\delta\rangle\bigr| \;\le\;\|\nabla f(x+t\delta)-\nabla f(x)\|\,\|\delta\|\;\le\;Lt\|\delta\|^2. $
 
 Integrating, $\int_0^1 Lt\|\delta\|^2\,dt=L\|\delta\|^2\int_0^1t\,dt=\tfrac{L}{2}\|\delta\|^2$. Taking absolute values through the integral gives (3.1). **End of proof.**
+<!-- END S33 -->
 
-### 34. The Picture -- a Parabola Lid
+<!-- BEGIN S34 -->
+### 34. The Picture -- a Parabola Lid [S34]
+<!-- END S34 -->
 
-### 35. Descent Lemma -- Proof Overview
+<!-- BEGIN S35 -->
+### 35. Descent Lemma -- Proof Overview [S35]
+<!-- END S35 -->
 
-### 36. Step 1 -- Set Up $g$
+<!-- BEGIN S36 -->
+### 36. Step 1 -- Set Up $g$ [S36]
+<!-- END S36 -->
 
-### 37. Step 2 -- Bound the Slope Drift
+<!-- BEGIN S37 -->
+### 37. Step 2 -- Bound the Slope Drift [S37]
+<!-- END S37 -->
 
-### 38. Step 3 -- Integrate
+<!-- BEGIN S38 -->
+### 38. Step 3 -- Integrate [S38]
+<!-- END S38 -->
 
-### 39. Proof Summary -- the Skeleton
+<!-- BEGIN S39 -->
+### 39. Proof Summary -- the Skeleton [S39]
+<!-- END S39 -->
 
-### 40. What the Descent Lemma Buys
+<!-- BEGIN S40 -->
+### 40. What the Descent Lemma Buys [S40]
 
 Two remarks. First, **no convexity is used**: Lemma 3.1 holds for the saddle, for a neural network, for anything with a Lipschitz gradient. This is why it is the workhorse of nonconvex analysis too (Section 6.5). Second, the *two-sided* form is genuinely two-sided: smoothness gives a lower quadratic bound as well, with the same constant but the opposite sign. The lower bound is much weaker than the strong-convexity floor of Section 5, whose constant is $+\mu$ rather than $-L$, but it is what forbids $f$ from dropping arbitrarily fast, and it is the reason $L$-smooth functions cannot have cusps pointing downward.
+<!-- END S40 -->
 
-### 41. Theorem 3 -- the Smoothness Sandwich
+<!-- BEGIN S41 -->
+### 41. Theorem 3 -- the Smoothness Sandwich [S41]
 
 #### 3.4 Theorem 3: the sandwich
 
@@ -326,32 +407,50 @@ The first inequality is where global minimality of $x^\star$ enters: $f^\star$ i
 $ q(s)\;=\;f(z)-s\|g\|^2+\tfrac{L}{2}s^2\|g\|^2, $
 
 minimized at $s=1/L$ with $q(1/L)=f(z)-\tfrac{1}{2L}\|g\|^2$. Hence $f^\star\le f(z)-\tfrac{1}{2L}\|g\|^2$, which is the left inequality. **End of proof.**
+<!-- END S41 -->
 
-### 42. Reading the Statement
+<!-- BEGIN S42 -->
+### 42. Reading the Statement [S42]
 
 **What each half needs.** The right inequality needs $\nabla f(x^\star)=0$ and the lid, nothing else; it would hold at any stationary point, minimizer or not. The left inequality needs $f^\star$ to be a *global* lower bound; it is false if $f$ is unbounded below. Take $f(z)=-z$, which is $0$-smooth, and note the left side would claim $\|\nabla f\|^2/(2L)$ with $L=0$. **Neither half uses convexity**, which is worth stressing: the sandwich is a smoothness fact, and it is the reason the nonconvex rate of Section 6.5 exists.
 
 **Reading.** The left inequality says a small gradient certifies near-optimality: $\|\nabla f(z)\|\le\varepsilon$ forces $f(z)-f^\star\le\varepsilon^2/(2L)$. This is the theoretical justification for the universal practice of using gradient norm as a stopping criterion. The right inequality says being close in $x$ guarantees being close in $f$: the value cannot blow up faster than quadratically as you leave the optimum.
+<!-- END S42 -->
 
-### 43. Proof -- Right Side
+<!-- BEGIN S43 -->
+### 43. Proof -- Right Side [S43]
+<!-- END S43 -->
 
-### 44. Proof -- Left Side, the Idea
+<!-- BEGIN S44 -->
+### 44. Proof -- Left Side, the Idea [S44]
+<!-- END S44 -->
 
-### 45. Proof -- Left Side, Minimize the Lid
+<!-- BEGIN S45 -->
+### 45. Proof -- Left Side, Minimize the Lid [S45]
+<!-- END S45 -->
 
-### 46. Proof -- Left Side, Best Direction
+<!-- BEGIN S46 -->
+### 46. Proof -- Left Side, Best Direction [S46]
+<!-- END S46 -->
 
-### 47. Sandwich, Checked on the Running Example
+<!-- BEGIN S47 -->
+### 47. Sandwich, Checked on the Running Example [S47]
 
 **Numerical check, verified.** At $z=(2,2)$: $f(z)=2\cdot4+\tfrac12\cdot4=10$, $\nabla f(z)=(8,2)$, and $\|\nabla f(z)\|^2=64+4=68$. The left bound is $68/(2\cdot4)=8.5$; the right bound is $\tfrac42\|(2,2)\|^2=2\cdot8=16$. So $8.5\le 10\le16$: both inequalities hold with room to spare, and neither is tight, because the running example's curvature is $4$ in one direction and only $1$ in the other while $L=4$ is used for both.
+<!-- END S47 -->
 
-### 48. Smooth and Convex
+<!-- BEGIN S48 -->
+### 48. Smooth and Convex [S48]
 
 #### 4 Smooth and Convex: Co-coercivity
+<!-- END S48 -->
 
-### 49. Two Bounds Meet
+<!-- BEGIN S49 -->
+### 49. Two Bounds Meet [S49]
+<!-- END S49 -->
 
-### 50. Lemma 2 -- Co-coercivity
+<!-- BEGIN S50 -->
+### 50. Lemma 2 -- Co-coercivity [S50]
 
 #### 4.1 Statement
 
@@ -362,18 +461,30 @@ Lemma 2 of the lecture combines the two hypotheses and extracts two inequalities
 (ii) $ \bigl\langle \nabla f(x)-\nabla f(y),\,x-y\bigr\rangle\;\ge\;\frac{1}{L}\bigl\|\nabla f(x)-\nabla f(y)\bigr\|^2. \tag{4.2} $
 
 Statement (ii) is called **co-coercivity** of the gradient; equivalently, $\nabla f$ is a $\tfrac1L$-cocoercive operator. It is strictly stronger than the plain monotonicity $\langle\nabla f(x)-\nabla f(y),x-y\rangle\ge0$ that convexity alone provides, and it is the exact inequality that makes the $O(1/T)$ rate work.
+<!-- END S50 -->
 
-### 51. What Co-coercivity Says
+<!-- BEGIN S51 -->
+### 51. What Co-coercivity Says [S51]
+<!-- END S51 -->
 
-### 52. Proof of (i) -- Overview
+<!-- BEGIN S52 -->
+### 52. Proof of (i) -- Overview [S52]
+<!-- END S52 -->
 
-### 53. Proof of (i) -- One Point, Two Bounds
+<!-- BEGIN S53 -->
+### 53. Proof of (i) -- One Point, Two Bounds [S53]
+<!-- END S53 -->
 
-### 54. Proof of (i) -- Chain and Rearrange
+<!-- BEGIN S54 -->
+### 54. Proof of (i) -- Chain and Rearrange [S54]
+<!-- END S54 -->
 
-### 55. Proof of (i) -- the Best $z$
+<!-- BEGIN S55 -->
+### 55. Proof of (i) -- the Best $z$ [S55]
+<!-- END S55 -->
 
-### 56. Proof of (ii) -- Overview
+<!-- BEGIN S56 -->
+### 56. Proof of (ii) -- Overview [S56]
 
 #### 4.2 Proof of (i): the tilt trick
 
@@ -394,14 +505,22 @@ $ g_x(y)-g_x(x)\;=\;f(y)-\langle\nabla f(x),y\rangle-f(x)+\langle\nabla f(x),x\r
 which rearranges to exactly (4.1). **End of proof.**
 
 Note what (4.1) improves on: the plain tangent floor (2.2) says $f(y)-f(x)-\langle\nabla f(x),y-x\rangle\ge0$. Smoothness upgrades the $0$ to a positive quantity that measures how much the gradient moved. The chain of implications is worth tracking: convexity gives the tilt a global minimum, smoothness gives the sandwich, and the composition of the two gives a strictly better floor than either alone.
+<!-- END S56 -->
 
-### 57. Proof of (ii) -- the Tilted Function
+<!-- BEGIN S57 -->
+### 57. Proof of (ii) -- the Tilted Function [S57]
+<!-- END S57 -->
 
-### 58. Proof of (ii) -- Apply the Sandwich
+<!-- BEGIN S58 -->
+### 58. Proof of (ii) -- Apply the Sandwich [S58]
+<!-- END S58 -->
 
-### 59. Proof of (ii) -- Symmetrize
+<!-- BEGIN S59 -->
+### 59. Proof of (ii) -- Symmetrize [S59]
+<!-- END S59 -->
 
-### 60. Proof of (ii) -- Add Them
+<!-- BEGIN S60 -->
+### 60. Proof of (ii) -- Add Them [S60]
 
 #### 4.3 Proof of (ii)
 
@@ -418,8 +537,10 @@ $ 0\;\ge\;\langle\nabla f(x)-\nabla f(y),\,y-x\rangle+\tfrac{1}{L}\|\nabla f(x)-
 where the two inner products combined because $\langle\nabla f(x),y-x\rangle+\langle\nabla f(y),x-y\rangle=\langle\nabla f(x)-\nabla f(y),y-x\rangle$. Moving the inner product to the left and flipping its sign gives (4.2). **End of proof.**
 
 The "write it twice and add" move here is the same one used in Lemma 2.5 and in the monotonicity proofs of Section 5.6. Whenever a symmetric conclusion is wanted from an asymmetric hypothesis, this is the move.
+<!-- END S60 -->
 
-### 61. Proof Summary -- Co-coercivity
+<!-- BEGIN S61 -->
+### 61. Proof Summary -- Co-coercivity [S61]
 
 #### 4.4 The equivalence the lecture does not state
 
@@ -432,16 +553,22 @@ Co-coercivity is not merely a consequence of "convex and smooth"; for convex $f$
 5. $\langle\nabla f(x)-\nabla f(y),x-y\rangle\le L\|x-y\|^2$.
 
 We proved 1 implies 2 implies 3 implies 4 above. The loop closes because 4 implies 1 by Cauchy-Schwarz: writing $\Delta g=\nabla f(x)-\nabla f(y)$ and $\Delta x=x-y$, the chain $\tfrac1L\|\Delta g\|^2\le\langle\Delta g,\Delta x\rangle\le\|\Delta g\|\,\|\Delta x\|$ gives $\|\Delta g\|\le L\|\Delta x\|$. That one-line closure is worth noticing: co-coercivity looks much stronger than Lipschitzness, and for *general* operators it is, but convexity makes them the same condition. Convexity is doing real work here.
+<!-- END S61 -->
 
-### 62. Co-coercivity, Checked on the Running Example
+<!-- BEGIN S62 -->
+### 62. Co-coercivity, Checked on the Running Example [S62]
 
 **Numerical check, verified.** With $x=(2,2)$ and $y=0$: $\nabla f(x)-\nabla f(y)=(8,2)-(0,0)=(8,2)$ and $x-y=(2,2)$. Left side of (4.2): $\langle(8,2),(2,2)\rangle=16+4=20$. Right side: $\tfrac14\cdot68=17$. So $20\ge17$. Checked. The slack is again the anisotropy $\mu=1$ against $L=4$: co-coercivity is tight only along the maximal-curvature direction, and here the displacement has equal components in both directions.
+<!-- END S62 -->
 
-### 63. Strong Convexity
+<!-- BEGIN S63 -->
+### 63. Strong Convexity [S63]
 
 #### 5 Strong Convexity
+<!-- END S63 -->
 
-### 64. Definition -- $\mu$-Strongly Convex
+<!-- BEGIN S64 -->
+### 64. Definition -- $\mu$-Strongly Convex [S64]
 
 #### 5.1 Definition and equivalent forms
 
@@ -460,16 +587,20 @@ $ f(y)-\tfrac\mu2\|y\|^2\;\ge\;f(x)-\tfrac\mu2\|x\|^2+\langle\nabla f(x),y-x\ran
 Collect the quadratic terms: $-\tfrac\mu2\|y\|^2+\tfrac\mu2\|x\|^2+\mu\langle x,y-x\rangle=-\tfrac\mu2\bigl(\|y\|^2-2\langle x,y\rangle+\|x\|^2\bigr)=-\tfrac\mu2\|y-x\|^2$, and moving it across gives exactly (5.1). **End of proof.**
 
 Strong convexity is a strictly stronger condition than strict convexity: $f(x)=x^4$ is strictly convex but not $\mu$-strongly convex for any $\mu>0$, since near the origin its curvature vanishes, so no fixed paraboloid fits underneath. It is also stronger than convexity by a quantitative margin, and that margin is precisely what turns the $O(1/T)$ rate into a linear one.
+<!-- END S64 -->
 
-### 65. The Two-Parabola Sandwich
+<!-- BEGIN S65 -->
+### 65. The Two-Parabola Sandwich [S65]
 
 Note also that a $\mu$-strongly convex, $L$-smooth function necessarily has $\mu\le L$: inequality (5.1) and the lid of Lemma 3.1 sandwich the quantity $f(y)-f(x)-\langle\nabla f(x),y-x\rangle$ between $\tfrac\mu2\|y-x\|^2$ and $\tfrac L2\|y-x\|^2$, so $\mu\le L$. The ratio $\kappa=L/\mu\ge1$ is the **condition number** and it governs everything in Section 8.
 
 #### 5.4 What strong convexity buys, geometrically
 
 Under both hypotheses, $f$ is trapped between two paraboloids of curvature $\mu$ and $L$ anchored at every point of its graph. That is a very rigid picture: the function is a quadratic up to a factor $\kappa$ in curvature. Gradient descent is exactly optimal on an isotropic quadratic, where $\kappa=1$ and one step with $\alpha=1/L$ reaches the minimum, and $\kappa$ measures how far a problem is from that ideal. All of the preconditioning, feature-normalization and adaptive-step-size machinery of practical deep learning is, in this language, an attempt to reduce an effective $\kappa$.
+<!-- END S65 -->
 
-### 66. Theorem 4 -- Hessian Floor
+<!-- BEGIN S66 -->
+### 66. Theorem 4 -- Hessian Floor [S66]
 
 #### 5.2 Theorem 4, proved
 
@@ -498,10 +629,14 @@ Inequality (5.3) is the mirror image of the sandwich's right half (3.2): smoothn
 $ \frac{\mu}{2}\|x-x^\star\|^2\;\le\;f(x)-f^\star\;\le\;\frac{L}{2}\|x-x^\star\|^2, $
 
 so distance-to-optimum and value gap are equivalent measures of progress up to the factor $\kappa$. This is why the theorem of Section 8 can be stated in distance and that of Section 7 in value without the two being different results.
+<!-- END S66 -->
 
-### 67. Recall -- Ridge Buys $\mu$
+<!-- BEGIN S67 -->
+### 67. Recall -- Ridge Buys $\mu$ [S67]
+<!-- END S67 -->
 
-### 68. Theorem 5 -- Gradient Monotonicity
+<!-- BEGIN S68 -->
+### 68. Theorem 5 -- Gradient Monotonicity [S68]
 
 #### 5.6 Theorems 5 and 6: monotonicity of the gradient
 
@@ -516,18 +651,28 @@ $ f(y)\ge f(x)+\langle\nabla f(x),y-x\rangle+\tfrac\mu2\|y-x\|^2,\qquad f(x)\ge 
 Add; $f(x)$ and $f(y)$ cancel, leaving $0\ge\langle\nabla f(x)-\nabla f(y),\,y-x\rangle+\mu\|x-y\|^2$, which is the claim. The convex case is identical with $\mu=0$.
 
 *Proof, converse direction, convex case.* Fix $x,y$ and let $\varphi(t)=f(x+t(y-x))$, so $\varphi'(t)=\langle\nabla f(x+t(y-x)),y-x\rangle$. For $s<t$, monotonicity applied to the points $x+t(y-x)$ and $x+s(y-x)$, whose difference is $(t-s)(y-x)$, gives $\bigl(\varphi'(t)-\varphi'(s)\bigr)(t-s)\ge0$, so $\varphi'$ is nondecreasing, so $\varphi$ is convex by Lemma 2.5, which needs only that $\varphi'$ is nondecreasing, not that $\varphi''$ exists. Lemma 2.4 lifts this to convexity of $f$. The strong case follows by applying this to $h=f-\tfrac\mu2\|\cdot\|^2$, whose gradient difference is $\nabla f(x)-\nabla f(y)-\mu(x-y)$. **End of proof.**
+<!-- END S68 -->
 
-### 69. Proof -- Add Two Floors
+<!-- BEGIN S69 -->
+### 69. Proof -- Add Two Floors [S69]
+<!-- END S69 -->
 
-### 70. Theorem 6 -- Strong Monotonicity
+<!-- BEGIN S70 -->
+### 70. Theorem 6 -- Strong Monotonicity [S70]
 
 The operator-theoretic reading is worth a sentence, because it is how the convex-optimization literature is organized. Minimizing a convex $f$ is the problem $0\in\nabla f(x)$, that is, finding a zero of a monotone operator; gradient descent is one instance of a family of fixed-point iterations for monotone operators, and strong monotonicity is exactly the condition making the associated map a contraction. Everything in Section 8 is a contraction-mapping argument in disguise.
+<!-- END S70 -->
 
-### 71. Proof -- Same Trick, Stronger Floors
+<!-- BEGIN S71 -->
+### 71. Proof -- Same Trick, Stronger Floors [S71]
+<!-- END S71 -->
 
-### 72. Technique Review -- Completing the Square
+<!-- BEGIN S72 -->
+### 72. Technique Review -- Completing the Square [S72]
+<!-- END S72 -->
 
-### 73. Lemma 3 -- the PL Condition
+<!-- BEGIN S73 -->
+### 73. Lemma 3 -- the PL Condition [S73]
 
 #### 5.5 Lemma 3: the Polyak-Lojasiewicz inequality
 
@@ -540,24 +685,34 @@ $ \|\nabla f(x)\|^2\;\ge\;2\mu\bigl(f(x)-f^\star\bigr)\qquad\text{for all }x. \t
 $ \min_y\psi(y)\;=\;f(x)-\tfrac1\mu\|\nabla f(x)\|^2+\tfrac{\mu}{2}\cdot\tfrac{1}{\mu^2}\|\nabla f(x)\|^2\;=\;f(x)-\frac{1}{2\mu}\|\nabla f(x)\|^2. $
 
 Since (5.1) holds for every $y$, in particular $f^\star=\min_y f(y)\ge\min_y\psi(y)$, that is $f^\star\ge f(x)-\tfrac{1}{2\mu}\|\nabla f(x)\|^2$. Rearranging gives (5.4). **End of proof.**
+<!-- END S73 -->
 
-### 74. Reading PL -- Gradient Norm Measures the Gap
+<!-- BEGIN S74 -->
+### 74. Reading PL -- Gradient Norm Measures the Gap [S74]
 
 Compare with the left half of the sandwich (3.2), which reads $\|\nabla f(x)\|^2\le 2L(f(x)-f^\star)$. So under both hypotheses,
 
 $ 2\mu\bigl(f(x)-f^\star\bigr)\;\le\;\|\nabla f(x)\|^2\;\le\;2L\bigl(f(x)-f^\star\bigr), $
 
 a two-sided identification of gradient magnitude with value gap. The upper bound is the "a small gradient means you are nearly done" direction; the PL lower bound is the "if you are not done, the gradient is not small" direction, and it is the latter that forbids the long flat plateaus on which gradient descent stalls.
+<!-- END S74 -->
 
-### 75. Proof of PL -- Rearrange the Floor
+<!-- BEGIN S75 -->
+### 75. Proof of PL -- Rearrange the Floor [S75]
+<!-- END S75 -->
 
-### 76. Proof of PL -- Complete the Square
+<!-- BEGIN S76 -->
+### 76. Proof of PL -- Complete the Square [S76]
+<!-- END S76 -->
 
-### 77. PL, Checked on the Running Example
+<!-- BEGIN S77 -->
+### 77. PL, Checked on the Running Example [S77]
 
 **Verification on the running example.** $\|\nabla f(x)\|^2=16x_1^2+x_2^2$ and $2\mu(f(x)-f^\star)=2\cdot1\cdot(2x_1^2+\tfrac12x_2^2)=4x_1^2+x_2^2$. Since $16x_1^2\ge4x_1^2$, inequality (5.4) holds, with equality exactly on the $x_2$-axis, the direction of minimal curvature, which is where $\mu$ is attained.
+<!-- END S77 -->
 
-### 78. PL as an Assumption of Its Own
+<!-- BEGIN S78 -->
+### 78. PL as an Assumption of Its Own [S78]
 
 **PL is strictly weaker than strong convexity, and this matters.** The lecture derives PL *from* strong convexity, which can leave the impression that it is a mere corollary. It is not: (5.4) can hold for functions that are not convex at all. Karimi, Nutini and Schmidt [8] give the example $f(x)=x^2+3\sin^2 x$ on $\mathbb{R}$, which satisfies PL with $\mu=1/32$ yet is plainly nonconvex. What PL does give, without convexity:
 
@@ -565,14 +720,20 @@ a two-sided identification of gradient magnitude with value gap. The upper bound
 - **Linear convergence of gradient descent**, at rate $(1-\mu/L)$ with $\alpha=1/L$; the lecture derives this as the bonus at the close, and Section 8.5 records it here.
 
 PL is therefore the natural weakest hypothesis under which the fast rate survives, and it is the entry point into the literature on why over-parameterized networks sometimes train as if they were convex. The inequality goes back to Polyak [9] and, in a more general form with exponents, to Lojasiewicz [10], both in 1963; its revival for machine learning is due to [8].
+<!-- END S78 -->
 
-### 79. Gradient Descent
+<!-- BEGIN S79 -->
+### 79. Gradient Descent [S79]
 
 #### 6 Gradient Descent
+<!-- END S79 -->
 
-### 80. The Problem
+<!-- BEGIN S80 -->
+### 80. The Problem [S80]
+<!-- END S80 -->
 
-### 81. The Algorithm
+<!-- BEGIN S81 -->
+### 81. The Algorithm [S81]
 
 #### 6.1 The algorithm and where it comes from
 
@@ -581,12 +742,18 @@ Gradient descent is $x_{i+1}=x_i-\alpha\nabla f(x_i)$, the method Cauchy propose
 $ x_{i+1}\;=\;\arg\min_{y}\;\Bigl\{f(x_i)+\langle\nabla f(x_i),\,y-x_i\rangle+\frac{1}{2\alpha}\|y-x_i\|^2\Bigr\}\;=\;x_i-\alpha\nabla f(x_i), $
 
 by setting the gradient of the quadratic to zero. So gradient descent *is* the exact minimization of a local quadratic model of $f$, with $1/\alpha$ playing the role of assumed curvature. Choosing $\alpha=1/L$ means "trust the model with the worst-case curvature"; choosing $\alpha$ larger means assuming less curvature than $f$ may actually have, which is exactly how divergence happens.
+<!-- END S81 -->
 
-### 82. 1D Intuition -- the Sign Does the Steering
+<!-- BEGIN S82 -->
+### 82. 1D Intuition -- the Sign Does the Steering [S82]
+<!-- END S82 -->
 
-### 83. Running Example -- GD, Set Up by Hand
+<!-- BEGIN S83 -->
+### 83. Running Example -- GD, Set Up by Hand [S83]
+<!-- END S83 -->
 
-### 84. Four Iterations by Hand ($\alpha = 1/4$)
+<!-- BEGIN S84 -->
+### 84. Four Iterations by Hand ($\alpha = 1/4$) [S84]
 
 #### 6.3 The iterate sequence, verified
 
@@ -599,14 +766,22 @@ With $\alpha=1/4$ and $x_0=(2,2)$ the recursions are $x_1^{(i+1)}=(1-1)x_1^{(i)}
 - $i=4$; $x_4=(0,\,0.6328)$; $f=0.2002$; squared distance $0.4004$.
 
 All values check: $f=\tfrac12x_2^2$ once $x_1=0$, and the ratio of consecutive values of $f$, and of consecutive squared distances, is $0.75^2=0.5625$ from step 1 onward. The single large drop from $i=0$ to $i=1$ is the $x_1$ coordinate being annihilated exactly; everything after is the slow $x_2$ mode, whose rate $0.75=1-\alpha\mu$ is what the theory predicts.
+<!-- END S84 -->
 
-### 85. The Path on the Contours ($\alpha = 1/4$)
+<!-- BEGIN S85 -->
+### 85. The Path on the Contours ($\alpha = 1/4$) [S85]
+<!-- END S85 -->
 
-### 86. Bigger Step -- Zigzag ($\alpha = 0.45$)
+<!-- BEGIN S86 -->
+### 86. Bigger Step -- Zigzag ($\alpha = 0.45$) [S86]
+<!-- END S86 -->
 
-### 87. Too Big -- Divergence ($\alpha = 0.6 \gt 2/L$)
+<!-- BEGIN S87 -->
+### 87. Too Big -- Divergence ($\alpha = 0.6 \gt 2/L$) [S87]
+<!-- END S87 -->
 
-### 88. Three Step Sizes, One Lesson
+<!-- BEGIN S88 -->
+### 88. Three Step Sizes, One Lesson [S88]
 
 #### 6.2 The exact story on a quadratic: the cliff at $2/L$ is sharp
 
@@ -631,8 +806,10 @@ So on quadratics the picture is complete and exact: convergence for $\alpha<2/L$
 - $\alpha=0.6$; factors $-1.4$ and $0.4$: diverges, with $x_1$ running $2\to-2.8\to3.92\to-5.488\to\cdots$.
 
 Every number here matches the lecture. The row at $\alpha=0.4$ is the one the lecture does not show, and it is the interesting one: the optimal step balances the two error modes so that both contract at the same rate $0.6$, which is exactly $\tfrac{\kappa-1}{\kappa+1}=\tfrac{3}{5}$. It also explains why $\alpha=1/L$, the safe choice used in most of the lecture's proofs, is *not* optimal here: it wastes the $x_1$ coordinate's already-finished progress on a conservative step for $x_2$.
+<!-- END S88 -->
 
-### 89. Theorem 7 -- GD Converges (Smooth Case)
+<!-- BEGIN S89 -->
+### 89. Theorem 7 -- GD Converges (Smooth Case) [S89]
 
 #### 6.4 Theorem 7, stated honestly
 
@@ -651,14 +828,22 @@ The lecture source phrases Theorem 7 as "gradient descent converges to the local
 $ f(x_{i+1})\;\le\;f(x_i)-\alpha\|\nabla f(x_i)\|^2+\tfrac{L\alpha^2}{2}\|\nabla f(x_i)\|^2\;=\;f(x_i)-\alpha\Bigl(1-\tfrac{\alpha L}{2}\Bigr)\|\nabla f(x_i)\|^2. $
 
 The constant $c_\alpha:=\alpha(1-\tfrac{\alpha L}{2})$ is strictly positive exactly when $0<\alpha<2/L$; this is where the threshold enters the proof. (b) A nonincreasing sequence bounded below converges. (c) Summing (a) from $0$ to $T-1$ telescopes: $c_\alpha\sum_{i<T}\|\nabla f(x_i)\|^2\le f(x_0)-f(x_T)\le f(x_0)-f^\star$, uniformly in $T$; let $T\to\infty$. A convergent series has terms tending to $0$. **End of proof.**
+<!-- END S89 -->
 
-### 90. Proof -- One Step Through the Lid
+<!-- BEGIN S90 -->
+### 90. Proof -- One Step Through the Lid [S90]
+<!-- END S90 -->
 
-### 91. Proof -- Monotone and Bounded
+<!-- BEGIN S91 -->
+### 91. Proof -- Monotone and Bounded [S91]
+<!-- END S91 -->
 
-### 92. Proof -- Gradients Must Vanish
+<!-- BEGIN S92 -->
+### 92. Proof -- Gradients Must Vanish [S92]
+<!-- END S92 -->
 
-### 93. Reading the Theorem
+<!-- BEGIN S93 -->
+### 93. Reading the Theorem [S93]
 
 **What this does *not* say.** It does not say $x_i$ converges; it does not say the limit of $f(x_i)$ is a local minimum value; it does not say any limit point is a minimizer. All three can fail without further assumptions. For $f(x)=e^{-x}$, which is not $L$-smooth globally, but the phenomenon persists for smooth examples, the iterates run to infinity with $f(x_i)$ decreasing to $0$ and $\|\nabla f(x_i)\|\to0$, and there is no minimizer at all. For a smooth function with a saddle, gradient descent started exactly on the stable manifold converges *to the saddle*, a stationary point that is not a minimum. The honest content of Theorem 7 is: **the iterates approach stationarity**. Convexity (Section 7) is what upgrades stationarity to optimality; strong convexity (Section 8) is what upgrades it to a rate.
 
@@ -677,14 +862,20 @@ Hence $\min_{i<T}\|\nabla f(x_i)\|\le\varepsilon$ after $T=O(\varepsilon^{-2})$ 
 *Proof.* With $\alpha=1/L$ we get $c_\alpha=\tfrac1L(1-\tfrac12)=\tfrac1{2L}$, and the telescoped bound of Theorem 6.2(c) reads $\tfrac{1}{2L}\sum_{i<T}\|\nabla f(x_i)\|^2\le f(x_0)-f^\star$. Divide by $T$ and use that a minimum is at most an average. **End of proof.**
 
 No convexity, no minimizer, no $\mu$: just the descent lemma and boundedness below. This $O(1/\varepsilon^2)$ is known to be *optimal* for first-order methods on smooth nonconvex functions (Carmon, Duchi, Hinder and Sidford [12]), so unlike the convex rates of Section 7 it cannot be improved by acceleration. When people say "we have theory for nonconvex optimization," this corollary is very often all they mean.
+<!-- END S93 -->
 
-### 94. Rate I -- $O(1/T)$
+<!-- BEGIN S94 -->
+### 94. Rate I -- $O(1/T)$ [S94]
 
 #### 7 Rate I: $O(1/T)$ for Smooth Convex $f$
+<!-- END S94 -->
 
-### 95. Assumptions and Goal
+<!-- BEGIN S95 -->
+### 95. Assumptions and Goal [S95]
+<!-- END S95 -->
 
-### 96. Theorem 8 -- $O(1/T)$ Convergence
+<!-- BEGIN S96 -->
+### 96. Theorem 8 -- $O(1/T)$ Convergence [S96]
 
 #### 7.1 Theorem 8, proved
 
@@ -721,18 +912,30 @@ $ f(x_{i+1})-f^\star\;\le\;\frac{1}{2\alpha}\Bigl(\|x_i-x^\star\|^2-\|x_{i+1}-x^
 $ \sum_{i=1}^{T}\bigl(f(x_i)-f^\star\bigr)\;\le\;\frac{1}{2\alpha}\Bigl(\|x_0-x^\star\|^2-\|x_T-x^\star\|^2\Bigr)\;\le\;\frac{\|x_0-x^\star\|^2}{2\alpha}. $
 
 **Step 5, use monotonicity of the values.** By Step 1 the sequence $f(x_i)$ is nonincreasing, so $f(x_T)-f^\star\le f(x_i)-f^\star$ for every $i\le T$, hence $T\bigl(f(x_T)-f^\star\bigr)\le\sum_{i=1}^{T}(f(x_i)-f^\star)$. Divide by $T$. **End of proof.**
+<!-- END S96 -->
 
-### 97. Proof Overview
+<!-- BEGIN S97 -->
+### 97. Proof Overview [S97]
+<!-- END S97 -->
 
-### 98. Step 1 -- Guaranteed Decrease
+<!-- BEGIN S98 -->
+### 98. Step 1 -- Guaranteed Decrease [S98]
+<!-- END S98 -->
 
-### 99. Step 2 -- Bring In the Optimum
+<!-- BEGIN S99 -->
+### 99. Step 2 -- Bring In the Optimum [S99]
+<!-- END S99 -->
 
-### 100. Technique Review -- the Square, Completed Again
+<!-- BEGIN S100 -->
+### 100. Technique Review -- the Square, Completed Again [S100]
+<!-- END S100 -->
 
-### 101. Step 3 -- the Distance Identity
+<!-- BEGIN S101 -->
+### 101. Step 3 -- the Distance Identity [S101]
+<!-- END S101 -->
 
-### 102. Corollary -- the Distance Also Shrinks
+<!-- BEGIN S102 -->
+### 102. Corollary -- the Distance Also Shrinks [S102]
 
 #### 7.4 Fejer monotonicity: the iterates converge, not just the values
 
@@ -743,24 +946,36 @@ Theorem 8 bounds $f(x_T)-f^\star$ but says nothing about $x_T$ itself. Its proof
 *Proof.* The left side of (7.2) is $f(x_{i+1})-f^\star\ge0$, so the right side is too, giving $\|x_{i+1}-x^\star\|^2\le\|x_i-x^\star\|^2$. Consequently the sequence $(x_i)$ is bounded, so it has limit points; by Theorem 7.1, $f(x_i)\to f^\star$, so by continuity every limit point $\bar x$ satisfies $f(\bar x)=f^\star$ and is therefore a minimizer. Fejer monotonicity applied to that particular $\bar x$ makes $\|x_i-\bar x\|$ nonincreasing; since a subsequence tends to $0$, the whole sequence does. **End of proof.**
 
 So for convex smooth $f$ the full statement is: the iterates converge to a minimizer, and the value gap decays like $1/T$. This is a strictly stronger conclusion than the assertion $\|\nabla f(x_i)\|\to0$ of Theorem 6.2, and the difference is entirely due to convexity. The pattern "non-expansiveness toward the solution set implies convergence" is the backbone of the whole fixed-point-theoretic treatment of convex optimization [16].
+<!-- END S102 -->
 
-### 103. Technique Review -- Telescoping Sums
+<!-- BEGIN S103 -->
+### 103. Technique Review -- Telescoping Sums [S103]
+<!-- END S103 -->
 
-### 104. Step 4 -- Telescope
+<!-- BEGIN S104 -->
+### 104. Step 4 -- Telescope [S104]
+<!-- END S104 -->
 
-### 105. Step 5 -- From Sum to Last Iterate
+<!-- BEGIN S105 -->
+### 105. Step 5 -- From Sum to Last Iterate [S105]
 
 Step 5 is worth pausing on. The telescoping in Step 4 naturally bounds the *sum*, which controls the *average* or the *best* iterate; getting the bound for the *last* iterate $x_T$ requires the monotonicity from Step 1. In stochastic gradient descent, where per-step monotonicity fails, this is exactly why guarantees are stated for the averaged iterate $\bar x_T=\tfrac1T\sum x_i$, a point the next lecture returns to.
+<!-- END S105 -->
 
-### 106. Proof Summary -- the Skeleton
+<!-- BEGIN S106 -->
+### 106. Proof Summary -- the Skeleton [S106]
+<!-- END S106 -->
 
-### 107. Corollary -- Iteration Complexity $O(1/\varepsilon)$
+<!-- BEGIN S107 -->
+### 107. Corollary -- Iteration Complexity $O(1/\varepsilon)$ [S107]
 
 #### 7.2 Reading the bound
 
 Rearranged: to reach $f(x_T)-f^\star\le\varepsilon$ it suffices to take $T\ge\dfrac{\|x_0-x^\star\|^2}{2\alpha\varepsilon}$, that is, $O(1/\varepsilon)$ iterations. With the standard choice $\alpha=1/L$ this is $T\ge\dfrac{L\|x_0-x^\star\|^2}{2\varepsilon}$: the iteration count is proportional to the smoothness constant and to the squared initial distance, and inversely proportional to the target accuracy. Note there is *no* $\mu$ and no logarithm; for merely convex $f$, one extra digit of accuracy costs a factor of $10$ in iterations, not a constant additive amount. That gap between $1/\varepsilon$ and $\log(1/\varepsilon)$ is the entire point of Section 8.
+<!-- END S107 -->
 
-### 108. Bound vs. Reality on the Running Example
+<!-- BEGIN S108 -->
+### 108. Bound vs. Reality on the Running Example [S108]
 
 **Numerical check, verified.** Running example, $\alpha=1/4$, $x_0=(2,2)$, so $\|x_0-x^\star\|^2=8$ and the bound is $8/(2\cdot\tfrac14\cdot T)=16/T$. To get $\varepsilon=0.01$ the theorem demands $T\ge1600$. Against the actual values from Section 6.3, given as: $T$; the bound $16/T$; the actual gap $f(x_T)-f^\star$; the ratio between them.
 
@@ -776,14 +991,20 @@ Two separate questions, and the lecture conflates them by silence.
 
 - **For gradient descent itself: essentially yes.** Drori and Teboulle [13] computed the exact worst case over all $L$-smooth convex $f$ and showed the sharp constant is $f(x_T)-f^\star\le\dfrac{L\|x_0-x^\star\|^2}{4T+2}$, attained by a specific piecewise-quadratic function. So (7.1) with $\alpha=1/L$ is off by only a factor of about $2$; the $1/T$ order cannot be improved for this algorithm. A streamlined derivation of both this rate and Theorem 10 is in Bubeck [4, Sections 3.2 to 3.4].
 - **For first-order methods in general: no.** Nesterov's accelerated gradient method [14] attains $O(1/T^2)$ using only gradients, and Nemirovski and Yudin's lower bound [15] shows $\Omega(1/T^2)$ is optimal. Section 9.1 says more.
+<!-- END S108 -->
 
-### 109. Rate II -- Linear
+<!-- BEGIN S109 -->
+### 109. Rate II -- Linear [S109]
 
 #### 8 Rate II: Linear Convergence Under Strong Convexity
+<!-- END S109 -->
 
-### 110. The Goal -- From $1/T$ to $c^{\,T}$
+<!-- BEGIN S110 -->
+### 110. The Goal -- From $1/T$ to $c^{\,T}$ [S110]
+<!-- END S110 -->
 
-### 111. Theorem 9 -- Subtract the Floor
+<!-- BEGIN S111 -->
+### 111. Theorem 9 -- Subtract the Floor [S111]
 
 #### 8.2 Two gaps in the derivation, closed
 
@@ -792,10 +1013,14 @@ Two separate questions, and the lecture conflates them by silence.
 $ \langle\Delta g-\mu\Delta x,\Delta x\rangle=\langle\Delta g,\Delta x\rangle-\mu\|\Delta x\|^2\le\|\Delta g\|\,\|\Delta x\|-\mu\|\Delta x\|^2\le(L-\mu)\|\Delta x\|^2. $
 
 The one implication of Section 4.4 not proved there is that 5 implies 2, so here it is. Given convex $g$ with $\langle\nabla g(x)-\nabla g(y),x-y\rangle\le M\|x-y\|^2$, set $\phi(x)=\tfrac M2\|x\|^2-g(x)$. Then $\langle\nabla\phi(x)-\nabla\phi(y),x-y\rangle=M\|\Delta x\|^2-\langle\nabla g(x)-\nabla g(y),\Delta x\rangle\ge0$, so $\phi$ is convex by Theorem 5.4, so $\phi(y)\ge\phi(x)+\langle\nabla\phi(x),y-x\rangle$; substituting $\phi=\tfrac M2\|\cdot\|^2-g$ and simplifying the quadratic terms exactly as in Section 5.1 yields $g(y)\le g(x)+\langle\nabla g(x),y-x\rangle+\tfrac M2\|y-x\|^2$, which is item 2. End of subproof.
+<!-- END S111 -->
 
-### 112. What $h$ Knows About $f$
+<!-- BEGIN S112 -->
+### 112. What $h$ Knows About $f$ [S112]
+<!-- END S112 -->
 
-### 113. Co-coercivity, Applied to $h$
+<!-- BEGIN S113 -->
+### 113. Co-coercivity, Applied to $h$ [S113]
 
 #### 8.1 Theorem 9: extended co-coercivity
 
@@ -818,14 +1043,20 @@ $ (L+\mu)\langle\Delta g,\Delta x\rangle\;\ge\;\|\Delta g\|^2+\mu L\|\Delta x\|^
 Divide by $L+\mu>0$. **End of proof.**
 
 Inequality (8.1) is the union of the two things already known, co-coercivity (4.2), which contributes the $\|\Delta g\|^2$ term, and strong monotonicity (Theorem 5.4), which contributes the $\|\Delta x\|^2$ term, but with better constants than simply averaging them would give. That improvement is what buys the sharp step-size range in Theorem 10.
+<!-- END S113 -->
 
-### 114. Unpack -- Expand the Square
+<!-- BEGIN S114 -->
+### 114. Unpack -- Expand the Square [S114]
 
 **Gap 2: the isotropic case $\mu=L$.** The proof above divides by $L-\mu$, so it says nothing when $\mu=L$, which is not a pathological corner but precisely the perfectly conditioned case $\kappa=1$. The conclusion still holds, with equality. Indeed if $\mu=L$ then $h$ satisfies both $\langle\nabla h(x)-\nabla h(y),x-y\rangle\ge0$, by convexity, and $\le(L-\mu)\|\Delta x\|^2=0$, by the display above, so the inner product vanishes identically, forcing $\nabla h$ to be constant and $h$ affine, say $h(x)=\langle a,x\rangle+b$. Then $f(x)=\tfrac\mu2\|x\|^2+\langle a,x\rangle+b$ and $\Delta g=\mu\Delta x$, so the two sides of (8.1) are $\mu\|\Delta x\|^2$ and $\tfrac{1}{2\mu}\mu^2\|\Delta x\|^2+\tfrac{\mu^2}{2\mu}\|\Delta x\|^2=\mu\|\Delta x\|^2$, which are equal. So (8.1) holds for all $\mu\le L$, with the case $\mu=L$ being an identity rather than an inequality. This also identifies the equality case in general: (8.1) is tight exactly on isotropic quadratics.
+<!-- END S114 -->
 
-### 115. Unpack -- Collect Terms
+<!-- BEGIN S115 -->
+### 115. Unpack -- Collect Terms [S115]
+<!-- END S115 -->
 
-### 116. Theorem 10 -- Linear Convergence
+<!-- BEGIN S116 -->
+### 116. Theorem 10 -- Linear Convergence [S116]
 
 #### 8.3 Theorem 10, proved, with the optimal step size
 
@@ -854,24 +1085,42 @@ $ \|x_{i+1}-x^\star\|^2\;\le\;c\,\|\Delta x\|^2\;+\;\alpha\Bigl(\alpha-\frac{2}{
 $ \alpha^\star=\frac{2}{\mu+L},\qquad c^\star=1-\frac{4\mu L}{(\mu+L)^2}=\Bigl(\frac{L-\mu}{L+\mu}\Bigr)^2=\Bigl(\frac{\kappa-1}{\kappa+1}\Bigr)^2,\qquad \kappa=\frac{L}{\mu}. $
 
 This is exactly the square of the contraction factor $\rho(\alpha^\star)$ computed independently in Proposition 6.1 for quadratics, as it must be, since Theorem 8.2 measures squared distance. The agreement is a useful check that neither bound is lossy at the optimum: **Theorem 10 is tight, and quadratics are the worst case.**
+<!-- END S116 -->
 
-### 117. Proof Overview
+<!-- BEGIN S117 -->
+### 117. Proof Overview [S117]
+<!-- END S117 -->
 
-### 118. Step 1 -- Expand the Square
+<!-- BEGIN S118 -->
+### 118. Step 1 -- Expand the Square [S118]
+<!-- END S118 -->
 
-### 119. Step 2 -- Co-coercivity at the Optimum
+<!-- BEGIN S119 -->
+### 119. Step 2 -- Co-coercivity at the Optimum [S119]
+<!-- END S119 -->
 
-### 120. Step 3 -- Group; Kill the Gradient Term
+<!-- BEGIN S120 -->
+### 120. Step 3 -- Group; Kill the Gradient Term [S120]
+<!-- END S120 -->
 
-### 121. Technique Review -- Unrolling a Recursion
+<!-- BEGIN S121 -->
+### 121. Technique Review -- Unrolling a Recursion [S121]
+<!-- END S121 -->
 
-### 122. Step 4 -- Unroll
+<!-- BEGIN S122 -->
+### 122. Step 4 -- Unroll [S122]
+<!-- END S122 -->
 
-### 123. Step 5 -- Function Values Follow
+<!-- BEGIN S123 -->
+### 123. Step 5 -- Function Values Follow [S123]
+<!-- END S123 -->
 
-### 124. Proof Summary -- the Skeleton
+<!-- BEGIN S124 -->
+### 124. Proof Summary -- the Skeleton [S124]
+<!-- END S124 -->
 
-### 125. Remark -- $O(\log(1/\varepsilon))$ Iterations
+<!-- BEGIN S125 -->
+### 125. Remark -- $O(\log(1/\varepsilon))$ Iterations [S125]
 
 **Iteration complexity.** From $\|x_T-x^\star\|^2\le c^T\|x_0-x^\star\|^2$, reaching $\varepsilon$ requires
 
@@ -880,8 +1129,10 @@ $ T\;\ge\;\frac{\log\bigl(\|x_0-x^\star\|^2/\varepsilon\bigr)}{\log(1/c)}. $
 At $\alpha=1/L$ we get $c=1-\tfrac{2\mu}{\mu+L}=\tfrac{L-\mu}{L+\mu}$, so $\log(1/c)\approx 2/\kappa$ for large $\kappa$ and $T=O\bigl(\kappa\log(1/\varepsilon)\bigr)$. Two readings: the $\log(1/\varepsilon)$ means each extra digit of accuracy costs a *constant* number of iterations, in contrast with Section 7.2, where it costs a factor of ten; the $\kappa$ means the constant is proportional to the condition number, so ill-conditioned problems are slow even though they are "linear". Both facts matter, and only the first is good news.
 
 **Linear against sublinear, numerically.** For $\varepsilon=10^{-6}$ with $\alpha=\tfrac14$, Theorem 10 needs $T\ge\log(8/10^{-6})/\log(1/0.6)=15.895/0.5108\approx31.1$, so $T=32$ iterations. Theorem 8's sublinear bound $\|x_0-x^\star\|^2/(2\alpha T)\le\varepsilon$ would demand $T\ge8/(2\cdot\tfrac14\cdot10^{-6})=1.6\times10^{7}$. Six orders of magnitude, on the same function with the same algorithm and the same step size; the only difference is which theorem you are allowed to invoke. That gap is the value of the extra hypothesis $\mu>0$.
+<!-- END S125 -->
 
-### 126. Running Example -- Contraction, Measured
+<!-- BEGIN S126 -->
+### 126. Running Example -- Contraction, Measured [S126]
 
 #### 8.4 The running example, verified, including a tightness bonus
 
@@ -899,10 +1150,14 @@ Four iterations, each given as: index $i$; the bound $c^i\cdot8$; the actual squ
 All four bound values reproduce, and the observed per-step ratio from $i\ge1$ is $\bigl(\tfrac34\bigr)^2=0.5625\le0.6$. Checked. It is close to the bound but not equal, because $\alpha=\tfrac14$ is not the optimal step for this problem.
 
 **Bonus the lecture misses.** Rerun at the optimal $\alpha^\star=\tfrac25$. Theorem 10 then predicts $c^\star=\bigl(\tfrac{4-1}{4+1}\bigr)^2=\bigl(\tfrac35\bigr)^2=0.36$. The actual iteration sends $x_1$ to $(1-4\cdot\tfrac25)x_1=-\tfrac35x_1$ and $x_2$ to $(1-\tfrac25)x_2=\tfrac35x_2$, so *both* coordinates contract by exactly $\tfrac35$ in magnitude and the squared distance contracts by exactly $0.36=c^\star$ at every step, from every starting point. So on this example, at the optimal step size, Theorem 10 holds with **equality**: the bound is not merely correct but exact. This is the concrete face of the tightness claim in Section 8.3, and it is a good sanity check that the constant $\tfrac{2\alpha\mu L}{\mu+L}$ has not been derived too generously.
+<!-- END S126 -->
 
-### 127. Geometric Shrinkage, Drawn
+<!-- BEGIN S127 -->
+### 127. Geometric Shrinkage, Drawn [S127]
+<!-- END S127 -->
 
-### 128. Bonus -- PL Alone Gives the Linear Rate
+<!-- BEGIN S128 -->
+### 128. Bonus -- PL Alone Gives the Linear Rate [S128]
 
 #### 8.5 Linear convergence from PL alone
 
@@ -917,18 +1172,24 @@ $ f(x_{i+1})-f^\star\;\le\;\Bigl(1-\frac{\mu}{L}\Bigr)\bigl(f(x_i)-f^\star\bigr)
 $ f(x_{i+1})\;\le\;f(x_i)-\frac{2\mu}{2L}\bigl(f(x_i)-f^\star\bigr). $
 
 Subtract $f^\star$ from both sides and factor. **End of proof.**
+<!-- END S128 -->
 
-### 129. Bonus -- Unroll the PL Rate
+<!-- BEGIN S129 -->
+### 129. Bonus -- Unroll the PL Rate [S129]
 
 No convexity was used, only the descent lemma and PL. Note also that the conclusion is about *values*, not iterates, and it has to be: under PL alone the minimizer need not be unique, since the solution set can be a whole manifold, so "$x_i\to x^\star$" is not even a well-posed claim. Karimi, Nutini and Schmidt [8] show that PL is implied by, and strictly weaker than, several other conditions in common use (error bounds, quadratic growth, the restricted secant inequality), and that it extends to proximal and stochastic variants.
 
 **Check on the running example.** With $\mu=1$ and $L=4$ the predicted factor is $1-\tfrac14=\tfrac34$; the observed ratio $f(x_{i+1})/f(x_i)=\bigl(\tfrac34\bigr)^2=\tfrac{9}{16}=0.5625\le0.75$. Checked. As always, the bound is honest but conservative because the worst-case direction is not the one the iterates actually travel after step one.
+<!-- END S129 -->
 
-### 130. Closing
+<!-- BEGIN S130 -->
+### 130. Closing [S130]
 
 #### 9 What the Lecture Leaves Out
+<!-- END S130 -->
 
-### 131. Every Tool, One Line Each
+<!-- BEGIN S131 -->
+### 131. Every Tool, One Line Each [S131]
 
 #### 9.1 Acceleration, and the lower bounds that make it optimal
 
@@ -945,8 +1206,10 @@ $L$-smoothness fails for the $\ell_1$ penalty, the hinge loss, and ReLU networks
 #### 9.4 Constraints
 
 Minimizing over a convex set $C$ replaces the update with **projected gradient descent**, $x_{i+1}=\Pi_C\bigl(x_i-\alpha\nabla f(x_i)\bigr)$. Because $\Pi_C$ is nonexpansive, every proof in Sections 7 and 8 survives essentially verbatim: the projection can only shrink distances to a point of $C$, and $x^\star\in C$. The optimality condition changes from $\nabla f(x^\star)=0$ to the variational inequality $\langle\nabla f(x^\star),y-x^\star\rangle\ge0$ for all $y\in C$. The unconstrained framing of the lecture hides that these are the same theorems. See [1, Chapter 4] and [16].
+<!-- END S131 -->
 
-### 132. The Constants You Now Own
+<!-- BEGIN S132 -->
+### 132. The Constants You Now Own [S132]
 
 #### 9.2 Choosing $\alpha$ without knowing $L$
 
@@ -959,14 +1222,19 @@ Newton's method, $x_{i+1}=x_i-\bigl(\nabla^2f(x_i)\bigr)^{-1}\nabla f(x_i)$, con
 #### 9.7 What actually happens in deep learning
 
 The honest position. Deep network training objectives are nonconvex, typically not globally $L$-smooth, and the theorems above do not apply as stated. What transfers: the descent lemma and the $O(1/\varepsilon^2)$ rate to stationarity of Corollary 6.3, which hold verbatim; the intuition that a step size larger than twice the reciprocal of the local smoothness constant diverges, which is exactly what a learning-rate sweep discovers empirically; and the condition-number picture, which explains why normalization layers and adaptive step sizes help. What does not transfer: the guarantee that stationary means optimal. The empirical observation that trained networks nonetheless reach near-zero loss has motivated searching for a hypothesis that is weaker than convexity but strong enough for a rate, and PL (Section 5.5) is the leading candidate, provable in some over-parameterized regimes. That is the honest state of the art, and the reason PL appears in a first course at all.
+<!-- END S132 -->
 
-### 133. Next -- Stochastic Gradients
+<!-- BEGIN S133 -->
+### 133. Next -- Stochastic Gradients [S133]
 
 #### 9.6 Stochastic gradients
 
 Every rate here assumes the exact gradient, whose cost is $O(N)$ for an $N$-sample ERM objective. The next lecture replaces $\nabla f$ by a mini-batch estimate; the consequences are structural, not cosmetic. The descent lemma no longer gives monotone decrease, so Step 5 of Theorem 7.1 fails and guarantees move to averaged iterates; a constant step size converges only to a noise ball of radius $O(\alpha\sigma^2/\mu)$ rather than to $x^\star$; and the rates degrade to $O(1/\sqrt T)$ in the convex case and $O(1/T)$ in the strongly convex case, both dominated by variance rather than by curvature, so acceleration no longer helps in the same way. Reference [17] is the survey; [19] gives the nonconvex analysis; the companion note for that lecture is listed in [20].
+<!-- END S133 -->
 
-### 134. $x^{+} = x - \alpha\, \nabla f(x)$
+<!-- BEGIN S134 -->
+### 134. $x^{+} = x - \alpha\, \nabla f(x)$ [S134]
+<!-- END S134 -->
 
 ## 10 References
 

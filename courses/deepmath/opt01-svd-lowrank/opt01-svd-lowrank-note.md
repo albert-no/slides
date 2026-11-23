@@ -1081,11 +1081,7 @@ $$\begin{aligned} \sigma_i(A) &= \max_{\substack{S \subseteq \mathbb{R}^n \\ \di
 
 **Theorem (Eckart--Young--Mirsky, Frobenius norm).** For every $B$ with $\operatorname{rank}(B) \leq k$, $\|A - B\|_F^2 \geq \sum_{i > k} \sigma_i(A)^2 = \|A - A_k\|_F^2$. *Proof.* By the Frobenius identity $\|M\|_F^2 = \sum_i \sigma_i(M)^2$ and Lemma 7.3, $\|A - B\|_F^2 = \sum_{i \geq 1} \sigma_i(A - B)^2 \geq \sum_{i \geq 1} \sigma_{i+k}(A)^2 = \sum_{j > k} \sigma_j(A)^2$, which is $\|A - A_k\|_F^2$ by section 61, $A_k$'s Error Is the Discarded Energy. $\blacksquare$
 
-The same two lines prove the nuclear-norm case, $\|A - B\|_* = \sum_i \sigma_i(A - B) \geq \sum_{i > k} \sigma_i(A) = \|A - A_k\|_*$, and, since Lemma 7.3 controls the whole singular-value vector entrywise, Mirsky's general statement:
-
-**Theorem 8M (Mirsky, 1960).** For every unitarily invariant norm, $A_k$ minimizes $\|A - B\|$ over $\operatorname{rank}(B) \leq k$. *Reason:* such a norm is a symmetric gauge function of the singular-value vector (von Neumann), hence monotone in it, and Lemma 7.3 gives $\sigma(A - B) \geq \sigma(A - A_k)$ entrywise after sorting.
-
-So one matrix, $A_k$, is simultaneously optimal for the spectral, Frobenius and nuclear errors. That is unusual: the $\ell_1$ and $\ell_2$ minimizers of an ordinary regression problem do not coincide in general.
+The same argument extends to the nuclear norm and, by Mirsky [2], to every unitarily invariant norm; those extensions are kept in the extended-edition note (`backup/opt01-svd-lowrank-full-note.md`).
 
 **Sources.**
 

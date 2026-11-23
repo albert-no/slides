@@ -3,15 +3,17 @@ size: large
 deck: courses/deepmath/opt01-svd-lowrank/opt01-svd-lowrank.html; courses/deepmath/opt03-convexity-gd/opt03-convexity-gd.html; their HTML/Markdown notes and backup editions
 audience / mode / duration: junior undergraduate AI majors / rigorous but narrowly scoped / 240 minutes total
 baseline: 99cf2a220a92c83e938167c05745af15d9bafe13
-id commit: not assigned; neither baseline deck has data-slide-id attributes
+id commit: 01ba79c7b18bb7538c0c8bcd34f6141dd604d075
 branch: 2026-11-23-opt01-opt03-four-hour-core
+reviewed candidate: 19e8acfdcb736b6232d820324c0bb5d64cfe6259
 pr: none
 state: in-work
-round: 1 of 3
+round: 2 of 3
 albert decisions:
   - 2026-11-23: requested restructure for remaining six lecture hours: prob09 two hours, SVD/low-rank and simplest GD four hours; final in week 15.
   - 2026-11-23 16:22 Asia/Seoul: Albert said "go ahead" (C11), approving stages 1–3, the 150+90-minute split, strong convexity retained, co-coercivity/PL backup-only, and corrected nonconvex stationarity target.
   - 2026-11-23: plan-v1.md complete; round-1 work order assigned to slides on the recorded branch.
+  - 2026-11-23: review-r1 verdict revise on 19e8acfdcb736b6232d820324c0bb5d64cfe6259; F01–F09 blocking, F10 optional. Round-2 work order is review-r1.md; argument and 150+90-minute allocation unchanged.
   - Current execution specification: plan-v1.md; stage 1–3 text below is the original proposal, now approved.
 
 # Size and work boundary

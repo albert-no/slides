@@ -5,15 +5,16 @@ audience / mode / duration: junior undergraduate AI majors / rigorous but narrow
 baseline: 99cf2a220a92c83e938167c05745af15d9bafe13
 id commit: 01ba79c7b18bb7538c0c8bcd34f6141dd604d075
 branch: 2026-11-23-opt01-opt03-four-hour-core
-reviewed candidate: 19e8acfdcb736b6232d820324c0bb5d64cfe6259
+reviewed candidate: 1f220ef63a13fb45ee38350bc06d498c0e6b4872
 pr: none
-state: in-work
+state: approved
 round: 2 of 3
 albert decisions:
   - 2026-11-23: requested restructure for remaining six lecture hours: prob09 two hours, SVD/low-rank and simplest GD four hours; final in week 15.
   - 2026-11-23 16:22 Asia/Seoul: Albert said "go ahead" (C11), approving stages 1–3, the 150+90-minute split, strong convexity retained, co-coercivity/PL backup-only, and corrected nonconvex stationarity target.
   - 2026-11-23: plan-v1.md complete; round-1 work order assigned to slides on the recorded branch.
   - 2026-11-23: review-r1 verdict revise on 19e8acfdcb736b6232d820324c0bb5d64cfe6259; F01–F09 blocking, F10 optional. Round-2 work order is review-r1.md; argument and 150+90-minute allocation unchanged.
+  - 2026-11-23: review-r2 approved exact commit 1f220ef63a13fb45ee38350bc06d498c0e6b4872; F01–F10 closed. Await final log-only push before PR; no merge authorized.
   - Current execution specification: plan-v1.md; stage 1–3 text below is the original proposal, now approved.
 
 # Size and work boundary

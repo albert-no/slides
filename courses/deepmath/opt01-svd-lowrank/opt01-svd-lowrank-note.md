@@ -283,216 +283,395 @@ Definition: $\|A\|_F = (\sum_{i=1}^m \sum_{j=1}^n a_{ij}^2)^{1/2}$, and for a re
 <!-- END S35 -->
 
 <!-- BEGIN S36 -->
-### 20. Recall -- Eigendecomposition [S36]
+### 20. Recall: Symmetric Eigendecomposition [S36]
 
-#### 4.1 The one imported black box
+**Message.** The SVD is built from one imported fact: a symmetric matrix has an orthonormal eigenbasis, and for $A^\top A$ every eigenvalue is nonnegative.
 
-**Spectral theorem (imported).** Every symmetric $S \in \mathbb{R}^{n \times n}$ can be written $S = Q \Lambda Q^\top$ with $Q$ orthogonal and $\Lambda = \operatorname{diag}(\lambda_1, \dots, \lambda_n)$ real. If moreover $S$ is positive semidefinite, meaning $x^\top S x \geq 0$ for all $x$, then every $\lambda_i \geq 0$.
+The slide opens with the recall line: every symmetric $S \in \mathbb R^{n\times n}$ factors as $S = Q\Lambda Q^\top$ with $Q$ orthogonal and $\Lambda$ real diagonal. It then applies this to $A^\top A$, which is symmetric and $n \times n$, so it acts on input vectors $x \in \mathbb R^n$. The display gives $A^\top A = Q\Lambda Q^\top$ and $\lambda_i = q_i^\top A^\top A q_i = \|Aq_i\|_2^2 \ge 0$. The highlighted line states the payoff: $A^\top A$ supplies orthonormal input directions $q_1, \dots, q_n$ in $\mathbb R^n$.
 
-This is the single result these notes do not prove. It was used in the lecture-8 note for covariance matrices and is proved in any of [5, 6, 8]. A sketch, for orientation: the maximum of the continuous function $x \mapsto x^\top S x$ on the compact unit sphere is attained at some $q_1$, which is an eigenvector by a Lagrange-multiplier or first-order argument; $S$ maps the orthogonal complement of $q_1$ into itself by symmetry, so one inducts on dimension. The positive-semidefinite claim is one line: $\lambda_i = q_i^\top S q_i \geq 0$. Everything else below is proved.
+**Details.**
+
+**Why the eigenvalues are nonnegative.** For a unit eigenvector $q_i$, $\lambda_i = q_i^\top (\lambda_i q_i) = q_i^\top A^\top A q_i = (Aq_i)^\top (Aq_i) = \|Aq_i\|_2^2 \ge 0$. More generally $x^\top A^\top A x = \|Ax\|_2^2 \ge 0$ for every $x$, so $A^\top A$ is positive semidefinite.
+
+**What is imported.** The spectral theorem itself is not proved in this lecture; it is the one black box. Everything else in Part 3 is derived from it.
+
+**Why input space.** $A^\top A$ is $n \times n$, the same size as the input dimension of $A$. Its eigenvectors will become the right singular vectors $v_i$ on the next slides.
+
+**Sources.**
+
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.2, Theorem 4.14 ($A^\top A$ symmetric positive semidefinite) and Theorem 4.15 (spectral theorem).
 <!-- END S36 -->
 
 <!-- BEGIN S38 -->
-### 21. Theorem 5 -- the SVD Exists [S38]
+### 21. Every Matrix Has an SVD [S38]
 
-#### 4.2 Theorem 5: existence of the SVD, proved
+**Message.** Every real matrix, of any shape and rank, factors as an orthogonal matrix times a nonnegative diagonal stretch times an orthogonal matrix.
 
-**Theorem 5.** Every $A \in \mathbb{R}^{m \times n}$ with $\operatorname{rank}(A) = r$ admits a factorization $A = U \Sigma V^\top$ with $U \in \mathbb{R}^{m \times m}$ and $V \in \mathbb{R}^{n \times n}$ orthogonal, and $\Sigma \in \mathbb{R}^{m \times n}$ diagonal in the sense that $\Sigma_{ij} = 0$ for $i \neq j$, with diagonal entries $\sigma_1 \geq \cdots \geq \sigma_r > 0 = \sigma_{r+1} = \cdots$.
+The theorem card states Theorem 5 for every $A \in \mathbb R^{m\times n}$ of rank $r$, with no assumption of squareness, symmetry or invertibility. The display reads $A = U\Sigma V^\top$ with $U \in \mathbb R^{m\times m}$ and $V \in \mathbb R^{n\times n}$ orthogonal. The last card line says $\Sigma \in \mathbb R^{m\times n}$ has $\Sigma_{ii} = \sigma_i$, zeros off the diagonal, $\sigma_1 \ge \dots \ge \sigma_r \gt 0$, and the remaining diagonal slots equal to $0$. A muted line under the card names the construction: eigenvectors of $A^\top A$ give $V$, then $u_i = Av_i/\sigma_i$.
 
-*Proof.* The matrix $S = A^\top A \in \mathbb{R}^{n \times n}$ is symmetric, since $S^\top = A^\top A$, and positive semidefinite, since $x^\top S x = \|Ax\|_2^2 \geq 0$. By the spectral theorem write $S = V \Lambda V^\top$ with $V = [v_1 \cdots v_n]$ orthogonal and $\lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_n \geq 0$, reordering the columns of $V$ to sort $\Lambda$, which preserves orthogonality.
+**Details.**
 
-*Step 1: the number of positive eigenvalues is $r$.* We have $\|Av_i\|_2^2 = v_i^\top S v_i = \lambda_i$, so $Av_i = 0$ exactly when $\lambda_i = 0$. Hence $\operatorname{null}(A) \supseteq \operatorname{span}\{v_i : \lambda_i = 0\}$. Conversely $Ax = 0$ implies $Sx = 0$, and $Sx = 0$ with $x = \sum_i c_i v_i$ gives $\sum_i c_i \lambda_i v_i = 0$, so $c_i = 0$ whenever $\lambda_i \neq 0$. Thus $\operatorname{null}(A) = \operatorname{span}\{v_i : \lambda_i = 0\}$, and by Theorem 1 the count of positive $\lambda_i$ is $n - \dim\operatorname{null}(A) = r$. So $\lambda_1 \geq \cdots \geq \lambda_r > 0 = \lambda_{r+1} = \cdots = \lambda_n$.
+**Construction sketch.** Take the eigendecomposition $A^\top A = V\Lambda V^\top$ with eigenvalues in decreasing order and set $\sigma_i = \sqrt{\lambda_i}$. Exactly $r$ of them are positive because $\operatorname{rank}(A^\top A) = \operatorname{rank}(A) = r$. For $i \le r$ put $u_i = Av_i/\sigma_i$; these are orthonormal because $u_i^\top u_j = v_i^\top A^\top A v_j/(\sigma_i\sigma_j) = \lambda_j v_i^\top v_j/(\sigma_i\sigma_j) = \delta_{ij}$. Extend $u_1, \dots, u_r$ to an orthonormal basis of $\mathbb R^m$. Then $AV = U\Sigma$ column by column (for $i \gt r$, $\|Av_i\|_2^2 = \lambda_i = 0$), so $A = U\Sigma V^\top$.
 
-*Step 2: define $\sigma_i$ and $u_i$.* For $i \leq r$ set $\sigma_i = \sqrt{\lambda_i} > 0$ and $u_i = Av_i / \sigma_i \in \mathbb{R}^m$. These are orthonormal:
+**Uniqueness.** The singular values are unique. The vectors are unique up to sign when the $\sigma_i$ are distinct and positive; repeated values allow any orthonormal basis of the shared subspace. The full existence and uniqueness proof is kept in the archived full note.
 
-$$ u_i^\top u_j = \frac{v_i^\top A^\top A v_j}{\sigma_i \sigma_j} = \frac{v_i^\top(\lambda_j v_j)}{\sigma_i \sigma_j} = \frac{\lambda_j \, \delta_{ij}}{\sigma_i \sigma_j} = \delta_{ij} . $$
+**Numbering.** This is Theorem 5 of the lecture; Theorems 6 and 7 below read the two norms off $\Sigma$.
 
-Since $r \leq m$, extend $u_1, \dots, u_r$ to an orthonormal basis $u_1, \dots, u_m$ of $\mathbb{R}^m$, by Lemma 2.5 applied to a completion to a basis, and set $U = [u_1 \cdots u_m]$, which is orthogonal by Proposition 3.5.
+**Sources.**
 
-*Step 3: verify $AV = U\Sigma$.* Let $\Sigma \in \mathbb{R}^{m \times n}$ have $\Sigma_{ii} = \sigma_i$ for $i \leq r$ and zeros elsewhere. Column $i$ of $AV$ is $Av_i$, which equals $\sigma_i u_i$ for $i \leq r$ by the definition of $u_i$, and $0$ for $i > r$ by Step 1. Column $i$ of $U\Sigma$ is $\sum_j u_j \Sigma_{ji} = \sigma_i u_i$ for $i \leq r$ and $0$ otherwise. The columns agree, so $AV = U\Sigma$, and right-multiplying by $V^\top$ gives $A = U\Sigma V^\top$. **End of proof.**
-
-Two remarks on this "$A^\top A$ route." First, the proof is *constructive*, and is exactly the by-hand recipe of the lecture: form $A^\top A$, eigendecompose, take square roots, push through $A$. Second, it is a terrible *numerical* recipe: forming $A^\top A$ squares the condition number, so library implementations, which use Golub-Kahan bidiagonalization [8, ch. 8], never do this. The hand computation is for understanding, not for code -- in practice one calls the library routine `numpy.linalg.svd`.
-
-#### 4.3 What is unique and what is not
-
-**Proposition 4.1.** The singular values are unique: they are the square roots of the eigenvalues of $A^\top A$, sorted. The singular *vectors* are not unique.
-
-*Proof of the first claim.* If $A = U\Sigma V^\top$ then $A^\top A = V \Sigma^\top \Sigma V^\top$, an eigendecomposition with eigenvalues $\sigma_i^2$; the eigenvalues of a fixed matrix are the roots of its characteristic polynomial, hence determined by $A$ alone. **End of proof.**
-
-Non-uniqueness of the vectors has two sources. *Signs:* replacing the pair $(u_i, v_i)$ by $(-u_i, -v_i)$ changes nothing, since $\sigma_i(-u_i)(-v_i)^\top = \sigma_i u_i v_i^\top$. *Repeated singular values:* if $\sigma_i = \sigma_j$ for $i \neq j$, any rotation within the corresponding two-dimensional eigenspace of $A^\top A$ yields another valid SVD -- for $A = I_2$ every orthogonal $V$ works, with $U = V$. Additionally, the columns $u_{r+1}, \dots, u_m$ are constrained only to complete an orthonormal basis.
-
-This is why the lecture drops the source's uniqueness claim for the *minimizer* in Theorem 8: non-uniqueness enters here, at the level of the decomposition itself, and Section 7.6 shows it survives into the approximation problem.
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5, Theorem 4.22 (SVD theorem); Section 4.5.2, eq. (4.78), $u_i = Av_i/\sigma_i$.
 <!-- END S38 -->
 
 <!-- BEGIN S39 -->
-### 22. Reading the Shapes (Full SVD) [S39]
+### 22. Read the Factor Shapes [S39]
+
+**Message.** The factor shapes $(m\times m)(m\times n)(n\times n)$ multiply to $m \times n$, and only the first $r$ diagonal slots of $\Sigma$ are nonzero.
+
+The figure draws, left to right, a tall shaded block $A$ labelled $m \times n$, an equals sign, a square $U$ labelled $m \times m$ and orthogonal, a tall $\Sigma$ labelled $m \times n$, and a smaller square $V^\top$ labelled $n \times n$ and orthogonal. Inside $\Sigma$ the diagonal starts as a solid blue segment, labelled $\sigma_1, \dots, \sigma_r \gt 0$ above the block, and continues as a dashed gray segment for the zero diagonal slots. A gray band across the bottom of $\Sigma$ marks the zero rows. The figure is drawn for $m \gt n$. The key lines below give the shape product and decode solid, dashed and gray.
+
+**Details.**
+
+**Names.** The columns $u_i$ of $U$ are the left singular vectors (in output space $\mathbb R^m$); the columns $v_i$ of $V$ are the right singular vectors (in input space $\mathbb R^n$).
+
+**Other shapes.** For $m \lt n$ the zero block of $\Sigma$ is a set of columns on the right instead of rows at the bottom. For square $A$ there is no zero block, only zero diagonal entries when $r \lt n$.
+
+**Sources.**
+
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5, eq. (4.64) and the shape discussion after Theorem 4.22.
 <!-- END S39 -->
 
 <!-- BEGIN S40 -->
-### 23. What Each Factor Does [S40]
+### 23. Rotate, Stretch, Rotate [S40]
+
+**Message.** Multiplying by $A = U\Sigma V^\top$ is three steps: an orthogonal change of input coordinates, a stretch by the singular values, and an orthogonal change of output coordinates.
+
+A flow diagram runs left to right through four boxes: $x$ in $\mathbb R^n$, then $V^\top x$ in $\mathbb R^n$, then $\Sigma V^\top x$ in $\mathbb R^m$, then $Ax$ in $\mathbb R^m$. The three arrows are labelled $V^\top$ (orthogonal), $\Sigma$ (stretch) and $U$ (orthogonal). The display reads $Ax = U(\Sigma(V^\top x))$ and notes that the rightmost factor acts first. Two lines name the roles: $V^\top$ and $U$ are rotations or reflections that keep lengths; $\Sigma$, of size $m \times n$, multiplies coordinate $i$ by $\sigma_i$ and is not a rotation.
+
+**Details.**
+
+**Why lengths are kept.** For orthogonal $Q$, $\|Qx\|_2^2 = x^\top Q^\top Q x = \|x\|_2^2$. This orthogonal invariance was proved earlier in the lecture and is used again in the norm proofs below.
+
+**Change of space.** $\Sigma$ is the only step that can change dimension: it maps $\mathbb R^n$ to $\mathbb R^m$, dropping coordinates when $m \lt n$ and padding with zeros when $m \gt n$.
+
+**Rotation or reflection.** An orthogonal matrix has determinant $\pm 1$; with determinant $-1$ it includes a reflection. In the worked example below both $U$ and $V$ have determinant $1$.
+
+**Sources.**
+
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5.1 and Figure 4.8 (basis change, scaling, basis change).
 <!-- END S40 -->
 
 <!-- BEGIN S52 -->
-### 24. Circle to Ellipse -- Rotate First [S52]
+### 24. First Change the Input Coordinates [S52]
 
-#### 4.8 The geometry: sphere to ellipsoid
+**Message.** The first step $V^\top$ only changes coordinates: the unit circle stays a circle and the right singular vectors become the coordinate axes.
 
-**Proposition 4.3.** $A$ maps the unit sphere $\{x : \|x\|_2 = 1\}$ onto the ellipsoid $\{\sum_{i \leq r} c_i u_i : \sum_{i \leq r} c_i^2/\sigma_i^2 \leq 1\}$, degenerating to a filled ellipsoid inside $\operatorname{range}(A)$ when $r < n$, with semi-axes $\sigma_i u_i$.
+Two panels are joined by a gray arrow labelled $V^\top$. Panel 1 shows the unit circle of inputs with two arrows: $v_1$ pointing up and to the right at $45$ degrees and $v_2$ pointing up and to the left. Panel 2, after $V^\top$, shows the same circle with $v_1$ now along the horizontal axis as $e_1$ and $v_2$ along the vertical axis as $e_2$. The caption says $V^\top$ is orthogonal, so lengths are kept and nothing is stretched. A muted line notes that the picture is drawn for the worked matrix used later, with $v_1 = (1,1)/\sqrt2$ and $v_2 = (-1,1)/\sqrt2$.
 
-*Proof.* With $y = V^\top x$, so that $\|y\| = 1$ by Theorem 4, we have $Ax = U\Sigma y = \sum_{i \leq r} \sigma_i y_i u_i$, that is, $c_i = \sigma_i y_i$ where $\sum_{i \leq n} y_i^2 = 1$. If $r = n$ this says exactly $\sum_i c_i^2/\sigma_i^2 = 1$. If $r < n$ the coordinates $y_{r+1}, \dots, y_n$ are free, so $\sum_{i \leq r} y_i^2$ takes every value in $[0,1]$ and the image is the solid ellipsoid. **End of proof.**
+**Details.**
 
-This is the standard four-stage rotate-stretch-rotate picture read algebraically: $V^\top$ rotates the sphere to itself, $\Sigma$ stretches axis $i$ by $\sigma_i$, and $U$ rotates the resulting ellipsoid into the output space. It also makes Theorem 6 geometrically obvious in advance -- the longest semi-axis has length $\sigma_1$.
+**Check.** $V^\top v_1 = e_1$ and $V^\top v_2 = e_2$ because the rows of $V^\top$ are $v_1^\top, v_2^\top$ and these are orthonormal. Here $V = \frac{1}{\sqrt2}\begin{bmatrix}1 & -1\\ 1 & 1\end{bmatrix}$ has determinant $1$, so $V^\top$ is a rotation by $-45$ degrees.
+
+**Sources.**
+
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5.1, Figure 4.8. Vectors: Worked-example arithmetic: our calculation, recomputed for this revision.
 <!-- END S52 -->
 
 <!-- BEGIN S53 -->
-### 25. Circle to Ellipse -- Stretch, Then Rotate Back [S53]
+### 25. Then Stretch and Reorient [S53]
+
+**Message.** $\Sigma$ stretches the axes by $\sigma_1$ and $\sigma_2$, and $U$ turns them into the output directions: the image of the unit circle is an ellipse with semi-axes $\sigma_1 u_1$ and $\sigma_2 u_2$.
+
+Two more panels continue the sequence, joined by an arrow labelled $U$. Panel 3, after $\Sigma$, shows an axis-aligned ellipse three times as wide as it is tall, with arrows $\sigma_1 e_1$ along the horizontal axis and $\sigma_2 e_2$ along the vertical axis. Panel 4, after $U$, shows the same ellipse tilted steeply up and to the right, with the long semi-axis $\sigma_1 u_1$ pointing along $(1,3)$ and the short one $\sigma_2 u_2$ pointing along $(-3,1)$; this ellipse is the set of all $Ax$ for unit $x$. The caption gives the semi-axis lengths as the singular values $\sigma_1 = 3\sqrt5 \approx 6.71$ and $\sigma_2 = \sqrt5 \approx 2.24$. The muted line warns that these are not the eigenvalues $3$ and $5$ of $A$ and that the drawing is shrunk with axis ratio exactly $3:1$.
+
+**Details.**
+
+**Why an ellipse.** After $V^\top$ the input is a unit vector $y$; $\Sigma y = (\sigma_1 y_1, \sigma_2 y_2)$ satisfies $(z_1/\sigma_1)^2 + (z_2/\sigma_2)^2 = 1$, an axis-aligned ellipse. $U$ is orthogonal, so it moves the ellipse rigidly.
+
+**Drawing scale.** The drawn semi-axes are $120$ and $40$ units, ratio $3 = \sigma_1/\sigma_2$; the tilt is $\arctan 3 \approx 71.57$ degrees, the direction of $u_1 = (1,3)/\sqrt{10}$.
+
+**Sources.**
+
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5.1, Figure 4.8. Numbers: Worked-example arithmetic: our calculation, recomputed for this revision.
 <!-- END S53 -->
 
 <!-- BEGIN S41 -->
-### 26. Technique Review -- the Outer-Product View [S41]
+### 26. A Sum of Rank-One Layers [S41]
 
-#### 4.4 Thin SVD, the rank-one expansion, and the four subspaces again
+**Message.** Expanding $U\Sigma V^\top$ writes $A$ as a sum of $r$ rank-one layers $\sigma_i u_i v_i^\top$, ordered by weight.
 
-Discarding the columns of $U$ and $V$ that meet only zeros in $\Sigma$ gives the **thin (compact) SVD** $A = U_c \Sigma_c V_c^\top$, with $U_c \in \mathbb{R}^{m \times r}$, $\Sigma_c = \operatorname{diag}(\sigma_1, \dots, \sigma_r)$ invertible, and $V_c \in \mathbb{R}^{n \times r}$. Equivalently,
+The left column shows $A = U\Sigma V^\top = \sum_{i=1}^r \sigma_i u_i v_i^\top$, with braces marking $u_i$ as $m \times 1$ and $v_i^\top$ as $1 \times n$. Three lines follow: each $u_i v_i^\top$ is $m \times n$ with every column a multiple of $u_i$; when $\sigma_i \gt 0$ the term has rank one; and all $r$ terms together give $A$ exactly. The right column shows three stacked translucent sheets; the front sheet is labelled $\sigma_1 u_1 v_1^\top$ with largest weight, the caption reads $A$ = layer $1 + \dots +$ layer $r$, and the back layers carry smaller $\sigma_i$.
 
-$$ A \;=\; \sum_{i=1}^{r} \sigma_i \, u_i v_i^\top , $$
+**Details.**
 
-since the $(j,k)$ entry of both sides is $\sum_i \sigma_i u_{ji} v_{ki}$. Each $u_i v_i^\top$ has rank one and acts as $x \mapsto u_i (v_i^\top x)$: measure the component of $x$ along $v_i$, emit it along $u_i$.
+**Derivation.** The columns of $U\Sigma$ are $\sigma_i u_i$ for $i \le r$ and zero otherwise. Multiplying by $V^\top$, whose rows are $v_i^\top$, gives $U\Sigma V^\top = \sum_{i=1}^r (\sigma_i u_i) v_i^\top$ by the column-times-row form of matrix multiplication.
 
-The SVD also hands back the subspaces of Theorem 3 explicitly. For each of the four, its basis drawn from the SVD factors and its dimension:
+**Rank one.** Column $j$ of $u_i v_i^\top$ is $(v_i)_j u_i$, a multiple of $u_i$, and $v_i \ne 0$, so the column space is exactly the span of $u_i$.
 
-- $\operatorname{range}(A)$: basis $u_1, \dots, u_r$; dimension $r$.
-- $\operatorname{null}(A^\top) = \operatorname{range}(A)^\perp$: basis $u_{r+1}, \dots, u_m$; dimension $m - r$.
-- $\operatorname{row}(A)$: basis $v_1, \dots, v_r$; dimension $r$.
-- $\operatorname{null}(A) = \operatorname{row}(A)^\perp$: basis $v_{r+1}, \dots, v_n$; dimension $n - r$.
+**Forward pointer.** The partial sum of the first $k$ layers is written $A_k = \sum_{i \le k}\sigma_i u_i v_i^\top$. Whether $A_k$ is the best rank-$k$ approximation is a separate theorem, proved later in the lecture.
 
-For the first of these: $Ax = \sum_{i \leq r} \sigma_i (v_i^\top x) u_i$ ranges over $\operatorname{span}\{u_1, \dots, u_r\}$ as $x$ varies. The fourth was Step 1 of the proof of Theorem 5, and the other two follow by Theorem 3.
+**Sources.**
 
-Note also that $\operatorname{rank}(A) = r$ is *defined* by the SVD as the number of nonzero singular values, which in floating-point arithmetic becomes the useful notion of *numerical rank*: the number of $\sigma_i$ above a tolerance. Section 5.6 explains why that is the only workable definition in practice.
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6 (matrix approximation as a sum of rank-one matrices).
 <!-- END S41 -->
 
 <!-- BEGIN S42 -->
-### 27. Thin (Compact) SVD [S42]
+### 27. Compact SVD Keeps Active Directions [S42]
+
+**Message.** Dropping the zero singular values leaves the compact SVD $A = U_r\Sigma_r V_r^\top$, which is still exact but whose thin factors are not orthogonal matrices.
+
+The figure shows $A$ ($m \times n$) equal to a thin tall block $U_r$ ($m \times r$), a small square $\Sigma_r$ ($r \times r$) with a full diagonal, and a short wide block $V_r^\top$ ($r \times n$); a gray note says only the $r$ nonzero $\sigma_i$ are kept. The display reads $A = U_r\Sigma_r V_r^\top$, $\Sigma_r = \operatorname{diag}(\sigma_1, \dots, \sigma_r)$, $U_r^\top U_r = V_r^\top V_r = I_r$. The muted qualifier says that when $r \lt m$, $U_r U_r^\top \ne I_m$: the thin factors have orthonormal columns but are not square orthogonal matrices.
+
+**Details.**
+
+**Why it is exact.** The rank-one expansion uses only $i \le r$, and $U_r\Sigma_r V_r^\top$ is exactly that sum. The discarded columns of $U$ and $V$ only ever multiply zeros of $\Sigma$.
+
+**What $U_r U_r^\top$ is.** It is the orthogonal projector onto the column space of $A$; it equals $I_m$ only when $r = m$. Likewise $V_r V_r^\top$ projects onto the row space.
+
+**Notation.** This revision writes the compact factors with subscript $r$ ($U_r, \Sigma_r, V_r$), matching the rank.
+
+**Sources.**
+
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5 (reduced SVD discussion).
 <!-- END S42 -->
 
 <!-- BEGIN S44 -->
-### 28. Worked -- SVD by Hand: the Plan [S44]
+### 28. One Matrix, One Construction [S44]
 
-#### 4.6 The running example, recomputed
+**Message.** One non-symmetric $2\times 2$ matrix carries the whole construction: form $A^\top A$, take eigenpairs, take square roots, and divide to get the outputs.
 
-Every step of the hand computation for $A$, the matrix with first row $(3, 0)$ and second row $(4, 5)$, verified independently.
+The worked example is introduced as $A = \begin{bmatrix}3 & 0\\ 4 & 5\end{bmatrix}$, not symmetric, used to the end of the lecture. The display substitutes the SVD into $A^\top A$: $A^\top A = V\Sigma^\top U^\top U\Sigma V^\top = V\Sigma^\top\Sigma V^\top$ because $U^\top U = I$, so the eigenvalues of $A^\top A$ are the $\sigma_i^2$. A four-box chain shows the route: 1, form $A^\top A$; 2, eigenpairs $\lambda_i, v_i$; 3, stretches $\sigma_i = \sqrt{\lambda_i}$; 4, outputs $u_i = Av_i/\sigma_i$.
+
+**Details.**
+
+**Why the route works.** $V\Sigma^\top\Sigma V^\top$ is an eigendecomposition: $\Sigma^\top\Sigma$ is $n \times n$ diagonal with entries $\sigma_i^2$ (and zeros), and $V$ is orthogonal. So the right singular vectors are eigenvectors of $A^\top A$, and the eigenvalues are the squared stretches.
+
+**Step 4.** Dividing by $\sigma_i$ is allowed only when $\sigma_i \gt 0$; the zero singular values give no $u_i$ this way, and the remaining columns of $U$ are filled in by any orthonormal completion.
+
+**Sources.**
+
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5.2 (construction of the SVD). Example: Worked-example arithmetic: our calculation, recomputed for this revision.
 <!-- END S44 -->
 
 <!-- BEGIN S45 -->
-### 29. Worked -- Step 1: Form $A^{\top}A$ [S45]
+### 29. Build the Symmetric Matrix $A^\top A$ [S45]
 
-#### 4.6 The running example, recomputed (continued)
+**Message.** For the worked example, $A^\top A = \begin{bmatrix}25 & 20\\ 20 & 25\end{bmatrix}$, and each entry is a dot product of two columns of $A$.
 
-*Step 1.* $A^\top$ has first row $(3, 4)$ and second row $(0, 5)$. The product $A^\top A$ has first row $(9 + 16, 20) = (25, 20)$ and second row $(20, 25)$. Checked.
+The first display multiplies $A^\top = \begin{bmatrix}3 & 4\\ 0 & 5\end{bmatrix}$ by $A$ to get $\begin{bmatrix}25 & 20\\ 20 & 25\end{bmatrix}$. The line below explains entry $(i,j)$ as column $i$ of $A$ dotted with column $j$, and the second display shows the three distinct dot products: $3^2 + 4^2 = 25$, $3\cdot 0 + 4\cdot 5 = 20$, and $0^2 + 5^2 = 25$. The muted line notes the result is $2\times 2$, symmetric and positive semidefinite, ready for an eigenproblem.
+
+**Details.**
+
+**Columns of $A$.** Column 1 is $(3,4)$ and column 2 is $(0,5)$. Their squared lengths $25$ and $25$ sit on the diagonal; their dot product $20$ sits off the diagonal.
+
+**Sources.**
+
+Worked-example arithmetic: our calculation, recomputed for this revision.
 <!-- END S45 -->
 
 <!-- BEGIN S46 -->
-### 30. Worked -- Step 2: Eigenvalues [S46]
+### 30. The Eigenvalues Are 45 and 5 [S46]
 
-#### 4.6 The running example, recomputed (continued)
+**Message.** The eigenvalues of $A^\top A$ are $45$ and $5$; they are the squared singular values, not eigenvalues of $A$.
 
-*Step 2.* $\det(A^\top A - \lambda I) = (25 - \lambda)^2 - 400$, so $25 - \lambda = \pm 20$, giving $\lambda_1 = 45$ and $\lambda_2 = 5$. Checked. Two consistency tests: the trace, $45 + 5 = 50 = 25 + 25$; and the determinant, $45 \cdot 5 = 225 = 625 - 400$.
+The characteristic polynomial is factored as a difference of squares: $\det(A^\top A - \lambda I) = (25-\lambda)^2 - 20^2 = (25-\lambda-20)(25-\lambda+20) = (5-\lambda)(45-\lambda)$. The second display lists $\lambda_1 = 45 \ge \lambda_2 = 5$ with two checks: the sum $50$ equals the trace $25+25$, and the product $225$ equals the determinant $25^2 - 20^2$. The muted line repeats that these are eigenvalues of $A^\top A$, the squared stretches $\sigma_i^2$.
 
-For eigenvectors: $A^\top A - 45I$ has first row $(-20, 20)$ and second row $(20, -20)$, and solving $(A^\top A - 45I)v = 0$ gives $v_1$ proportional to $(1,1)$. Likewise $A^\top A - 5I$ has both rows equal to $(20, 20)$, and solving gives $v_2$ proportional to $(-1, 1)$. Normalized and orthogonal. Checked.
+**Details.**
+
+**Arithmetic.** $25^2 - 20^2 = 625 - 400 = 225 = 45 \cdot 5$. Also $\det(A^\top A) = (\det A)^2 = 15^2 = 225$.
+
+**Sources.**
+
+Worked-example arithmetic: our calculation, recomputed for this revision.
 <!-- END S46 -->
 
 <!-- BEGIN S47 -->
-### 31. Worked -- Step 2: Eigenvectors [S47]
+### 31. Orthonormal Input Directions [S47]
 
-#### 4.6 The running example, recomputed (continued)
+**Message.** Solving the two null-space problems gives $v_1 = (1,1)/\sqrt2$ and $v_2 = (-1,1)/\sqrt2$: orthonormal input directions.
 
-The coincidence that $V$ is the same $45$-degree rotation met earlier in the lecture is not an accident of exposition but of the example: $A^\top A$ has equal diagonal entries, and any symmetric matrix with first row $(a, b)$ and second row $(b, a)$ has eigenvectors $(1,1)$ and $(-1,1)$ regardless of $a$ and $b$.
+The display solves $(A^\top A - \lambda I)v = 0$ for each eigenvalue. For $\lambda_1 = 45$ the matrix is $\begin{bmatrix}-20 & 20\\ 20 & -20\end{bmatrix}$, whose null space is spanned by $(1,1)$, so $v_1 = (1,1)/\sqrt2$. For $\lambda_2 = 5$ the matrix is $\begin{bmatrix}20 & 20\\ 20 & 20\end{bmatrix}$, giving $v_2 = (-1,1)/\sqrt2$. The check line shows $v_1^\top v_2 = \frac12(-1+1) = 0$ and both vectors have length $1$. The muted line notes that $-v_i$ also works, provided $u_i$ flips with it.
+
+**Details.**
+
+**Sign convention.** Replacing $v_i$ by $-v_i$ replaces $u_i = Av_i/\sigma_i$ by $-u_i$, and $\sigma_i u_i v_i^\top$ is unchanged. The lecture fixes the signs above.
+
+**Geometry.** $V = [v_1\ v_2] = \frac{1}{\sqrt2}\begin{bmatrix}1 & -1\\ 1 & 1\end{bmatrix}$ is the rotation by $45$ degrees (determinant $1$).
+
+**Sources.**
+
+Worked-example arithmetic: our calculation, recomputed for this revision.
 <!-- END S47 -->
 
 <!-- BEGIN S48 -->
-### 32. Worked -- Step 3: Sigmas and $u_i$ [S48]
+### 32. Recover Stretches and Output Directions [S48]
 
-#### 4.6 The running example, recomputed (continued)
+**Message.** Square roots give $\sigma_1 = 3\sqrt5$ and $\sigma_2 = \sqrt5$, and $u_i = Av_i/\sigma_i$ gives $u_1 = (1,3)/\sqrt{10}$ and $u_2 = (-3,1)/\sqrt{10}$.
 
-*Step 3.* $\sigma_1 = \sqrt{45} = 3\sqrt5 \approx 6.7082$ and $\sigma_2 = \sqrt5 \approx 2.2361$. Checked. Then $Av_1 = \tfrac{1}{\sqrt2}(3, 9)$ with $\|Av_1\| = \tfrac{1}{\sqrt2}\sqrt{90} = \sqrt{45} = \sigma_1$ (checked), so
+The first display gives $\sigma_1 = \sqrt{45} = 3\sqrt5 \approx 6.71$ and $\sigma_2 = \sqrt5 \approx 2.24$. The second display computes $Av_1 = (3,9)/\sqrt2$ and divides by $3\sqrt5$ to get $u_1 = (1,3)/\sqrt{10}$, and computes $Av_2 = (-3,1)/\sqrt2$ and divides by $\sqrt5$ to get $u_2 = (-3,1)/\sqrt{10}$. The check line shows $u_1^\top u_2 = \frac{1}{10}(-3+3) = 0$, both of length $1$, and both $\sigma_i \gt 0$ so the divisions are allowed.
 
-$$ u_1 = \frac{Av_1}{\sigma_1} = \frac{(3,9)}{\sqrt2 \cdot 3\sqrt5} = \frac{(1,3)}{\sqrt{10}} . $$
+**Details.**
 
-Checked. Similarly $Av_2 = \tfrac{1}{\sqrt2}(-3, 1)$ with $\|Av_2\| = \tfrac{\sqrt{10}}{\sqrt2} = \sqrt5 = \sigma_2$ (checked), so $u_2 = (-3, 1)/\sqrt{10}$. Checked.
+**Arithmetic.** $Av_1 = \frac{1}{\sqrt2}(3\cdot1 + 0\cdot1,\ 4\cdot1 + 5\cdot1) = (3,9)/\sqrt2$; dividing by $3\sqrt5$ gives $(1,3)/\sqrt{10}$ since $\sqrt2\cdot\sqrt5 = \sqrt{10}$. $Av_2 = \frac{1}{\sqrt2}(-3,\ -4+5) = (-3,1)/\sqrt2$. Lengths: $(1+9)/10 = 1$ for both.
+
+**Geometry.** $U = \frac{1}{\sqrt{10}}\begin{bmatrix}1 & -3\\ 3 & 1\end{bmatrix}$ has determinant $(1+9)/10 = 1$, a rotation by $\arctan 3 \approx 71.57$ degrees.
+
+**Sources.**
+
+Worked-example arithmetic: our calculation, recomputed for this revision.
 <!-- END S48 -->
 
 <!-- BEGIN S49 -->
-### 33. Worked -- Step 4: Assemble [S49]
+### 33. The Factors Reconstruct $A$ [S49]
+
+**Message.** Multiplying the three computed factors gives back $A$ exactly.
+
+The first display writes $A$ as the product of $U = \frac{1}{\sqrt{10}}\begin{bmatrix}1 & -3\\ 3 & 1\end{bmatrix}$, $\Sigma = \operatorname{diag}(3\sqrt5, \sqrt5)$ and $V^\top = \frac{1}{\sqrt2}\begin{bmatrix}1 & 1\\ -1 & 1\end{bmatrix}$, each labelled by a brace. The second display multiplies in two steps: $U\Sigma = \frac{1}{\sqrt2}\begin{bmatrix}3 & -3\\ 9 & 1\end{bmatrix}$, then $(U\Sigma)V^\top = \frac12\begin{bmatrix}6 & 0\\ 8 & 10\end{bmatrix} = A$, with a check mark. The muted line reminds that the columns of $U$ are $u_1, u_2$ and the rows of $V^\top$ are $v_1^\top, v_2^\top$.
+
+**Details.**
+
+**Arithmetic.** $U\Sigma$: column 1 is $3\sqrt5\,(1,3)/\sqrt{10} = (3,9)/\sqrt2$ and column 2 is $\sqrt5\,(-3,1)/\sqrt{10} = (-3,1)/\sqrt2$. Then row 1 of $(U\Sigma)V^\top$ is $\frac12(3\cdot1 + (-3)(-1),\ 3\cdot1 + (-3)\cdot1) = \frac12(6, 0)$ and row 2 is $\frac12(9 - 1,\ 9 + 1) = \frac12(8, 10)$.
+
+**Sources.**
+
+Worked-example arithmetic: our calculation, recomputed for this revision.
 <!-- END S49 -->
 
 <!-- BEGIN S50 -->
-### 34. Worked -- Verify via Rank-1 Layers [S50]
+### 34. The First Layer Carries Most Energy [S50]
 
-#### 4.6 The running example, recomputed (continued)
+**Message.** The first rank-one layer $A_1$ carries $45$ of the total energy $50$, that is $90\%$; this is a reconstruction fact, not yet an optimality claim.
 
-*Step 4: the two rank-one layers.* The first layer is
+The first display splits $A$ into its two layers: $A_1 = \sigma_1 u_1 v_1^\top = \begin{bmatrix}1.5 & 1.5\\ 4.5 & 4.5\end{bmatrix}$ plus $\sigma_2 u_2 v_2^\top = \begin{bmatrix}1.5 & -1.5\\ -0.5 & 0.5\end{bmatrix}$. The second display gives the energies, squared Frobenius norms: $50 = 45 + 5$. The text line states the share $45/50 = 90\%$. The muted line warns that this is reconstruction, not optimality: it does not yet show $A_1$ is the best rank-one approximation.
 
-$$ \sigma_1 u_1 v_1^\top = 3\sqrt5 \cdot \frac{1}{\sqrt{10}} \cdot \frac{1}{\sqrt2} \, (1,3)^\top (1,1) = \frac{3\sqrt5}{\sqrt{20}} \cdot M_1 = \tfrac32 M_1 , $$
+**Details.**
 
-where $M_1$ is the matrix with first row $(1,1)$ and second row $(3,3)$, using $3\sqrt5/\sqrt{20} = 3\sqrt5/(2\sqrt5) = 3/2$. So the first layer has first row $(1.5, 1.5)$ and second row $(4.5, 4.5)$. Checked.
+**Arithmetic.** $\sigma_1 u_1 v_1^\top = 3\sqrt5 \cdot \frac{1}{\sqrt{10}}(1,3) \cdot \frac{1}{\sqrt2}(1,1)^\top = \frac{3}{2}\begin{bmatrix}1 & 1\\ 3 & 3\end{bmatrix}$, entries summing in squares to $\frac94(1+1+9+9) = 45$. $\sigma_2 u_2 v_2^\top = \sqrt5 \cdot \frac{1}{\sqrt{10}}(-3,1) \cdot \frac{1}{\sqrt2}(-1,1)^\top = \frac12\begin{bmatrix}3 & -3\\ -1 & 1\end{bmatrix}$, squared entries $\frac14(9+9+1+1) = 5$. The two layers add to $A$ entry by entry. $\|A\|_F^2 = 9 + 0 + 16 + 25 = 50$.
 
-Similarly the second layer is $\sigma_2 u_2 v_2^\top = \sqrt5 \cdot \tfrac{1}{\sqrt{20}} \cdot M_2 = \tfrac12 M_2$, where $M_2$ is the matrix with first row $(3, -3)$ and second row $(-1, 1)$; so the second layer has first row $(1.5, -1.5)$ and second row $(-0.5, 0.5)$. Checked. The two layers sum entry by entry to $(1.5 + 1.5, 1.5 - 1.5) = (3, 0)$ and $(4.5 - 0.5, 4.5 + 0.5) = (4, 5)$, which is $A$. Checked.
+**Why the energies add.** The layers are orthogonal in the Frobenius inner product because $u_1 \perp u_2$; Theorem 7 below states the general identity $\|A\|_F^2 = \sum_i \sigma_i^2$.
+
+**Forward pointer.** That $A_1$ is the best rank-one approximation, in both the spectral and Frobenius norms, is the Eckart-Young-Mirsky theorem, later in the lecture.
+
+**Sources.**
+
+Worked-example arithmetic: our calculation, recomputed for this revision.
 <!-- END S50 -->
 
 <!-- BEGIN S51 -->
-### 35. Eigenvalues $\neq$ Singular Values [S51]
+### 35. Eigenvalues Are Not Singular Values [S51]
 
-#### 4.7 Eigenvalues versus singular values
+**Message.** For a non-symmetric matrix the eigenvalues and the singular values are different lists; the eigenvalues of $A^\top A$ are the squared singular values.
 
-For the running matrix, which is lower triangular, the eigenvalues are the diagonal entries $3$ and $5$; the singular values are $6.708$ and $2.236$. Not equal, not even close. But the products agree: $3 \cdot 5 = 15 = |\det A| = \sigma_1 \sigma_2 = 3\sqrt5 \cdot \sqrt5$, and that is general.
+The slide shows the same $A = \begin{bmatrix}3 & 0\\ 4 & 5\end{bmatrix}$ in two columns. Left, the eigenvalues of $A$ are $3$ and $5$, read from the diagonal of a triangular matrix; an eigenvector keeps its direction, $Ax = \lambda x$. Right, the singular values are $3\sqrt5 \approx 6.71$ and $\sqrt5 \approx 2.24$; a singular pair satisfies $Av_i = \sigma_i u_i$, so the direction may turn. The highlight says $45$ and $5$ are eigenvalues of $A^\top A$, the squares $\sigma_i^2$, and that the lists coincide for symmetric positive semidefinite $A$ but differ in general.
 
-**Proposition 4.2.** For square $A$: (a) $\prod_i \sigma_i = |\det A| = \prod_i |\lambda_i|$; (b) $\max_i |\lambda_i| \leq \sigma_1$, with equality for all $i$ simultaneously if and only if $A$ is normal, meaning $A^\top A = AA^\top$, which in the real case includes in particular every symmetric $A$.
+**Details.**
 
-*Proof of (a) and of the inequality in (b).* (a) $\det A = \det U \det \Sigma \det V^\top = \pm \prod_i \sigma_i$. (b) If $Ax = \lambda x$ with $\|x\| = 1$ then $|\lambda| = \|Ax\|_2 \leq \max_{\|y\| = 1} \|Ay\|_2 = \sigma_1$ by Theorem 6. The equality characterization is standard and imported, from [6, ch. 3]. **End of proof.**
+**Eigenvectors of $A$.** $\det(A - \lambda I) = (3-\lambda)(5-\lambda)$. For $\lambda = 3$, $(1,-2)$ works: $A(1,-2) = (3, -6)$. For $\lambda = 5$, $(0,1)$ works: $A(0,1) = (0,5)$. These are not orthogonal: $(1,-2)\cdot(0,1) = -2$.
 
-The conceptual difference is this: eigenvectors are directions $A$ preserves, while right singular vectors are directions $A$ stretches most. That is why singular values are the right notion here -- eigenvalues need not exist over $\mathbb{R}$, as a $90$-degree rotation has none, and eigenvectors need not be orthogonal or even span the space, whereas the singular values and both singular bases always exist.
+**One shared quantity.** Both products equal $|\det A| = 15$: $3 \cdot 5 = 15$ and $3\sqrt5 \cdot \sqrt5 = 15$.
+
+**Symmetric case.** For symmetric $A = Q\Lambda Q^\top$ the singular values are $|\lambda_i|$; they equal the eigenvalues only when all $\lambda_i \ge 0$. A symmetric matrix with a negative eigenvalue has eigendecomposition and SVD that differ by signs. Note: MML Section 4.5.3 states the symmetric case without the positive semidefinite condition.
+
+**Sources.**
+
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5.3 (eigenvalue decomposition vs SVD). Example: Worked-example arithmetic: our calculation, recomputed for this revision.
 <!-- END S51 -->
 
 <!-- BEGIN S68 -->
-### 36. Theorem 6 -- Spectral Norm $=$ Top Sigma [S68]
+### 36. Largest Singular Value, Largest Stretch [S68]
 
-#### 6.3 Theorem 6: the spectral norm is $\sigma_1$
+**Message.** The spectral norm, the largest stretch of any unit vector, equals the largest singular value $\sigma_1$; the proof needs an upper bound and a witness.
 
-**Theorem 6.** $\|A\|_2 = \sigma_1(A)$, attained at $x = v_1$.
+The theorem card states Theorem 6 for every $A \in \mathbb R^{m\times n}$ with largest singular value $\sigma_1$: $\|A\|_2 = \max_{\|x\|_2 = 1}\|Ax\|_2 = \sigma_1$. Below, two columns name the proof tasks: 1, an upper bound $\|Ax\|_2 \le \sigma_1$ for every unit $x$; 2, a witness, one unit $x$ with $\|Ax\|_2 = \sigma_1$.
 
-*Proof.* Let $A = U\Sigma V^\top$ and let $\|x\|_2 = 1$. Put $y = V^\top x$, so $\|y\|_2 = 1$ by Theorem 4. Then, again by Theorem 4 applied to $U$,
+**Details.**
 
-$$ \|Ax\|_2^2 = \|U\Sigma y\|_2^2 = \|\Sigma y\|_2^2 = \sum_{i \leq r} \sigma_i^2 y_i^2 \;\leq\; \sigma_1^2 \sum_i y_i^2 = \sigma_1^2 . $$
+**Why two tasks.** A maximum equals $\sigma_1$ exactly when nothing exceeds $\sigma_1$ and something reaches it. The next two slides do the two tasks.
 
-So $\|A\|_2 \leq \sigma_1$. For the reverse, $x = v_1$ gives $y = e_1$ and $\|Av_1\|_2 = \sigma_1$. **End of proof.**
+**Geometry.** On the ellipse picture, $\sigma_1$ is the longest semi-axis of the image of the unit circle.
 
-The two-line structure -- peel off $U$ and $V$ by orthogonal invariance, reduce to a diagonal problem, read off the answer -- is the master trick of this lecture, and Theorems 7 and 8 are the same trick twice more.
+**Definition.** $\|\cdot\|_2$ as the worst stretch was defined earlier in the lecture.
+
+**Sources.**
+
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6, Definition 4.23 and Theorem 4.24 (proof left as an exercise there). R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3.5-lowrank.html, Proposition 3.11.
 <!-- END S68 -->
 
 <!-- BEGIN S69 -->
-### 37. Proof (Thm 6) -- No Vector Beats $\sigma_1$ [S69]
+### 37. No Direction Beats the Largest Stretch [S69]
+
+**Message.** After the orthogonal change of coordinates $y = V^\top x$, every unit input is stretched by at most $\sigma_1$.
+
+The first line takes any unit $x \in \mathbb R^n$ and sets $y = V^\top x$, which is also a unit vector by orthogonal invariance. The two-line display chains $\|Ax\|_2^2 = \|U\Sigma y\|_2^2 = \|\Sigma y\|_2^2$ (since $U$ is orthogonal) $= \sum_{i=1}^r \sigma_i^2 y_i^2 \le \sigma_1^2\sum_{i=1}^n y_i^2 = \sigma_1^2\|y\|_2^2 = \sigma_1^2$ (since every $\sigma_i \le \sigma_1$). The muted line notes that as $x$ runs over all unit vectors so does $y$, so no direction is skipped.
+
+**Details.**
+
+**The inequality step.** Each term $\sigma_i^2 y_i^2 \le \sigma_1^2 y_i^2$, and extending the sum from $r$ to $n$ only adds nonnegative terms $\sigma_1^2 y_i^2$.
+
+**Coverage.** $V^\top$ is invertible with inverse $V$, so $x \mapsto V^\top x$ is a bijection of the unit sphere onto itself; bounding over all unit $y$ is the same as bounding over all unit $x$.
+
+**Shape.** $\Sigma y$ lies in $\mathbb R^m$ and its only nonzero coordinates are $\sigma_i y_i$ for $i \le r$.
+
+**Sources.**
+
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6, Theorem 4.24 (exercise). R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3.5-lowrank.html, Proposition 3.11.
 <!-- END S69 -->
 
 <!-- BEGIN S70 -->
-### 38. Proof (Thm 6) -- And $v_1$ Achieves It [S70]
+### 38. The First Singular Vector Attains It [S70]
+
+**Message.** The input $x = v_1$ is stretched by exactly $\sigma_1$, so together with the upper bound $\|A\|_2 = \sigma_1$.
+
+The slide takes the unit witness $x = v_1$. The first display computes $Av_1 = U\Sigma V^\top v_1 = U\Sigma e_1 = \sigma_1 u_1$, so $\|Av_1\|_2 = \sigma_1$ because $u_1$ is a unit vector. The second display closes the argument: $\sigma_1 = \|Av_1\|_2 \le \|A\|_2 \le \sigma_1$ by the upper bound, hence $\|A\|_2 = \sigma_1$, end of proof. The muted line ties it to the picture: $\sigma_1 u_1$ is the ellipse's longest semi-axis.
+
+**Details.**
+
+**Step $V^\top v_1 = e_1$.** The rows of $V^\top$ are $v_1^\top, \dots, v_n^\top$, and $v_j^\top v_1 = \delta_{j1}$.
+
+**Edge case $A = 0$.** Then $r = 0$, every $\sigma_i = 0$ and $\|A\|_2 = 0$; the identity still holds with any unit $v_1$, since $Av_1 = 0 = \sigma_1 u_1$.
+
+**Worked example.** $\|A\|_2 = 3\sqrt5 \approx 6.71$, attained at $v_1 = (1,1)/\sqrt2$ with $Av_1 = (3,9)/\sqrt2$, whose length is $\sqrt{90/2} = \sqrt{45}$.
+
+**Sources.**
+
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6, Theorem 4.24 (exercise). R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3.5-lowrank.html, Proposition 3.11.
 <!-- END S70 -->
 
 <!-- BEGIN S73 -->
-### 39. Theorem 7 -- Frobenius via Sigmas [S73]
+### 39. Frobenius Energy Sums Squared Stretches [S73]
 
-#### 6.4 The Frobenius norm and Theorem 7 (continued)
+**Message.** The total energy $\|A\|_F^2$, the sum of all squared entries, equals the sum of all squared singular values.
 
-**Theorem 7.** $\|A\|_F = (\sum_{i=1}^{r}\sigma_i^2)^{1/2}$, and more generally $\|UAV\|_F = \|A\|_F$ for orthogonal $U$ and $V$.
+The theorem card states Theorem 7 for every $A \in \mathbb R^{m\times n}$ of rank $r$: $\|A\|_F^2 = \sum_{i,j} a_{ij}^2 = \sum_{i=1}^r \sigma_i^2$. A contrast line follows: $\|A\|_2 = \sigma_1$ measures the worst single direction while $\|A\|_F$ measures total energy. The muted line checks the worked example: $\|A\|_F^2 = 9 + 0 + 16 + 25 = 50 = 45 + 5$.
 
-*Proof.* Using $\operatorname{tr}(XY) = \operatorname{tr}(YX)$:
+**Details.**
 
-$$ \|UAV\|_F^2 = \operatorname{tr}(V^\top A^\top U^\top U A V) = \operatorname{tr}(V^\top A^\top A V) = \operatorname{tr}(A^\top A V V^\top) = \operatorname{tr}(A^\top A) = \|A\|_F^2 . $$
+**Consequence.** $\|A\|_2 = \sigma_1 \le \|A\|_F \le \sqrt r\,\sigma_1$, since the sum has $r$ terms each at most $\sigma_1^2$. In the example, $\sqrt{45} \approx 6.71 \le \sqrt{50} \approx 7.07$.
 
-Applying this with the SVD, $\|A\|_F = \|U^\top A V\|_F = \|\Sigma\|_F = (\sum_i \sigma_i^2)^{1/2}$. **End of proof.**
+**Definition.** $\|\cdot\|_F$ as total energy was defined earlier in the lecture.
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3.5-lowrank.html, Proposition 3.10.
 <!-- END S73 -->
 
 <!-- BEGIN S74 -->
-### 40. Proof (Thm 7) -- One Trace Chain [S74]
+### 40. Orthogonal Coordinates Preserve Total Energy [S74]
+
+**Message.** Orthogonal matrices on either side do not change the Frobenius norm, so $\|A\|_F = \|U^\top A V\|_F = \|\Sigma\|_F$.
+
+The first line fixes orthogonal $Q$ and $W$ and a matrix $B$ with columns $b_j$. The two-line display proves invariance on each side. Columns: $\|QB\|_F^2 = \sum_j\|Qb_j\|_2^2 = \sum_j\|b_j\|_2^2 = \|B\|_F^2$, using vector invariance column by column. Rows, via the transpose: $\|BW\|_F = \|W^\top B^\top\|_F = \|B^\top\|_F = \|B\|_F$. The final display applies both with $Q = U^\top$ and $W = V$: $\|A\|_F^2 = \|U^\top A V\|_F^2 = \|\Sigma\|_F^2 = \sum_{i=1}^r\sigma_i^2$, end of proof.
+
+**Details.**
+
+**Transposition.** $\|B^\top\|_F = \|B\|_F$ because both sum the same squared entries.
+
+**Alternative trace proof.** $\|A\|_F^2 = \operatorname{tr}(A^\top A) = \operatorname{tr}(V\Sigma^\top\Sigma V^\top) = \operatorname{tr}(\Sigma^\top\Sigma V^\top V) = \operatorname{tr}(\Sigma^\top\Sigma) = \sum_i\sigma_i^2$, using the cyclic property of the trace.
+
+**Why $U^\top A V = \Sigma$.** Multiply $A = U\Sigma V^\top$ on the left by $U^\top$ and on the right by $V$.
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3.5-lowrank.html, Proposition 3.10 (proof via $\|U^\top A V\|_F = \|\Sigma\|_F$).
 <!-- END S74 -->
 
 <!-- REGION P2 END -->

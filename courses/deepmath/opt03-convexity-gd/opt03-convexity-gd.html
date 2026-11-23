@@ -128,100 +128,116 @@
 </div>
 
 <div class="slide" data-slide-id="S80">
-  <h2>The Problem</h2>
+  <h2>Goal: Minimize One Differentiable $f$</h2>
   <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$\min_{x \in \mathbb{R}^d} \; f(x)$$</div>
-  <ul>
-    <li>$f$ convex: &nbsp;$x$ is a solution $\iff \nabla f(x) = 0$</li>
-    <li>But $\nabla f(x) = 0$ rarely has a closed form &mdash; the lesson of least squares</li>
-    <li>Plan: <strong>walk downhill</strong>, one gradient at a time</li>
-  </ul>
+  <div class="math-block" style="margin:8px 0">$$\text{minimize } f(x) \text{ over } x \in \mathbb{R}^n, \qquad f:\mathbb{R}^n \to \mathbb{R} \text{ differentiable}$$</div>
+  <!-- exact geometry (schematic 1-D slice): f(u) = 1.5/(1+exp(2(u-2))) - 0.8 exp(-(u+1)^2), u in [-3,5].
+       inf f = 0 (u -> +inf), never attained; local min u ~ -0.995 (f ~ 0.696), local max u ~ 0.645 (f ~ 1.353).
+       X = 100 + 110(u+3), Y = 280 - 150 f.  f_low = 0 drawn at Y = 280. -->
+  <div class="o3-fig" style="max-width:880px;margin:4px auto 0;">
+    <svg viewBox="60 40 960 285" style="width:100%;">
+      <line x1="160" y1="280" x2="1000" y2="280" stroke="#5a6673" stroke-width="2.5" stroke-dasharray="10 7"/>
+      <polyline points="100,57 122,60 144,64 166,72 188,83 210,99 232,118 254,139 276,158 298,171 320,176 342,171 364,158 386,141 408,121 430,103 452,89 474,81 496,77 518,78 540,84 562,94 584,107 606,125 628,145 650,168 672,190 694,210 716,228 738,242 760,253 782,261 804,267 826,271 848,274 870,276 892,277 914,278 936,279 958,279 980,279"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
+      <circle cx="320" cy="176" r="7" fill="#003876"/>
+      <circle cx="501" cy="77" r="7" fill="#8a97a5"/>
+    </svg>
+    <span class="fl fl-sub fl-blue" style="left:27.08%;top:57.9%">local min</span>
+    <span class="fl fl-sub fl-grey" style="left:45.94%;top:6.3%">local max</span>
+    <span class="fl fl-grey" style="left:4.2%;top:84.2%">$f_{\text{low}}$</span>
+    <span class="fl fl-sub fl-grey" style="left:77.1%;top:93%">tail tends to $f_{\text{low}}$, never reaches it</span>
+  </div>
+  <p>Deterministic: the exact gradient $\nabla f(x)$ at every step</p>
+  <p class="muted">Nonconvex case: no minimizer assumed, only a lower bound</p>
+  <div class="cite">Schematic 1-D slice of one nonconvex $f$ (our illustration; formula in the note)</div>
 </div>
 
 <div class="slide" data-slide-id="S14">
-  <h2>The Gradient, Recalled</h2>
+  <h2>Recall: The Gradient Gives First-Order Change</h2>
   <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$\nabla f(x) = \begin{bmatrix}
-    \frac{\partial}{\partial x_1} f(x)\\
-    \vdots \\
-    \frac{\partial}{\partial x_d} f(x)
-  \end{bmatrix} \in \mathbb{R}^d$$</div>
-  <ul>
-    <li>$d$-dimensional generalization of the derivative</li>
-    <li>Directional derivative along $v$: &nbsp;$\langle \nabla f(x), v\rangle = \nabla f(x)^{\top} v$</li>
-    <li>$\nabla f(x)$ points in the <strong>maximally increasing</strong> direction</li>
-  </ul>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \nabla f(x) &= \Big(\tfrac{\partial f}{\partial x_1}(x),\, \dots,\, \tfrac{\partial f}{\partial x_n}(x)\Big) \in \mathbb{R}^n\\[6px]
+    f(x + h) &= f(x) + \langle \nabla f(x), h\rangle + o(\|h\|) \quad \text{as } h \to 0
+  \end{aligned}$$</div>
+  <p>Rate of change along a direction $v$: &nbsp;$\langle \nabla f(x), v\rangle$</p>
+  <p class="muted">Local statement: it says nothing about one fixed, finite step</p>
 </div>
 
 <div class="slide" data-slide-id="S82">
-  <h2>1D Intuition &mdash; the Sign Does the Steering</h2>
+  <h2>Small Steps Against the Gradient Go Downhill</h2>
   <div class="divider"></div>
-  <div class="o3-fig" style="max-width:860px;margin:6px auto 0;">
-    <svg viewBox="0 0 640 300" style="width:100%;">
+  <!-- exact geometry: f(u) = u^2, u in [-2,2]; X = 320 + 130u, Y = 270 - 50u^2.
+       start u = 1.5 (f = 2.25, f' = 3 > 0); short step lands at u = 0.9 (f = 0.81, lower);
+       long step lands at u = -1.8 (f = 3.24, higher). -->
+  <div class="o3-fig" style="max-width:900px;margin:4px auto 0;">
+    <svg viewBox="0 0 760 300" style="width:100%;">
       <defs>
-        <marker id="arrb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#003876"/>
+        <marker id="o3a-arrg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e8b57"/>
+        </marker>
+        <marker id="o3a-arrr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#d94040"/>
         </marker>
       </defs>
-      <line x1="30" y1="275" x2="620" y2="275" stroke="#c9d2da" stroke-width="2"/>
-      <polyline points="60,100 105,160 150,198 195,225 240,240 285,246 330,240 375,225 420,198 465,160 510,100"
+      <line x1="40" y1="285" x2="600" y2="285" stroke="#c9d2da" stroke-width="2"/>
+      <polyline points="60,70 73,90 86,108 99,126 112,142 125,158 138,172 151,186 164,198 177,210 190,220 203,230 216,238 229,246 242,252 255,258 268,262 281,266 294,268 307,270 320,270 333,270 346,268 359,266 372,262 385,258 398,252 411,246 424,238 437,230 450,220 463,210 476,198 489,186 502,172 515,158 528,142 541,125 554,108 567,90 580,70"
         fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
-      <!-- left point: slope negative, move right -->
-      <circle cx="130" cy="181" r="7" fill="#003876"/>
-      <line x1="130" y1="181" x2="205" y2="181" stroke="#003876" stroke-width="3" marker-end="url(#arrb)"/>
-      <!-- right point: slope positive, move left -->
-      <circle cx="445" cy="177" r="7" fill="#003876"/>
-      <line x1="445" y1="177" x2="370" y2="177" stroke="#003876" stroke-width="3" marker-end="url(#arrb)"/>
-      <circle cx="285" cy="246" r="7" fill="#2e8b57"/>
+      <path d="M 512 168 Q 490 205 446 226" fill="none" stroke="#2e8b57" stroke-width="3.5" marker-end="url(#o3a-arrg)"/>
+      <path d="M 510 150 Q 300 -10 94 100" fill="none" stroke="#d94040" stroke-width="3" stroke-dasharray="9 6" marker-end="url(#o3a-arrr)"/>
+      <circle cx="515" cy="158" r="8" fill="#003876"/>
+      <circle cx="437" cy="230" r="8" fill="#2e8b57"/>
+      <circle cx="86" cy="108" r="8" fill="#d94040"/>
     </svg>
-    <span class="fl fl-blue" style="left:25.78%;top:20.0%">$f'(x) \lt 0$: step right</span>
-    <span class="fl fl-blue" style="left:73.44%;top:20.0%">$f'(x) \gt 0$: step left</span>
-    <span class="fl fl-sub fl-green" style="left:44.53%;top:87.5%">min</span>
+    <span class="fl fl-red" style="left:39.5%;top:9.3%">long step (dashed): $f$ rises</span>
+    <span class="fl fl-blue fl-l" style="left:70.4%;top:52.7%">$x$ with $f'(x) \gt 0$</span>
+    <span class="fl fl-green fl-l" style="left:60.5%;top:87.3%">short step (solid): $f$ drops</span>
   </div>
-  <div class="math-block" style="margin:8px 0">$$x^{(1)} = x^{(0)} - \alpha f'(x^{(0)}) \qquad \text{one rule handles both signs}$$</div>
+  <p>Move along $-\nabla f(x)$: downhill for a small enough step</p>
+  <p class="muted">How far is safe? The smoothness constant $L$ decides</p>
+  <div class="cite">Illustration: $f(u)=u^2$ from $u=1.5$, steps to $u=0.9$ and $u=-1.8$ (our calculation)</div>
 </div>
 
 <div class="slide" data-slide-id="S27">
-  <h2>Definition &mdash; $L$-Smooth</h2>
+  <h2>$L$-Smoothness Bounds Gradient Change</h2>
   <div class="divider"></div>
   <div class="card">
     <h3>Definition.</h3>
-    <p>Differentiable $f$ is <strong>$L$-smooth</strong> if $\nabla f$ is $L$-Lipschitz:</p>
-    <div class="math-block" style="margin:8px 0">$$\|\nabla f(x_1) - \nabla f(x_2)\| \;\leq\; L\, \|x_1 - x_2\|$$</div>
+    <p>Differentiable $f:\mathbb{R}^n\to\mathbb{R}$ is <strong>$L$-smooth</strong> ($L \gt 0$) if for all $x, y \in \mathbb{R}^n$:</p>
+    <div class="math-block" style="margin:8px 0">$$\|\nabla f(x) - \nabla f(y)\| \;\leq\; L\, \|x - y\| \qquad (\text{Euclidean norm})$$</div>
   </div>
-  <ul>
-    <li>Now the <strong>gradient</strong> is limited in how fast it changes</li>
-    <li>Curvature bounded by $L$ &mdash; no sign condition: smooth $\neq$ convex</li>
-  </ul>
+  <p>A condition on the <strong>gradient</strong>, not on $f$ itself</p>
+  <p>Example: $f(x)=\tfrac12 x^2$ is $1$-smooth, yet $f$ is not Lipschitz</p>
+  <p class="muted">No convexity: smooth does not mean convex</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Lipschitz continuous gradient assumption&rdquo;</div>
 </div>
 
 <div class="slide" data-slide-id="S81">
-  <h2>The Algorithm</h2>
+  <h2>One Fixed Step: $1/L$</h2>
   <div class="divider"></div>
   <div class="o3-algo">
-    <h3 style="margin:0 0 6px;color:var(--yonsei-blue);">Gradient Descent</h3>
+    <h3 style="margin:0 0 6px;color:var(--yonsei-blue);">Gradient descent, step $1/L$</h3>
     <ol>
-      <li>Pick a starting point $x^{(0)}$ and step sizes $\alpha_k \gt 0$</li>
-      <li>Repeat: &nbsp;$x^{(k+1)} = x^{(k)} - \alpha_k \, \nabla f\big(x^{(k)}\big)$</li>
-      <li>Stop when $\|\nabla f(x^{(k)})\|$ is small</li>
+      <li>Input: smoothness constant $L$, any start $x_0 \in \mathbb{R}^n$</li>
+      <li>For $t = 0, 1, \dots, T-1$: &nbsp;$x_{t+1} = x_t - \tfrac{1}{L}\nabla f(x_t)$</li>
+      <li>Output: iterates $x_0, x_1, \dots, x_T$</li>
     </ol>
   </div>
-  <ul style="margin-top:14px;">
-    <li>$-\nabla f$: the maximally <strong>decreasing</strong> direction</li>
-    <li>$\alpha_k$: the <strong>step size</strong> &mdash; deep learning's "learning rate"</li>
-  </ul>
+  <p style="margin-top:14px;">The same update in all three guarantees</p>
+  <p class="muted">$L$ assumed known; no line search, no other step size</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo; (step $\alpha \le 1/L$; here $\alpha = 1/L$)</div>
 </div>
 
 <div class="slide" data-slide-id="S30">
-  <h2>Running Example &mdash; $L = 4$</h2>
+  <h2>Running Example: $L = 4$</h2>
   <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$\nabla^2 f = \begin{bmatrix} 4 & 0 \\ 0 & 1 \end{bmatrix} \;\preceq\; 4I
-    \qquad\Rightarrow\qquad L = \lambda_{\max} = 4$$</div>
-  <ul>
-    <li>For quadratics: $L$ = largest Hessian eigenvalue</li>
-    <li>Earlier check $f = x_1^2 + x_1 x_2 + x_2^2$: eigenvalues $\{3,1\}$ &nbsp;$\Rightarrow$&nbsp; $L = 3$</li>
-  </ul>
-  <p class="muted">the constant you will feed into the step size</p>
+  <p>$f(x) = 2x_1^2 + \tfrac12 x_2^2$ on $\mathbb{R}^2$, &nbsp;gradient $\nabla f(x) = (4x_1,\, x_2)$</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \|\nabla f(x) - \nabla f(y)\| &= \|(4z_1,\, z_2)\|, \qquad z = x - y\\[4px]
+    &= \sqrt{16 z_1^2 + z_2^2} \;\leq\; 4\,\|z\|
+  \end{aligned}$$</div>
+  <p>Equality at $z = (1, 0)$: no smaller $L$ works</p>
+  <div class="highlight"><p>So $L = 4$ and the step is $1/L = 1/4$</p></div>
+  <div class="cite">Our calculation (illustrative example)</div>
 </div>
 
 <!-- ===== REGION P4a END ===== -->
@@ -235,112 +251,125 @@
 </div>
 
 <div class="slide" data-slide-id="S33">
-  <h2>Lemma 1 &mdash; the Descent Lemma</h2>
+  <h2>Smoothness Gives a Quadratic Upper Bound</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Lemma 1 (descent lemma).</h3>
-    <p>$f$ &nbsp;$L$-smooth. Then for all $x, \delta \in \mathbb{R}^d$:</p>
-    <div class="math-block" style="margin:8px 0">$$f(x + \delta) \;\leq\; f(x) + \langle \nabla f(x), \delta\rangle + \frac{L}{2}\|\delta\|^2$$</div>
+    <h3>Lemma (descent lemma).</h3>
+    <p>$f:\mathbb{R}^n\to\mathbb{R}$ differentiable and $L$-smooth. For all $x, y \in \mathbb{R}^n$:</p>
+    <div class="math-block" style="margin:8px 0">$$f(y) \;\leq\; f(x) + \langle \nabla f(x),\, y - x\rangle + \frac{L}{2}\|y - x\|^2$$</div>
   </div>
-  <p class="muted">a quadratic <strong>lid</strong> with curvature $L$ &mdash; convexity not needed</p>
+  <p>Linear model plus $\tfrac{L}{2}\|y-x\|^2$: valid for every finite step</p>
+  <p class="muted">No convexity needed</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Descent lemma&rdquo;</div>
 </div>
 
 <div class="slide" data-slide-id="S34">
-  <h2>The Picture &mdash; a Parabola Lid</h2>
+  <h2>The Upper Bound Touches $f$ at $x$</h2>
   <div class="divider"></div>
-  <div class="o3-fig" style="max-width:860px;margin:6px auto 0;">
+  <div class="o3-fig" style="max-width:800px;margin:4px auto 0;">
     <svg viewBox="0 0 640 340" style="width:100%;">
       <line x1="30" y1="330" x2="445" y2="330" stroke="#c9d2da" stroke-width="2"/>
       <!-- exact geometry: f(u)=u^2, touch at u0=-0.6, lid = tangent + (L/2)(u-u0)^2 with L=3.
-           X = 280 + 115u, Y = 300 - 55*value -->
+           lid - f = (L/2 - 1)(u-u0)^2 = (1/2)(u+0.6)^2 >= 0, zero only at u0 (verified algebraically).
+           X = 280 + 115u, Y = 300 - 55*value, u in [-2, 1.4] -->
       <polyline points="50,80 73,122 96,159 119,192 142,221 165,245 188,265 211,280 234,291 257,298 280,300 303,298 326,291 349,280 372,265 395,245 418,221 441,192"
         fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
       <!-- tangent at u0: t(u) = 0.36 - 1.2(u + 0.6) -->
-      <line x1="62" y1="194" x2="303" y2="333" stroke="#8a97a5" stroke-width="2.5"/>
+      <line x1="62" y1="194" x2="303" y2="333" stroke="#8a97a5" stroke-width="2"/>
       <!-- lid -->
       <polyline points="50,26 73,82 96,132 119,175 142,211 165,241 188,264 211,280 234,290 257,293 280,290 303,280 326,264 349,241 372,211 395,175 418,132 441,82"
         fill="none" stroke="#003876" stroke-width="3" stroke-dasharray="8 6" stroke-linejoin="round"/>
       <circle cx="211" cy="280" r="7" fill="#003876"/>
     </svg>
     <span class="fl fl-blue" style="left:33.0%;top:91.2%">$x$</span>
-    <span class="fl fl-blue fl-l" style="left:71.1%;top:24.1%">lid: tangent $+\,\tfrac{L}{2}\|d\|^2$</span>
-    <span class="fl fl-l" style="left:71.1%;top:56.5%">$f$</span>
-    <span class="fl fl-sub fl-grey fl-l" style="left:7.8%;top:79.4%">tangent at $x$</span>
+    <span class="fl fl-blue fl-l" style="left:71.1%;top:24.1%">dashed: upper bound</span>
+    <span class="fl fl-l" style="left:71.1%;top:56.5%">solid: $f$</span>
+    <span class="fl fl-sub fl-grey fl-l" style="left:3.5%;top:72%">thin: tangent at $x$</span>
   </div>
-  <p class="muted" style="text-align:center;">lid touches at $x$, then opens with curvature $L$ &mdash; $f$ can never pierce it</p>
+  <p class="muted" style="text-align:center;">Equal at $y = x$, above $f$ everywhere else</p>
+  <div class="cite">Illustration: $f(u)=u^2$, $x=-0.6$, $L=3$ (our drawing; $f$ is $2$-smooth, so $L=3$ is valid)</div>
 </div>
 
 <div class="slide" data-slide-id="S36">
-  <h2>Step 1 &mdash; Set Up $g$</h2>
+  <h2>Proof Step 1: Follow the Segment</h2>
   <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$g(t) = f\big(x + t(y - x)\big), \qquad
-    g'(t) = \nabla f\big(x + t(y-x)\big)^{\top}(y - x)$$</div>
-  <ul>
-    <li>$g(0) = f(x)$, &nbsp;$g(1) = f(y)$, &nbsp;$g'(0) = \nabla f(x)^{\top}(y-x)$</li>
-    <li>Plan: show $g'(t)$ cannot exceed $g'(0)$ by more than $Lt\|y-x\|^2$</li>
-  </ul>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    h &= y - x, \qquad \rho(s) = f(x + s h), \quad s \in [0, 1]\\[4px]
+    \rho'(s) &\stackrel{\text{(chain rule)}}{=} \langle \nabla f(x + s h),\, h\rangle\\[4px]
+    f(y) - f(x) &\stackrel{\text{(FTC)}}{=} \rho(1) - \rho(0) = \int_0^1 \rho'(s)\, ds
+  \end{aligned}$$</div>
+  <p>$s$ marks a point on the segment, not the iteration index $t$</p>
+  <p class="muted">FTC applies: $\nabla f$ is Lipschitz, so $\rho'$ is continuous</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Descent lemma&rdquo;</div>
 </div>
 
 <div class="slide" data-slide-id="S37">
-  <h2>Step 2 &mdash; Bound the Slope Drift</h2>
+  <h2>Proof Step 2: Smoothness Bounds the Drift</h2>
   <div class="divider"></div>
+  <p>Compare the slope at $s$ with the slope at $0$:</p>
   <div class="math-block" style="margin:8px 0">$$\begin{aligned}
-    g'(t) - g'(0) &= \big(\nabla f(x + t(y-x)) - \nabla f(x)\big)^{\top}(y-x)\\[4px]
-    &\stackrel{\text{(CS)}}{\leq} \big\|\nabla f(x + t(y-x)) - \nabla f(x)\big\|\; \|y-x\|\\[4px]
-    &\stackrel{\text{(smooth)}}{\leq} L\,\|t(y-x)\|\; \|y-x\| \;=\; L t\, \|y-x\|^2
+    \rho'(s) - \rho'(0) &= \langle \nabla f(x + s h) - \nabla f(x),\, h\rangle\\[4px]
+    &\stackrel{\text{(Cauchy-Schwarz)}}{\leq} \|\nabla f(x + s h) - \nabla f(x)\|\; \|h\|\\[4px]
+    &\stackrel{(L\text{-smooth})}{\leq} L\,\|s h\|\; \|h\| \;=\; L s\, \|h\|^2
   \end{aligned}$$</div>
-  <p class="muted">smoothness applied between $x + t(y-x)$ and $x$: distance $t\|y-x\|$</p>
+  <p class="muted">The points $x + sh$ and $x$ are $s\|h\|$ apart</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Descent lemma&rdquo;</div>
 </div>
 
 <div class="slide" data-slide-id="S38">
-  <h2>Step 3 &mdash; Integrate</h2>
+  <h2>Proof Step 3: Integrating $s$ Gives $\tfrac{1}{2}$</h2>
   <div class="divider"></div>
   <div class="math-block" style="margin:8px 0">$$\begin{aligned}
-    f(y) = g(1) &\stackrel{\text{(FTC)}}{=} g(0) + \int_0^1 g'(t)\, dt\\[4px]
-    &\stackrel{\text{(Step 2)}}{\leq} g(0) + \int_0^1 \big(g'(0) + Lt\|y-x\|^2\big)\, dt\\[4px]
-    &= f(x) + \nabla f(x)^{\top}(y - x) + \frac{L}{2}\|y-x\|^2 \qquad \blacksquare
+    f(y) &\stackrel{\text{(Step 1)}}{=} f(x) + \int_0^1 \rho'(s)\, ds\\[4px]
+    &\stackrel{\text{(Step 2)}}{\leq} f(x) + \int_0^1 \big(\rho'(0) + L s\,\|h\|^2\big)\, ds\\[4px]
+    &= f(x) + \langle \nabla f(x),\, y - x\rangle + \frac{L}{2}\|y - x\|^2 \qquad \blacksquare
   \end{aligned}$$</div>
-  <p class="muted">$\int_0^1 L t \, dt = L/2$ &mdash; where the $\tfrac{L}{2}$ comes from</p>
+  <p class="muted">$\int_0^1 L s\, ds = \tfrac{L}{2}$: the coefficient in the lemma</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Descent lemma&rdquo;</div>
 </div>
 
 <div class="slide" data-slide-id="S90">
-  <h2>Proof &mdash; One Step Through the Lid</h2>
+  <h2>The Step $1/L$ Decreases $f$</h2>
   <div class="divider"></div>
+  <p>Lemma at $x = x_t$ with $y = x_{t+1} = x_t - \tfrac{1}{L} g_t$ where $g_t = \nabla f(x_t)$:</p>
   <div class="math-block" style="margin:8px 0">$$\begin{aligned}
-    f\big(x^{(k+1)}\big) &= f\big(x^{(k)} - \alpha \nabla f(x^{(k)})\big)\\[4px]
-    &\stackrel{\text{(Lem 1, } \delta = -\alpha\nabla f\text{)}}{\leq}
-      f\big(x^{(k)}\big) - \alpha \|\nabla f(x^{(k)})\|^2 + \frac{L\alpha^2}{2}\|\nabla f(x^{(k)})\|^2\\[4px]
-    &= f\big(x^{(k)}\big) - \alpha\Big(1 - \frac{L\alpha}{2}\Big)\|\nabla f(x^{(k)})\|^2
+    f(x_{t+1}) &\leq f(x_t) + \big\langle g_t,\, -\tfrac{1}{L} g_t\big\rangle + \frac{L}{2}\Big\|\tfrac{1}{L} g_t\Big\|^2\\[4px]
+    &= f(x_t) - \frac{1}{L}\|g_t\|^2 + \frac{1}{2L}\|g_t\|^2
+    \;=\; f(x_t) - \frac{1}{2L}\|g_t\|^2
   \end{aligned}$$</div>
-  <p class="muted">descent lemma with the GD step plugged in as $\delta$</p>
+  <div class="highlight"><p>No convexity: $f$ never increases; strict drop whenever $g_t \neq 0$</p></div>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo; (with $\alpha = 1/L$)</div>
 </div>
 
 <div class="slide" data-slide-id="S83">
-  <h2>Running Example &mdash; GD, Set Up by Hand</h2>
+  <h2>One Step Zeroes the Stiff Coordinate</h2>
   <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$\nabla f(x) = (4x_1,\, x_2), \qquad \alpha = \frac{1}{L} = \frac{1}{4}$$</div>
-  <div class="math-block" style="margin:8px 0">$$x^+ = x - \tfrac{1}{4}(4x_1, x_2) = \big(0,\; \tfrac{3}{4} x_2\big)$$</div>
-  <ul>
-    <li>Stiff direction $x_1$: solved in <strong>one step</strong> &mdash; factor $1 - \alpha \cdot 4 = 0$</li>
-    <li>Soft direction $x_2$: shrinks by $1 - \alpha \cdot 1 = \frac{3}{4}$ per step</li>
-  </ul>
+  <p>Running example, step $1/L = 1/4$:</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    x^{+} &= x - \tfrac{1}{4}\,(4x_1,\, x_2)\\[4px]
+    &= \big((1 - \tfrac{4}{4})\,x_1,\; (1 - \tfrac{1}{4})\,x_2\big) \;=\; \big(0,\; \tfrac{3}{4}x_2\big)
+  \end{aligned}$$</div>
+  <p>Coordinate 1, curvature $4$: factor $0$, <strong>exactly zero</strong> after one step</p>
+  <p>Coordinate 2, curvature $1$: factor $\tfrac{3}{4}$ every step</p>
+  <div class="cite">Our calculation (illustrative example)</div>
 </div>
 
 <div class="slide" data-slide-id="S84">
-  <h2>Four Iterations by Hand &nbsp;($\alpha = 1/4$)</h2>
+  <h2>Two Steps: $f$ Falls From $10$ to $81/128$</h2>
   <div class="divider"></div>
   <table>
     <thead>
-      <tr><th>k</th><th>x(k)</th><th>f(x(k))</th><th>dist. squared to x*</th></tr>
+      <tr><th style="text-transform:none;">$t$</th><th style="text-transform:none;">$x_t$</th><th style="text-transform:none;">$f(x_t)$</th><th>descent bound</th></tr>
     </thead>
     <tbody>
-      <tr><td>0</td><td>$(2,\ 2)$</td><td>$10$</td><td>$8$</td></tr>
-      <tr><td>1</td><td>$(0,\ 1.5)$</td><td>$1.125$</td><td>$2.25$</td></tr>
-      <tr><td>2</td><td>$(0,\ 1.125)$</td><td>$0.6328$</td><td>$1.2656$</td></tr>
-      <tr><td>3</td><td>$(0,\ 0.8438)$</td><td>$0.3560$</td><td>$0.7119$</td></tr>
-      <tr><td>4</td><td>$(0,\ 0.6328)$</td><td>$0.2002$</td><td>$0.4004$</td></tr>
+      <tr><td>$0$</td><td>$(2,\ 2)$</td><td>$10$</td><td>&mdash;</td></tr>
+      <tr><td>$1$</td><td>$(0,\ \tfrac{3}{2})$</td><td>$\tfrac{9}{8}$</td><td>$10 - \tfrac{68}{8} = \tfrac{3}{2}$</td></tr>
+      <tr><td>$2$</td><td>$(0,\ \tfrac{9}{8})$</td><td>$\tfrac{81}{128}$</td><td>$\tfrac{9}{8} - \tfrac{9/4}{8} = \tfrac{27}{32}$</td></tr>
     </tbody>
   </table>
+  <p style="margin-top:14px;">Descent bound: $f(x_{t-1}) - \tfrac{1}{8}\|\nabla f(x_{t-1})\|^2$</p>
+  <p class="muted">Each value sits below its bound, as the inequality promises</p>
+  <div class="cite">Our calculation (illustrative example)</div>
 </div>
 
 <!-- ===== REGION P4b END ===== -->
@@ -354,65 +383,101 @@
 </div>
 
 <div class="slide" data-slide-id="S89">
-  <h2>Theorem 7 &mdash; GD Converges (Smooth Case)</h2>
+  <h2>Nonconvex Guarantee: Small Squared Gradient</h2>
   <div class="divider"></div>
   <div class="card">
-    <h3>Theorem 7.</h3>
-    <p>$f$ &nbsp;$L$-smooth with a global minimum. GD with constant $\alpha \in (0, 2/L)$:</p>
-    <div class="math-block" style="margin:8px 0">$$f\big(x^{(k+1)}\big) \leq f\big(x^{(k)}\big),
-      \qquad f\big(x^{(k)}\big) \text{ converges},
-      \qquad \big\|\nabla f\big(x^{(k)}\big)\big\| \rightarrow 0$$</div>
+    <h3>Theorem (nonconvex, step $1/L$).</h3>
+    <p>$f:\mathbb{R}^n\to\mathbb{R}$ differentiable, $L$-smooth, and $f(x) \geq f_{\text{low}}$ for all $x$. For any $x_0$ and every $T \geq 1$:</p>
+    <div class="math-block" style="margin:8px 0">$$\min_{0 \leq t \lt T}\; \|\nabla f(x_t)\|^2 \;\leq\; \frac{2L\,\big(f(x_0) - f_{\text{low}}\big)}{T}$$</div>
   </div>
-  <p class="muted">no convexity: the limit is a stationary point, not necessarily a global minimum</p>
+  <p>Best of the $T$ squared gradients $t = 0, \dots, T-1$; not a gap to a minimum</p>
+  <p class="muted">$f_{\text{low}}$ need not be attained: no minimizer assumed</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo; (stated for step $\alpha \le 1/L$)</div>
 </div>
 
 <div class="slide" data-slide-id="S91">
-  <h2>Proof &mdash; Monotone and Bounded</h2>
+  <h2>Proof Step 1: Sum the Decreases</h2>
   <div class="divider"></div>
-  <ul>
-    <li>$\alpha \lt 2/L$ &nbsp;$\Rightarrow$&nbsp; coefficient $\alpha(1 - L\alpha/2) \gt 0$</li>
-    <li>So $f(x^{(k)})$ is <strong>non-increasing</strong></li>
-    <li>Bounded below by $f(x^\star)$ &nbsp;$\Rightarrow$&nbsp; it converges &nbsp;<span class="muted">(monotone convergence)</span></li>
-  </ul>
-  <div class="math-block" style="margin:8px 0">$$f(x^{(0)}) \geq f(x^{(1)}) \geq \cdots \geq f(x^\star)
-    \quad\Longrightarrow\quad f(x^{(k)}) \downarrow \text{ some limit}$$</div>
+  <p>Add the descent inequality for $t = 0, \dots, T-1$; the $f$ terms telescope:</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \frac{1}{2L}\sum_{t=0}^{T-1} \|\nabla f(x_t)\|^2 &\leq \sum_{t=0}^{T-1} \big(f(x_t) - f(x_{t+1})\big)\\[4px]
+    &= f(x_0) - f(x_T) \;\stackrel{(f \,\geq\, f_{\text{low}})}{\leq}\; f(x_0) - f_{\text{low}}
+  \end{aligned}$$</div>
+  <p>A finite budget $f(x_0) - f_{\text{low}}$ caps the total squared gradient</p>
+  <p class="muted">Only $f(x_T) \geq f_{\text{low}}$ is used: no minimizer needed</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo;</div>
 </div>
 
 <div class="slide" data-slide-id="S92">
-  <h2>Proof &mdash; Gradients Must Vanish</h2>
+  <h2>Proof Step 2: Minimum at Most Average</h2>
   <div class="divider"></div>
-  <div class="math-block" style="margin:8px 0">$$\alpha\Big(1 - \frac{L\alpha}{2}\Big) \sum_{k=0}^{K} \|\nabla f(x^{(k)})\|^2
-    \;\leq\; f(x^{(0)}) - f(x^{(K+1)}) \;\leq\; f(x^{(0)}) - f(x^\star)$$</div>
-  <ul>
-    <li>Per-step drops <strong>sum</strong>; the sum stays finite as $K \rightarrow \infty$</li>
-    <li>A convergent series has vanishing terms: $\|\nabla f(x^{(k)})\|^2 \rightarrow 0$ &nbsp;$\blacksquare$</li>
-  </ul>
-  <p class="muted">first sighting of telescoping &mdash; named properly in &sect;07</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \min_{0 \leq t \lt T} \|\nabla f(x_t)\|^2 &\leq \frac{1}{T}\sum_{t=0}^{T-1} \|\nabla f(x_t)\|^2\\[4px]
+    &\stackrel{\text{(Step 1)}}{\leq} \frac{2L\,\big(f(x_0) - f_{\text{low}}\big)}{T} \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p>$T$ terms, so the smallest is at most their average</p>
+  <p class="muted">A bound on the best iterate, not on the last one</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo;</div>
 </div>
 
 <div class="slide" data-slide-id="S93">
-  <h2>Reading the Theorem</h2>
+  <h2>Stationary Does Not Mean Minimum</h2>
   <div class="divider"></div>
-  <ul>
-    <li>Looks modest &mdash; it is the <strong>load-bearing</strong> fact of deep learning</li>
-    <li>Steeper gradient changes (larger $L$) $\Rightarrow$ smaller safe step</li>
-    <li>The notes call it beautiful: steepness and step size, exactly related</li>
-  </ul>
   <div class="highlight">
-    <p><strong>Exercise (from the notes).</strong> Is smoothness necessary? Interpret $\alpha \lt 2/L$ &mdash; hint: the divergence slide.</p>
+    <p><strong>Q:</strong> Does nonconvex GD reach a local optimum at rate $1/T$?</p>
+    <p><strong>A:</strong> No. The $1/T$ rate is for $\min_t \|\nabla f(x_t)\|^2$ only.</p>
   </div>
+  <div class="o3-fig" style="max-width:1000px;margin:6px auto 0;">
+    <svg viewBox="0 0 1000 240" style="width:100%;">
+      <rect x="8" y="5" width="984" height="230" rx="14" fill="#eef3f8" stroke="#003876" stroke-width="3"/>
+      <rect x="130" y="52" width="852" height="168" rx="12" fill="#ffffff" stroke="#5a6673" stroke-width="2.5"/>
+      <rect x="330" y="100" width="644" height="105" rx="10" fill="#ffffff" stroke="#2e8b57" stroke-width="2.5" stroke-dasharray="9 6"/>
+      <rect x="560" y="148" width="406" height="42" rx="8" fill="#ffffff" stroke="#2e8b57" stroke-width="2" stroke-dasharray="9 6"/>
+    </svg>
+    <span class="fl fl-blue fl-l" style="left:2.6%;top:12.5%">$\|\nabla f(x)\| \leq \varepsilon$: what the theorem gives</span>
+    <span class="fl fl-grey fl-l" style="left:14.8%;top:32.1%">stationary, $\nabla f(x) = 0$: also maxima, saddles</span>
+    <span class="fl fl-green fl-l" style="left:34.8%;top:51.7%">local minimum: not guaranteed</span>
+    <span class="fl fl-sub fl-green fl-l" style="left:57.8%;top:72.1%">global minimum</span>
+  </div>
+  <p class="muted">Scope: $L$-smooth, bounded below, step $1/L$, no further assumptions</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo; (limit may be a maximum or saddle)</div>
 </div>
 
 <div class="slide" data-slide-id="S136">
-  <!-- NEW S136: see plan-v1 §5 -->
-  <h2>S136 (new)</h2>
+  <h2>GD Can Stay at a Maximum</h2>
   <div class="divider"></div>
+  <!-- exact geometry: f(x) = 1 - cos x, x in [-0.5, 2pi + 0.5]; X = 117 + 114x, Y = 250 - 95 f.
+       x0 = pi at (475, 60): f = 2, f' = sin(pi) = 0, f'' = cos(pi) = -1. Minima x = 0, 2pi at (117,250), (833,250). -->
+  <div class="o3-fig" style="max-width:660px;margin:0 auto;">
+    <svg viewBox="0 0 950 290" style="width:100%;">
+      <line x1="40" y1="250" x2="910" y2="250" stroke="#c9d2da" stroke-width="2"/>
+      <polyline points="60,238 74,243 88,247 102,249 115,250 129,249 143,248 157,244 171,240 185,234 198,227 212,219 226,210 240,200 254,189 268,179 281,167 295,156 309,144 323,133 337,122 351,111 364,101 378,92 392,84 406,77 420,71 434,66 447,63 461,61 475,60 489,61 503,63 517,66 530,71 544,77 558,84 572,92 586,101 600,111 614,122 627,133 641,144 655,156 669,167 683,179 697,189 710,200 724,210 738,219 752,227 766,234 780,240 793,244 807,248 821,249 835,250 849,249 863,247 876,243 890,238"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
+      <circle cx="475" cy="60" r="9" fill="#d94040"/>
+      <circle cx="117" cy="250" r="7" fill="#2e8b57"/>
+      <circle cx="833" cy="250" r="7" fill="#2e8b57"/>
+    </svg>
+    <span class="fl fl-red" style="left:50%;top:7.6%">$x_0 = \pi$: $f'(\pi) = 0$, $f''(\pi) = -1$</span>
+    <span class="fl fl-sub fl-green" style="left:12.3%;top:94.5%">min</span>
+    <span class="fl fl-sub fl-green" style="left:87.7%;top:94.5%">min</span>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$x_{t+1} = x_t - \sin x_t \;\;(\text{step } 1/L = 1), \qquad x_0 = \pi \;\Rightarrow\; x_t = \pi \text{ for all } t$$</div>
+  <p>Assumptions hold: $f(x) = 1 - \cos x \geq 0$ and $L = 1$</p>
+  <p class="muted">Existence counterexample: exact start $x_0 = \pi$, not typical behaviour</p>
+  <div class="cite">Our calculation (illustrative example)</div>
 </div>
 
 <div class="slide" data-slide-id="S137">
-  <!-- NEW S137: see plan-v1 §5 -->
-  <h2>S137 (new)</h2>
+  <h2>The Square Changes the Rate</h2>
   <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \min_{0 \leq t \lt T} \|\nabla f(x_t)\| &\leq \sqrt{\frac{2L\,\big(f(x_0) - f_{\text{low}}\big)}{T}} \;=\; O\big(1/\sqrt{T}\big)\\[6px]
+    \text{some } \|\nabla f(x_t)\| \leq \varepsilon,\ t \lt T \quad &\Longleftarrow\quad T \;\geq\; \frac{2L\,\big(f(x_0) - f_{\text{low}}\big)}{\varepsilon^2}
+  \end{aligned}$$</div>
+  <p>Bound for tolerance $\varepsilon/10$: $100\times$ the iterations</p>
+  <p>Constants $L$ and $f(x_0) - f_{\text{low}}$ depend on the problem</p>
+  <p class="muted">Best iterate only: no $O(1/T)$ gradient-norm rate, no local minimum</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo;; $T$ count: our derivation</div>
 </div>
 
 <!-- ===== REGION P4c END ===== -->

@@ -3,16 +3,18 @@ size: large
 deck: talks/261128yonseimath/261128yonseimath.html
 audience / mode / duration: middle-school students who understand university-level mathematics (Albert confirmed); Korean concept-first ceremony talk; 25 minutes total
 baseline: 95df062f8f980c686f0ef45974ebd3f626ff79d2
-id commit: pending slides handoff; dedicated ID-only commit requested
-branch: 2026-11-24-261128yonseimath-draft (assigned; slides to create from baseline)
+id commit: 1e7b5b90af65f688aa078aefb784c869ae572a8b (verified ID-only: 24 slides + 24 note articles)
+branch: 2026-11-24-261128yonseimath-draft
 pr: none
 state: in-work
-round: 1 of 3
+round: 2 of 3 (round 1 reviewed; revision ordered)
+review commit: fae496e1a58dcd6dc196dddf1b7018dfaf43303b
 albert decisions:
 - 2026-11-24 23:57 Asia/Seoul: requested a new ~25-minute ceremony draft in talks/261128yonseimath; supplied GPT brief; identifies himself as alumnus/current professor.
 - 2026-11-25 00:08 Asia/Seoul: supplied authentic personal reflection C24; detailed formulas unnecessary C25; asked for a meaningful mathematical example C26.
 - 2026-11-25 00:23 Asia/Seoul: corrected audience to middle-school students capable of university-level mathematics; requested higher-level examples such as AM–GM/Jensen; explicitly ordered drafting first and discussion of examples afterward (C27). Proceed authorization closes stages 1–3 gate with this correction; no further example selection gate.
 current plan: plan-v2.md, complete stage-4 work order; supersedes plan-v1.md
+latest review: review-r1.md — revise; F01–F05 blocking, F06–F07 optional; awaiting work-r2 exact SHA
 current decisions:
 - 24 target pages; 6+11+7 minutes content plus 1 minute buffer; same 25-minute scope.
 - Use C24 as personal reflection. No fabricated anecdote. AM–GM to log/Jensen is a complete but revisable two-page illustration, not a claimed life event.

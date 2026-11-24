@@ -137,3 +137,23 @@ Append-only. Literature selection cutoff: 2026-11-24 (the supplied brief). Prima
 - Multiply marked probabilities by 1.5, then normalize all four by 1.25: resulting probabilities 0.48, 0.24, 0.16, 0.12. Marked mass changes from 0.50 to 0.60. Counts are not promised to equal these proportions in a finite sample.
 - Half of the candidate list being marked does not generally imply half of the probability mass; this toy setup deliberately has both. At another context the assignment changes. Do not mark aggregate “other” as if it were a single token.
 - Mechanism source remains E04; the specific numbers and Korean labels are ours. No sampling or model query was conducted. Generator path planned as in E19; exact parameters must stay with the generated comparison figure.
+
+## E21 — Actual draft figures and numerical reproduction (review r1)
+- Label: our calculation / illustrative example. Resolves the planned-figure status in E05/E19/E20 for the first draft.
+- Version: reviewed commit `fae496e1a58dcd6dc196dddf1b7018dfaf43303b`; generator `talks/261128yonseimath/figs/generate-figures.py`.
+- Inputs: 10×10 coin grid, 70 filled / 30 hollow; Binomial n=100, p=1/2, k=0…100, upper-tail k≥70; rectangles 8×2 and 5×5 with unit grids; y=ln x on [1,9], chord from x=2 to x=8; toy food probabilities .40/.30/.20/.10 with first/fourth multiplied by 1.5 and all renormalized.
+- Reviewer ran the generator in the exact-commit scratch extraction. All four SVG outputs reproduced byte-for-byte. Assertions passed for counts, normalized probabilities, tail 0.00003925069822796835, products 16/25, chord midpoint ln4 below ln5. Concavity throughout the interval also follows from (ln x)''=-1/x²<0, not just sampled points.
+- Plot-rendering qualification: the PMF generator floors sub-half-pixel bar heights to a hairline; the full-height red tint identifies the tail's x-range, not its probability area. The printed tail value is calculated from exact probabilities, not plotted pixel heights.
+- Limits remain E05/E19/E20: toy calculations are not observed model performance, real-text calibration, or an empirical invisibility guarantee.
+
+## E22 — Correct E02's bibliographic title (review r1)
+- Label: published result (official developer report).
+- Same URL/date/authors as E02. The official page title is **Advanced version of Gemini with Deep Think officially achieves gold-medal standard at the International Mathematical Olympiad**. E02 used the page's subheading **Breakthrough Performance at IMO 2025 with Gemini Deep Think** as though it were the article title. This entry corrects that bibliographic label, not the result.
+- Source: https://deepmind.google/blog/advanced-version-of-gemini-with-deep-think-officially-achieves-gold-medal-standard-at-the-international-mathematical-olympiad/ , title and opening result paragraphs, re-opened in the Nov 25 review. 35/42, 5/6, advanced-system scope and gold-medal standard remain supported.
+
+## E23 — Source refresh and limits for the spoken wording (review r1)
+- Label: published result (dated announcements / primary paper), with review scope clarification.
+- E03 URLs re-opened Nov 25: OpenAI's 2026-09-08 announcement, “The result,” concerns the forced C/D alternatives; Clay's 2026-09-11 concluding paragraphs distinguish its prize-evaluation/credit process. These support the dated announcement-versus-recognition distinction, not a current claim about the entire mathematical community's consensus or lack of it. Do not substitute “not independently established here” with “the community has not accepted it.”
+- E04 paper https://proceedings.mlr.press/v202/kirchenbauer23a/kirchenbauer23a.pdf , abstract and Algorithm 2/§3.1, re-opened: candidate assignment is computable from the preceding token and the assignment rule. Context dependence alone is not secrecy. The paper does not establish that nobody could ever notice a change in any individual sentence, or guarantee detection for every finite text.
+- E06/E07 primary pages re-opened: paraphrase/length qualifications and the historical May 2024 SynthID/Gemini announcement remain supported. SynthID is not identified as the same algorithm.
+- E08 primary texts re-opened: Commission Article 50(2) machine-readable marking/detectability and Korean Article 31(2), effective 2026-07-21, support the narrow origin-transparency motivation. Neither source specifies this teaching algorithm as the mandatory method. No new applicability-date or compliance claim is added.

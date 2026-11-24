@@ -125,8 +125,8 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | REFT (first-token diversification for RLVR) | `talks/postech260821/postech260821.html:167-464` (rebuttal: 403-449) |
 | SafePath (8-token safety primer for LRMs) | `talks/postech260821/postech260821.html:466-589` |
 | Benign DPO attack + fine-tuning-as-a-service | `talks/postech260821/postech260821.html:591-774` (rebuttal: 695-745) |
-| Watermark as a coin test for a general audience (Korean, toy lunch example, exact Binomial(100,½) tail) | `talks/261128yonseimath/261128yonseimath.html:285-438` |
-| AM–GM as fixed-sum balance → Jensen via log concavity (concept-first, Korean) | `talks/261128yonseimath/261128yonseimath.html:487-530` |
+| Watermark as a coin test for a general audience (Korean, toy lunch example, exact Binomial(100,½) tail) | `talks/261128yonseimath/261128yonseimath.html:284-437` |
+| AM–GM as fixed-sum balance → Jensen via log concavity (concept-first, Korean) | `talks/261128yonseimath/261128yonseimath.html:486-529` |
 | Kirchenbauer green-list + z-test + entropy-bound proof | `courses/privacy/lectures/06-watermark/watermark.html:245-592` |
 | Gumbel distribution + Gumbel-max trick + full proof | `courses/privacy/lectures/06-watermark/watermark.html:616-742` |
 | Aaronson rule + distortion-free definition and proof | `courses/privacy/lectures/06-watermark/watermark.html:743-810` |

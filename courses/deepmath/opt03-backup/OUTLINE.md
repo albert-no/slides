@@ -2,8 +2,8 @@
 
 Archive only: nothing here is on the 2026 teaching path. The active final block is prob09
 (week 13, first 120 minutes), then the two active optimization decks
-`../opt01-svd-lowrank/opt01-svd-lowrank.html` (Lecture 10, 68 slides, 150 minutes, split
-across weeks 13–14) and `../opt02-convexity-gd/opt02-convexity-gd.html` (Lecture 11, 51
+`../opt01-svd-lowrank/opt01-svd-lowrank.html` (Lecture 10, 61 slides, 150 minutes, split
+across weeks 13–14) and `../opt02-convexity-gd/opt02-convexity-gd.html` (Lecture 11, 48
 slides, 90 minutes, week 14). See `../OUTLINE.md`.
 
 All four optimization backups live in this one folder (moved here 2026-11-24, job

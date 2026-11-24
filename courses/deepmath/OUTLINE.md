@@ -42,8 +42,8 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE, generative models as MLE? (LLMs, DDPM) | prob 1563–1911 | done (130 slides) |
 | 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (154 slides) |
 | 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, RL sample reuse | new material | done (70 slides) |
-| 10 | `opt01-svd-lowrank/` — rank/nullity, vector/spectral/Frobenius norms, SVD and Eckart–Young–Mirsky | opt 1–435 | done — **68 slides, 150 min** (restructured 2026-11-23); full / extended 119 in `opt03-backup/` |
-| 11 | `opt02-convexity-gd/` — fixed-step GD, smoothness/descent, nonconvex stationarity, convex function-gap and strongly convex geometric rates | opt 795–1319 | done — **51 slides, 90 min** (restructured 2026-11-23; folder renamed from `opt03-convexity-gd/` 2026-11-24); full / extended 134 in `opt03-backup/` |
+| 10 | `opt01-svd-lowrank/` — rank/nullity, vector/spectral/Frobenius norms, SVD and Eckart–Young–Mirsky | opt 1–435 | done — **61 slides, 150 min** (restructured 2026-11-23; worked calculations trimmed 2026-11-24); full / extended 119 in `opt03-backup/` |
+| 11 | `opt02-convexity-gd/` — fixed-step GD, smoothness/descent, nonconvex stationarity, convex function-gap and strongly convex geometric rates | opt 795–1319 | done — **48 slides, 90 min** (restructured 2026-11-23; running example removed 2026-11-24; folder renamed from `opt03-convexity-gd/` 2026-11-24); full / extended 134 in `opt03-backup/` |
 
 Optimization backup collection (not one of the 11, not taught in 2026): `opt03-backup/` — the full
 opt01 (119 slides) and opt03 (134) editions, the old opt02 regression/ERM/ridge deck (110; opt 436–794,
@@ -530,78 +530,85 @@ Named-not-proved, flagged: strong LLN; CLT interval as approximate; SNIS
 consistency; ESS as a heuristic diagnostic; PPO clipping and the RLHF objective
 scoped to the cited sources.
 
-### opt01-svd-lowrank — SVD & Best Low-Rank Approximation (68 slides, 150 min)
+### opt01-svd-lowrank — SVD & Best Low-Rank Approximation (61 slides, 150 min)
 
 `opt01-svd-lowrank/opt01-svd-lowrank.html` · **opt 1–435** (core subset; restructured 2026-11-23, job
-`2026-11-23-opt01-opt03-four-hour-core`). Lecture 10 — taught after prob09 in the
+`2026-11-23-opt01-opt03-four-hour-core`; fewer worked calculations 2026-11-24, job
+`2026-11-24-opt01-opt02-polish`). Lecture 10 — taught after prob09 in the
 2026 final block, split across weeks 13–14 (150 min). Argument: rank and two error
 norms → read an SVD → Eckart–Young–Mirsky (truncated SVD is best in both the
-spectral and Frobenius norms) → read every number off one matrix. Running example
-A=[[3,0],[4,5]] (σ = 3√5, √5); rank-1 sidekick C=[[1,1],[2,2]]. Stable slide IDs
-(`data-slide-id`) shared with the full edition. Pseudo-inverse, four fundamental
-subspaces, nuclear norm, matrix completion and the least-squares bridge are only in
-the full edition (below).
+spectral and Frobenius norms) → energy ratio guides rank; low-rank factors compress
+weights (brief LLM application). One illustration matrix A=[[3,0],[4,5]]
+(σ = 3√5, √5), restated where used; no hand construction of its SVD on-slide (the
+five-step derivation is archived under S45–S49 in the full edition); rank-1 sidekick
+C=[[1,1],[2,2]]. Stable slide IDs (`data-slide-id`) shared with the full edition.
+Pseudo-inverse, four fundamental subspaces, nuclear norm, matrix completion and the
+least-squares bridge are only in the full edition (below).
 
-Companion: `opt01-svd-lowrank/opt01-svd-lowrank-note.html` — one article per slide (message → explanation → details → sources); the full Frobenius EYM proof (Courant–Fischer, Weyl) is in the S101 article.
-Accessible edition: `opt01-svd-lowrank/opt01-svd-lowrank-note.md` — screen-reader Markdown edition of that note (1285 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Companion: `opt01-svd-lowrank/opt01-svd-lowrank-note.html` — one article per slide (message → explanation → details → sources); the Frobenius EYM proof (Courant–Fischer, Weyl) is in the S101 article, marked optional and beyond lecture scope.
+Accessible edition: `opt01-svd-lowrank/opt01-svd-lowrank-note.md` — screen-reader Markdown edition of that note (1159 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | opt01-svd-lowrank/opt01-svd-lowrank.html:100 |
-| 01 | Why Low Rank? (smaller matrix, controlled error :168, span/range :185, rank :222, collapse to one direction :246, null space :283, rank–nullity :322) | 3–9 | opt01-svd-lowrank/opt01-svd-lowrank.html:161 |
-| 02 | Measuring Error (norm axioms :356, ℓ1/ℓ2/ℓ∞ :387, 7, 5, 4 worked :412, unit balls :446, orthogonal Q preserves length :478/:513, spectral norm = worst stretch :526, Frobenius = total energy :563) | 10–18 | opt01-svd-lowrank/opt01-svd-lowrank.html:349 |
-| 03 | Reading an SVD (symmetric eigendecomposition recall :595, SVD theorem :605, factor shapes :619, rotate–stretch–rotate :653–:714, rank-one layers :757, compact SVD :782, SVD of A by hand :810–:895, eigenvalues ≠ singular values :907, ‖A‖₂=σ₁ with upper bound + witness :930–:966, ‖A‖_F²=Σσᵢ² :978, invariance :991) | 19–40 | opt01-svd-lowrank/opt01-svd-lowrank.html:588 |
-| 04 | Best Low-Rank Approximation (truncation candidate :1013, worked A₁ and its error :1023/:1038, EYM spectral statement :1049, floor-for-all reading :1063, tools: null space, subspace intersection, two planes in R³, witness, top-k+1 stretch :1094–:1154, proof plan + Steps 1–5 :1166–:1237, one-chain recap :1247, EYM Frobenius statement :1263, achievability :1277) | 41–61 | opt01-svd-lowrank/opt01-svd-lowrank.html:1006 |
-| 05 | Read the Answer (best rank-1 error √5 :1300, 90% energy :1313, spectral vs Frobenius error :1333, what the guarantee covers :1345, global recap :1367) | 62–67 | opt01-svd-lowrank/opt01-svd-lowrank.html:1293 |
-| — | End slide | 68 | opt01-svd-lowrank/opt01-svd-lowrank.html:1385 |
+| — | Title + TOC | 1–2 | opt01-svd-lowrank/opt01-svd-lowrank.html:128 |
+| 01 | Why Low Rank? (smaller matrix, controlled error :196, range = column span :215, an output combines the columns :228, rank :263, collapse to one direction :287, null space :324, rank–nullity :363) | 3–10 | opt01-svd-lowrank/opt01-svd-lowrank.html:189 |
+| 02 | Measuring Error (norm axioms :397, ℓ1/ℓ2/ℓ∞ :428, 7, 5, 4 worked :453, unit balls :487, orthogonal Q preserves ℓ2 geometry :519/:555, spectral norm = worst stretch :568, Frobenius = total energy :605) | 11–19 | opt01-svd-lowrank/opt01-svd-lowrank.html:390 |
+| 03 | Reading an SVD (symmetric eigendecomposition recall :637, SVD theorem :647, factor shapes :661, rotate–stretch–rotate :695–:756, rank-one layers :799, compact SVD :824, constructing the SVD (general recipe, σᵢ > 0) :852, first layer carries most energy (illustration) :870, eigenvalues vs singular values in general :882, ‖A‖₂=σ₁ with upper bound + witness :904–:940, ‖A‖_F²=Σσᵢ² :952, invariance :965) | 20–36 | opt01-svd-lowrank/opt01-svd-lowrank.html:630 |
+| 04 | Best Low-Rank Approximation (truncation candidate :987, EYM spectral statement :997, optimality needs two claims :1011, tools: null space, subspace intersection, two planes in R³, witness, top-k+1 stretch :1031–:1091, proof plan + Steps 1–5 :1103–:1174, one-chain recap :1184, EYM Frobenius statement, proof beyond scope :1200, achievability :1214) | 37–55 | opt01-svd-lowrank/opt01-svd-lowrank.html:980 |
+| 05 | Read the Answer (energy retention R_k guides rank :1237, low rank compresses LLM weights :1249, what the guarantee covers :1265, global recap :1287) | 56–60 | opt01-svd-lowrank/opt01-svd-lowrank.html:1230 |
+| — | End slide | 61 | opt01-svd-lowrank/opt01-svd-lowrank.html:1306 |
 
 Key theorems (cited by name on-slide, no numbers): **rank–nullity** (stated,
-proof in note; opt01-svd-lowrank/opt01-svd-lowrank.html:326); **orthogonal invariance** claim, proved
-(opt01-svd-lowrank/opt01-svd-lowrank.html:517); **SVD existence** (stated; opt01-svd-lowrank/opt01-svd-lowrank.html:609); **spectral norm = σ₁**, upper
-bound + witness proof (opt01-svd-lowrank/opt01-svd-lowrank.html:934); **Frobenius norm identity** (opt01-svd-lowrank/opt01-svd-lowrank.html:982);
+proof in note; opt01-svd-lowrank/opt01-svd-lowrank.html:367); **orthogonal invariance** claim (ℓ2), proved
+(opt01-svd-lowrank/opt01-svd-lowrank.html:559); **SVD existence** (stated; opt01-svd-lowrank/opt01-svd-lowrank.html:651); **spectral norm = σ₁**, upper
+bound + witness proof (opt01-svd-lowrank/opt01-svd-lowrank.html:908); **Frobenius norm identity** (opt01-svd-lowrank/opt01-svd-lowrank.html:956);
 **Eckart–Young–Mirsky, spectral** — proved in five steps via subspace
-intersection (opt01-svd-lowrank/opt01-svd-lowrank.html:1053); **Eckart–Young–Mirsky, Frobenius** — stated, proof in
-the note (opt01-svd-lowrank/opt01-svd-lowrank.html:1267).
+intersection (opt01-svd-lowrank/opt01-svd-lowrank.html:1001); **Eckart–Young–Mirsky, Frobenius** — stated; proof beyond
+this lecture's scope (optional in the note) (opt01-svd-lowrank/opt01-svd-lowrank.html:1204).
+Application: SVD-LLM (Wang et al., ICLR 2025) cited as one published use (opt01-svd-lowrank/opt01-svd-lowrank.html:1249).
 Figures: inline SVG/HTML with hand-computed geometry; S87 two-planes geometry
 from `opt01-svd-lowrank/figs/o1c_planes.py`.
 Stated-not-proved on-slide: rank–nullity, SVD existence, Frobenius EYM
-(proofs in the note). Uniqueness dropped (spectral minimizer non-unique).
+(rank–nullity and SVD existence proofs in the note; Frobenius proof optional there).
+Uniqueness dropped (spectral minimizer non-unique).
 
-### opt02-convexity-gd — Gradient Descent: Three Guarantees (51 slides, 90 min)
+### opt02-convexity-gd — Gradient Descent: Three Guarantees (48 slides, 90 min)
 
 `opt02-convexity-gd/opt02-convexity-gd.html` · **opt 795–1319** (core subset; restructured 2026-11-23, job
 `2026-11-23-opt01-opt03-four-hour-core`; folder renamed from `opt03-convexity-gd/`
-2026-11-24). Lecture 11 — taught after opt01 in
+2026-11-24; running example and integral proof removed 2026-11-24, job
+`2026-11-24-opt01-opt02-polish`). Lecture 11 — taught after opt01 in
 week 14 (90 min); self-contained, assumes nothing from the backup regression deck. One algorithm,
-GD with step 1/L, one descent inequality, three guarantees: nonconvex + lower
-bound → min squared gradient O(1/T) (stationarity, not a local minimum);
-convex + attained optimum → last function gap O(1/T); μ-strongly convex →
-geometric decay of distance and gap. Running example f = 2x₁² + ½x₂²
-(L = 4, μ = 1; f falls 10 → 81/128 in two steps). Co-coercivity, PL, Hessian
-tests and other step sizes are only in the full edition (below). Stable slide
-IDs shared with the full edition.
+GD with step 1/L, one descent inequality (the standard smoothness upper bound, used as
+a lemma; GD step = minimizer of the quadratic upper model by completing the square),
+three guarantees: nonconvex + lower bound → every ‖∇f(x_t)‖ → 0 and best squared
+gradient O(1/T) (stationarity, not a local minimum); convex + attained optimum →
+last function gap O(1/T); μ-strongly convex → geometric decay of distance and gap.
+No running example (the old f = 2x₁² + ½x₂² arithmetic is archived in the full
+edition). Co-coercivity, PL, Hessian tests and other step sizes are only in the full
+edition (below). Stable slide IDs shared with the full edition.
 
-Companion: `opt02-convexity-gd/opt02-convexity-gd-note.html` — one article per slide (message → explanation → details → sources).
-Accessible edition: `opt02-convexity-gd/opt02-convexity-gd-note.md` — screen-reader Markdown edition of that note (1100 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Companion: `opt02-convexity-gd/opt02-convexity-gd-note.html` — one article per slide (message → explanation → details → sources); the integral proof of the descent lemma is optional detail in the S33 article.
+Accessible edition: `opt02-convexity-gd/opt02-convexity-gd-note.md` — screen-reader Markdown edition of that note (1076 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | opt02-convexity-gd/opt02-convexity-gd.html:64 |
-| 01 | One Update (goal + nonconvex schematic :140, gradient recall :165, downhill steps :176, L-smoothness :210, step 1/L :224, running example L = 4 :240) | 3–9 | opt02-convexity-gd/opt02-convexity-gd.html:133 |
-| 02 | One Descent Inequality (descent lemma :263, touches f at x :276, proof steps 1–3 :303–:329, step 1/L decreases f by ‖∇f‖²/2L :341, worked steps :354/:367) | 10–18 | opt02-convexity-gd/opt02-convexity-gd.html:256 |
-| 03 | Nonconvex: Stationarity (theorem :395, proof steps :408/:421, stationary ≠ minimum :433, GD stays at a maximum :456, the square changes the rate :480) | 19–25 | opt02-convexity-gd/opt02-convexity-gd.html:388 |
-| 04 | Convex: Optimality (chords above :503, tangent below :537, assume an optimum :566, O(1/T) function gap :600, proof plan + steps :614–:673, one-chain recap :683) | 26–37 | opt02-convexity-gd/opt02-convexity-gd.html:496 |
-| 05 | Strongly Convex: Geometric Decay (quadratic floor :706, curvature bounded below :718, theorem :748, contraction proof :762–:794, linear = geometric :804, example beats its bound :840) | 38–47 | opt02-convexity-gd/opt02-convexity-gd.html:699 |
-| 06 | Three Guarantees (assumptions → guarantees table :864, no extra conditions needed :877) | 48–50 | opt02-convexity-gd/opt02-convexity-gd.html:857 |
-| — | End slide x_{t+1} = x_t − ∇f(x_t)/L | 51 | opt02-convexity-gd/opt02-convexity-gd.html:903 |
+| — | Title + TOC | 1–2 | opt02-convexity-gd/opt02-convexity-gd.html:69 |
+| 01 | One Update (goal + nonconvex schematic :145, gradient recall :170, downhill steps :181, L-smoothness :215, step 1/L :229) | 3–8 | opt02-convexity-gd/opt02-convexity-gd.html:138 |
+| 02 | One Descent Inequality (descent lemma as tool :255, upper-model build S34a–c :271–:314, minimize a safe upper model :347, completing the square gives GD :357, step 1/L decreases f by ‖∇f‖²/2L :370) | 9–16 | opt02-convexity-gd/opt02-convexity-gd.html:248 |
+| 03 | Nonconvex: Stationarity (theorem :398, proof steps :407/:420, every gradient norm vanishes :432, stationary ≠ minimum :445, the square changes the rate :468) | 17–23 | opt02-convexity-gd/opt02-convexity-gd.html:387 |
+| 04 | Convex: Optimality (chords above :491, tangent below :525, assume an optimum :554, O(1/T) function gap :588, proof plan + steps :602–:661, one-chain recap :671) | 24–35 | opt02-convexity-gd/opt02-convexity-gd.html:484 |
+| 05 | Strongly Convex: Geometric Decay (quadratic floor :694, curvature bounded below :706, theorem :743, contraction proof :753–:785, linear = geometric :795) | 36–44 | opt02-convexity-gd/opt02-convexity-gd.html:687 |
+| 06 | Three Guarantees (assumptions → guarantees table :841, no extra conditions needed :854) | 45–47 | opt02-convexity-gd/opt02-convexity-gd.html:834 |
+| — | End slide x_{t+1} = x_t − ∇f(x_t)/L | 48 | opt02-convexity-gd/opt02-convexity-gd.html:880 |
 
-Key results (cited by name on-slide): **descent lemma** (opt02-convexity-gd/opt02-convexity-gd.html:267), proved in three
-steps; **nonconvex rate** min_t ‖∇f(x_t)‖² ≤ 2L(f(x_0) − f_low)/T (opt02-convexity-gd/opt02-convexity-gd.html:399);
-**convex O(1/T)**, Garrigos & Gower 2024 Thm 3.4 (opt02-convexity-gd/opt02-convexity-gd.html:604); **strongly convex
-geometric rate**, Garrigos & Gower 2024 Thm 3.6 (opt02-convexity-gd/opt02-convexity-gd.html:752). All three proved
+Key results (cited by name on-slide): **descent lemma** (opt02-convexity-gd/opt02-convexity-gd.html:259), stated as a
+standard tool (integral proof optional in the note); **nonconvex rate** min_t ‖∇f(x_t)‖² ≤ 2L(f(x_0) − f_low)/T (opt02-convexity-gd/opt02-convexity-gd.html:398) and
+**‖∇f(x_t)‖ → 0** by summability (opt02-convexity-gd/opt02-convexity-gd.html:432); **convex O(1/T)** (opt02-convexity-gd/opt02-convexity-gd.html:592) and **strongly convex
+geometric rate** (opt02-convexity-gd/opt02-convexity-gd.html:743), classical treatment Nesterov 2004, exact bounds Garrigos & Gower 2024 Thms 3.4/3.6. All three proved
 on-slide by one distance/descent argument; no co-coercivity, no PL.
 Figures: inline SVG; S95/S65/S110 generated by
-`opt02-convexity-gd/figs/o3b_figs.py`.
+`opt02-convexity-gd/figs/o3b_figs.py`; S34a–c build by `opt02-convexity-gd/figs/gd_model_build.py`.
 
 ### opt01-svd-lowrank-full — Full / extended edition (119 slides; backup, `opt03-backup/`)
 

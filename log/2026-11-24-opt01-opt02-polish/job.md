@@ -8,14 +8,19 @@ branch: 2026-11-24-opt01-opt02-polish
 pr: 80 — https://github.com/albert-no/slides/pull/80 (existing PR; no second PR)
 pr head branch: 2026-11-23-opt01-opt03-four-hour-core
 state: in-work
-round: 1 of 2
+round: 2 of 2
+review commit: 2244aea04c44369d216d928c9e70b5341cddca2e
 albert decisions:
   - 2026-11-24 22:10 Asia/Seoul: additional opt01 comments C01–C13 authorize spacing, splitting, figure readability, removal of worked arithmetic, retained illustration/energy argument, explicit Frobenius-proof scope and brief LLM weight-compression application.
   - 2026-11-24 22:20 Asia/Seoul: opt02 C14–C20 authorize removal of running examples and pages 24/47, optional animation, an elementary descent argument, clarification of vanishing gradients and rate, and reference verification. Both batches combined before plan-v1 announcement.
   - No merge, PDF, probability rewrite or overall teaching-time change requested.
   - 2026-11-24: plan-v1.md complete and issued as the first work order for this medium follow-up; C01–C20 mapped to frozen deck-qualified IDs. New job branch from baseline; retain existing PR #80 for approved delivery.
 
-  - 2026-11-24 22:33 Asia/Seoul: slides acknowledged plan-v1, reported branch setup from 9fdba01 and implementation underway; exact pushed work SHA pending.
+  - 2026-11-24 22:33 Asia/Seoul: slides acknowledged plan-v1 and reported branch setup from 9fdba01.
+
+review decisions:
+  - 2026-11-24: round1 exact commit 2244aea04c44369d216d928c9e70b5341cddca2e reviewed; verdict revise. Main decks answer the requests; blocking F01 covers narrow-note math reflow and F02 covers nonconvex summary qualifiers. F03/F04 are nonblocking.
+  - review-r1.md issued for final round2; notes/necessary metadata only, no main-deck redesign or plan change. E10 resolves the flagged Golub–Van Loan citation. Existing PR80 head remains unchanged until approval.
 
 # Size and relationship to the approved work
 

@@ -5,10 +5,10 @@ audience / mode / duration: junior undergraduate AI majors / rigorous but narrow
 baseline: 99cf2a220a92c83e938167c05745af15d9bafe13
 id commit: 01ba79c7b18bb7538c0c8bcd34f6141dd604d075
 branch: 2026-11-23-opt01-opt03-four-hour-core
-reviewed candidate: 1f220ef63a13fb45ee38350bc06d498c0e6b4872
+reviewed candidate: f36ff43c5e0d28b01c12af0cef4ece9c143a8ed9
 relocation starting point: 3d427a6cc1a2e447179a58e8ce5d9442e947363d
 pr: 80 — https://github.com/albert-no/slides/pull/80
-state: in-work
+state: approved
 round: 3 of 3
 albert decisions:
   - 2026-11-23: requested restructure for remaining six lecture hours: prob09 two hours, SVD/low-rank and simplest GD four hours; final in week 15.
@@ -19,6 +19,7 @@ albert decisions:
   - 2026-11-23: final record commit 3d427a6cc1a2e447179a58e8ce5d9442e947363d verified pushed and log-only after the approved content SHA; all job copies match. PR #80 opened against main via GitHub REST API. Await Albert final check; not merged.
   - 2026-11-24 14:20 Asia/Seoul: Albert requested temporary consecutive opt01/opt02 folders and filenames, with all remaining optimization material physically in opt03-backup (C12–C14). Same PR #80; no merge order.
   - 2026-11-24: plan-v2.md is the round-3 work order from pushed SHA 3d427a6cc1a2e447179a58e8ce5d9442e947363d. Prior content approval remains historical; new packaging awaits review. Size stays large; bounded relocation, no new mathematical argument or teaching-time change.
+  - 2026-11-24: review-r3 approved exact commit f36ff43c5e0d28b01c12af0cef4ece9c143a8ed9. C01–C14 done; approved mathematics/time preserved; final opt01/opt02 and opt03-backup packaging verified. Await final log-only push before updating existing PR #80 summary. No merge authorized.
   - Current execution specification: plan-v2.md plus unchanged plan-v1 slide specs; stage 1–3 text below is historical and its original-path constraints are superseded by C12–C14.
 
 # Size and work boundary

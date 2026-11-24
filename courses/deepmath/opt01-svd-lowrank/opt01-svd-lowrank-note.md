@@ -1080,7 +1080,7 @@ Each of these changes the problem, so the closed-form answer no longer applies a
 
 Other limits of this lecture, for the record: the existence of the SVD rests on the spectral theorem, which was not proved here; everything was over the real numbers (the complex case is parallel, with conjugate transposes); and how the SVD is computed numerically is a separate subject (Golub and Van Loan [8], ch. 8).
 
-**Optional: spectral and Frobenius errors can differ.** For $A = \operatorname{diag}(5,3,1)$ and $k = 1$, $A_1 = \operatorname{diag}(5,0,0)$ and the residual is $\operatorname{diag}(0,3,1)$. Its spectral error is $\sigma_2 = 3$ and its Frobenius error is $\sqrt{3^2 + 1^2} = \sqrt{10} \approx 3.16$: the two norms agree only when the residual has a single nonzero singular value. In general $\|M\|_2 \leq \|M\|_F \leq \sqrt{\operatorname{rank}(M)}\, \|M\|_2$.
+**Optional: spectral and Frobenius errors can differ.** For $A = \operatorname{diag}(5,3,1)$ and $k = 1$, $A_1 = \operatorname{diag}(5,0,0)$ and the residual is $\operatorname{diag}(0,3,1)$. Its spectral error is $\sigma_2 = 3$ and its Frobenius error is $\sqrt{3^2 + 1^2} = \sqrt{10} \approx 3.16$: the two norms agree exactly when the residual has at most one nonzero singular value. In general $\|M\|_2 \leq \|M\|_F \leq \sqrt{\operatorname{rank}(M)}\, \|M\|_2$.
 
 Weighted errors, where some entries count more than others, and observing only some entries, are not covered: the unweighted Eckart-Young-Mirsky guarantee does not apply to general weighted or missing-entry objectives, and truncating the given matrix's SVD is not generally guaranteed to solve them.
 

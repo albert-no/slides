@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI가 수학 문제를 푸는 시대, 무엇이 진짜 실력일까?</title>
+<link rel="stylesheet" href="../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../reference/deck.css">
+<link rel="stylesheet" href="../../reference/katex/katex.min.css">
+<script defer src="../../reference/katex/katex.min.js"></script>
+<script defer src="../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+</head>
+<body data-brand-logo="../../reference/kor-eng2.png">
+
+<style>
+/* Hangul reads thin at the engine's 300 weight — lift body copy to 400. */
+.deck p, .deck li, .deck td { font-weight: 400; }
+.deck { word-break: keep-all; }
+.deck strong { font-weight: 700; }
+/* Citations sit bottom-left, beside the brand footer */
+.deck .cite { left: 240px; bottom: 18px; transform: none; text-align: left; max-width: calc(100% - 330px); }
+
+/* Flow diagrams: larger box text for a hall */
+.ym-flow { justify-content: center; gap: 14px; flex-wrap: nowrap; }
+.ym-flow .diagram-box { font-size: 1.7rem; line-height: 1.35; padding: 24px 30px; }
+.ym-row .ym-flow .diagram-box, .ym-flow.ym-4 .diagram-box { font-size: 1.5rem; padding: 18px 22px; }
+.ym-flow .diagram-box .ym-sub { display: block; font-weight: 400; color: var(--gray-text); margin-top: 4px; }
+.ym-flow .diagram-box.filled .ym-sub { color: rgba(255,255,255,0.85); }
+.ym-flow .diagram-arrow { font-size: 2.2rem; }
+
+/* Figure with HTML overlay labels */
+.ym-fig { position: relative; margin: 0 auto; }
+.ym-fig > img { display: block; width: 100%; height: auto; }
+.ym-fig .fl { position: absolute; transform: translate(-50%,-50%); white-space: nowrap; font-weight: 700; font-size: 1.5rem; color: var(--charcoal); }
+.ym-fig .fl-sub { font-size: 1.3rem; font-weight: 500; }
+.ym-fig .fl-l { transform: translate(0,-50%); }
+.ym-fig .fl-r { transform: translate(-100%,-50%); }
+.ym-fig .fl-blue { color: var(--yonsei-blue); }
+.ym-fig .fl-gray { color: #555; }
+.ym-fig .fl-red { color: var(--warn); }
+
+/* S04 IMO score */
+.ym-imo { display: flex; align-items: center; gap: 56px; margin: 14px 0 8px; }
+.ym-big { font-size: 5.6rem; font-weight: 700; color: var(--yonsei-blue); line-height: 1; letter-spacing: -0.03em; }
+.ym-big span { font-size: 0.45em; color: var(--charcoal); }
+.ym-imo-grid { display: grid; grid-template-columns: repeat(3, 150px); gap: 14px; }
+.ym-imo-grid div { height: 84px; border-radius: 10px; border: 3px solid var(--yonsei-blue); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; }
+.ym-imo-grid .ok { background: var(--yonsei-blue); color: #fff; }
+.ym-imo-grid .no { border-style: dashed; color: var(--gray-text); }
+
+/* S10 text cards */
+.ym-text { background: var(--light); border: 1px solid var(--slate); border-radius: 10px; padding: 18px 22px; font-size: 1.45rem; line-height: 1.5; margin: 8px 0 12px; }
+.ym-tag { display: inline-block; padding: 2px 10px; border: 2px dashed var(--warn); color: var(--warn); border-radius: 6px; font-weight: 700; }
+
+/* S11 / S13 probability bars */
+.ym-ctx { display: flex; align-items: center; gap: 18px; margin: 6px 0 14px; }
+.ym-ctx .ym-prompt { font-size: 1.7rem; font-weight: 700; }
+.ym-bars { display: grid; grid-template-columns: 120px 1fr 90px; align-items: center; column-gap: 16px; row-gap: 16px; }
+.ym-bars .lab { font-size: 1.55rem; font-weight: 700; text-align: right; }
+.ym-bars .track { height: 42px; position: relative; }
+.ym-bars .bar { position: absolute; left: 0; top: 0; bottom: 0; background: var(--yonsei-blue); border-radius: 0 6px 6px 0; }
+.ym-bars .val { font-size: 1.5rem; font-weight: 600; }
+.ym-pair .track { height: 52px; }
+.ym-pair .bar.b0 { top: 0; bottom: 28px; background: #c9ced6; }
+.ym-pair .bar.b1 { top: 28px; bottom: 0; }
+.ym-pair .val { line-height: 1.15; font-size: 1.3rem; }
+.ym-pair .val b { font-size: 1.5rem; }
+.ym-mark { color: var(--success); }
+.ym-mark::after { content: ' ✓'; }
+.ym-chip { display: inline-block; padding: 4px 14px; border-radius: 8px; border: 2px solid #b9c0ca; font-weight: 600; margin: 2px; }
+.ym-chip.ym-g { border-color: var(--success); color: var(--success); background: rgba(46,139,87,0.08); }
+.ym-chip.ym-g::after { content: ' ✓'; }
+
+/* S12 two-row grouping diagram */
+.ym-row { display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: 14px; margin: 8px 0; }
+.ym-row .ym-who { font-size: 1.45rem; font-weight: 700; color: var(--yonsei-blue); }
+.ym-row .ym-flow { justify-content: flex-start; margin: 0; }
+
+/* S14 coin grid */
+.ym-coins { display: grid; grid-template-columns: 360px 1fr; gap: 48px; align-items: center; margin-top: 4px; }
+
+/* S16 outcome stack */
+.ym-out { display: flex; flex-direction: column; gap: 10px; }
+.ym-out .diagram-box { min-width: 0; }
+
+/* S19 loop return */
+.ym-return { margin: 0 110px; height: 34px; border: 3px dashed #9aa3af; border-top: none; border-radius: 0 0 14px 14px; position: relative; }
+.ym-return span { position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); background: #fff; padding: 0 14px; font-size: 1.35rem; font-weight: 600; color: var(--gray-text); }
+
+/* S23 rectangles + inequality */
+.ym-amgm { display: grid; grid-template-columns: 620px 1fr; gap: 40px; align-items: center; }
+.ym-amgm .math-block { margin: 10px 0; }
+</style>
+
+<div class="deck" id="deck">
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 1 — Title -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide title-slide active">
+  <img class="title-logo" src="../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">연세대학교 과학영재교육원 수료식 · 특별강연</div>
+  <h1>AI가 수학 문제를 푸는 시대,<br>무엇이 진짜 실력일까?</h1>
+  <div class="divider"></div>
+  <p class="subtitle">AI가 수학을 푼다면, 우리는 왜 배울까?<br>이해한 수학이 여는 새로운 질문들</p>
+  <p style="font-weight:500;">노알버트 (Albert No) &nbsp;·&nbsp; 연세대학교 인공지능학과</p>
+  <p style="margin-top:6px;">과학영재교육원 수료 선배 &nbsp;·&nbsp; 2026. 11. 28.</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 2 — Contents -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>오늘의 세 가지 질문</h2>
+  <div class="divider"></div>
+  <div class="toc-list">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">AI 이후의 수학</div>
+        <div class="toc-sub">AI가 증명까지 한다면, 무엇이 달라질까?</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">글에 숨긴 확률</div>
+        <div class="toc-sub">AI가 쓴 글에 흔적을 남길 수 있을까?</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">직관과 함께 커지는 가능성</div>
+        <div class="toc-sub">이해한 수학으로 무엇을 더 할 수 있을까?</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 3 — Section 01 -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide section-slide left">
+  <div class="section-num">01</div>
+  <h1>AI 이후의 수학</h1>
+  <div class="divider"></div>
+  <p class="subtitle">AI는 이미 어디까지 왔을까?</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 4 — IMO 2025 -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>AI도 올림피아드 문제를 증명한다</h2>
+  <div class="divider"></div>
+  <p>국제수학올림피아드(IMO) 2025 · 공식 채점 기준으로 평가</p>
+  <div class="ym-imo">
+    <div>
+      <div class="ym-big">35<span> / 42점</span></div>
+      <p style="margin-top:12px;"><strong>금메달 수준</strong> (gold-medal standard)</p>
+    </div>
+    <div class="ym-imo-grid">
+      <div class="ok">해결</div><div class="ok">해결</div><div class="ok">해결</div>
+      <div class="ok">해결</div><div class="ok">해결</div><div class="no">미해결</div>
+    </div>
+  </div>
+  <p>6문제 중 5문제를 완전히 해결</p>
+  <p class="muted">모든 챗봇이 아니라, 평가된 고급 시스템(Gemini Deep Think)의 결과</p>
+  <div class="cite">Luong &amp; Lockhart, “Breakthrough Performance at IMO 2025 with Gemini Deep Think,” Google DeepMind, 2025-07-21</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 5 — Navier–Stokes announcement -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>연구의 최전선에도 등장한 AI</h2>
+  <div class="divider"></div>
+  <p>나비에–스토크스 방정식: 유체의 움직임을 기술하는 방정식</p>
+  <div class="diagram-flow ym-flow" style="margin:34px 0 30px;">
+    <div class="diagram-box filled">2026. 9. 8.<span class="ym-sub">OpenAI: AI를 활용한<br>해법 발표</span></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">2026. 9. 11.<span class="ym-sub">Clay 수학연구소:<br>별도 심사 절차 안내</span></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">최종 인정<span class="ym-sub">발표와 다른,<br>별도의 절차</span></div>
+  </div>
+  <div class="highlight"><strong>발표와 최종 인정은 별개</strong>: 그래도 AI가 연구 문제에 도전하는 시대</div>
+  <div class="cite">OpenAI, “Navier–Stokes solution,” 2026-09-08 · Clay Mathematics Institute, “Navier–Stokes announcement,” 2026-09-11</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 6 — Answer vs understanding -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>정답 다음의 질문</h2>
+  <div class="divider"></div>
+  <div class="grid-2" style="margin-top:8px;">
+    <div class="card">
+      <h3>정답 구하기</h3>
+      <p>값 · 식 · 증명을 얻는다</p>
+    </div>
+    <div class="card">
+      <h3>문제 이해하기</h3>
+      <p>왜 맞는가 · 언제 틀리는가<br>다음에 무엇을 물을까</p>
+    </div>
+  </div>
+  <div class="highlight">그래서 배운다: 의미와 가정을 알면<br><strong>더 묻고, 확인하고, 넓힐 수 있다</strong></div>
+  <p class="muted">둘은 이어진 실력 · AI도 두 쪽 모두를 도울 수 있다</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 7 — Tools change questions -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>도구가 바꾸는 질문</h2>
+  <div class="divider"></div>
+  <div class="diagram-flow ym-flow" style="margin:38px 0 32px;">
+    <div class="diagram-box">계산기<span class="ym-sub">빠른 산술</span></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">컴퓨터<span class="ym-sub">대규모 계산 · 시뮬레이션</span></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box filled">AI<span class="ym-sub">코딩 · 추론 · 탐색을 돕는다</span></div>
+  </div>
+  <div class="highlight">도구가 강해질수록, <strong>시도할 수 있는 질문</strong>이 커진다</div>
+  <p class="muted">역사의 단계가 아니라 비유 · 이해는 여전히 질문을 고른다</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 8 — Abstraction -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>현상을 질문으로 바꾸는 힘</h2>
+  <div class="divider"></div>
+  <div class="diagram-flow ym-flow" style="margin:22px 0 18px;">
+    <div class="diagram-box">이해<span class="ym-sub">“이 동전, 공정할까?”</span></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">정식화<span class="ym-sub">“앞면 확률이 1/2인가?”</span></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box filled">검증<span class="ym-sub">100번 던져<br>우연과 비교</span></div>
+  </div>
+  <div class="highlight"><strong>추상화</strong>: 중요한 것만 남겨, 확인할 수 있는 질문으로 바꾸기</div>
+  <p class="muted">계산 기법도 여전히 필요 · 무엇을 남길지 고르는 것이 핵심</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 9 — Section 02 -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide section-slide left">
+  <div class="section-num">02</div>
+  <h1>글에 숨긴 확률</h1>
+  <div class="divider"></div>
+  <p class="subtitle">평범한 글에 확인 가능한 흔적을 남길 수 있을까?</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 10 — Origin trace -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>글에 출처를 남길 수 있을까?</h2>
+  <div class="divider"></div>
+  <div class="grid-2">
+    <div>
+      <h3>나중에 붙인 표시</h3>
+      <div class="ym-text">오늘 점심은 김밥을 먹었다. <span class="ym-tag">[AI 생성]</span></div>
+      <p>표시를 지우면 끝</p>
+    </div>
+    <div>
+      <h3>생성할 때 남긴 흔적</h3>
+      <div class="ym-text">오늘 점심은 김밥을 먹었다.</div>
+      <p>겉보기엔 같은 글 · 규칙을 알면 통계로 확인</p>
+    </div>
+  </div>
+  <div class="highlight"><strong>생성할 때 확인 가능한 흔적을 남기자</strong></div>
+  <p class="muted">출처 표시는 EU·한국 법에도 등장 · 이 방식이 의무는 아님</p>
+  <div class="cite">설명용 예문 · EU AI Act, Art. 50(2) · 인공지능 발전과 신뢰 기반 조성 등에 관한 기본법 제31조</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 11 — Next-token probabilities -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>다음 조각을 고르는 확률</h2>
+  <div class="divider"></div>
+  <p>토큰: 글의 작은 조각 (단어일 수도, 아닐 수도)</p>
+  <div class="ym-ctx">
+    <span class="ym-prompt">“오늘 점심은 ___”</span>
+    <span class="pill">설명용 가상 예시</span>
+  </div>
+  <div class="ym-bars">
+    <div class="lab">김밥</div><div class="track"><div class="bar" style="width:80%"></div></div><div class="val">40%</div>
+    <div class="lab">라면</div><div class="track"><div class="bar" style="width:60%"></div></div><div class="val">30%</div>
+    <div class="lab">국수</div><div class="track"><div class="bar" style="width:40%"></div></div><div class="val">20%</div>
+    <div class="lab">샐러드</div><div class="track"><div class="bar" style="width:20%"></div></div><div class="val">10%</div>
+  </div>
+  <p style="margin-top:18px;">확률에 따라 하나 고르기 → 글에 붙이기 → <strong>다시 반복</strong></p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 12 — Shared grouping rule -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>같은 규칙으로 묶고 세기</h2>
+  <div class="divider"></div>
+  <p>만드는 쪽과 확인하는 쪽이 <strong>같은 규칙</strong>으로 후보를 묶는다</p>
+  <div class="ym-row">
+    <div class="ym-who">생성할 때</div>
+    <div class="diagram-flow ym-flow">
+      <div class="diagram-box">문맥<span class="ym-sub">“오늘 점심은”</span></div>
+      <div class="diagram-arrow">+</div>
+      <div class="diagram-box">공유 규칙</div>
+      <div class="diagram-arrow">→</div>
+      <div class="diagram-box" style="font-weight:500;"><span class="ym-chip ym-g">김밥</span><span class="ym-chip ym-g">샐러드</span><span class="ym-chip">라면</span><span class="ym-chip">국수</span></div>
+    </div>
+  </div>
+  <div class="ym-row">
+    <div class="ym-who">확인할 때</div>
+    <div class="diagram-flow ym-flow">
+      <div class="diagram-box">완성된 글</div>
+      <div class="diagram-arrow">+</div>
+      <div class="diagram-box">같은 규칙</div>
+      <div class="diagram-arrow">→</div>
+      <div class="diagram-box filled">표시 묶음(✓)에 든<br>조각 세기</div>
+    </div>
+  </div>
+  <p>문맥이 바뀌면 묶음도 바뀐다: 고정된 단어 목록이 아님</p>
+  <p class="muted">초록색 ✓ = 이 문맥의 표시 묶음 · 실제 글에는 색이 없다</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 13 — Slightly biased choice -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>조금 바꾼 선택에 흔적이 남는다</h2>
+  <div class="divider"></div>
+  <div class="cols" style="align-items:start; gap:40px; margin-top:10px;">
+    <div style="flex:1.35;">
+      <p class="muted" style="margin-bottom:12px;">회색 = 바꾸기 전 · 파랑 = 바꾼 뒤 (설명용 가상 예시)</p>
+      <div class="ym-bars ym-pair">
+        <div class="lab ym-mark">김밥</div><div class="track"><div class="bar b0" style="width:66.7%"></div><div class="bar b1" style="width:80%"></div></div><div class="val">40% →<br><b>48%</b></div>
+        <div class="lab">라면</div><div class="track"><div class="bar b0" style="width:50%"></div><div class="bar b1" style="width:40%"></div></div><div class="val">30% →<br><b>24%</b></div>
+        <div class="lab">국수</div><div class="track"><div class="bar b0" style="width:33.3%"></div><div class="bar b1" style="width:26.7%"></div></div><div class="val">20% →<br><b>16%</b></div>
+        <div class="lab ym-mark">샐러드</div><div class="track"><div class="bar b0" style="width:16.7%"></div><div class="bar b1" style="width:20%"></div></div><div class="val">10% →<br><b>12%</b></div>
+      </div>
+    </div>
+    <div style="flex:1;">
+      <p>표시 묶음(✓) 합계</p>
+      <div class="ym-big" style="font-size:3.6rem; margin:6px 0 18px;">50% → 60%</div>
+      <p>항상 고르진 않는다: <strong>조금 더 자주</strong></p>
+      <p>한 번은 티 나지 않아도, 쌓이면 보인다</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 14 — Coin question -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>동전 100번, 앞면 70번?</h2>
+  <div class="divider"></div>
+  <div class="ym-coins">
+    <div class="ym-fig" style="width:360px;">
+      <img src="figs/coins-100.svg" alt="동전 100개: 앞면 70개(채운 원), 뒷면 30개(빈 원)">
+    </div>
+    <div>
+      <p><strong>여러분이라면?</strong> 공정한 동전일까요?</p>
+      <p>● 앞면 70 · ○ 뒷면 30</p>
+      <p>우연 모형: 공정하고 독립인 동전 → 기대 50번</p>
+      <div class="highlight">불가능하진 않지만, <strong>매우 드물다</strong></div>
+      <p class="muted">“동전이 확실히 이상하다”는 아님</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 15 — Binomial tail -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>우연이라면 얼마나 드문가?</h2>
+  <div class="divider"></div>
+  <div class="ym-fig" style="width:900px; margin-top:4px;">
+    <img src="figs/binom-pmf.svg" alt="공정한 동전 100번의 앞면 횟수 분포: 50 근처가 가장 높고, 70 이상 구간은 거의 0">
+    <span class="fl fl-r fl-gray" style="left:48.5%; top:6%;">기대 50번</span>
+    <span class="fl" style="left:81.9%; top:22%; color:var(--warn);">70번 이상</span>
+    <span class="fl fl-sub" style="left:81.9%; top:33%; color:var(--warn);">약 0.0039%</span>
+    <span class="fl fl-sub" style="left:4.5%; top:96.2%;">0</span>
+    <span class="fl fl-sub" style="left:50%; top:96.2%;">50</span>
+    <span class="fl fl-red" style="left:68.2%; top:96.2%;">70</span>
+    <span class="fl fl-sub" style="left:95.5%; top:96.2%;">100</span>
+  </div>
+  <p style="margin-top:10px;">가로 = 앞면 횟수 · 막대 높이 = 그 횟수가 나올 확률</p>
+  <p class="muted">공정·독립 동전 가정 아래의 드문 정도 · “AI일 확률”이 아니다</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 16 — Limits -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>흔적은 단서, 판결은 아니다</h2>
+  <div class="divider"></div>
+  <div class="diagram-flow ym-flow" style="margin:18px 0 22px;">
+    <div class="diagram-box filled">표시하며 생성</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">편집 · 번역<span class="ym-sub">짧은 글</span></div>
+    <div class="diagram-arrow">→</div>
+    <div class="ym-out">
+      <div class="diagram-box">강한 흔적<span class="ym-sub">통계적 근거</span></div>
+      <div class="diagram-box" style="border-style:dashed;">약한 신호<span class="ym-sub">판단 보류</span></div>
+    </div>
+  </div>
+  <p>검출기는 <strong>자기 방식의 흔적</strong>만 찾는다</p>
+  <p>흔적 없음 ≠ 사람이 썼다는 증거</p>
+  <div class="cite">Kirchenbauer et al., “On the Reliability of Watermarks for Large Language Models,” ICLR 2024</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 17 — Reframing recap -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>출처의 질문이 확률의 질문으로</h2>
+  <div class="divider"></div>
+  <div class="diagram-flow ym-flow" style="margin:22px 0 20px;">
+    <div class="diagram-box">이해<span class="ym-sub">“AI가 쓴 글인지<br>알고 싶다”</span></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">정식화<span class="ym-sub">선택을 조금 기울이고<br>표시 묶음을 센다</span></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box filled">검증<span class="ym-sub">“우연이라면<br>얼마나 드문가?”</span></div>
+  </div>
+  <div class="highlight">출처의 질문이 <strong>동전의 질문</strong>이 되었다</div>
+  <p class="muted">실제 적용에는 공학과 가정 점검이 더 필요</p>
+  <div class="cite">Kirchenbauer et al., “A Watermark for Large Language Models,” ICML 2023</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 18 — Section 03 -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide section-slide left">
+  <div class="section-num">03</div>
+  <h1>직관과 함께 커지는 가능성</h1>
+  <div class="divider"></div>
+  <p class="subtitle">이해한 수학으로 더 많은 질문을</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 19 — Experiment loop -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>좋은 질문을 더 많이 시험하기</h2>
+  <div class="divider"></div>
+  <div class="diagram-flow ym-flow ym-4" style="margin:18px 0 0;">
+    <div class="diagram-box filled">질문 바꾸기<span class="ym-sub">“10번 중 7번이라면?”</span></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">AI와 함께<br>구현</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">독립적으로<br>확인</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">질문<br>다듬기</div>
+  </div>
+  <div class="ym-return"><span>다듬은 질문으로 다시</span></div>
+  <p style="margin-top:34px;">이해가 <strong>질문과 확인</strong>을 이끈다</p>
+  <p class="muted">AI도 아이디어를 낼 수 있다 · 확인은 반드시 따로</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 20 — Personal reflection -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>오래 남은 것은 수학의 의미</h2>
+  <div class="divider"></div>
+  <div class="diagram-flow ym-flow" style="margin:22px 0 22px;">
+    <div class="diagram-box">공식 · 기법<span class="ym-sub">문제 풀이 훈련</span></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">말로 설명하기<span class="ym-sub">“이 식은 무슨 뜻?”</span></div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box filled">의미와 직관<span class="ym-sub">새로운 관점</span></div>
+  </div>
+  <div class="highlight">문제 풀이 훈련도 도움이 됐지만,<br><strong>진짜 중요했던 것은 직관</strong>이었다</div>
+  <p class="muted">이곳 영재원에서도, 그 뒤의 삶 전체에서도</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 21 — AM–GM (id S23) -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>같은 합이라면, 균형 잡힐수록 곱이 크다</h2>
+  <div class="divider"></div>
+  <p>두 양수 $a, b$ · 합은 $a+b=10$으로 고정</p>
+  <div class="ym-amgm">
+    <div class="ym-fig" style="width:620px;">
+      <img src="figs/rectangles.svg" alt="같은 둘레의 직사각형 두 개: 2×8은 넓이 16, 5×5는 넓이 25, 단위 정사각형으로 표시">
+      <span class="fl" style="left:25.9%; top:45.5%;">8</span>
+      <span class="fl" style="left:2.5%; top:65.1%;">2</span>
+      <span class="fl" style="left:82.1%; top:5.5%;">5</span>
+      <span class="fl" style="left:66.7%; top:45.1%;">5</span>
+      <span class="fl fl-blue" style="left:25.9%; top:91%;">2 × 8 = 16</span>
+      <span class="fl fl-blue" style="left:82.1%; top:91%;">5 × 5 = 25</span>
+    </div>
+    <div>
+      <p>산술·기하평균 부등식 (AM–GM)</p>
+      <div class="math-block">$$\frac{a+b}{2} \ge \sqrt{ab}$$</div>
+      <p>등호: $a = b$일 때</p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:14px;">합이 고정될 때의 이야기 · 모든 문제에서 ‘같게’가 최선은 아님</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 22 — Jensen / log (id S24) -->
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- Exact y = ln x on [1,9]; chord (2,ln2)-(8,ln8); at x=5 curve ln5 = 1.609 > chord ln4 = 1.386.
+     Transform: px = 70 + (x-1)*111.25, py = 310 - 130*ln x  (viewBox 1000x340). f'' = -1/x^2 < 0. -->
+<div class="slide">
+  <h2>평균과 함수, 순서가 중요하다</h2>
+  <div class="divider"></div>
+  <div class="ym-fig" style="width:900px; margin-top:0;">
+    <img src="figs/log-chord.svg" alt="y = log x 곡선과 x=2, 8을 잇는 선분: x=5에서 곡선(log 5)이 선분(log 4)보다 위">
+    <span class="fl fl-l fl-blue" style="left:64%; top:66%;">━ 곡선 $y=\log x$</span>
+    <span class="fl fl-l fl-gray" style="left:64%; top:78%;">╍ 두 점을 잇는 선분</span>
+    <span class="fl fl-r fl-blue" style="left:49%; top:21%;">$\log 5$: 평균을 먼저 넣은 값</span>
+    <span class="fl fl-l fl-gray" style="left:54%; top:47%;">$\log 4$: 함수값의 평균</span>
+    <span class="fl fl-sub" style="left:18.1%; top:104%;">$a=2$</span>
+    <span class="fl fl-sub" style="left:51.5%; top:104%;">$5$</span>
+    <span class="fl fl-sub" style="left:84.9%; top:104%;">$b=8$</span>
+  </div>
+  <p style="margin-top:44px;">오목한 log: <strong>평균을 넣은 값 ≥ 함수값의 평균</strong></p>
+  <p>$\displaystyle \log\frac{a+b}{2} \ge \frac{\log a + \log b}{2}$ &nbsp;($a, b \gt 0$) · Jensen 부등식의 log 경우</p>
+  <div class="cite">Boyd &amp; Vandenberghe, <em>Convex Optimization</em>, 2004, §3.1.8–3.1.9</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 23 — Three questions (id S21) -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>이 식은 어떤 이야기를 할까?</h2>
+  <div class="divider"></div>
+  <p>문제를 푼 뒤, 세 가지를 물어보기</p>
+  <div class="diagram-flow ym-flow" style="margin:22px 0 22px;">
+    <div class="diagram-box">무슨 뜻일까?</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box">어떤 가정이<br>필요할까?</div>
+    <div class="diagram-arrow">→</div>
+    <div class="diagram-box filled">다른 곳에도<br>쓸 수 있을까?</div>
+  </div>
+  <div class="highlight">AI 시대에도 수학을 배우는 이유:<br><strong>이해한 만큼, AI와 함께 더 많이 묻고 확인한다</strong></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SLIDE 24 — Closer (id S22) -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="slide end-slide no-footer">
+  <div class="big-word">수료를 축하합니다</div>
+  <div class="big-word-sub">여러분의 다음 질문을 응원합니다</div>
+</div>
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / 24</div>
+</div><!-- end deck -->
+<script src="../../reference/deck.js"></script>
+</body>
+</html>

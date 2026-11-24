@@ -8,7 +8,7 @@ The lecture has 68 sections and runs 150 minutes. Audience: junior undergraduate
 
 **Conventions.** $A \in \mathbb{R}^{m \times n}$ is a real matrix of rank $r$, with singular values $\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_{\min(m,n)} \geq 0$ and $\sigma_i = 0$ for $i > r$. $Q$ denotes an orthogonal matrix, $A = U\Sigma V^\top$ the full SVD and $A = U_r \Sigma_r V_r^\top$ the compact one. $A_k = \sum_{i \leq k} \sigma_i u_i v_i^\top$ is the rank-$k$ truncated SVD and $B$ a competing matrix of rank at most $k$. $\|\cdot\|_2$ is the Euclidean vector norm or the spectral matrix norm; $\|\cdot\|_F$ is the Frobenius norm. Results are cited by name, not number. The running example is $A$ with first row $(3, 0)$ and second row $(4, 5)$.
 
-**Extended edition.** The pre-2026-11 lecture (119 sections: pseudo-inverse, four fundamental subspaces, nuclear norm, matrix completion, and the full set of background proofs) is archived with the same IDs as `backup/opt01-svd-lowrank-full.html`, with notes `backup/opt01-svd-lowrank-full-note.html` and `backup/opt01-svd-lowrank-full-note.md`.
+**Extended edition.** The pre-2026-11 lecture (119 sections: pseudo-inverse, four fundamental subspaces, nuclear norm, matrix completion, and the full set of background proofs) is archived with the same IDs as `../opt03-backup/opt01-svd-lowrank-full.html`, with notes `../opt03-backup/opt01-svd-lowrank-full-note.html` and `../opt03-backup/opt01-svd-lowrank-full-note.md`.
 
 <!-- REGION Opening BEGIN -->
 
@@ -1081,7 +1081,7 @@ $$\begin{aligned} \sigma_i(A) &= \max_{\substack{S \subseteq \mathbb{R}^n \\ \di
 
 **Theorem (Eckart--Young--Mirsky, Frobenius norm).** For every $B$ with $\operatorname{rank}(B) \leq k$, $\|A - B\|_F^2 \geq \sum_{i > k} \sigma_i(A)^2 = \|A - A_k\|_F^2$. *Proof.* By the Frobenius identity $\|M\|_F^2 = \sum_i \sigma_i(M)^2$ and Lemma 7.3, $\|A - B\|_F^2 = \sum_{i \geq 1} \sigma_i(A - B)^2 \geq \sum_{i \geq 1} \sigma_{i+k}(A)^2 = \sum_{j > k} \sigma_j(A)^2$, which is $\|A - A_k\|_F^2$ by section 61, $A_k$'s Error Is the Discarded Energy. $\blacksquare$
 
-The same argument extends to the nuclear norm and, by Mirsky [2], to every unitarily invariant norm; those extensions are kept in the extended-edition note (`backup/opt01-svd-lowrank-full-note.md`).
+The same argument extends to the nuclear norm and, by Mirsky [2], to every unitarily invariant norm; those extensions are kept in the extended-edition note (`../opt03-backup/opt01-svd-lowrank-full-note.md`).
 
 **Sources.**
 
@@ -1261,7 +1261,7 @@ The lecture closes on the SVD written as a sum of rank-one layers, $A = \sum_i \
 
 ## References
 
-Theorem and section numbers in the annotations below (Theorem 5.1, Theorem 6.3) refer to the extended edition's note, `backup/opt01-svd-lowrank-full-note.md`.
+Theorem and section numbers in the annotations below (Theorem 5.1, Theorem 6.3) refer to the extended edition's note, `../opt03-backup/opt01-svd-lowrank-full-note.md`.
 
 1. C. Eckart and G. Young. "The approximation of one matrix by another of lower rank." *Psychometrika* 1(3):211-218, 1936. doi:10.1007/BF02288367 -- https://doi.org/10.1007/BF02288367
 2. L. Mirsky. "Symmetric gauge functions and unitarily invariant norms." *Quarterly Journal of Mathematics* 11(1):50-59, 1960. doi:10.1093/qmath/11.1.50 -- https://doi.org/10.1093/qmath/11.1.50
@@ -1275,11 +1275,11 @@ Theorem and section numbers in the annotations below (Theorem 5.1, Theorem 6.3) 
 10. E. J. Candes and B. Recht. "Exact matrix completion via convex optimization." *Foundations of Computational Mathematics* 9:717-772, 2009. arXiv:0805.4471 -- https://arxiv.org/abs/0805.4471
 11. E. J. Candes and T. Tao. "The power of convex relaxation: near-optimal matrix completion." *IEEE Transactions on Information Theory* 56(5):2053-2080, 2010. arXiv:0903.1476 -- https://arxiv.org/abs/0903.1476
 12. M. Fazel. *Matrix Rank Minimization with Applications.* PhD thesis, Stanford University, 2002. The convex-envelope result, Theorem 6.3.
-13. B. Recht, M. Fazel, and P. A. Parrilo. "Guaranteed minimum-rank solutions of linear matrix equations via nuclear norm minimization." *SIAM Review* 52(3):471-501, 2010. arXiv:0706.4138 -- https://arxiv.org/abs/0706.4138. Includes the semidefinite-program formulation quoted in Section 8.3 of the extended-edition note (`backup/opt01-svd-lowrank-full-note.md`).
+13. B. Recht, M. Fazel, and P. A. Parrilo. "Guaranteed minimum-rank solutions of linear matrix equations via nuclear norm minimization." *SIAM Review* 52(3):471-501, 2010. arXiv:0706.4138 -- https://arxiv.org/abs/0706.4138. Includes the semidefinite-program formulation quoted in Section 8.3 of the extended-edition note (`../opt03-backup/opt01-svd-lowrank-full-note.md`).
 14. J.-F. Cai, E. J. Candes, and Z. Shen. "A singular value thresholding algorithm for matrix completion." *SIAM Journal on Optimization* 20(4):1956-1982, 2010. arXiv:0810.3286 -- https://arxiv.org/abs/0810.3286
 15. M. Hardt, R. Meka, P. Raghavendra, and B. Weitz. "Computational limits for matrix completion." *COLT* 2014. arXiv:1402.2331 -- https://arxiv.org/abs/1402.2331. The hardness statement of Theorem 9.
 16. R. D. Wilkinson. MATH3030 lecture notes, section 3.5, "Low-rank approximation." https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html. The proof reference cited in the source; the Frobenius case is proved independently in section 60 above (Eckart-Young-Mirsky: Frobenius Error).
-17. Y. Koren, R. Bell, and C. Volinsky. "Matrix factorization techniques for recommender systems." *IEEE Computer* 42(8):30-37, 2009. doi:10.1109/MC.2009.263 -- https://doi.org/10.1109/MC.2009.263. By the Netflix Prize winners; the practical counterpart to the matrix-completion slides of the extended edition (`backup/opt01-svd-lowrank-full.html`).
+17. Y. Koren, R. Bell, and C. Volinsky. "Matrix factorization techniques for recommender systems." *IEEE Computer* 42(8):30-37, 2009. doi:10.1109/MC.2009.263 -- https://doi.org/10.1109/MC.2009.263. By the Netflix Prize winners; the practical counterpart to the matrix-completion slides of the extended edition (`../opt03-backup/opt01-svd-lowrank-full.html`).
 18. E. J. Hu et al. "LoRA: Low-Rank Adaptation of Large Language Models." *ICLR* 2022. arXiv:2106.09685 -- https://arxiv.org/abs/2106.09685
 19. N. Halko, P. G. Martinsson, and J. A. Tropp. "Finding structure with randomness: probabilistic algorithms for constructing approximate matrix decompositions." *SIAM Review* 53(2):217-288, 2011. arXiv:0909.4061 -- https://arxiv.org/abs/0909.4061
-20. Companion notes in this series: prob01 through prob09 cover the probability half (lectures 1 through 9); the covariance eigendecomposition, the symmetric positive-semidefinite special case of the SVD, is in prob08. The opt03 note covers gradient descent. The regression and SGD notes (opt02, opt04) are extended material, listed in `../backup/OUTLINE.md`. Each lives at `../<name>/<name>-note.md` in this accessible edition, or `-note.html` in the original.
+20. Companion notes in this series: prob01 through prob09 cover the probability half (lectures 1 through 9); the covariance eigendecomposition, the symmetric positive-semidefinite special case of the SVD, is in prob08. The opt02 note covers gradient descent. Each of these notes lives at `../<name>/<name>-note.md` in this accessible edition, or `-note.html` in the original. The regression and SGD notes are extended material in `../opt03-backup/`, listed in `../opt03-backup/OUTLINE.md`.

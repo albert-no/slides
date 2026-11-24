@@ -401,7 +401,7 @@ the pairwise-uncorrelated induction noted after Lemma 2.3. **End of proof.**
 
 This single identity powers everything that follows: the coin bound $4/n$, the
 weak law of large numbers, error bars, and the variance argument for minibatching
-reused by name in opt04.
+reused in the backup SGD lecture.
 
 ### 4.6 Coin answer, verified
 

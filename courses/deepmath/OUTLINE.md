@@ -13,8 +13,8 @@ Past homework and exams (2024–25, PDFs as handed out) in `exam/`: `hw1sol`–`
 source `midterm26.tex` (exam 2026-10-20), reviewed in `midterm26-review/` (below).
 
 **Accessible editions.** Every deck's speaker note also ships as a screen-reader Markdown
-edition at `<deck>/<deck>-note.md`; the midterm26 review and the backup full editions of
-opt01, opt03 and prob06 have one too (17 files, ~19.4k lines total). These are written for a
+edition at `<deck>/<deck>-note.md`; the midterm26 review, the prob06 backup full edition and the four
+optimization decks in `opt03-backup/` have one too (17 files, ~19.4k lines total). These are written for a
 blind student who reads through a Markdown-to-braille/speech converter, so they follow a
 fixed contract: plain ASCII only (no smart quotes, em dashes, Unicode math or diacritics),
 all math in LaTeX (`$…$` inline, `$$…$$` display with `\tag{}` for numbered equations),
@@ -29,7 +29,7 @@ differentiate, don't duplicate): entropy/KL/MI/Fano have a grad-level treatment 
 `03-diffentropy/`; diffusion/DDPM rigor in `courses/privacy/lectures/02-generative/`
 and `courses/infotheory/lectures/07-diffusion/`.
 
-## Deck plan (13 decks — status)
+## Deck plan (11 active decks + optimization backup collection — status)
 
 | # | Deck | Source (tex lines) | Status |
 |---|---|---|---|
@@ -42,12 +42,16 @@ and `courses/infotheory/lectures/07-diffusion/`.
 | 7 | `prob07-estimation/` — cond. expectation/tower, MLE/MAP, Fano (full proof), Naive Bayes, bias-variance, MMSE, generative models as MLE? (LLMs, DDPM) | prob 1563–1911 | done (130 slides) |
 | 8 | `prob08-gaussian/` — MVN (3 defs, properties w/ proofs), Gaussian channel, Gaussian diffusion/DDPM, Gaussian discriminant | prob 1912–2519 (MIT OCW 6.436J citation) | done (154 slides) |
 | 9 | `prob09-monte-carlo/` — Monte Carlo, importance sampling, variance trade-offs, RL sample reuse | new material | done (70 slides) |
-| 10 | `opt01-svd-lowrank/` — rank/nullity, vector/spectral/Frobenius norms, SVD and Eckart–Young–Mirsky | opt 1–435 | done — **68 slides, 150 min** (restructured 2026-11-23); full / extended 119 in backup/ |
-| 11 | `opt02-regression-erm/` — least squares θ\*=A†B (full proof), ERM/Bayes risk, ridge + closed form | opt 436–794, 1463–1517 | done (110 slides) — **backup-only in 2026**, not taught; index in `backup/OUTLINE.md` |
-| 12 | `opt03-convexity-gd/` — fixed-step GD, smoothness/descent, nonconvex stationarity, convex function-gap and strongly convex geometric rates | opt 795–1319 | done — **51 slides, 90 min** (restructured 2026-11-23); full / extended 134 in backup/ |
-| 13 | `opt04-sgd/` — SGD O(1/√K) proof, mini-batching, strongly-convex SGD O(log k/k) | opt 1320–1462, 1520–1600 | done (117 slides, 2026-09 diagram pass) — **backup-only in 2026**, not taught; index in `backup/OUTLINE.md` |
+| 10 | `opt01-svd-lowrank/` — rank/nullity, vector/spectral/Frobenius norms, SVD and Eckart–Young–Mirsky | opt 1–435 | done — **68 slides, 150 min** (restructured 2026-11-23); full / extended 119 in `opt03-backup/` |
+| 11 | `opt02-convexity-gd/` — fixed-step GD, smoothness/descent, nonconvex stationarity, convex function-gap and strongly convex geometric rates | opt 795–1319 | done — **51 slides, 90 min** (restructured 2026-11-23; folder renamed from `opt03-convexity-gd/` 2026-11-24); full / extended 134 in `opt03-backup/` |
 
-Exam-review deck (not one of the 13): `midterm26-review/` — midterm 2026 solutions lecture (74 slides).
+Optimization backup collection (not one of the 11, not taught in 2026): `opt03-backup/` — the full
+opt01 (119 slides) and opt03 (134) editions, the old opt02 regression/ERM/ridge deck (110; opt 436–794,
+1463–1517) and the old opt04 SGD deck (117; opt 1320–1462, 1520–1600), each with HTML note and
+Markdown edition; index in `opt03-backup/OUTLINE.md`. Their filenames keep the historical lecture
+numbers 10–13.
+
+Exam-review deck (not one of the 11): `midterm26-review/` — midterm 2026 solutions lecture (74 slides).
 
 Dropped from source by request: operator theory (opt 1603–1761), acceleration/AGM
 (1765–1889), GDM/RMSprop/Adam (1981–2056), SAM (2060–2091).
@@ -563,22 +567,69 @@ from `opt01-svd-lowrank/figs/o1c_planes.py`.
 Stated-not-proved on-slide: rank–nullity, SVD existence, Frobenius EYM
 (proofs in the note). Uniqueness dropped (spectral minimizer non-unique).
 
-### opt01-svd-lowrank-full — Full / extended edition (119 slides)
+### opt02-convexity-gd — Gradient Descent: Three Guarantees (51 slides, 90 min)
 
-`opt01-svd-lowrank/backup/opt01-svd-lowrank-full.html` · the pre-2026-11-23
+`opt02-convexity-gd/opt02-convexity-gd.html` · **opt 795–1319** (core subset; restructured 2026-11-23, job
+`2026-11-23-opt01-opt03-four-hour-core`; folder renamed from `opt03-convexity-gd/`
+2026-11-24). Lecture 11 — taught after opt01 in
+week 14 (90 min); self-contained, assumes nothing from the backup regression deck. One algorithm,
+GD with step 1/L, one descent inequality, three guarantees: nonconvex + lower
+bound → min squared gradient O(1/T) (stationarity, not a local minimum);
+convex + attained optimum → last function gap O(1/T); μ-strongly convex →
+geometric decay of distance and gap. Running example f = 2x₁² + ½x₂²
+(L = 4, μ = 1; f falls 10 → 81/128 in two steps). Co-coercivity, PL, Hessian
+tests and other step sizes are only in the full edition (below). Stable slide
+IDs shared with the full edition.
+
+Companion: `opt02-convexity-gd/opt02-convexity-gd-note.html` — one article per slide (message → explanation → details → sources).
+Accessible edition: `opt02-convexity-gd/opt02-convexity-gd-note.md` — screen-reader Markdown edition of that note (1066 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+
+| # | Section | Slides | Location |
+|---|---|---|---|
+| — | Title + TOC | 1–2 | opt02-convexity-gd/opt02-convexity-gd.html:64 |
+| 01 | One Update (goal + nonconvex schematic :140, gradient recall :165, downhill steps :176, L-smoothness :210, step 1/L :224, running example L = 4 :240) | 3–9 | opt02-convexity-gd/opt02-convexity-gd.html:133 |
+| 02 | One Descent Inequality (descent lemma :263, touches f at x :276, proof steps 1–3 :303–:329, step 1/L decreases f by ‖∇f‖²/2L :341, worked steps :354/:367) | 10–18 | opt02-convexity-gd/opt02-convexity-gd.html:256 |
+| 03 | Nonconvex: Stationarity (theorem :395, proof steps :408/:421, stationary ≠ minimum :433, GD stays at a maximum :456, the square changes the rate :480) | 19–25 | opt02-convexity-gd/opt02-convexity-gd.html:388 |
+| 04 | Convex: Optimality (chords above :503, tangent below :537, assume an optimum :566, O(1/T) function gap :600, proof plan + steps :614–:673, one-chain recap :683) | 26–37 | opt02-convexity-gd/opt02-convexity-gd.html:496 |
+| 05 | Strongly Convex: Geometric Decay (quadratic floor :706, curvature bounded below :718, theorem :748, contraction proof :762–:794, linear = geometric :804, example beats its bound :840) | 38–47 | opt02-convexity-gd/opt02-convexity-gd.html:699 |
+| 06 | Three Guarantees (assumptions → guarantees table :864, no extra conditions needed :877) | 48–50 | opt02-convexity-gd/opt02-convexity-gd.html:857 |
+| — | End slide x_{t+1} = x_t − ∇f(x_t)/L | 51 | opt02-convexity-gd/opt02-convexity-gd.html:903 |
+
+Key results (cited by name on-slide): **descent lemma** (opt02-convexity-gd/opt02-convexity-gd.html:267), proved in three
+steps; **nonconvex rate** min_t ‖∇f(x_t)‖² ≤ 2L(f(x_0) − f_low)/T (opt02-convexity-gd/opt02-convexity-gd.html:399);
+**convex O(1/T)**, Garrigos & Gower 2024 Thm 3.4 (opt02-convexity-gd/opt02-convexity-gd.html:604); **strongly convex
+geometric rate**, Garrigos & Gower 2024 Thm 3.6 (opt02-convexity-gd/opt02-convexity-gd.html:752). All three proved
+on-slide by one distance/descent argument; no co-coercivity, no PL.
+Figures: inline SVG; S95/S65/S110 generated by
+`opt02-convexity-gd/figs/o3b_figs.py`.
+
+### opt01-svd-lowrank-full — Full / extended edition (119 slides; backup, `opt03-backup/`)
+
+`opt03-backup/opt01-svd-lowrank-full.html` · the pre-2026-11-23
 lecture, archived unchanged apart from paths and the title (rank/range/null,
 four subspaces, norms, SVD, pseudo-inverse, spectral/Frobenius/nuclear norms,
 Eckart–Young–Mirsky, Netflix/matrix completion; bridge to least squares).
 Slide IDs S01–S119 in baseline order; an Snn in the main deck is the same slide.
 
-Companion: `opt01-svd-lowrank/backup/opt01-svd-lowrank-full-note.html` — one article per slide, the full legacy note.
-Accessible edition: `opt01-svd-lowrank/backup/opt01-svd-lowrank-full-note.md` (1248 lines).
+Companion: `opt03-backup/opt01-svd-lowrank-full-note.html` — one article per slide, the full legacy note.
+Accessible edition: `opt03-backup/opt01-svd-lowrank-full-note.md` (1248 lines).
 
-### opt02-regression-erm — Linear Regression, ERM & Ridge (110 slides)
+### opt03-convexity-gd-full — Full / extended edition (134 slides; backup, `opt03-backup/`)
 
-`opt02-regression-erm/opt02-regression-erm.html` · **opt 436–794 + 1463–1517**
+`opt03-backup/opt03-convexity-gd-full.html` · the pre-2026-11-23
+lecture, archived unchanged apart from paths and the title (convexity,
+Hessian tests, L-smoothness, descent lemma, sandwich, co-coercivity, strong
+convexity, PL, GD convergence with both rates, step-size cliff at 2/L).
+Slide IDs S01–S134 in baseline order.
+
+Companion: `opt03-backup/opt03-convexity-gd-full-note.html` — one article per slide, the full legacy note.
+Accessible edition: `opt03-backup/opt03-convexity-gd-full-note.md` (1262 lines).
+
+### opt02-regression-erm — Linear Regression, ERM & Ridge (110 slides; backup, `opt03-backup/`)
+
+`opt03-backup/opt02-regression-erm.html` · **opt 436–794 + 1463–1517**
 (least squares, feature maps, multi-output, ERM/Bayes risk, ridge merged in).
-Lecture 11 — answers opt01's bridge (x = A†b, proof delivered as the deck
+Historical Lecture 11 (backup in 2026, not taught) — answers opt01's bridge (x = A†b, proof delivered as the deck
 centerpiece); recalls opt01 compact SVD / pseudo-inverse / rotations-are-free /
 orthogonal split as technique reviews, prob05 LLN, prob06 ERM +
 approximation/estimation split, prob07 MMSE / MAP / bias–variance, prob08
@@ -588,34 +639,34 @@ normal equations → orthogonality check → feature map (exact fit) → ridge
 θ_λ=(4/(3+λ), 3/(2+λ)) with the λ=1 crossing. Ends bridging to opt03
 (convexity + gradient descent).
 
-Companion: `opt02-regression-erm/opt02-regression-erm-note.html` — detailed definitions, expanded proofs, lemmas, references.
-Accessible edition: `opt02-regression-erm/opt02-regression-erm-note.md` — screen-reader Markdown edition of that note (467 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Companion: `opt03-backup/opt02-regression-erm-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `opt03-backup/opt02-regression-erm-note.md` — screen-reader Markdown edition of that note (467 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | opt02-regression-erm/opt02-regression-erm.html:44 |
-| 01 | Why Regression? (the pseudo-inverse explained :152, simplest trainable model, today's three results cards :192, route map SVG :215) | 3–7 | opt02-regression-erm/opt02-regression-erm.html:144 |
-| 02 | Linear Regression (data :279, linear model, height-weight SVG :303, dummy feature :335, interpretability, squared loss :359, training problem :371, running 3-point example + scatter SVG :383) | 8–16 | opt02-regression-erm/opt02-regression-erm.html:271 |
-| 03 | Matrix Form (stack the data :433, one objective one norm :446, tall/square/fat SVG :455, regression = tall case, running example has no exact solution :490, best we can do :504) | 17–23 | opt02-regression-erm/opt02-regression-erm.html:425 |
-| 04 | The Least-Squares Theorem (technique reviews 1–4: compact SVD :523, pseudo-inverse :538, rotations free :553, vector split :567; Thm 1 :582, reading :595, 5-step proof overview :607, Steps 1–5 one idea per slide :620–:685, every minimizer + smallest :696, uniqueness :709, proof-summary skeleton :720, key trick named :735, worked SVD :748, worked A† and θ\* :759, worked fitted line + residual table :773, implications :819, :833) | 24–46 | opt02-regression-erm/opt02-regression-erm.html:515 |
-| 05 | Geometry & Normal Equations (range(A) :853, projection picture SVG :866, solution is a projection AA†=U_cU_cᵀ :890, residual orthogonal :904, TR gradients of quadratics :918, Thm 2 :931, expansion proof both directions :944–:958, two formulas one answer (AᵀA)⁻¹Aᵀ=A† :972, worked normal equations :987, worked perpendicular check :999, which route when :1011) | 47–59 | opt02-regression-erm/opt02-regression-erm.html:845 |
-| 06 | Feature Maps (bend the model (tex log/x/x² example) :1033, feature map def :1045, worked add x² :1058, worked elimination, exact fit :1072, line-vs-parabola SVG :1084, more features never hurt training :1127, feature engineering → learning :1140) | 60–67 | opt02-regression-erm/opt02-regression-erm.html:1025 |
-| 07 | Multi-Output Regression (vector labels :1162, objective splits by output :1175, m independent regressions Θₖ=A†Bₖ :1186, linear layer implication :1200) | 68–72 | opt02-regression-erm/opt02-regression-erm.html:1154 |
-| 08 | Empirical Risk Minimization (one frame :1219, recall prob06 card :1230, loss def :1243, two classic losses + SVG :1255, predictions vs label space (prob02 CE recall) :1282, expected risk :1294, Bayes risk & predictor :1309, f\*=E[Y\|X] via prob07 MMSE :1323, empirical risk + prob05 LLN :1335, approximation-vs-estimation SVG :1348, least squares is ERM table :1373, when ERM backfires :1388) | 73–85 | opt02-regression-erm/opt02-regression-erm.html:1211 |
-| 09 | Ridge Regression (fragile predictors :1410, Cauchy–Schwarz sensitivity :1421, regularizer def (tex ℓ1 typo fixed) :1433, regularized ERM :1446, Thm 3 :1458, reading (no rank condition) :1470, TR eigenvalue shift (prob08 recall) :1481, Lemma AᵀA+λI invertible :1494, proof overview :1508, Step 1 gradient :1520, Step 2 strict win :1531, proof summary :1545, ridge through SVD shrinkage :1558, λ→0⁺ = A†B answers least-norm teaser :1571, worked ridge :1584, turning-the-dial table + coefficient-vs-λ chart :1595, worked three fits SVG :1633, underfit/just-right/overfit panels :1667, ridge = MAP prior (prob07) :1702, what λ buys (bias–variance, validation) :1713) | 86–106 | opt02-regression-erm/opt02-regression-erm.html:1402 |
-| — | Closing: every-tool table with the one-chain line folded in, bridge to iterative methods, end slide θ\*=A†B | 107–110 | opt02-regression-erm/opt02-regression-erm.html:1727 |
+| — | Title + TOC | 1–2 | opt03-backup/opt02-regression-erm.html:44 |
+| 01 | Why Regression? (the pseudo-inverse explained :152, simplest trainable model, today's three results cards :192, route map SVG :215) | 3–7 | opt03-backup/opt02-regression-erm.html:144 |
+| 02 | Linear Regression (data :279, linear model, height-weight SVG :303, dummy feature :335, interpretability, squared loss :359, training problem :371, running 3-point example + scatter SVG :383) | 8–16 | opt03-backup/opt02-regression-erm.html:271 |
+| 03 | Matrix Form (stack the data :433, one objective one norm :446, tall/square/fat SVG :455, regression = tall case, running example has no exact solution :490, best we can do :504) | 17–23 | opt03-backup/opt02-regression-erm.html:425 |
+| 04 | The Least-Squares Theorem (technique reviews 1–4: compact SVD :523, pseudo-inverse :538, rotations free :553, vector split :567; Thm 1 :582, reading :595, 5-step proof overview :607, Steps 1–5 one idea per slide :620–:685, every minimizer + smallest :696, uniqueness :709, proof-summary skeleton :720, key trick named :735, worked SVD :748, worked A† and θ\* :759, worked fitted line + residual table :773, implications :819, :833) | 24–46 | opt03-backup/opt02-regression-erm.html:515 |
+| 05 | Geometry & Normal Equations (range(A) :853, projection picture SVG :866, solution is a projection AA†=U_cU_cᵀ :890, residual orthogonal :904, TR gradients of quadratics :918, Thm 2 :931, expansion proof both directions :944–:958, two formulas one answer (AᵀA)⁻¹Aᵀ=A† :972, worked normal equations :987, worked perpendicular check :999, which route when :1011) | 47–59 | opt03-backup/opt02-regression-erm.html:845 |
+| 06 | Feature Maps (bend the model (tex log/x/x² example) :1033, feature map def :1045, worked add x² :1058, worked elimination, exact fit :1072, line-vs-parabola SVG :1084, more features never hurt training :1127, feature engineering → learning :1140) | 60–67 | opt03-backup/opt02-regression-erm.html:1025 |
+| 07 | Multi-Output Regression (vector labels :1162, objective splits by output :1175, m independent regressions Θₖ=A†Bₖ :1186, linear layer implication :1200) | 68–72 | opt03-backup/opt02-regression-erm.html:1154 |
+| 08 | Empirical Risk Minimization (one frame :1219, recall prob06 card :1230, loss def :1243, two classic losses + SVG :1255, predictions vs label space (prob02 CE recall) :1282, expected risk :1294, Bayes risk & predictor :1309, f\*=E[Y\|X] via prob07 MMSE :1323, empirical risk + prob05 LLN :1335, approximation-vs-estimation SVG :1348, least squares is ERM table :1373, when ERM backfires :1388) | 73–85 | opt03-backup/opt02-regression-erm.html:1211 |
+| 09 | Ridge Regression (fragile predictors :1410, Cauchy–Schwarz sensitivity :1421, regularizer def (tex ℓ1 typo fixed) :1433, regularized ERM :1446, Thm 3 :1458, reading (no rank condition) :1470, TR eigenvalue shift (prob08 recall) :1481, Lemma AᵀA+λI invertible :1494, proof overview :1508, Step 1 gradient :1520, Step 2 strict win :1531, proof summary :1545, ridge through SVD shrinkage :1558, λ→0⁺ = A†B answers least-norm teaser :1571, worked ridge :1584, turning-the-dial table + coefficient-vs-λ chart :1595, worked three fits SVG :1633, underfit/just-right/overfit panels :1667, ridge = MAP prior (prob07) :1702, what λ buys (bias–variance, validation) :1713) | 86–106 | opt03-backup/opt02-regression-erm.html:1402 |
+| — | Closing: every-tool table with the one-chain line folded in, bridge to iterative methods, end slide θ\*=A†B | 107–110 | opt03-backup/opt02-regression-erm.html:1727 |
 
 Key theorems: **Thm 1** least-squares solution θ\* = A†B minimizes ‖Aθ−B‖₂²
 and is the least-norm minimizer, full 5-step SVD proof (insert SVD + complete
 basis, rotate residual, drop constant, split θ, solve surviving piece)
-(opt02-regression-erm/opt02-regression-erm.html:582); **Thm 2** normal
+(opt03-backup/opt02-regression-erm.html:582); **Thm 2** normal
 equations AᵀAθ̂ = AᵀB characterize minimizers, expansion proof in both
 directions, (AᵀA)⁻¹Aᵀ = A† under full rank
-(opt02-regression-erm/opt02-regression-erm.html:931); **Lemma** AᵀA + λI is
+(opt03-backup/opt02-regression-erm.html:931); **Lemma** AᵀA + λI is
 invertible for every A and λ > 0, eigenvalue-shift argument
-(opt02-regression-erm/opt02-regression-erm.html:1494); **Thm 3** ridge closed
+(opt03-backup/opt02-regression-erm.html:1494); **Thm 3** ridge closed
 form θ\*_λ = (AᵀA+λI)⁻¹AᵀB, unique for any A, gradient + strict-verification
-proof (opt02-regression-erm/opt02-regression-erm.html:1458).
+proof (opt03-backup/opt02-regression-erm.html:1458).
 Figures: 12 inline SVGs with hand-computed geometry (route map,
 height-weight sketch, running-example scatter, tall/square/fat block shapes,
 fitted line + residuals, projection of B onto range(A) with right-angle marker,
@@ -638,58 +689,12 @@ AA† = U_cU_cᵀ projection derivation, ridge-through-SVD shrinkage
 = E[Y\|X] via prob07 MMSE recall, and all worked numeric examples above (the
 tex sets up the running objects but computes none of them).
 
-### opt03-convexity-gd — Gradient Descent: Three Guarantees (51 slides, 90 min)
+### opt04-sgd — Stochastic Gradient Descent (117 slides; backup, `opt03-backup/`)
 
-`opt03-convexity-gd/opt03-convexity-gd.html` · **opt 795–1319** (core subset; restructured 2026-11-23, job
-`2026-11-23-opt01-opt03-four-hour-core`). Lecture 12 — taught after opt01 in
-week 14 (90 min); self-contained, assumes nothing from opt02. One algorithm,
-GD with step 1/L, one descent inequality, three guarantees: nonconvex + lower
-bound → min squared gradient O(1/T) (stationarity, not a local minimum);
-convex + attained optimum → last function gap O(1/T); μ-strongly convex →
-geometric decay of distance and gap. Running example f = 2x₁² + ½x₂²
-(L = 4, μ = 1; f falls 10 → 81/128 in two steps). Co-coercivity, PL, Hessian
-tests and other step sizes are only in the full edition (below). Stable slide
-IDs shared with the full edition.
-
-Companion: `opt03-convexity-gd/opt03-convexity-gd-note.html` — one article per slide (message → explanation → details → sources).
-Accessible edition: `opt03-convexity-gd/opt03-convexity-gd-note.md` — screen-reader Markdown edition of that note (1066 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
-
-| # | Section | Slides | Location |
-|---|---|---|---|
-| — | Title + TOC | 1–2 | opt03-convexity-gd/opt03-convexity-gd.html:64 |
-| 01 | One Update (goal + nonconvex schematic :140, gradient recall :165, downhill steps :176, L-smoothness :210, step 1/L :224, running example L = 4 :240) | 3–9 | opt03-convexity-gd/opt03-convexity-gd.html:133 |
-| 02 | One Descent Inequality (descent lemma :263, touches f at x :276, proof steps 1–3 :303–:329, step 1/L decreases f by ‖∇f‖²/2L :341, worked steps :354/:367) | 10–18 | opt03-convexity-gd/opt03-convexity-gd.html:256 |
-| 03 | Nonconvex: Stationarity (theorem :395, proof steps :408/:421, stationary ≠ minimum :433, GD stays at a maximum :456, the square changes the rate :480) | 19–25 | opt03-convexity-gd/opt03-convexity-gd.html:388 |
-| 04 | Convex: Optimality (chords above :503, tangent below :537, assume an optimum :566, O(1/T) function gap :600, proof plan + steps :614–:673, one-chain recap :683) | 26–37 | opt03-convexity-gd/opt03-convexity-gd.html:496 |
-| 05 | Strongly Convex: Geometric Decay (quadratic floor :706, curvature bounded below :718, theorem :748, contraction proof :762–:794, linear = geometric :804, example beats its bound :840) | 38–47 | opt03-convexity-gd/opt03-convexity-gd.html:699 |
-| 06 | Three Guarantees (assumptions → guarantees table :864, no extra conditions needed :877) | 48–50 | opt03-convexity-gd/opt03-convexity-gd.html:857 |
-| — | End slide x_{t+1} = x_t − ∇f(x_t)/L | 51 | opt03-convexity-gd/opt03-convexity-gd.html:903 |
-
-Key results (cited by name on-slide): **descent lemma** (opt03-convexity-gd/opt03-convexity-gd.html:267), proved in three
-steps; **nonconvex rate** min_t ‖∇f(x_t)‖² ≤ 2L(f(x_0) − f_low)/T (opt03-convexity-gd/opt03-convexity-gd.html:399);
-**convex O(1/T)**, Garrigos & Gower 2024 Thm 3.4 (opt03-convexity-gd/opt03-convexity-gd.html:604); **strongly convex
-geometric rate**, Garrigos & Gower 2024 Thm 3.6 (opt03-convexity-gd/opt03-convexity-gd.html:752). All three proved
-on-slide by one distance/descent argument; no co-coercivity, no PL.
-Figures: inline SVG; S95/S65/S110 generated by
-`opt03-convexity-gd/figs/o3b_figs.py`.
-
-### opt03-convexity-gd-full — Full / extended edition (134 slides)
-
-`opt03-convexity-gd/backup/opt03-convexity-gd-full.html` · the pre-2026-11-23
-lecture, archived unchanged apart from paths and the title (convexity,
-Hessian tests, L-smoothness, descent lemma, sandwich, co-coercivity, strong
-convexity, PL, GD convergence with both rates, step-size cliff at 2/L).
-Slide IDs S01–S134 in baseline order.
-
-Companion: `opt03-convexity-gd/backup/opt03-convexity-gd-full-note.html` — one article per slide, the full legacy note.
-Accessible edition: `opt03-convexity-gd/backup/opt03-convexity-gd-full-note.md` (1262 lines).
-
-### opt04-sgd — Stochastic Gradient Descent (117 slides)
-
-`opt04-sgd/opt04-sgd.html` · **opt 1320–1462, 1520–1600** (SGD setup,
+`opt03-backup/opt04-sgd.html` · **opt 1320–1462, 1520–1600** (SGD setup,
 unbiasedness, full O(1/√K) convex proof for the averaged iterate,
 mini-batch 1/b variance, strongly-convex SGD O(log k/k) with decreasing
-steps). Lecture 13 — the course finale: answers the cost problem left by
+steps). Historical Lecture 13 (backup in 2026, not taught), written as the course finale: answers the cost problem left by
 gradient descent (full gradients cost N backprops; sample one instead and
 pay with variance). Every borrowed tool — tangent floor, telescoping,
 unrolling, uniform expectation, Jensen, variance of averages, tower — is
@@ -710,36 +715,36 @@ old "≈ 10³" read the decade spacing of the worked table, not the switch
 point — the note's §7.7 gives k ≈ 299). Closes the whole course: 13-deck
 map, what-you-can-now-read, end slide θ_{k+1} = θ_k − α g_k.
 
-Companion: `opt04-sgd/opt04-sgd-note.html` — detailed definitions, expanded proofs, lemmas, references.
-Accessible edition: `opt04-sgd/opt04-sgd-note.md` — screen-reader Markdown edition of that note (681 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Companion: `opt03-backup/opt04-sgd-note.html` — detailed definitions, expanded proofs, lemmas, references.
+Accessible edition: `opt03-backup/opt04-sgd-note.md` — screen-reader Markdown edition of that note (681 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
-| — | Title + TOC | 1–2 | opt04-sgd/opt04-sgd.html:50 |
-| 01 | Why SGD? (bill for one GD step :158, N is millions :169, sample-don't-sum :192, four results :207, route map SVG :231) | 3–8 | opt04-sgd/opt04-sgd.html:150 |
-| 02 | The Finite-Sum Objective (ERM :262, GD priced :274, running example :286, three-parabolas SVG :300, full gradient by hand :328, the gap :345) | 9–15 | opt04-sgd/opt04-sgd.html:254 |
-| 03 | The Stochastic Gradient (algorithm box :364, three-candidates SVG :378, TR uniform expectation (from prob01) :407, Thm 1 unbiasedness :420 + proof :433, worked check table :447, unbiased ≠ zero :464, truth + noise σ²=6 :479, epochs remark :492) | 16–25 | opt04-sgd/opt04-sgd.html:356 |
-| 04 | SGD by Hand (α=½ midpoint step :511, run table :523, GD comparison :541, two-paths SVG :562, 2-D companion :595, contour SVG :608, reading the picture :649, averaged iterate θ̄₄ = 2.175 :670) | 26–34 | opt04-sgd/opt04-sgd.html:503 |
-| 05 | Noise vs Progress (α=0.1 table :695, error recursion :716, mean dies/variance survives :730, noise floor ασ²/(2−α) table :743, racing-to-floors SVG :762, step-size dial :791, three escape plans :812) | 35–42 | opt04-sgd/opt04-sgd.html:687 |
-| 06 | The O(1/√K) Theorem (E_k notation :843, variance assumption honestly :856, bounded gradients :869, running constants :886, Thm 2 :899, reading :914, overview :927, Steps 1–9 one idea/slide :943–:1155 with TRs tangent floor :973, tower :1019, telescoping :1046, balance :1085, Jensen :1141 interleaved; one-step inequality read :1005, balance U-curve SVG :1112, skeleton :1170, worked bound table :1186, GD-vs-SGD total work :1205, average-vs-last remark :1224) | 43–69 | opt04-sgd/opt04-sgd.html:835 |
-| 07 | Mini-Batching (update :1249, still unbiased :1261, TR variance of averages (from prob05) :1273, Thm 3 :1287 + proof :1300, b=1 vs b=3 worked :1311, histogram SVG :1328, full-batch corner :1364, what b buys :1381, GPU price :1395, choosing b :1416) | 70–81 | opt04-sgd/opt04-sgd.html:1241 |
-| 08 | Strongly Convex SGD (regularized problem :1436, kill-the-floor schedule :1448, running example rewritten :1461, Thm 4 :1473, reading :1486, overview :1499, TR unrolling :1513, Steps 1a/1b weights = 1/(k+1) :1525–:1538, worked running average :1551 + table :1561, TR splitting square :1579, Steps 2a/2b :1591–:1604, TR strong floor :1617, Steps 3a/3b contraction :1631–:1645, Step 4 schedule :1659, Step 5a weighted telescope a₀=0 :1672, TR harmonic sum + integral SVG :1685, Step 5b :1718, Step 6 Jensen :1731, skeleton :1744, log-removable remark :1759, worked bound table :1771, log-log rates SVG :1790) | 82–108 | opt04-sgd/opt04-sgd.html:1428 |
-| 09 | In Practice (recipe table :1826, proved-vs-run honesty :1844, descendants names only :1862) | 109–112 | opt04-sgd/opt04-sgd.html:1818 |
-| 10 | Closing the Course (every-tool table :1894, 13-deck course map SVG :1913, what you can now read :1967, end slide θ_{k+1} = θ_k − α g_k :1987) | 113–117 | opt04-sgd/opt04-sgd.html:1886 |
+| — | Title + TOC | 1–2 | opt03-backup/opt04-sgd.html:50 |
+| 01 | Why SGD? (bill for one GD step :158, N is millions :169, sample-don't-sum :192, four results :207, route map SVG :231) | 3–8 | opt03-backup/opt04-sgd.html:150 |
+| 02 | The Finite-Sum Objective (ERM :262, GD priced :274, running example :286, three-parabolas SVG :300, full gradient by hand :328, the gap :345) | 9–15 | opt03-backup/opt04-sgd.html:254 |
+| 03 | The Stochastic Gradient (algorithm box :364, three-candidates SVG :378, TR uniform expectation (from prob01) :407, Thm 1 unbiasedness :420 + proof :433, worked check table :447, unbiased ≠ zero :464, truth + noise σ²=6 :479, epochs remark :492) | 16–25 | opt03-backup/opt04-sgd.html:356 |
+| 04 | SGD by Hand (α=½ midpoint step :511, run table :523, GD comparison :541, two-paths SVG :562, 2-D companion :595, contour SVG :608, reading the picture :649, averaged iterate θ̄₄ = 2.175 :670) | 26–34 | opt03-backup/opt04-sgd.html:503 |
+| 05 | Noise vs Progress (α=0.1 table :695, error recursion :716, mean dies/variance survives :730, noise floor ασ²/(2−α) table :743, racing-to-floors SVG :762, step-size dial :791, three escape plans :812) | 35–42 | opt03-backup/opt04-sgd.html:687 |
+| 06 | The O(1/√K) Theorem (E_k notation :843, variance assumption honestly :856, bounded gradients :869, running constants :886, Thm 2 :899, reading :914, overview :927, Steps 1–9 one idea/slide :943–:1155 with TRs tangent floor :973, tower :1019, telescoping :1046, balance :1085, Jensen :1141 interleaved; one-step inequality read :1005, balance U-curve SVG :1112, skeleton :1170, worked bound table :1186, GD-vs-SGD total work :1205, average-vs-last remark :1224) | 43–69 | opt03-backup/opt04-sgd.html:835 |
+| 07 | Mini-Batching (update :1249, still unbiased :1261, TR variance of averages (from prob05) :1273, Thm 3 :1287 + proof :1300, b=1 vs b=3 worked :1311, histogram SVG :1328, full-batch corner :1364, what b buys :1381, GPU price :1395, choosing b :1416) | 70–81 | opt03-backup/opt04-sgd.html:1241 |
+| 08 | Strongly Convex SGD (regularized problem :1436, kill-the-floor schedule :1448, running example rewritten :1461, Thm 4 :1473, reading :1486, overview :1499, TR unrolling :1513, Steps 1a/1b weights = 1/(k+1) :1525–:1538, worked running average :1551 + table :1561, TR splitting square :1579, Steps 2a/2b :1591–:1604, TR strong floor :1617, Steps 3a/3b contraction :1631–:1645, Step 4 schedule :1659, Step 5a weighted telescope a₀=0 :1672, TR harmonic sum + integral SVG :1685, Step 5b :1718, Step 6 Jensen :1731, skeleton :1744, log-removable remark :1759, worked bound table :1771, log-log rates SVG :1790) | 82–108 | opt03-backup/opt04-sgd.html:1428 |
+| 09 | In Practice (recipe table :1826, proved-vs-run honesty :1844, descendants names only :1862) | 109–112 | opt03-backup/opt04-sgd.html:1818 |
+| 10 | Closing the Course (every-tool table :1894, 13-deck course map SVG :1913, what you can now read :1967, end slide θ_{k+1} = θ_k − α g_k :1987) | 113–117 | opt03-backup/opt04-sgd.html:1886 |
 
 Key theorems: **Thm 1** unbiasedness E[∇L_{i_k}(θ)] = ∇L(θ), two-line
-proof via uniform expectation (opt04-sgd/opt04-sgd.html:420); **Thm 2**
+proof via uniform expectation (opt03-backup/opt04-sgd.html:420); **Thm 2**
 convex SGD O(1/√K): with α = D/(√(G²+σ²)√(K+1)), E[L(θ̄_K) − L*] ≤
 √(G²+σ²)·D/√(K+1) for the averaged iterate — full 9-step proof
-(opt04-sgd/opt04-sgd.html:899); **Thm 3** mini-batch variance σ²/b for
+(opt03-backup/opt04-sgd.html:899); **Thm 3** mini-batch variance σ²/b for
 i.i.d. with-replacement batches, proved via the variance of an average
-(opt04-sgd/opt04-sgd.html:1287); **Thm 4** strongly convex SGD with
+(opt03-backup/opt04-sgd.html:1287); **Thm 4** strongly convex SGD with
 α_k = 1/(μ(k+1)): E[F(x̄_k) − F(x*)] ≤ (2(G²+σ²)/μ)·(1+log(k+1))/(k+1) —
 full 6-step proof via unrolling, weighted telescope with vanishing head,
-harmonic sum (opt04-sgd/opt04-sgd.html:1473).
+harmonic sum (opt03-backup/opt04-sgd.html:1473).
 Figures: ten inline SVGs, all rebuilt in the 2026-09 pass on the
 KaTeX-over-SVG overlay pattern — the `.o4-fig` wrapper (CSS at
-opt04-sgd/opt04-sgd.html:25) is `position:relative; align-self:start`,
+opt03-backup/opt04-sgd.html:25) is `position:relative; align-self:start`,
 the SVG carries shapes only (zero `<text>`), and every label is an
 absolutely positioned `<span class="fl">` at left = x/W, top =
 (y − minY − 6)/H, so math renders through KaTeX at a fixed 1.55rem

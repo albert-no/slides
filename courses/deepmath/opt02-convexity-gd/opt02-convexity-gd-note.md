@@ -1,14 +1,14 @@
-# Deep Learning Math 12: Gradient Descent -- Three Guarantees -- Notes
+# Deep Learning Math 11: Gradient Descent -- Three Guarantees -- Notes
 
-**About this file.** This is the text-only, screen-reader-friendly edition of the Lecture 12 companion note. It has 51 numbered sections, each headed by its number, title and an ID in brackets; the lecture's slide deck `opt03-convexity-gd.html` and the HTML note `opt03-convexity-gd-note.html` use the same section numbers and IDs. Every figure and table is described in words or linearized into lists, and all mathematics is written in LaTeX. Nothing else is needed to read it.
+**About this file.** This is the text-only, screen-reader-friendly edition of the Lecture 11 companion note. It has 51 numbered sections, each headed by its number, title and an ID in brackets; the lecture's slide deck `opt02-convexity-gd.html` and the HTML note `opt02-convexity-gd-note.html` use the same section numbers and IDs. Every figure and table is described in words or linearized into lists, and all mathematics is written in LaTeX. Nothing else is needed to read it.
 
-Companion to the slide deck `opt03-convexity-gd.html` (51 slides, 90 minutes). Audience: junior undergraduate AI majors who know gradients, Taylor's first-order approximation and the Euclidean inner product. The lecture is self-contained; it assumes nothing from the regression lecture. Each section opens with a one-sentence message, then explains it, then gives details (derivations, worked numbers, figure provenance) and sources. Cross-references name a section by its number, for example section 9, Running Example: $L = 4$.
+Companion to the slide deck `opt02-convexity-gd.html` (51 slides, 90 minutes). Audience: junior undergraduate AI majors who know gradients, Taylor's first-order approximation and the Euclidean inner product. The lecture is self-contained; it assumes nothing from the regression lecture. Each section opens with a one-sentence message, then explains it, then gives details (derivations, worked numbers, figure provenance) and sources. Cross-references name a section by its number, for example section 9, Running Example: $L = 4$.
 
 **What the lecture does.** One algorithm, gradient descent with the fixed step $1/L$, and three guarantees earned by three assumptions. The update and $L$-smoothness (sections 3-9); one descent inequality, $f(x_{t+1}) \leq f(x_t) - \frac{1}{2L}\|\nabla f(x_t)\|^2$ (sections 10-18); nonconvex $f$ bounded below: a small squared gradient at rate $O(1/T)$, which means approximate stationarity, not a local minimum (sections 19-25); convex $f$ with an attained minimum: function gap $O(1/T)$ (sections 26-37); $\mu$-strongly convex $f$: geometric (linear) decay of the distance and the function gap (sections 38-47); and the three results side by side (sections 48-50).
 
 **Conventions.** $f:\mathbb{R}^n \to \mathbb{R}$ is differentiable and $L$-smooth; $x_{t+1} = x_t - \frac{1}{L}\nabla f(x_t)$. $f_{\text{low}}$ is a lower bound on $f$; when a minimizer $x^*$ exists, $f^* = f(x^*)$. $\mu > 0$ is the strong-convexity constant. $\|\cdot\|$ is the Euclidean norm. The running example is $f(x) = 2x_1^2 + \frac12 x_2^2$ on $\mathbb{R}^2$, with $L = 4$. Results are cited by name, not number.
 
-**Extended edition.** The pre-2026-11 lecture (134 slides, with the Hessian tests, co-coercivity, the Polyak-Lojasiewicz condition, step sizes other than $1/L$ and the full legacy proofs) is archived with the same slide IDs as `backup/opt03-convexity-gd-full.html`, with notes `backup/opt03-convexity-gd-full-note.html` and `backup/opt03-convexity-gd-full-note.md`.
+**Extended edition.** The pre-2026-11 lecture (134 slides, with the Hessian tests, co-coercivity, the Polyak-Lojasiewicz condition, step sizes other than $1/L$ and the full legacy proofs) is archived with the same slide IDs as `../opt03-backup/opt03-convexity-gd-full.html`, with notes `../opt03-backup/opt03-convexity-gd-full-note.html` and `../opt03-backup/opt03-convexity-gd-full-note.md`.
 
 <!-- REGION Opening BEGIN -->
 
@@ -19,7 +19,7 @@ Companion to the slide deck `opt03-convexity-gd.html` (51 slides, 90 minutes). A
 
 **Message.** One algorithm, gradient descent with step $1/L$; three assumptions give three different guarantees.
 
-Lecture 12 of Deep Learning Math (90 minutes). It studies one algorithm, gradient descent with the fixed step $1/L$, and asks what can be guaranteed about it. Smoothness and a lower bound on $f$ give approximate stationarity; adding convexity and an attained minimum gives an $O(1/T)$ function gap; adding strong convexity gives geometric decay of the distance to the minimizer.
+Lecture 11 of Deep Learning Math (90 minutes). It studies one algorithm, gradient descent with the fixed step $1/L$, and asks what can be guaranteed about it. Smoothness and a lower bound on $f$ give approximate stationarity; adding convexity and an attained minimum gives an $O(1/T)$ function gap; adding strong convexity gives geometric decay of the distance to the minimizer.
 <!-- END S01 -->
 
 <!-- BEGIN S02 -->
@@ -1076,7 +1076,7 @@ The update is the same throughout the lecture: $x_{t+1} = x_t - \tfrac{1}{L}\nab
 
 ## References
 
-Section numbers and the theorem, corollary and lemma numbers in the annotations below (Theorems 8 and 10, Corollary 6.3) refer to the extended edition's note, `backup/opt03-convexity-gd-full-note.md`.
+Section numbers and the theorem, corollary and lemma numbers in the annotations below (Theorems 8 and 10, Corollary 6.3) refer to the extended edition's note, `../opt03-backup/opt03-convexity-gd-full-note.md`.
 
 1. S. Boyd and L. Vandenberghe, *Convex Optimization*, Cambridge University Press, 2004. Free PDF: https://web.stanford.edu/~boyd/cvxbook/. Chapter 3 is the standard reference for the convexity-preserving operations of Section 2.3; Chapter 9 for unconstrained descent methods and line search.
 2. R. T. Rockafellar, *Convex Analysis*, Princeton University Press, 1970. https://press.princeton.edu/books/paperback/9780691015866/convex-analysis. The source for subdifferentials, conjugacy, and the nonsmooth theory referenced in Section 9.3.
@@ -1097,4 +1097,4 @@ Section numbers and the theorem, corollary and lemma numbers in the annotations 
 17. L. Bottou, F. E. Curtis and J. Nocedal, "Optimization Methods for Large-Scale Machine Learning," *SIAM Review* 60(2), 223-311, 2018. arXiv:1606.04838, https://arxiv.org/abs/1606.04838. The survey bridging Sections 9.2 and 9.6 with practice.
 18. J. Nocedal and S. J. Wright, *Numerical Optimization*, 2nd edition, Springer, 2006. doi:10.1007/978-0-387-40065-5, https://doi.org/10.1007/978-0-387-40065-5. Line search (Section 9.2), Newton and quasi-Newton methods (Section 9.5).
 19. S. Ghadimi and G. Lan, "Stochastic First- and Zeroth-order Methods for Nonconvex Stochastic Programming," *SIAM Journal on Optimization* 23(4), 2341-2368, 2013. arXiv:1309.5549, https://arxiv.org/abs/1309.5549. The stochastic analogue of Corollary 6.3, and the reference point for the next lecture.
-20. Companion notes in this series, in the same accessible Markdown edition: `../opt01-svd-lowrank/opt01-svd-lowrank-note.md` (SVD and best low-rank approximation). The regression and SGD notes (opt02, opt04) are extended material, listed in `../backup/OUTLINE.md`. The probability half of the course is covered by prob01 through prob09.
+20. Companion notes in this series, in the same accessible Markdown edition: `../opt01-svd-lowrank/opt01-svd-lowrank-note.md` (SVD and best low-rank approximation). The regression and SGD notes are extended material in `../opt03-backup/`, listed in `../opt03-backup/OUTLINE.md`. The probability half of the course is covered by prob01 through prob09.

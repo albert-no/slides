@@ -1,4 +1,4 @@
-"""Coordinates for the o3b- inline SVG figures in opt03-convexity-gd.html (slides S95, S65, S110).
+"""Coordinates for the o3b- inline SVG figures in opt02-convexity-gd.html (slides S95, S65, S110).
 Run: python3 o3b_figs.py  -> prints polyline point lists and invariant checks.
 Exact inputs:
   S95  f(u) = max(|u|-1, 0)^2  (convex, 2-smooth, argmin = [-1,1]); x_t = 2.9, x* = 1.

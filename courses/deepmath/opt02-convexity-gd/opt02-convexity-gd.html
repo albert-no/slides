@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>opt02 &mdash; Gradient Descent: Three Guarantees</title>
+
+<!-- Design system (canonical; all decks link to reference/). -->
+<link rel="stylesheet" href="../../../reference/colors_and_type.css">
+<link rel="stylesheet" href="../../../reference/deck.css">
+
+<!-- KaTeX for math rendering. -->
+<link rel="stylesheet" href="../../../reference/katex/katex.min.css">
+<script defer src="../../../reference/katex/katex.min.js"></script>
+<script defer src="../../../reference/katex/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+
+<style>
+.o3-algo { background:var(--light); border-left:3px solid var(--yonsei-blue); padding:16px 22px; border-radius:0 10px 10px 0; max-width:880px; margin:18px auto 0; }
+.o3-algo ol { margin:0; padding-left:0; list-style:none; counter-reset:step; }
+.o3-algo ol li { counter-increment:step; padding:8px 0 8px 56px; position:relative; line-height:1.45; }
+.o3-algo ol li::before { content:counter(step) "."; position:absolute; left:12px; top:8px;
+  font-weight:700; color:var(--yonsei-blue); width:36px; text-align:right; }
+.o3-algo ol li + li { border-top:1px solid var(--slate); }
+
+/* KaTeX cannot typeset inside SVG <text>; every figure label is an
+   absolutely-positioned span over the SVG. Percent coordinates come
+   straight from the viewBox: left = x/W, top = y/H. */
+.o3-fig { position:relative; width:100%; margin:0 auto; align-self:start; }
+.o3-fig > svg { display:block; width:100%; height:auto; }
+.o3-fig .fl { position:absolute; transform:translate(-50%,-50%); white-space:nowrap;
+  font-weight:600; font-size:1.55rem; color:var(--charcoal); }
+.o3-fig .fl-sub { font-size:1.25rem; font-weight:500; }
+.o3-fig .fl-l { transform:translate(0,-50%); }
+.o3-fig .fl-r { transform:translate(-100%,-50%); }
+.o3-fig .fl-blue  { color:var(--yonsei-blue); }
+.o3-fig .fl-white { color:#ffffff; }
+.o3-fig .fl-pale  { color:#cfd9e4; }
+.o3-fig .fl-grey  { color:#5a6673; }
+.o3-fig .fl-lgrey { color:#8a97a5; }
+.o3-fig .fl-red   { color:#d94040; }
+.o3-fig .fl-green { color:#2e8b57; }
+/* --- o3a- scoped CSS --- */
+/* --- end o3a- --- */
+/* --- o3b- scoped CSS --- */
+.o3b-split { display:grid; grid-template-columns:minmax(0,1fr) 440px; gap:32px; align-items:center; margin-top:4px; }
+.o3b-split.o3b-figleft { grid-template-columns:540px minmax(0,1fr); }
+.o3b-split > div > p { margin:10px 0; }
+.o3b-card .math-block { margin:8px 0; }
+.o3b-tab { margin:8px 0; }
+.o3b-tab th { text-transform:none; letter-spacing:0; }
+.o3b-tab th.o3b-num, .o3b-tab td.o3b-num { text-align:right; font-variant-numeric:tabular-nums; }
+.o3b-tiers td { padding:12px 14px; }
+.o3b-flow { flex-wrap:nowrap; justify-content:center; }
+.o3b-outcomes { display:flex; flex-direction:column; gap:10px; }
+.o3b-flow .diagram-box { font-size:1.55rem; padding:12px 18px; }
+.o3b-flow { gap:10px; }
+/* --- end o3b- --- */
+/* --- pp2- scoped CSS --- */
+.pp2-build { max-width:820px; margin:4px auto 0; }
+/* --- end pp2- --- */
+</style>
+</head>
+<body data-brand-logo="../../../reference/kor-eng2.png">
+
+<div class="deck" id="deck">
+
+<!-- ===== REGION Opening BEGIN ===== -->
+<div class="slide title-slide active" data-slide-id="S01">
+  <img class="title-logo" src="../../../reference/kor-eng2.png" alt="Yonsei University">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; Lecture 11</div>
+  <h1>Gradient Descent:<br>Three Guarantees</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Geometry and algebra: what each assumption earns</p>
+  <div class="spacer-lg"></div>
+  <p style="font-weight:500;font-size:1.8rem;">Albert No &nbsp;&middot;&nbsp; Yonsei University</p>
+  <p style="margin-top:6px;">Fall 2026</p>
+</div>
+
+<div class="slide" data-slide-id="S02">
+  <h2>Contents</h2>
+  <div class="divider"></div>
+  <div class="toc-list" style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(3,auto);grid-template-columns:1fr 1fr;gap:40px 44px;margin-top:24px">
+    <div class="toc-item">
+      <div class="toc-num">01</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">One Update</div>
+        <div class="toc-sub">Step against the gradient</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">02</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">One Descent Inequality</div>
+        <div class="toc-sub">An upper model and one square</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">03</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Nonconvex: Stationarity</div>
+        <div class="toc-sub">Gradients vanish, minima not promised</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">04</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Convex: Optimality</div>
+        <div class="toc-sub">Function gap at rate 1/T</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">05</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Strongly Convex: Geometric Decay</div>
+        <div class="toc-sub">Distance shrinks every step</div>
+      </div>
+    </div>
+    <div class="toc-item">
+      <div class="toc-num">06</div>
+      <div class="toc-rule"></div>
+      <div>
+        <div class="toc-label">Three Guarantees</div>
+        <div class="toc-sub">Same step, different assumptions</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REGION Opening END ===== -->
+
+<!-- ===== REGION P4a BEGIN ===== -->
+<div class="slide section-slide left" data-slide-id="S79">
+  <div class="section-num">01</div>
+  <h1>One Update</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Step against the gradient</p>
+</div>
+
+<div class="slide" data-slide-id="S80">
+  <h2>Goal: Minimize One Differentiable $f$</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\text{minimize } f(x) \text{ over } x \in \mathbb{R}^n, \qquad f:\mathbb{R}^n \to \mathbb{R} \text{ differentiable}$$</div>
+  <!-- exact geometry (schematic 1-D slice): f(u) = 1.5/(1+exp(2(u-2))) - 0.8 exp(-(u+1)^2), u in [-3,5].
+       inf f = 0 (u -> +inf), never attained; local min u ~ -0.995 (f ~ 0.696), local max u ~ 0.645 (f ~ 1.353).
+       X = 100 + 110(u+3), Y = 280 - 150 f.  f_low = 0 drawn at Y = 280. -->
+  <div class="o3-fig" style="max-width:880px;margin:4px auto 0;">
+    <svg viewBox="60 40 960 285" style="width:100%;">
+      <line x1="160" y1="280" x2="1000" y2="280" stroke="#5a6673" stroke-width="2.5" stroke-dasharray="10 7"/>
+      <polyline points="100,57 122,60 144,64 166,72 188,83 210,99 232,118 254,139 276,158 298,171 320,176 342,171 364,158 386,141 408,121 430,103 452,89 474,81 496,77 518,78 540,84 562,94 584,107 606,125 628,145 650,168 672,190 694,210 716,228 738,242 760,253 782,261 804,267 826,271 848,274 870,276 892,277 914,278 936,279 958,279 980,279"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
+      <circle cx="320" cy="176" r="7" fill="#003876"/>
+      <circle cx="501" cy="77" r="7" fill="#8a97a5"/>
+    </svg>
+    <span class="fl fl-sub fl-blue" style="left:27.08%;top:57.9%">local min</span>
+    <span class="fl fl-sub fl-grey" style="left:45.94%;top:6.3%">local max</span>
+    <span class="fl fl-grey" style="left:4.2%;top:84.2%">$f_{\text{low}}$</span>
+    <span class="fl fl-sub fl-grey" style="left:77.1%;top:93%">tail tends to $f_{\text{low}}$, never reaches it</span>
+  </div>
+  <p>Deterministic: the exact gradient $\nabla f(x)$ at every step</p>
+  <p class="muted">Nonconvex case: no minimizer assumed, only a lower bound</p>
+  <div class="cite">Schematic 1-D slice of one nonconvex $f$ (our illustration; formula in the note)</div>
+</div>
+
+<div class="slide" data-slide-id="S14">
+  <h2>Recall: The Gradient Gives First-Order Change</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \nabla f(x) &= \Big(\tfrac{\partial f}{\partial x_1}(x),\, \dots,\, \tfrac{\partial f}{\partial x_n}(x)\Big) \in \mathbb{R}^n\\[6px]
+    f(x + h) &= f(x) + \langle \nabla f(x), h\rangle + o(\|h\|) \quad \text{as } h \to 0
+  \end{aligned}$$</div>
+  <p>Rate of change along a direction $v$: &nbsp;$\langle \nabla f(x), v\rangle$</p>
+  <p class="muted">Local statement: it says nothing about one fixed, finite step</p>
+</div>
+
+<div class="slide" data-slide-id="S82">
+  <h2>Small Steps Against the Gradient Go Downhill</h2>
+  <div class="divider"></div>
+  <!-- exact geometry: f(u) = u^2, u in [-2,2]; X = 320 + 130u, Y = 270 - 50u^2.
+       start u = 1.5 (f = 2.25, f' = 3 > 0); short step lands at u = 0.9 (f = 0.81, lower);
+       long step lands at u = -1.8 (f = 3.24, higher). -->
+  <div class="o3-fig" style="max-width:900px;margin:4px auto 0;">
+    <svg viewBox="0 0 760 300" style="width:100%;">
+      <defs>
+        <marker id="o3a-arrg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e8b57"/>
+        </marker>
+        <marker id="o3a-arrr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#d94040"/>
+        </marker>
+      </defs>
+      <line x1="40" y1="285" x2="600" y2="285" stroke="#c9d2da" stroke-width="2"/>
+      <polyline points="60,70 73,90 86,108 99,126 112,142 125,158 138,172 151,186 164,198 177,210 190,220 203,230 216,238 229,246 242,252 255,258 268,262 281,266 294,268 307,270 320,270 333,270 346,268 359,266 372,262 385,258 398,252 411,246 424,238 437,230 450,220 463,210 476,198 489,186 502,172 515,158 528,142 541,125 554,108 567,90 580,70"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M 512 168 Q 490 205 446 226" fill="none" stroke="#2e8b57" stroke-width="3.5" marker-end="url(#o3a-arrg)"/>
+      <path d="M 510 150 Q 300 -10 94 100" fill="none" stroke="#d94040" stroke-width="3" stroke-dasharray="9 6" marker-end="url(#o3a-arrr)"/>
+      <circle cx="515" cy="158" r="8" fill="#003876"/>
+      <circle cx="437" cy="230" r="8" fill="#2e8b57"/>
+      <circle cx="86" cy="108" r="8" fill="#d94040"/>
+    </svg>
+    <span class="fl fl-red" style="left:39.5%;top:9.3%">long step (dashed): $f$ rises</span>
+    <span class="fl fl-blue fl-l" style="left:70.4%;top:52.7%">$x$ with $f'(x) \gt 0$</span>
+    <span class="fl fl-green fl-l" style="left:60.5%;top:87.3%">short step (solid): $f$ drops</span>
+  </div>
+  <p>Move along $-\nabla f(x)$: downhill for a small enough step</p>
+  <p class="muted">How far is safe? The smoothness constant $L$ decides</p>
+  <div class="cite">Illustration: $f(u)=u^2$ from $u=1.5$, steps to $u=0.9$ and $u=-1.8$ (our calculation)</div>
+</div>
+
+<div class="slide" data-slide-id="S27">
+  <h2>$L$-Smoothness Bounds Gradient Change</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Definition.</h3>
+    <p>Differentiable $f:\mathbb{R}^n\to\mathbb{R}$ is <strong>$L$-smooth</strong> ($L \gt 0$) if for all $x, y \in \mathbb{R}^n$:</p>
+    <div class="math-block" style="margin:8px 0">$$\|\nabla f(x) - \nabla f(y)\| \;\leq\; L\, \|x - y\| \qquad (\text{Euclidean norm})$$</div>
+  </div>
+  <p>A condition on the <strong>gradient</strong>, not on $f$ itself</p>
+  <p>Example: $f(x)=\tfrac12 x^2$ is $1$-smooth, yet $f$ is not Lipschitz</p>
+  <p class="muted">No convexity: smooth does not mean convex</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Lipschitz continuous gradient assumption&rdquo;</div>
+</div>
+
+<div class="slide" data-slide-id="S81">
+  <h2>One Fixed Step: $1/L$</h2>
+  <div class="divider"></div>
+  <div class="o3-algo">
+    <h3 style="margin:0 0 6px;color:var(--yonsei-blue);">Gradient descent, step $1/L$</h3>
+    <ol>
+      <li>Input: smoothness constant $L$, any start $x_0 \in \mathbb{R}^n$</li>
+      <li>For $t = 0, 1, \dots, T-1$: &nbsp;$x_{t+1} = x_t - \tfrac{1}{L}\nabla f(x_t)$</li>
+      <li>Output: iterates $x_0, x_1, \dots, x_T$</li>
+    </ol>
+  </div>
+  <p style="margin-top:14px;">The same update in all three guarantees</p>
+  <p class="muted">$L$ assumed known; no line search, no other step size</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo; (step $\alpha \le 1/L$; here $\alpha = 1/L$)</div>
+</div>
+
+<!-- ===== REGION P4a END ===== -->
+
+<!-- ===== REGION P4b BEGIN ===== -->
+<div class="slide section-slide left" data-slide-id="S25">
+  <div class="section-num">02</div>
+  <h1>One Descent Inequality</h1>
+  <div class="divider"></div>
+  <p class="subtitle">An upper model and one square</p>
+</div>
+
+<div class="slide" data-slide-id="S33">
+  <h2>Smoothness Gives a Quadratic Upper Bound</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Lemma (descent lemma).</h3>
+    <p>$f:\mathbb{R}^n\to\mathbb{R}$ differentiable and $L$-smooth. For all $x, y \in \mathbb{R}^n$:</p>
+    <div class="math-block" style="margin:8px 0">$$f(y) \;\leq\; f(x) + \langle \nabla f(x),\, y - x\rangle + \frac{L}{2}\|y - x\|^2$$</div>
+  </div>
+  <p style="margin-top:14px;">Linear model plus $\tfrac{L}{2}\|y-x\|^2$: valid for every finite step</p>
+  <p>A standard lemma, used here as a tool; the pictures illustrate it</p>
+  <p class="muted">No convexity needed; optional proof in the notes</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Descent lemma&rdquo;</div>
+</div>
+
+<!-- S34a/S34b/S34c: one frame, built up. Coordinates: figs/gd_model_build.py
+     (f(u)=u^2, x=-0.6, L=3; X=360+340u, Y=295-420v, viewBox 760x360). -->
+<div class="slide" data-slide-id="S34a">
+  <h2>Start at the Current Point</h2>
+  <div class="divider"></div>
+  <div class="o3-fig pp2-build">
+    <svg viewBox="0 0 760 360">
+      <line x1="40" y1="295" x2="720" y2="295" stroke="#c9d2da" stroke-width="2"/>
+      <polyline points="93.8,37.5 103.0,55.0 112.1,71.8 121.3,88.0 130.5,103.6 139.7,118.6 148.9,133.0 158.0,146.8 167.2,160.0 176.4,172.5 185.6,184.5 194.8,195.8 203.9,206.5 213.1,216.6 222.3,226.1 231.5,235.0 240.7,243.3 249.8,250.9 259.0,258.0 268.2,264.4 277.4,270.2 286.6,275.4 295.7,280.0 304.9,284.0 314.1,287.3 323.3,290.1 332.5,292.2 341.6,293.8 350.8,294.7 360.0,295.0 369.2,294.7 378.4,293.8 387.5,292.2 396.7,290.1 405.9,287.3 415.1,284.0 424.3,280.0 433.4,275.4 442.6,270.2 451.8,264.4 461.0,258.0 470.2,250.9 479.3,243.3 488.5,235.0 497.7,226.1 506.9,216.6 516.1,206.5 525.2,195.8 534.4,184.5 543.6,172.5 552.8,160.0 562.0,146.8 571.1,133.0 580.3,118.6 589.5,103.6 598.7,88.0 607.9,71.8 617.0,55.0 626.2,37.5"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
+      <line x1="77.8" y1="27.9" x2="264.8" y2="305.1" stroke="#8a97a5" stroke-width="2.5"/>
+      <line x1="156" y1="143.8" x2="156" y2="295" stroke="#003876" stroke-width="1.5" stroke-dasharray="3 5"/>
+      <circle cx="156" cy="143.8" r="8" fill="#003876"/>
+    </svg>
+    <span class="fl fl-blue" style="left:20.5%;top:93%">$x$</span>
+    <span class="fl fl-l" style="left:84.5%;top:12.5%">$f$</span>
+    <span class="fl fl-sub fl-grey fl-r" style="left:20%;top:76%">tangent at $x$</span>
+  </div>
+  <p style="text-align:center;">The tangent gives the local slope, not a safe upper bound</p>
+  <div class="cite">Our drawing: $f(u)=u^2$, $x=-0.6$ (figs/gd_model_build.py)</div>
+</div>
+
+<div class="slide" data-slide-id="S34b">
+  <h2>Smoothness Adds an Upper Model</h2>
+  <div class="divider"></div>
+  <div class="o3-fig pp2-build">
+    <svg viewBox="0 0 760 360">
+      <line x1="40" y1="295" x2="720" y2="295" stroke="#c9d2da" stroke-width="2"/>
+      <polyline points="93.8,37.5 103.0,55.0 112.1,71.8 121.3,88.0 130.5,103.6 139.7,118.6 148.9,133.0 158.0,146.8 167.2,160.0 176.4,172.5 185.6,184.5 194.8,195.8 203.9,206.5 213.1,216.6 222.3,226.1 231.5,235.0 240.7,243.3 249.8,250.9 259.0,258.0 268.2,264.4 277.4,270.2 286.6,275.4 295.7,280.0 304.9,284.0 314.1,287.3 323.3,290.1 332.5,292.2 341.6,293.8 350.8,294.7 360.0,295.0 369.2,294.7 378.4,293.8 387.5,292.2 396.7,290.1 405.9,287.3 415.1,284.0 424.3,280.0 433.4,275.4 442.6,270.2 451.8,264.4 461.0,258.0 470.2,250.9 479.3,243.3 488.5,235.0 497.7,226.1 506.9,216.6 516.1,206.5 525.2,195.8 534.4,184.5 543.6,172.5 552.8,160.0 562.0,146.8 571.1,133.0 580.3,118.6 589.5,103.6 598.7,88.0 607.9,71.8 617.0,55.0 626.2,37.5"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
+      <line x1="77.8" y1="27.9" x2="264.8" y2="305.1" stroke="#8a97a5" stroke-width="2.5"/>
+      <polyline points="94.8,32.7 101.6,47.0 108.4,60.9 115.2,74.2 122.0,87.1 128.8,99.4 135.6,111.3 142.4,122.6 149.2,133.5 156.0,143.8 162.8,153.6 169.6,163.0 176.4,171.8 183.2,180.1 190.0,187.9 196.8,195.2 203.6,202.0 210.4,208.3 217.2,214.1 224.0,219.4 230.8,224.2 237.6,228.5 244.4,232.3 251.2,235.5 258.0,238.3 264.8,240.6 271.6,242.3 278.4,243.6 285.2,244.3 292.0,244.6 298.8,244.3 305.6,243.6 312.4,242.3 319.2,240.6 326.0,238.3 332.8,235.5 339.6,232.3 346.4,228.5 353.2,224.2 360.0,219.4 366.8,214.1 373.6,208.3 380.4,202.0 387.2,195.2 394.0,187.9 400.8,180.1 407.6,171.8 414.4,163.0 421.2,153.6 428.0,143.8 434.8,133.5 441.6,122.6 448.4,111.3 455.2,99.4 462.0,87.1 468.8,74.2 475.6,60.9 482.4,47.0 489.2,32.7"
+        fill="none" stroke="#003876" stroke-width="3.5" stroke-dasharray="10 6" stroke-linejoin="round"/>
+      <line x1="156" y1="143.8" x2="156" y2="295" stroke="#003876" stroke-width="1.5" stroke-dasharray="3 5"/>
+      <circle cx="156" cy="143.8" r="8" fill="#003876"/>
+    </svg>
+    <span class="fl fl-blue" style="left:20.5%;top:93%">$x$</span>
+    <span class="fl fl-l" style="left:84.5%;top:12.5%">$f$</span>
+    <span class="fl fl-sub fl-grey fl-r" style="left:20%;top:76%">tangent at $x$</span>
+    <span class="fl fl-blue fl-r" style="left:61.5%;top:12.5%">upper model $Q_x$</span>
+  </div>
+  <p style="text-align:center;">$Q_x$ touches $f$ at $x$ and stays above it everywhere</p>
+  <div class="cite">Our drawing: $f(u)=u^2$, $x=-0.6$, $L=3$ ($f$ is $2$-smooth, so $L=3$ is valid)</div>
+</div>
+
+<div class="slide" data-slide-id="S34c">
+  <h2>Minimize the Model, Then Step</h2>
+  <div class="divider"></div>
+  <div class="o3-fig pp2-build">
+    <svg viewBox="0 0 760 360">
+      <defs><marker id="pp2-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#003876"/></marker></defs>
+      <line x1="40" y1="295" x2="720" y2="295" stroke="#c9d2da" stroke-width="2"/>
+      <polyline points="93.8,37.5 103.0,55.0 112.1,71.8 121.3,88.0 130.5,103.6 139.7,118.6 148.9,133.0 158.0,146.8 167.2,160.0 176.4,172.5 185.6,184.5 194.8,195.8 203.9,206.5 213.1,216.6 222.3,226.1 231.5,235.0 240.7,243.3 249.8,250.9 259.0,258.0 268.2,264.4 277.4,270.2 286.6,275.4 295.7,280.0 304.9,284.0 314.1,287.3 323.3,290.1 332.5,292.2 341.6,293.8 350.8,294.7 360.0,295.0 369.2,294.7 378.4,293.8 387.5,292.2 396.7,290.1 405.9,287.3 415.1,284.0 424.3,280.0 433.4,275.4 442.6,270.2 451.8,264.4 461.0,258.0 470.2,250.9 479.3,243.3 488.5,235.0 497.7,226.1 506.9,216.6 516.1,206.5 525.2,195.8 534.4,184.5 543.6,172.5 552.8,160.0 562.0,146.8 571.1,133.0 580.3,118.6 589.5,103.6 598.7,88.0 607.9,71.8 617.0,55.0 626.2,37.5"
+        fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
+      <line x1="77.8" y1="27.9" x2="264.8" y2="305.1" stroke="#8a97a5" stroke-width="2.5"/>
+      <polyline points="94.8,32.7 101.6,47.0 108.4,60.9 115.2,74.2 122.0,87.1 128.8,99.4 135.6,111.3 142.4,122.6 149.2,133.5 156.0,143.8 162.8,153.6 169.6,163.0 176.4,171.8 183.2,180.1 190.0,187.9 196.8,195.2 203.6,202.0 210.4,208.3 217.2,214.1 224.0,219.4 230.8,224.2 237.6,228.5 244.4,232.3 251.2,235.5 258.0,238.3 264.8,240.6 271.6,242.3 278.4,243.6 285.2,244.3 292.0,244.6 298.8,244.3 305.6,243.6 312.4,242.3 319.2,240.6 326.0,238.3 332.8,235.5 339.6,232.3 346.4,228.5 353.2,224.2 360.0,219.4 366.8,214.1 373.6,208.3 380.4,202.0 387.2,195.2 394.0,187.9 400.8,180.1 407.6,171.8 414.4,163.0 421.2,153.6 428.0,143.8 434.8,133.5 441.6,122.6 448.4,111.3 455.2,99.4 462.0,87.1 468.8,74.2 475.6,60.9 482.4,47.0 489.2,32.7"
+        fill="none" stroke="#003876" stroke-width="3.5" stroke-dasharray="10 6" stroke-linejoin="round"/>
+      <line x1="156" y1="143.8" x2="156" y2="295" stroke="#003876" stroke-width="1.5" stroke-dasharray="3 5"/>
+      <line x1="292" y1="244.6" x2="292" y2="295" stroke="#003876" stroke-width="1.5" stroke-dasharray="3 5"/>
+      <line x1="292" y1="244.6" x2="292" y2="278.2" stroke="#d94040" stroke-width="4"/>
+      <line x1="160" y1="312" x2="286" y2="312" stroke="#003876" stroke-width="3" marker-end="url(#pp2-arr)"/>
+      <circle cx="156" cy="143.8" r="8" fill="#003876"/>
+      <circle cx="292" cy="244.6" r="7" fill="#ffffff" stroke="#003876" stroke-width="3"/>
+      <circle cx="292" cy="278.2" r="7" fill="#1a1a1a"/>
+      <circle cx="360" cy="295" r="5" fill="#8a97a5"/>
+    </svg>
+    <span class="fl fl-blue" style="left:20.5%;top:93%">$x$</span>
+    <span class="fl fl-blue" style="left:38.4%;top:94%">$x - g/L$</span>
+    <span class="fl fl-sub fl-grey fl-l" style="left:48.4%;top:88%">min of $f$</span>
+    <span class="fl fl-l" style="left:84.5%;top:12.5%">$f$</span>
+    <span class="fl fl-sub fl-grey fl-r" style="left:20%;top:76%">tangent at $x$</span>
+    <span class="fl fl-blue fl-r" style="left:61.5%;top:12.5%">upper model $Q_x$</span>
+    <span class="fl fl-sub fl-red fl-l" style="left:40.4%;top:72.6%">gap: $f \le Q_x$</span>
+  </div>
+  <p style="text-align:center;">Step to the model's minimizer, not to $f$'s minimizer</p>
+  <div class="cite">Our drawing: $f(u)=u^2$, $x=-0.6$, $L=3$; step to $-0.2$ (figs/gd_model_build.py)</div>
+</div>
+
+<div class="slide" data-slide-id="S36">
+  <h2>Minimize a Safe Upper Model</h2>
+  <div class="divider"></div>
+  <p>Fix the base point $x$ and write $g = \nabla f(x)$. For every candidate $y$:</p>
+  <div class="math-block" style="margin:8px 0">$$f(y) \;\leq\; Q_x(y) \;=\; f(x) + \langle g,\, y - x\rangle + \frac{L}{2}\|y - x\|^2$$</div>
+  <p>$Q_x$ is a simple quadratic in $y$; $f$ may be anything smooth</p>
+  <div class="highlight"><p>Choose the next point by minimizing $Q_x$, not $f$</p></div>
+  <div class="cite">Inequality: descent lemma, Cornell CS4787/5777 (Fall 2026), Lecture 5; model view: our exposition</div>
+</div>
+
+<div class="slide" data-slide-id="S37">
+  <h2>Completing the Square Gives GD</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    Q_x(y) &= f(x) + \frac{L}{2}\Big(\|y - x\|^2 + \frac{2}{L}\langle g,\, y - x\rangle\Big)\\[4px]
+    &= f(x) - \frac{1}{2L}\|g\|^2 + \frac{L}{2}\Big\|y - \Big(x - \frac{1}{L}g\Big)\Big\|^2
+  \end{aligned}$$</div>
+  <p>The square vanishes only at $y = x - \tfrac{1}{L}g$: the GD step</p>
+  <div class="highlight"><p>GD step = minimizer of $Q_x$, with value $f(x) - \tfrac{1}{2L}\|g\|^2$</p></div>
+  <p class="muted">Only $\|a + b\|^2 = \|a\|^2 + 2\langle a, b\rangle + \|b\|^2$; no integral, no Hessian</p>
+  <div class="cite">Our algebra on the descent lemma (Cornell CS4787/5777, Lecture 5)</div>
+</div>
+
+<div class="slide" data-slide-id="S90">
+  <h2>The Step $1/L$ Decreases $f$</h2>
+  <div class="divider"></div>
+  <p>Lemma at $x = x_t$, $y = x_{t+1} = x_t - \tfrac{1}{L} g_t$ (the model minimizer), $g_t = \nabla f(x_t)$:</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    f(x_{t+1}) &\leq f(x_t) + \big\langle g_t,\, -\tfrac{1}{L} g_t\big\rangle + \frac{L}{2}\Big\|\tfrac{1}{L} g_t\Big\|^2\\[4px]
+    &= f(x_t) - \frac{1}{L}\|g_t\|^2 + \frac{1}{2L}\|g_t\|^2
+    \;=\; f(x_t) - \frac{1}{2L}\|g_t\|^2
+  \end{aligned}$$</div>
+  <p>The right side is the minimum value of $Q_{x_t}$</p>
+  <div class="highlight"><p>No convexity: $f$ never increases; strict drop whenever $g_t \neq 0$</p></div>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo; (with $\alpha = 1/L$)</div>
+</div>
+
+<!-- ===== REGION P4b END ===== -->
+
+<!-- ===== REGION P4c BEGIN ===== -->
+<div class="slide section-slide left" data-slide-id="S135">
+  <div class="section-num">03</div>
+  <h1>Nonconvex: Stationarity</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Gradients vanish, minima not promised</p>
+</div>
+
+<div class="slide" data-slide-id="S89">
+  <h2>Nonconvex Guarantee: Small Squared Gradient</h2>
+  <div class="divider"></div>
+  <div class="card">
+    <h3>Theorem (nonconvex, step $1/L$).</h3>
+    <p>$f:\mathbb{R}^n\to\mathbb{R}$ differentiable, $L$-smooth ($L \gt 0$), and $f(x) \geq f_{\text{low}}$ for all $x$. For any $x_0$ and every $T \geq 1$:</p>
+    <div class="math-block" style="margin:8px 0">$$\min_{0 \leq t \lt T}\; \|\nabla f(x_t)\|^2 \;\leq\; \frac{2L\,\big(f(x_0) - f_{\text{low}}\big)}{T}$$</div>
+  </div>
+  <p>$\min$ over the iterates $t = 0, \dots, T-1$: the best of $T$ squared gradients</p>
+  <p class="muted">Not a minimum of $f$: $f_{\text{low}}$ need not be attained</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo; (stated for step $\alpha \le 1/L$)</div>
+</div>
+
+<div class="slide" data-slide-id="S91">
+  <h2>Proof Step 1: Sum the Decreases</h2>
+  <div class="divider"></div>
+  <p>Add the descent inequality for $t = 0, \dots, T-1$; the $f$ terms telescope:</p>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \frac{1}{2L}\sum_{t=0}^{T-1} \|\nabla f(x_t)\|^2 &\leq \sum_{t=0}^{T-1} \big(f(x_t) - f(x_{t+1})\big)\\[4px]
+    &= f(x_0) - f(x_T) \;\stackrel{(f \,\geq\, f_{\text{low}})}{\leq}\; f(x_0) - f_{\text{low}}
+  \end{aligned}$$</div>
+  <p>A finite budget $f(x_0) - f_{\text{low}}$ caps the total squared gradient</p>
+  <p class="muted">Only $f(x_T) \geq f_{\text{low}}$ is used: no minimizer needed</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo;</div>
+</div>
+
+<div class="slide" data-slide-id="S92">
+  <h2>Proof Step 2: Minimum at Most Average</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \min_{0 \leq t \lt T} \|\nabla f(x_t)\|^2 &\leq \frac{1}{T}\sum_{t=0}^{T-1} \|\nabla f(x_t)\|^2\\[4px]
+    &\stackrel{\text{(Step 1)}}{\leq} \frac{2L\,\big(f(x_0) - f_{\text{low}}\big)}{T} \qquad \blacksquare
+  \end{aligned}$$</div>
+  <p>$T$ terms, so the smallest is at most their average</p>
+  <p class="muted">A bound on the best iterate, not on the last one</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo;</div>
+</div>
+
+<div class="slide" data-slide-id="S141">
+  <h2>Every Gradient Norm Vanishes</h2>
+  <div class="divider"></div>
+  <div class="highlight">
+    <p><strong>Q:</strong> Does $\|\nabla f(x_t)\| \to 0$ for nonconvex GD?</p>
+    <p><strong>A:</strong> Yes, for the whole sequence, under the same assumptions.</p>
+  </div>
+  <div class="math-block" style="margin:8px 0">$$\sum_{t \geq 0} \|\nabla f(x_t)\|^2 \;\leq\; 2L\,\big(f(x_0) - f_{\text{low}}\big) \;\lt\; \infty \quad\Longrightarrow\quad \|\nabla f(x_t)\| \to 0$$</div>
+  <p>Nonnegative terms with a finite sum must tend to zero</p>
+  <p class="muted">$L$-smooth, $f \geq f_{\text{low}}$, step $1/L$; no last-iterate rate, no claim that $x_t$ converges</p>
+  <div class="cite">Step 1 bound for every $T$: Cornell CS4787/5777 (Fall 2026), Lecture 5; the limit: our deduction</div>
+</div>
+
+<div class="slide" data-slide-id="S93">
+  <h2>Stationary Does Not Mean Minimum</h2>
+  <div class="divider"></div>
+  <div class="highlight">
+    <p><strong>Q:</strong> Does nonconvex GD reach a local optimum at rate $1/T$?</p>
+    <p><strong>A:</strong> No. The $1/T$ rate is for $\min_t \|\nabla f(x_t)\|^2$ only.</p>
+  </div>
+  <div class="o3-fig" style="max-width:1000px;margin:6px auto 0;">
+    <svg viewBox="0 0 1000 240" style="width:100%;">
+      <rect x="8" y="5" width="984" height="230" rx="14" fill="#eef3f8" stroke="#003876" stroke-width="3"/>
+      <rect x="130" y="52" width="852" height="168" rx="12" fill="#ffffff" stroke="#5a6673" stroke-width="2.5"/>
+      <rect x="330" y="100" width="644" height="105" rx="10" fill="#ffffff" stroke="#2e8b57" stroke-width="2.5" stroke-dasharray="9 6"/>
+      <rect x="560" y="148" width="406" height="42" rx="8" fill="#ffffff" stroke="#2e8b57" stroke-width="2" stroke-dasharray="9 6"/>
+    </svg>
+    <span class="fl fl-blue fl-l" style="left:2.6%;top:12.5%">$\|\nabla f(x)\| \leq \varepsilon$: what the theorem gives</span>
+    <span class="fl fl-grey fl-l" style="left:14.8%;top:32.1%">stationary, $\nabla f(x) = 0$: also maxima, saddles</span>
+    <span class="fl fl-green fl-l" style="left:34.8%;top:51.7%">local minimum: not guaranteed</span>
+    <span class="fl fl-sub fl-green fl-l" style="left:57.8%;top:72.1%">global minimum</span>
+  </div>
+  <p class="muted">Scope: $L$-smooth, bounded below, step $1/L$, no further assumptions</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo; (limit may be a maximum or saddle)</div>
+</div>
+
+<div class="slide" data-slide-id="S137">
+  <h2>The Square Changes the Rate</h2>
+  <div class="divider"></div>
+  <div class="math-block" style="margin:8px 0">$$\begin{aligned}
+    \min_{0 \leq t \lt T} \|\nabla f(x_t)\| &\leq \sqrt{\frac{2L\,\big(f(x_0) - f_{\text{low}}\big)}{T}} \;=\; O\big(1/\sqrt{T}\big)\\[6px]
+    \text{some } \|\nabla f(x_t)\| \leq \varepsilon,\ t \lt T \quad &\Longleftarrow\quad T \;\geq\; \frac{2L\,\big(f(x_0) - f_{\text{low}}\big)}{\varepsilon^2}
+  \end{aligned}$$</div>
+  <p>Bound for tolerance $\varepsilon/10$: $100\times$ the iterations</p>
+  <p>Constants $L$ and $f(x_0) - f_{\text{low}}$ depend on the problem</p>
+  <p class="muted">Best iterate only: no $O(1/T)$ gradient-norm rate, no local minimum</p>
+  <div class="cite">Cornell CS4787/5777 (Fall 2026), Lecture 5, &ldquo;Convergence of GD&rdquo;; $T$ count: our derivation</div>
+</div>
+
+<!-- ===== REGION P4c END ===== -->
+
+<!-- ===== REGION P4d BEGIN ===== -->
+<div class="slide section-slide left" data-slide-id="S09">
+  <div class="section-num">04</div>
+  <h1>Convex: Optimality</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Function gap at rate 1/T</p>
+</div>
+
+<div class="slide" data-slide-id="S10">
+  <h2>Convexity Puts Chords Above</h2>
+  <div class="divider"></div>
+  <div class="o3b-split">
+    <div>
+      <div class="card o3b-card">
+        <p><strong>Convex</strong> $f:\mathbb{R}^n\to\mathbb{R}$: for all $x,y$ and $\theta\in[0,1]$,</p>
+        <div class="math-block">$$f\big(\theta x+(1-\theta)y\big)\le\theta f(x)+(1-\theta)f(y)$$</div>
+      </div>
+      <p>Graph on or below every chord</p>
+      <p><strong>Payoff:</strong> every local minimum is global</p>
+      <p class="muted">$\le$, not $\lt$: flat pieces allowed</p>
+    </div>
+    <div class="o3-fig">
+      <svg viewBox="0 0 640 330">
+        <line x1="30" y1="300" x2="620" y2="300" stroke="#c9d2da" stroke-width="2"/>
+        <!-- f(u)=u^2, X=320+130u, Y=280-60u^2; chord u=-1 to u=1.5; theta=1/2 at u=0.25 -->
+        <polyline points="60,40 125,145 190,220 255,265 320,280 385,265 450,220 515,145 580,40"
+          fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <line x1="190" y1="220" x2="515" y2="145" stroke="#003876" stroke-width="3"/>
+        <circle cx="190" cy="220" r="7" fill="#003876"/>
+        <circle cx="515" cy="145" r="7" fill="#003876"/>
+        <line x1="352.5" y1="300" x2="352.5" y2="182.5" stroke="#8a97a5" stroke-width="2" stroke-dasharray="5 4"/>
+        <circle cx="352.5" cy="182.5" r="6" fill="#003876"/>
+        <circle cx="352.5" cy="276" r="6" fill="#1a1a1a"/>
+      </svg>
+      <span class="fl fl-blue" style="left:29.7%;top:76.5%">$y$</span>
+      <span class="fl fl-blue" style="left:84.5%;top:43.9%">$x$</span>
+      <span class="fl fl-blue fl-r" style="left:53.5%;top:48.5%">chord</span>
+      <span class="fl fl-r" style="left:12%;top:30%">$f$</span>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-slide-id="S15">
+  <h2>The Tangent Lies Below</h2>
+  <div class="divider"></div>
+  <div class="o3b-split">
+    <div>
+      <div class="card o3b-card">
+        <p>$f$ convex and <strong>differentiable</strong>: for all $x,y\in\mathbb{R}^n$,</p>
+        <div class="math-block">$$f(y)\ge f(x)+\langle\nabla f(x),\,y-x\rangle$$</div>
+      </div>
+      <p>One gradient gives a <strong>global lower bound</strong></p>
+      <p>Smoothness bounds $f$ above; convexity, below</p>
+      <p class="muted">So $\nabla f(x)=0$ means $x$ is a global minimizer</p>
+    </div>
+    <div class="o3-fig">
+      <svg viewBox="0 0 640 340">
+        <line x1="30" y1="330" x2="620" y2="330" stroke="#c9d2da" stroke-width="2"/>
+        <!-- f(u)=u^2, X=320+130u, Y=280-60u^2; tangent at u=-1: v=-1-2u -->
+        <polyline points="60,40 125,145 190,220 255,265 320,280 385,265 450,220 515,145 580,40"
+          fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <line x1="60" y1="100" x2="320" y2="340" stroke="#003876" stroke-width="3"/>
+        <circle cx="190" cy="220" r="7" fill="#003876"/>
+      </svg>
+      <span class="fl fl-blue fl-l" style="left:31.5%;top:62%">$x$</span>
+      <span class="fl fl-blue fl-l" style="left:9%;top:88%">tangent at $x$</span>
+      <span class="fl fl-l" style="left:84%;top:22%">$f$</span>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-slide-id="S95">
+  <h2>Assume an Optimum Exists</h2>
+  <div class="divider"></div>
+  <div class="o3b-split o3b-figleft">
+    <div class="o3-fig">
+      <svg viewBox="0 0 640 330">
+        <!-- f(u)=max(|u|-1,0)^2, X=320+75u, Y=270-33f; figs/o3b_figs.py -->
+        <line x1="30" y1="270" x2="620" y2="270" stroke="#c9d2da" stroke-width="2"/>
+        <polyline points="50.0,46.9 57.5,63.8 65.0,79.9 72.5,95.4 80.0,110.3 87.5,124.5 95.0,138.0 102.5,150.9 110.0,163.1 117.5,174.6 125.0,185.5 132.5,195.8 140.0,205.3 147.5,214.2 155.0,222.5 162.5,230.1 170.0,237.0 177.5,243.3 185.0,248.9 192.5,253.8 200.0,258.1 207.5,261.8 215.0,264.7 222.5,267.0 230.0,268.7 237.5,269.7 245.0,270.0 395.0,270.0 402.5,269.7 410.0,268.7 417.5,267.0 425.0,264.7 432.5,261.8 440.0,258.1 447.5,253.8 455.0,248.9 462.5,243.3 470.0,237.0 477.5,230.1 485.0,222.5 492.5,214.2 500.0,205.3 507.5,195.8 515.0,185.5 522.5,174.6 530.0,163.1 537.5,150.9 545.0,138.0 552.5,124.5 560.0,110.3 567.5,95.4 575.0,79.9 582.5,63.8 590.0,46.9"
+          fill="none" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>
+        <line x1="245" y1="270" x2="395" y2="270" stroke="#003876" stroke-width="7" stroke-linecap="round"/>
+        <line x1="537.5" y1="270" x2="537.5" y2="150.9" stroke="#003876" stroke-width="2.5" stroke-dasharray="6 5"/>
+        <line x1="395" y1="298" x2="537.5" y2="298" stroke="#8a97a5" stroke-width="2.5"/>
+        <line x1="395" y1="290" x2="395" y2="306" stroke="#8a97a5" stroke-width="2.5"/>
+        <line x1="537.5" y1="290" x2="537.5" y2="306" stroke="#8a97a5" stroke-width="2.5"/>
+        <circle cx="395" cy="270" r="8" fill="#003876"/>
+        <circle cx="537.5" cy="150.9" r="8" fill="#1a1a1a"/>
+      </svg>
+      <span class="fl fl-blue" style="left:50%;top:74%">$\arg\min f$</span>
+      <span class="fl fl-blue fl-r" style="left:60%;top:90%">$x^\star$</span>
+      <span class="fl fl-l" style="left:86.5%;top:43%">$x_t$</span>
+      <span class="fl fl-blue fl-l" style="left:85.5%;top:65%">$\Delta_t$</span>
+      <span class="fl fl-grey" style="left:72.5%;top:97%">$\sqrt{D_t}$</span>
+      <span class="fl fl-l" style="left:5%;top:9%">$f$</span>
+    </div>
+    <div>
+      <p>Assume some $x^\star\in\arg\min f$ exists</p>
+      <p>Not assumed unique: any minimizer works</p>
+      <div class="math-block">$$\begin{aligned}f^\star&=f(x^\star)\\ \Delta_t&=f(x_t)-f^\star\ge0\\ D_t&=\|x_t-x^\star\|^2\end{aligned}$$</div>
+      <p class="muted">Plot: $f(u)=\max(|u|-1,0)^2$</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide" data-slide-id="S96">
+  <h2>Convex: $O(1/T)$ Function Gap</h2>
+  <div class="divider"></div>
+  <div class="card o3b-card">
+    <h3>Theorem (smooth convex GD).</h3>
+    <p>$f:\mathbb{R}^n\to\mathbb{R}$ differentiable, convex, $L$-smooth; a minimizer $x^\star$ exists.</p>
+    <p>GD with step $1/L$ from any $x_0$. For every $T\ge1$:</p>
+    <div class="math-block">$$f(x_T)-f^\star\;\le\;\frac{L\,\|x_0-x^\star\|^2}{2T}$$</div>
+  </div>
+  <p>Bounds the <strong>function-value gap</strong> at the last iterate</p>
+  <p class="muted">Sublinear: not a bound on $\|x_T-x^\star\|$, not geometric</p>
+  <div class="cite">Classical treatment: Nesterov, <em>Introductory Lectures on Convex Optimization: A Basic Course</em>, Springer (2004). Exact bound: Garrigos &amp; Gower, arXiv:2301.11235v3 (2024), &sect;3.1, Thm 3.4</div>
+</div>
+
+<div class="slide" data-slide-id="S97">
+  <h2>Proof Plan: Spend Distance</h2>
+  <div class="divider"></div>
+  <p><strong>Target:</strong> $\;\Delta_T\le\dfrac{L\,D_0}{2T}$, in five moves</p>
+  <div class="o3-algo">
+    <ol>
+      <li><strong>Descent:</strong> each step lowers $f$ by $\tfrac{1}{2L}\|\nabla f(x_t)\|^2$</li>
+      <li><strong>Tangent at $x_t$:</strong> ties the gap $\Delta_t$ to $\nabla f(x_t)$</li>
+      <li><strong>Distance identity:</strong> each gap paid by $D_t-D_{t+1}$</li>
+      <li><strong>Telescope</strong> over $t=0,\dots,T-1$</li>
+      <li><strong>Last iterate:</strong> smallest gap $\le$ average gap</li>
+    </ol>
+  </div>
+</div>
+
+<div class="slide" data-slide-id="S98">
+  <h2>Recall: One-Step Decrease</h2>
+  <div class="divider"></div>
+  <p><strong>Descent inequality:</strong> $f$ $L$-smooth, $g_t=\nabla f(x_t)$, $x_{t+1}=x_t-\tfrac1L g_t$</p>
+  <div class="math-block">$$f(x_{t+1})\;\le\;f(x_t)-\frac{1}{2L}\|g_t\|^2$$</div>
+  <p>Subtract $f^\star$; smoothness only, no convexity yet:</p>
+  <div class="math-block">$$\Delta_{t+1}\;\le\;\Delta_t-\frac{1}{2L}\|g_t\|^2$$</div>
+</div>
+
+<div class="slide" data-slide-id="S99">
+  <h2>Use the Tangent at $x_t$</h2>
+  <div class="divider"></div>
+  <p>Tangent bound with $x=x_t$ and $y=x^\star$:</p>
+  <div class="math-block">$$f^\star\;\ge\;f(x_t)+\langle g_t,\,x^\star-x_t\rangle
+    \quad\Longrightarrow\quad \Delta_t\;\le\;\langle g_t,\,x_t-x^\star\rangle$$</div>
+  <p>Insert into the descent step:</p>
+  <div class="math-block">$$\Delta_{t+1}\;\le\;\langle g_t,\,x_t-x^\star\rangle-\frac{1}{2L}\|g_t\|^2$$</div>
+</div>
+
+<div class="slide" data-slide-id="S101">
+  <h2>Expand the Squared Distance</h2>
+  <div class="divider"></div>
+  <p>Since $x_{t+1}-x^\star=(x_t-x^\star)-\tfrac1L g_t$:</p>
+  <div class="math-block">$$\begin{aligned}
+    D_{t+1} &= D_t-\tfrac{2}{L}\langle g_t,\,x_t-x^\star\rangle+\tfrac{1}{L^2}\|g_t\|^2\\
+    \tfrac{L}{2}\,(D_t-D_{t+1}) &= \langle g_t,\,x_t-x^\star\rangle-\tfrac{1}{2L}\|g_t\|^2
+  \end{aligned}$$</div>
+  <p>Line 2 is exactly the right side of the tangent-plus-descent bound:</p>
+  <div class="math-block">$$\Delta_{t+1}\;\le\;\frac{L}{2}\,\big(D_t-D_{t+1}\big)$$</div>
+</div>
+
+<div class="slide" data-slide-id="S104">
+  <h2>Distances Telescope</h2>
+  <div class="divider"></div>
+  <p>Add the bound for $t=0,1,\dots,T-1$:</p>
+  <div class="math-block">$$\begin{aligned}
+    \sum_{t=1}^{T}\Delta_t \;=\; \sum_{t=0}^{T-1}\Delta_{t+1}
+      &\;\le\; \tfrac{L}{2}\big[(D_0-\cancel{D_1})+(\cancel{D_1}-\cancel{D_2})+\cdots+(\cancel{D_{T-1}}-D_T)\big]\\
+      &\;=\; \tfrac{L}{2}\,(D_0-D_T)\;\le\;\tfrac{L}{2}\,D_0
+  \end{aligned}$$</div>
+  <p>Middle distances cancel; drop $D_T\ge0$</p>
+  <p class="muted">Left side: the $T$ gaps $\Delta_1,\dots,\Delta_T$</p>
+</div>
+
+<div class="slide" data-slide-id="S105">
+  <h2>The Last Gap Is Smallest</h2>
+  <div class="divider"></div>
+  <p>Descent makes gaps nonincreasing: $\Delta_T\le\Delta_t$ for $1\le t\le T$</p>
+  <div class="math-block">$$T\,\Delta_T\;\le\;\sum_{t=1}^{T}\Delta_t\;\le\;\frac{L}{2}\,D_0
+    \quad\Longrightarrow\quad f(x_T)-f^\star\;\le\;\frac{L\,\|x_0-x^\star\|^2}{2T}\qquad\blacksquare$$</div>
+  <p>Monotone by the descent inequality, not by convexity</p>
+  <p class="muted">Last iterate here; nonconvex GD bounds only the best gradient</p>
+</div>
+
+<div class="slide" data-slide-id="S106">
+  <h2>The Convex Proof in One Chain</h2>
+  <div class="divider"></div>
+  <div class="math-block">$$\begin{aligned}
+    T\,\Delta_T &\;\stackrel{\text{(monotone)}}{\le}\; \sum\nolimits_{t=0}^{T-1}\Delta_{t+1}
+      \;\stackrel{\text{(descent + tangent)}}{\le}\; \sum\nolimits_{t=0}^{T-1}\Big(\langle g_t,\,x_t-x^\star\rangle-\tfrac{1}{2L}\|g_t\|^2\Big)\\[10pt]
+    &\;\stackrel{\text{(distance identity)}}{=}\; \tfrac{L}{2}\sum\nolimits_{t=0}^{T-1}\big(D_t-D_{t+1}\big)
+      \;\stackrel{\text{(telescope)}}{=}\; \tfrac{L}{2}\,(D_0-D_T)\;\le\;\tfrac{L}{2}\,D_0
+  \end{aligned}$$</div>
+  <div class="highlight"><p><strong>Sublinear $O(1/T)$, not linear:</strong> doubling $T$ only halves the bound</p></div>
+  <p class="muted">Only descent and the tangent bound: no co-coercivity, no PL condition</p>
+</div>
+
+<!-- ===== REGION P4d END ===== -->
+
+<!-- ===== REGION P4e BEGIN ===== -->
+<div class="slide section-slide left" data-slide-id="S63">
+  <div class="section-num">05</div>
+  <h1>Strongly Convex: Geometric Decay</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Distance shrinks every step</p>
+</div>
+
+<div class="slide" data-slide-id="S64">
+  <h2>Add a Quadratic Floor</h2>
+  <div class="divider"></div>
+  <div class="card o3b-card">
+    <p>Differentiable $f:\mathbb{R}^n\to\mathbb{R}$ is <strong>$\mu$-strongly convex</strong>, $\mu\gt0$, if for all $x,y\in\mathbb{R}^n$,</p>
+    <div class="math-block">$$f(y)\;\ge\;f(x)+\langle\nabla f(x),\,y-x\rangle+\frac{\mu}{2}\,\|y-x\|^2$$</div>
+  </div>
+  <p>The tangent bound, plus a quadratic bowl of curvature $\mu$</p>
+  <p>With $L$-smoothness: from here on $0\lt\mu\le L$</p>
+  <p class="muted">Stronger than a unique minimizer: $x^4$ has one, yet fails for every $\mu\gt0$</p>
+</div>
+
+<div class="slide" data-slide-id="S65">
+  <h2>Curvature Is Bounded Below</h2>
+  <div class="divider"></div>
+  <div class="o3b-split o3b-figleft">
+    <div class="o3-fig">
+      <svg viewBox="0 0 640 385">
+        <defs><clipPath id="o3b-clip65"><rect x="0" y="20" width="640" height="365"/></clipPath></defs>
+        <!-- figs/o3b_figs.py S65: generic phi(s)=s^2, illustrative mu=1, L=3, anchor s0=-1 -->
+        <line x1="20" y1="300" x2="620" y2="300" stroke="#c9d2da" stroke-width="2"/>
+        <line x1="34" y1="182.4" x2="342" y2="339.2" stroke="#8a97a5" stroke-width="2"/>
+        <g clip-path="url(#o3b-clip65)" fill="none" stroke-linejoin="round">
+          <polyline points="34.0,74.9 45.0,93.5 56.0,111.3 67.0,128.2 78.0,144.3 89.0,159.6 100.0,174.0 111.0,187.6 122.0,200.3 133.0,212.2 144.0,223.3 155.0,233.5 166.0,242.9 177.0,251.4 188.0,259.1 199.0,266.0 210.0,272.0 221.0,277.2 232.0,281.5 243.0,285.0 254.0,287.7 265.0,289.5 276.0,290.5 287.0,290.6 298.0,289.9 309.0,288.4 320.0,286.0 331.0,282.8 342.0,278.7 353.0,273.8 364.0,268.1 375.0,261.5 386.0,254.1 397.0,245.8 408.0,236.7 419.0,226.8 430.0,216.0 441.0,204.4 452.0,191.9 463.0,178.6 474.0,164.5 485.0,149.5 496.0,133.7 507.0,117.0 518.0,99.5 529.0,81.2 540.0,62.0 551.0,42.0 562.0,21.1 573.0,-0.6 584.0,-23.1" stroke="#003876" stroke-width="3" stroke-dasharray="9 6"/>
+          <polyline points="34.0,146.6 45.0,156.5 56.0,166.2 67.0,175.5 78.0,184.6 89.0,193.5 100.0,202.0 111.0,210.3 122.0,218.2 133.0,225.9 144.0,233.4 155.0,240.5 166.0,247.4 177.0,253.9 188.0,260.2 199.0,266.3 210.0,272.0 221.0,277.5 232.0,282.6 243.0,287.5 254.0,292.2 265.0,296.5 276.0,300.6 287.0,304.3 298.0,307.8 309.0,311.1 320.0,314.0 331.0,316.7 342.0,319.0 353.0,321.1 364.0,323.0 375.0,324.5 386.0,325.8 397.0,326.7 408.0,327.4 419.0,327.9 430.0,328.0 441.0,327.9 452.0,327.4 463.0,326.7 474.0,325.8 485.0,324.5 496.0,323.0 507.0,321.1 518.0,319.0 529.0,316.7 540.0,314.0 551.0,311.1 562.0,307.8 573.0,304.3 584.0,300.6" stroke="#2e8b57" stroke-width="3"/>
+          <polyline points="34.0,110.7 45.0,125.0 56.0,138.7 67.0,151.9 78.0,164.5 89.0,176.5 100.0,188.0 111.0,198.9 122.0,209.3 133.0,219.1 144.0,228.3 155.0,237.0 166.0,245.1 177.0,252.7 188.0,259.7 199.0,266.1 210.0,272.0 221.0,277.3 232.0,282.1 243.0,286.3 254.0,289.9 265.0,293.0 276.0,295.5 287.0,297.5 298.0,298.9 309.0,299.7 320.0,300.0 331.0,299.7 342.0,298.9 353.0,297.5 364.0,295.5 375.0,293.0 386.0,289.9 397.0,286.3 408.0,282.1 419.0,277.3 430.0,272.0 441.0,266.1 452.0,259.7 463.0,252.7 474.0,245.1 485.0,237.0 496.0,228.3 507.0,219.1 518.0,209.3 529.0,198.9 540.0,188.0 551.0,176.5 562.0,164.5 573.0,151.9 584.0,138.7" stroke="#1a1a1a" stroke-width="3.5"/>
+        </g>
+        <circle cx="210" cy="272" r="7" fill="#1a1a1a"/>
+      </svg>
+      <span class="fl fl-l" style="left:93%;top:36%">$f$</span>
+      <span class="fl fl-blue fl-r" style="left:82%;top:11.7%">upper, curvature $L$</span>
+      <span class="fl fl-green" style="left:75%;top:92%">floor, curvature $\mu$</span>
+      <span class="fl fl-sub fl-grey" style="left:14.8%;top:63.6%">tangent</span>
+      <span class="fl fl-r" style="left:31%;top:76.6%">$x$</span>
+    </div>
+    <div>
+      <p>$r(y)$: height of $f(y)$ above the tangent at $x$</p>
+      <div class="math-block">$$\frac{\mu}{2}\|y-x\|^2\le r(y)\le\frac{L}{2}\|y-x\|^2$$</div>
+      <p>Floor and upper model touch $f$ at $x$, with the same tangent</p>
+      <p class="muted">Curvature trapped between $\mu$ and $L$</p>
+    </div>
+  </div>
+  <div class="cite">Illustration: our drawing (figs/o3b_figs.py)</div>
+</div>
+
+<div class="slide" data-slide-id="S116">
+  <h2>Strongly Convex: Geometric Convergence</h2>
+  <div class="divider"></div>
+  <div class="card o3b-card">
+    <h3>Theorem (strongly convex GD).</h3>
+    <p>$f:\mathbb{R}^n\to\mathbb{R}$ $\mu$-strongly convex and $L$-smooth; $x^\star$ its unique minimizer.</p>
+    <p>GD with step $1/L$ from any $x_0$. For every $T\ge1$:</p>
+    <div class="math-block">$$\|x_T-x^\star\|^2\;\le\;\Big(1-\frac{\mu}{L}\Big)^{T}\,\|x_0-x^\star\|^2$$</div>
+  </div>
+  <p>$q=1-\mu/L\in[0,1)$; $q=0$ means $\mu=L$ and $x_1=x^\star$</p>
+  <p class="muted">Same step $1/L$ as before, not $2/(\mu+L)$</p>
+  <div class="cite">Classical treatment: Nesterov, <em>Introductory Lectures on Convex Optimization: A Basic Course</em>, Springer (2004). Exact statement: Garrigos &amp; Gower, arXiv:2301.11235v3 (2024), &sect;3.2, Thm 3.6, Remark 3.7</div>
+</div>
+
+<div class="slide" data-slide-id="S138">
+  <h2>Keep the Extra Curvature Term</h2>
+  <div class="divider"></div>
+  <p>Strong convexity at $x=x_t$, $y=x^\star$: $\;\Delta_t\le\langle g_t,\,x_t-x^\star\rangle-\tfrac{\mu}{2}D_t$</p>
+  <p>Same descent step and distance identity as the convex proof:</p>
+  <div class="math-block">$$\begin{aligned}
+    \Delta_{t+1} &\;\le\; \langle g_t,\,x_t-x^\star\rangle-\tfrac{1}{2L}\|g_t\|^2-\tfrac{\mu}{2}D_t\\
+    &\;=\; \tfrac{L}{2}\,(D_t-D_{t+1})-\tfrac{\mu}{2}\,D_t
+  \end{aligned}$$</div>
+  <p class="muted">$\mu=0$ gives back the convex step; no PL condition used</p>
+</div>
+
+<div class="slide" data-slide-id="S139">
+  <h2>Nonnegative Gap Forces Contraction</h2>
+  <div class="divider"></div>
+  <p>$x^\star$ minimizes $f$, so $\Delta_{t+1}\ge0$:</p>
+  <div class="math-block">$$0\;\le\;\frac{L}{2}\,(D_t-D_{t+1})-\frac{\mu}{2}\,D_t$$</div>
+  <p>Multiply by $2/L$ and move $D_{t+1}$ to the left:</p>
+  <div class="highlight"><p>$$D_{t+1}\;\le\;\Big(1-\frac{\mu}{L}\Big)\,D_t\;=\;q\,D_t$$</p></div>
+  <p class="muted">Each step shrinks the squared distance by at least the factor $q$</p>
+</div>
+
+<div class="slide" data-slide-id="S122">
+  <h2>Repeat the Same Contraction</h2>
+  <div class="divider"></div>
+  <p>Apply $D_{t+1}\le q\,D_t$ for $t=T-1,\dots,0$:</p>
+  <div class="math-block">$$D_T\;\le\;q\,D_{T-1}\;\le\;q^2\,D_{T-2}\;\le\;\cdots\;\le\;q^{T}\,D_0$$</div>
+  <p>Valid for every $T\ge1$; if $q=0$, then $D_T=0$</p>
+  <p>Since $1-u\le e^{-u}$: $\;q^T\le e^{-\mu T/L}$</p>
+  <p class="muted">Error falls by a constant factor every step</p>
+</div>
+
+<div class="slide" data-slide-id="S123">
+  <h2>Function Values Follow Distance</h2>
+  <div class="divider"></div>
+  <p>Smoothness upper bound at $x^\star$, where $\nabla f(x^\star)=0$:</p>
+  <div class="math-block">$$f(x_T)-f^\star\;\le\;\frac{L}{2}\,\|x_T-x^\star\|^2\;\le\;\frac{L}{2}\,q^{T}\,\|x_0-x^\star\|^2\qquad\blacksquare$$</div>
+  <p>Iterates and values converge to <strong>the optimum</strong></p>
+  <p>Not just to some stationary point</p>
+  <p class="muted">Prefactor $\tfrac{L}{2}D_0$, taken from the distance bound</p>
+</div>
+
+<div class="slide" data-slide-id="S110">
+  <h2>Linear Means Geometric</h2>
+  <div class="divider"></div>
+  <div class="o3b-split o3b-figleft">
+    <div class="o3-fig">
+      <svg viewBox="0 0 640 330">
+        <!-- figs/o3b_figs.py S110: shapes 1/T and q^T, illustrative q=0.8; log10 scale, X=80+22(T-1), Y=30+80(-log10 e) -->
+        <g stroke="#e3e8ee" stroke-width="1.5">
+          <line x1="80" y1="30" x2="600" y2="30"/><line x1="80" y1="110" x2="600" y2="110"/>
+          <line x1="80" y1="190" x2="600" y2="190"/><line x1="80" y1="270" x2="600" y2="270"/>
+        </g>
+        <line x1="80" y1="20" x2="80" y2="285" stroke="#8a97a5" stroke-width="2"/>
+        <line x1="80" y1="285" x2="600" y2="285" stroke="#8a97a5" stroke-width="2"/>
+        <polyline points="80.0,30.0 102.0,54.1 124.0,68.2 146.0,78.2 168.0,85.9 190.0,92.3 212.0,97.6 234.0,102.2 256.0,106.3 278.0,110.0 300.0,113.3 322.0,116.3 344.0,119.1 366.0,121.7 388.0,124.1 410.0,126.3 432.0,128.4 454.0,130.4 476.0,132.3 498.0,134.1 520.0,135.8 542.0,137.4 564.0,138.9 586.0,140.4" fill="none" stroke="#8a97a5" stroke-width="3.5" stroke-linejoin="round"/>
+        <polyline points="80.0,37.8 102.0,45.5 124.0,53.3 146.0,61.0 168.0,68.8 190.0,76.5 212.0,84.3 234.0,92.0 256.0,99.8 278.0,107.5 300.0,115.3 322.0,123.0 344.0,130.8 366.0,138.5 388.0,146.3 410.0,154.0 432.0,161.8 454.0,169.6 476.0,177.3 498.0,185.1 520.0,192.8 542.0,200.6 564.0,208.3 586.0,216.1" fill="none" stroke="#003876" stroke-width="3.5" stroke-linejoin="round"/>
+      </svg>
+      <span class="fl fl-grey fl-r" style="left:11%;top:9.1%">$1$</span>
+      <span class="fl fl-grey fl-r" style="left:11%;top:33.3%">$10^{-1}$</span>
+      <span class="fl fl-grey fl-r" style="left:11%;top:57.6%">$10^{-2}$</span>
+      <span class="fl fl-grey fl-r" style="left:11%;top:81.8%">$10^{-3}$</span>
+      <span class="fl fl-grey" style="left:12.5%;top:94%">$1$</span>
+      <span class="fl fl-grey" style="left:91.6%;top:94%">$24$</span>
+      <span class="fl fl-grey" style="left:52%;top:94%">iteration $T$</span>
+      <span class="fl fl-grey" style="left:82%;top:34%">$1/T$</span>
+      <span class="fl fl-blue" style="left:74%;top:67%">$q^T$</span>
+    </div>
+    <div>
+      <p><strong>Linear</strong> rate: error $\le C\,q^T$ with $0\lt q\lt1$</p>
+      <p>Same thing as geometric: straight on a log scale</p>
+      <p><strong>Sublinear:</strong> $1/T$ flattens out</p>
+      <div class="highlight"><p>Convex $O(1/T)$ is sublinear, not linear</p></div>
+      <p class="muted">Shapes only, illustrative $q$: not GD output</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REGION P4e END ===== -->
+
+<!-- ===== REGION P4f BEGIN ===== -->
+<div class="slide section-slide left" data-slide-id="S130">
+  <div class="section-num">06</div>
+  <h1>Three Guarantees</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Same step, different assumptions</p>
+</div>
+
+<div class="slide" data-slide-id="S131">
+  <h2>Three Assumptions, Three Guarantees</h2>
+  <div class="divider"></div>
+  <table class="o3b-tab o3b-tiers">
+    <tr><th>Assumption</th><th>Guarantee after $T$ steps</th><th>Type</th></tr>
+    <tr><td>$L$-smooth, $f\ge f_{\text{low}}$</td><td>$\min_{t\lt T}\|\nabla f(x_t)\|^2\le\dfrac{2L\,(f(x_0)-f_{\text{low}})}{T}$</td><td>best iterate, $O(1/T)$</td></tr>
+    <tr><td>+ convex, $x^\star$ exists</td><td>$\Delta_T\le\dfrac{L\,D_0}{2T}$</td><td>gap $O(1/T)$, sublinear</td></tr>
+    <tr><td>+ $\mu$-strongly convex</td><td>$D_T\le q^TD_0,\;\;\Delta_T\le\dfrac{L}{2}\,q^TD_0$</td><td>linear (geometric)</td></tr>
+  </table>
+  <p>Nonconvex also: every $\|\nabla f(x_t)\|\to0$; no local-minimum guarantee</p>
+  <div class="cite">Nonconvex: Cornell CS4787/5777 (Fall 2026), Lecture 5; limit: our deduction. Convex and strongly convex: Nesterov (2004); exact bounds: Garrigos &amp; Gower, arXiv:2301.11235v3 (2024), Thms 3.4 and 3.6</div>
+</div>
+
+<div class="slide" data-slide-id="S140">
+  <h2>No Extra Conditions Needed</h2>
+  <div class="divider"></div>
+  <div class="diagram-flow o3b-flow">
+    <div class="diagram-box">descent<br>inequality</div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box">distance<br>identity</div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="diagram-box">tangent bound<br>$-\dfrac{\mu}{2}D_t$</div>
+    <div class="diagram-arrow">&rarr;</div>
+    <div class="o3b-outcomes">
+      <div class="diagram-box filled">$\mu=0$: telescope, $O(1/T)$</div>
+      <div class="diagram-box filled">$\mu\gt0$: contract, $q^T$</div>
+    </div>
+  </div>
+  <table class="o3b-tab">
+    <tr><td>Co-coercivity of $\nabla f$</td><td><strong>not needed</strong></td></tr>
+    <tr><td>Polyak&ndash;&#321;ojasiewicz (PL) condition</td><td><strong>not needed</strong></td></tr>
+    <tr><td>Strong convexity</td><td><strong>kept</strong>: it supplies the $\mu$ term</td></tr>
+  </table>
+  <p class="muted">Both are useful tools elsewhere, not prerequisites here</p>
+</div>
+
+<!-- ===== REGION P4f END ===== -->
+
+<!-- ===== REGION Closing BEGIN ===== -->
+<div class="slide title-slide" data-slide-id="S134">
+  <div class="pill pill-fill" style="margin-bottom:28px;">Deep Learning Math &middot; Lecture 11</div>
+  <h1 style="font-size:6rem;">$x_{t+1} = x_t - \tfrac{1}{L}\, \nabla f(x_t)$</h1>
+  <div class="divider"></div>
+  <p class="subtitle">One update. Three guarantees. Questions?</p>
+</div>
+
+<!-- ===== REGION Closing END ===== -->
+
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+<div class="slide-num" id="slideNum">1 / N</div>
+
+</div><!-- end deck -->
+<script src="../../../reference/deck.js"></script>
+</body>
+</html>

@@ -309,7 +309,7 @@ Format: `Authors (in venue order), "Title", Venue YYYY` — no arXiv ID unless a
 | Math slide | prose + `.math-block`; `$$…$$` for `cases`/`align` | §5 |
 | Code / pseudocode | `.code-block` with `.kw`/`.fn`/`.cm`/`.str`; escape `&lt;` | `lec02tech.html` |
 | Diagram + math labels | HTML boxes for structure, SVG for arrows only | `dp8-fl.html` |
-| SVG plot + KaTeX labels | `position:relative` wrapper, shapes in `<svg>`, every math label a `<span class="fl">` | `courses/deepmath/opt03-convexity-gd/` (`.o3-fig`) |
+| SVG plot + KaTeX labels | `position:relative` wrapper, shapes in `<svg>`, every math label a `<span class="fl">` | `courses/deepmath/opt02-convexity-gd/` (`.o3-fig`) |
 | Chain diagram | flex row of math spans, active edge blue, sleeping gray, `$\cdots$` nodes | `diffusion2-ddpm.html` |
 | Recall card | `.card` `padding: 10px 16px` with `<strong>Recall (&lt;topic&gt;).</strong>` — name the result, not the deck (§6) | §5 |
 | Inline exercise | plain `<p><strong>Exercise.</strong> …</p>` beside the fact | — |
@@ -368,7 +368,7 @@ Format: `Authors (in venue order), "Title", Venue YYYY` — no arXiv ID unless a
      X = 280 + 115u, Y = 300 - 55*value -->
 ```
 
-Then read the render against the algebra: which curve is on top, where they touch, which way the gap opens. Shipped: `courses/deepmath/opt03-convexity-gd/`.
+Then read the render against the algebra: which curve is on top, where they touch, which way the gap opens. Shipped: `courses/deepmath/opt02-convexity-gd/`.
 
 **Two lines in one plot need two *redundant* encodings.** Curves told apart only by which label sits nearer merge at projector distance; curves told apart only by color merge again in a grayscale handout and for a color-blind reader. Carry the distinction twice: color **plus** one of dash/solid, stroke width, marker shape, or a label placed directly on the curve. The label span takes its curve's color — but color alone never carries the meaning. opt04's balance-point figure pairs semantic color (progress `#2e8b57`, noise `#d94040`) with a label on each curve naming its term; those two hues are that deck's choice, not a palette to copy. One color per role still holds: the same green means the same thing in every figure of the deck.
 

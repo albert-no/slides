@@ -1,714 +1,1140 @@
 # Deep Learning Math 10: SVD and Low-Rank Approximation -- Notes
 
-**About this file.** This is the linear-text edition of the companion note for lecture 10 of Deep Learning Math, covering the singular value decomposition and low-rank approximation. It carries the full mathematical content of that note: every definition, theorem, proof, worked number and reference. Figures and tables have been replaced by prose descriptions placed where they occurred, matrices are written out entry by entry in text, and cross-references to the accompanying presentation have been removed. Section numbering matches the original note, so a reference such as "Section 7.4" points to the same material here. Nothing else is needed to read it.
+**About this file.** This is the text-only, screen-reader-friendly edition of the Lecture 10 companion note. It has one numbered section per topic, each headed by its number, title and an ID in brackets; the slide deck `opt01-svd-lowrank.html` and the HTML note `opt01-svd-lowrank-note.html` use the same numbering and IDs. Every figure and table is described in words or linearized into lists, and all mathematics is written in LaTeX. Nothing else is needed to read it.
 
-**Convention.** Throughout, $A \in \mathbb{R}^{m \times n}$ is a real matrix with $\operatorname{rank}(A) = r$. Its singular values are written $\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_{\min(m,n)} \geq 0$, with $\sigma_i = 0$ for $i > r$. Everything is stated over the real numbers; the complex case requires only the replacements "orthogonal" to "unitary" and transpose ${}^\top$ to conjugate transpose ${}^*$. A norm bar with no subscript, $\|\cdot\|$, means the Euclidean norm $\|\cdot\|_2$.
+The lecture has 61 sections and runs 150 minutes. Audience: junior undergraduate AI majors who know matrix multiplication, the Euclidean inner product and the eigendecomposition of a symmetric matrix. Each section opens with a one-sentence message, then explains the idea, then gives details (derivations, worked numbers, figure provenance) and sources.
 
-**The running example.** One $2 \times 2$ matrix recurs from Section 4.6 onward. It is called $A$ and has first row $(3, 0)$ and second row $(4, 5)$. A second, singular, matrix called $C$ has first row $(1, 1)$ and second row $(2, 2)$.
+**What the lecture does.** Five parts: why a low-rank matrix is useful (sections 3-10); two ways to measure the error of an approximation, the spectral and Frobenius norms (sections 11-19); reading an SVD as rotate, stretch, rotate (sections 20-36); the Eckart-Young-Mirsky theorem, which says the truncated SVD is the best rank-k approximation in both norms (sections 37-55); and reading the answer: choosing a rank by retained energy, one published use in compressing language-model weights, and what the guarantee covers (sections 56-60).
 
-**Notation.**
+**Conventions.** $A \in \mathbb{R}^{m \times n}$ is a real matrix of rank $r$, with singular values $\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_{\min(m,n)} \geq 0$ and $\sigma_i = 0$ for $i > r$. $Q$ denotes an orthogonal matrix, $A = U\Sigma V^\top$ the full SVD and $A = U_r \Sigma_r V_r^\top$ the compact one. $A_k = \sum_{i \leq k} \sigma_i u_i v_i^\top$ is the rank-$k$ truncated SVD and $B$ a competing matrix of rank at most $k$. $\|\cdot\|_2$ is the Euclidean vector norm or the spectral matrix norm; $\|\cdot\|_F$ is the Frobenius norm. Results are cited by name, not number. An illustration matrix, used in a few sections and always restated there, is $A$ with first row $(3, 0)$ and second row $(4, 5)$.
 
-- $\operatorname{span}\{v_1, \dots, v_k\}$: the set of all linear combinations of $v_1, \dots, v_k$.
-- $\operatorname{range}(A) = \{Ax : x \in \mathbb{R}^n\} \subseteq \mathbb{R}^m$, the column space.
-- $\operatorname{null}(A) = \{x : Ax = 0\} \subseteq \mathbb{R}^n$, the null space or kernel.
-- $\operatorname{row}(A) = \operatorname{range}(A^\top) \subseteq \mathbb{R}^n$, the row space.
-- $\operatorname{rank}(A) = \dim \operatorname{range}(A)$.
-- $W^\perp$: the orthogonal complement of a subspace $W$.
-- $\langle x, y \rangle = x^\top y$; $\delta_{ij}$ is $1$ if $i = j$ and $0$ otherwise.
-- $\|x\|_p = (\sum_i |x_i|^p)^{1/p}$; $\|x\|_\infty = \max_i |x_i|$; $\|x\|_0 = \#\{i : x_i \neq 0\}$.
-- $\|A\|_2 = \sigma_1$ (spectral norm), $\|A\|_F = (\sum_{i,j} a_{ij}^2)^{1/2}$ (Frobenius norm), $\|A\|_* = \sum_i \sigma_i$ (nuclear norm).
-- $A^\dagger$: the Moore-Penrose pseudo-inverse.
-- $A_k = \sum_{i \leq k} \sigma_i u_i v_i^\top$: the rank-$k$ truncated SVD.
-- $U_c, \Sigma_c, V_c$: the thin (compact) SVD factors, of sizes $m \times r$, $r \times r$, $n \times r$.
-- $\operatorname{tr}(X)$: the trace; $\operatorname{diag}(\dots)$: the diagonal matrix with the listed entries.
-- $\succeq 0$ after a matrix: positive semidefinite.
+**Extended edition.** The pre-2026-11 lecture (119 sections: pseudo-inverse, four fundamental subspaces, nuclear norm, matrix completion, and the full set of background proofs) is archived with the same IDs as `../opt03-backup/opt01-svd-lowrank-full.html`, with notes `../opt03-backup/opt01-svd-lowrank-full-note.html` and `../opt03-backup/opt01-svd-lowrank-full-note.md`.
 
-**Background used.** This is Lecture 10 (opt01), the first of the four optimization lectures: opt01, opt02, opt03, opt04 are lectures 10 through 13. From the probability half of the course: Jensen's inequality (Lecture 1, prob01), used once in Lemma 3.1; the eigendecomposition of a covariance matrix (Lecture 8, prob08), which is the symmetric positive-semidefinite special case of Section 4.5. Maximum likelihood and the minimum-mean-squared-error estimator (Lecture 7, prob07) and empirical risk minimization (Lecture 6, prob06) are the problems this half of the course solves. The only mathematical result imported without proof is the **spectral theorem** for real symmetric matrices (Section 4.1); two further results are cited rather than proved because their proofs are outside the lecture's scope (the convex-envelope theorem of Fazel, Theorem 6.3, and the exact-recovery theorem for matrix completion, Theorem 10).
+<!-- REGION Opening BEGIN -->
 
-**What this edition adds.** Nothing mathematical: the content is that of the original companion note, which already proves everything the lecture states without proof. What is added is linearization. The two matrix displays that were laid out as grids, and the four-row table of fundamental subspaces in Section 4.4, are given as bullet lists. Small matrices that appeared inline as $2 \times 2$ arrays are written as "first row ..., second row ...". A tick mark used in the original to signal "this number was checked" is rendered as the word *checked* at the end of the sentence.
+## Opening
 
-**Contents.**
+<!-- BEGIN S01 -->
+### 1. SVD and Best Low-Rank Approximation [S01]
 
-1. Why the optimization half
-2. Background: subspaces, dimension, rank
-3. Norms and orthogonal matrices
-4. The singular value decomposition
-5. The Moore-Penrose pseudo-inverse
-6. Matrix norms
-7. Low-rank approximation: Eckart-Young-Mirsky
-8. Matrix completion and the nuclear-norm relaxation
-9. What the lecture leaves out
-10. References
+**Message.** Replace a matrix by one of lower rank, and say exactly how much is lost.
 
-**Summary of what is proved here.** The linear-algebra background the lecture assumes -- that dimension is well defined, the dimension formula $\dim(W_1 + W_2) + \dim(W_1 \cap W_2) = \dim W_1 + \dim W_2$, and row rank $=$ column rank -- is proved from scratch in Section 2. Theorem 1 (rank-nullity), Theorem 2 (orthogonal decomposition, with uniqueness), Theorem 3 (the four fundamental subspaces) and Theorem 5 (existence of the SVD), all four of which the lecture states without proof, are proved in Sections 2 and 4. The $\ell_p$ norm axioms are verified through Young's, Holder's and Minkowski's inequalities in Section 3.2, with an explicit counterexample showing the triangle inequality fails for $p < 1$. The Moore-Penrose pseudo-inverse is shown well defined and characterized by Penrose's four equations in Section 5, together with the discontinuity of the map $A \mapsto A^\dagger$ that the clean $2 \times 2$ examples hide. The nuclear norm is *proved* to be a norm, via the variational identity $\|A\|_* = \max_{\|Z\|_2 \leq 1} \operatorname{tr}(Z^\top A)$, in Section 6.5. The Frobenius case of Eckart-Young-Mirsky -- the one real gap in the lecture, where the source gives only a sketch -- is proved in full in Section 7.4, via Courant-Fischer for singular values and Weyl's additive inequality, both proved first in Sections 7.2 and 7.4. Section 7.6 settles the uniqueness question: with $A = \operatorname{diag}(2,1)$ and $k = 1$, *every* $B = \operatorname{diag}(a, 0)$ with $a \in [1,3]$ is a spectral-norm minimizer, so the source's uniqueness claim is false as stated; in the Frobenius norm the minimizer is unique exactly when $\sigma_k > \sigma_{k+1}$. Every number in the lecture has been recomputed from scratch -- $A^\top A$ with rows $(25, 20)$ and $(20, 25)$, eigenvalues $45$ and $5$, singular values $3\sqrt5$ and $\sqrt5$, the pseudo-inverse $\tfrac{1}{15}$ times the matrix with rows $(5, 0)$ and $(-4, 3)$, $\|A\|_F = 5\sqrt2$, $\|A\|_* = 4\sqrt5$, the $90\%$ energy figure, the recommender toy example's count of $18$ against $20$ -- and all of them check out.
+Lecture 10 of Deep Learning Math (150 minutes). The lecture asks one question: given a matrix, which matrix of rank at most $k$ is closest to it, and how close is it? The singular value decomposition answers it in closed form, and the Eckart-Young-Mirsky theorem proves that the answer cannot be beaten.
+<!-- END S01 -->
 
-## 1 Why the optimization half
+<!-- BEGIN S02 -->
+### 2. Contents [S02]
 
-### 1.1 The argmin that was never solved
+**Message.** Five parts: the question, the error measures, the decomposition, the theorem, and reading the answer through rank, error and energy.
 
-The probability half of the course built estimators and bounded their errors, and each one ended in an optimization problem left unsolved: maximum likelihood is $\arg\max_\theta \sum_i \log p_\theta(x_i)$ (lecture 7); empirical risk minimization is $\arg\min_{f \in \mathcal{F}} \hat R(f)$ (lecture 6); the minimum-mean-squared-error estimator is the minimizer of a squared loss over all measurable functions (lecture 7). This half of the course solves those problems. The order of the four lectures is **object** (lecture 10, this one: what is being optimized -- matrices, and what their internal structure is), **problem** (lecture 11: least squares and empirical risk minimization, which have closed-form solutions), **algorithm** (lecture 12: convexity and gradient descent, for when they do not), and **practice** (lecture 13: stochastic gradients, which is what actually runs).
+1. Why Low Rank?: Fewer directions, measured loss.
+2. Measuring Error: Two sizes for a residual.
+3. Reading an SVD: Rotate, stretch, rotate.
+4. Best Low-Rank Approximation: Eckart-Young-Mirsky.
+5. Read the Answer: Rank, error and energy.
+<!-- END S02 -->
 
-### 1.2 Why a linear-algebra lecture belongs in a deep-learning course
+<!-- REGION Opening END -->
 
-Every learnable parameter in a modern network sits in a matrix: a dense layer is $x \mapsto Wx + b$; an embedding table is $|\mathcal{V}| \times d$; attention is three projections $W_Q, W_K, W_V$ plus an output projection. The singular value decomposition is the only factorization that exists for *every* such matrix, and Sections 5 through 7 show that the three questions one actually asks about a weight matrix -- can it be inverted, how big is it, can it be compressed -- all have answers written directly in its singular values.
+<!-- REGION P1a BEGIN -->
 
-The lecture's empirical claim, which the mathematics does not prove and cannot, is that on real weight matrices, embedding tables and rating matrices the singular values decay fast. The mathematics supplies the conditional statement (Theorem 8): *if* they decay fast, truncation is not merely a reasonable heuristic but the provably optimal rank-$k$ approximation.
+## Part 1: Why Low Rank?
 
-## 2 Background: subspaces, dimension, rank
+<!-- BEGIN S120 -->
+### 3. Part 1: Why Low Rank? [S120]
 
-The lecture opens with span, rank and null space as recalled objects and states Theorems 1 through 3 without proof. This section supplies the whole chain. Nothing here is deep, but the proof of Theorem 8 rests entirely on it, and the one genuinely non-obvious ingredient -- the dimension formula of Section 2.3 -- is exactly the technique review the lecture flags as its second recalled tool.
+**Message.** Part 1 poses the question: replace a matrix by one with fewer independent directions, and measure what is lost.
+<!-- END S120 -->
 
-### 2.1 Span, independence, basis; dimension is well defined
+<!-- BEGIN S80 -->
+### 4. A Smaller Matrix, Controlled Error [S80]
 
-**Definitions.** For $v_1, \dots, v_k \in \mathbb{R}^n$, $\operatorname{span}\{v_1, \dots, v_k\} = \{\sum_i \alpha_i v_i : \alpha_i \in \mathbb{R}\}$. The list is *linearly independent* if $\sum_i \alpha_i v_i = 0$ forces every $\alpha_i = 0$. A *subspace* $W \subseteq \mathbb{R}^n$ is a nonempty set closed under addition and scalar multiplication. A *basis* of $W$ is an independent list spanning $W$, and $\dim W$ is the length of a basis.
+**Message.** Low-rank approximation replaces a fully observed matrix $A$ by a matrix $B$ of rank at most $k$ and judges the result by the size of the residual $A - B$.
 
-That last definition needs a theorem to be legitimate: two bases of the same subspace could a priori have different lengths.
+The setting: $A \in \mathbb{R}^{m\times n}$ is given and every entry is observed; we choose $B$ with $\operatorname{rank}(B) \le k$; these are stated as two separate lines, Given and Choose. Then consider one equation with three matrices: the data $A = \left[\begin{smallmatrix}3 & 0\\ 4 & 5\end{smallmatrix}\right]$, of rank 2, equals a rank-1 candidate $B = \left[\begin{smallmatrix}1.5 & 1.5\\ 4.5 & 4.5\end{smallmatrix}\right]$ plus the residual $A - B = \left[\begin{smallmatrix}1.5 & -1.5\\ -0.5 & 0.5\end{smallmatrix}\right]$. The decomposition $A = B + (A - B)$ holds for any $B$; what changes from one candidate to another is how big the residual is, and that size will be measured by a matrix norm (Part 2). This sets up the two questions for the lecture: which rank-$k$ matrix is closest, and how small can the error be. At this point $B$ is just one candidate; nothing yet says it is the best one.
 
-**Lemma 2.1 (Steinitz exchange).** If $w_1, \dots, w_p$ are linearly independent and all lie in $\operatorname{span}\{v_1, \dots, v_q\}$, then $p \leq q$.
+The quality of a candidate is the size of the residual $A - B$ in a matrix norm, and the lecture asks two questions: which $B$ is closest, and how small can the error be. Storage is one reason to want low rank; the count, and when it is a saving, is worked out in section 58 on compressing language-model weights. For this $2\times 2$ illustration with $k = 1$ there is no saving at all (both counts are $4$).
 
-*Proof.* Induct on $p$, exchanging one vector at a time. Suppose after $j$ steps we have a spanning list consisting of $w_1, \dots, w_j$ together with $q - j$ of the $v$'s; this is true for $j = 0$. If $j < p$, write $w_{j+1}$ in that spanning list:
+**Details.** **Full observation versus completion.** Here every entry of $A$ is known and the residual is computed over all entries. Matrix completion is a different problem: only some entries are observed, the fit is measured on those, and the low-rank assumption fills in the rest. The methods of this lecture do not directly solve completion.
 
-$$ w_{j+1} = \sum_{i \leq j} \alpha_i w_i + \sum_{\ell} \beta_\ell v_{i_\ell} . $$
+**Why the problem is not convex.** The feasible set $\{B : \operatorname{rank}(B) \le k\}$ is not convex: $\operatorname{diag}(1,0)$ and $\operatorname{diag}(0,1)$ both have rank 1, but their midpoint $\tfrac12 I_2$ has rank 2. So convex-optimization guarantees do not apply; the lecture still reaches an exact answer through the SVD.
 
-Not every $\beta_\ell$ can vanish, or $w_{j+1}$ would be a combination of $w_1, \dots, w_j$, contradicting independence; in particular the list of remaining $v$'s is nonempty, which already forces $q - j \geq 1$, that is, $j < q$. Pick $\ell$ with $\beta_\ell \neq 0$, solve for $v_{i_\ell}$, and swap it out for $w_{j+1}$: the new list still spans. After $p$ steps we have used $p$ distinct $v$'s, so $p \leq q$. **End of proof.**
+**Check of the example.** $B + (A - B) = \left[\begin{smallmatrix}1.5+1.5 & 1.5-1.5\\ 4.5-0.5 & 4.5+0.5\end{smallmatrix}\right] = \left[\begin{smallmatrix}3 & 0\\ 4 & 5\end{smallmatrix}\right] = A$. Both columns of $B$ equal $(1.5, 4.5)$, so $\operatorname{rank}(B) = 1$.
 
-Applying the lemma in both directions to two bases of $W$ gives equal lengths, so $\dim W$ is well defined. The same lemma gives the two facts used repeatedly below: any independent list in $W$ has at most $\dim W$ elements and extends to a basis of $W$, and any spanning list contains a basis.
+**Sources.** Problem statement: Wilkinson, *Multivariate Statistics* (MATH3030 notes), Section 3.5 "Low-rank approximation". The matrices $A$, $B$ and $A - B$ are our illustration (evidence E08); the storage count is our arithmetic.
+<!-- END S80 -->
 
-### 2.2 Range, null space, rank
+<!-- BEGIN S12a -->
+### 5. Range Is the Column Span [S12a]
 
-**Definitions.** For $A \in \mathbb{R}^{m \times n}$ with columns $a_1, \dots, a_n$: $\operatorname{range}(A) = \{Ax : x \in \mathbb{R}^n\} = \operatorname{span}\{a_1, \dots, a_n\} \subseteq \mathbb{R}^m$, using $Ax = \sum_i x_i a_i$; $\operatorname{null}(A) = \{x \in \mathbb{R}^n : Ax = 0\} \subseteq \mathbb{R}^n$; $\operatorname{row}(A) = \operatorname{range}(A^\top) \subseteq \mathbb{R}^n$; and $\operatorname{rank}(A) = \dim \operatorname{range}(A)$. Both $\operatorname{range}(A)$ and $\operatorname{null}(A)$ are subspaces, immediately from linearity of $x \mapsto Ax$.
+**Message.** Every output $Ax$ is a linear combination of the columns of $A$, so the set of all outputs, the range, is the span of the columns.
 
-The parenthetical remark "row rank $=$ column rank" is a real theorem; here is the two-line proof.
+Write $A = [\,a_1 \cdots a_n\,] \in \mathbb{R}^{m\times n}$ with columns $a_j \in \mathbb{R}^m$, and take an input $x \in \mathbb{R}^n$. Multiplying out gives $Ax = x_1a_1 + \cdots + x_na_n = \sum_j x_j a_j$, a vector in $\mathbb{R}^m$: the entries of $x$ are the weights on the columns. The span of a list of vectors is the set of all their linear combinations. The range (column space) of $A$ collects every possible output, $\operatorname{range}(A) = \{Ax : x \in \mathbb{R}^n\}$; by the expansion above it equals $\operatorname{span}\{a_1, \dots, a_n\}$, a subspace of the output space $\mathbb{R}^m$. This section gives the definitions only; section 6 adds a numerical example.
 
-**Proposition 2.2.** $\operatorname{rank}(A^\top) = \operatorname{rank}(A)$.
+**Details.** The span of $v_1, \dots, v_k$ is the set of all combinations $\sum_i \alpha_i v_i$. A subspace is a nonempty set closed under addition and scalar multiplication; $\operatorname{range}(A)$ is one because $Ax + Ay = A(x+y)$ and $\alpha Ax = A(\alpha x)$. A basis is a linearly independent spanning list, and the dimension is its length (well defined by the Steinitz exchange lemma, proved in the backup note).
 
-*Proof.* Let $r = \operatorname{rank}(A)$ and let $u_1, \dots, u_r$ be a basis of $\operatorname{range}(A)$; write $U_0 = [u_1 \cdots u_r] \in \mathbb{R}^{m \times r}$. Each column $a_j$ lies in $\operatorname{range}(A)$, so $a_j = U_0 c_j$ for some $c_j \in \mathbb{R}^r$; stacking these, $A = U_0 C$ with $C = [c_1 \cdots c_n] \in \mathbb{R}^{r \times n}$. Then $A^\top = C^\top U_0^\top$, so every column of $A^\top$ is a combination of the $r$ columns of $C^\top$, giving $\operatorname{rank}(A^\top) \leq r$. Applying the same bound to $A^\top$ in place of $A$ gives $\operatorname{rank}(A) \leq \operatorname{rank}(A^\top)$. **End of proof.**
+**Sources.** Deisenroth, Faisal & Ong, *Mathematics for Machine Learning* (CUP 2020), Section 2.7.3, Definition 2.23 and eq. (2.124): $\operatorname{Im}(A) = \{Ax\} = \operatorname{span}[a_1, \dots, a_n] \subseteq \mathbb{R}^m$.
+<!-- END S12a -->
 
-The factorization $A = U_0 C$ produced in that proof is worth naming: **every rank-$r$ matrix is a product of an $m \times r$ and an $r \times n$ matrix**, that is, a sum of $r$ rank-one matrices. That is the abstract form of the recommender factorization $R = TG$ of Section 8, and the reason a rank-$r$ matrix costs $r(m+n)$ numbers rather than $mn$.
+<!-- BEGIN S12b -->
+### 6. An Output Combines the Columns [S12b]
 
-### 2.3 The dimension formula, proved
+**Message.** The input $x$ supplies the coefficients: $Ax$ is the columns of $A$ weighted by the entries of $x$ and added.
 
-**Theorem 2.3.** For subspaces $W_1, W_2 \subseteq \mathbb{R}^n$,
+Take $m = n = 2$ with columns $a_1 = (2,1)$ and $a_2 = (1,2)$, drawn as two arrows from the origin. With coefficients $x = (1,1)$ the output is $Ax = 1\cdot a_1 + 1\cdot a_2 = (3,3)$. Geometrically, $(3,3)$ is the far corner of the parallelogram whose sides are $a_1$ and $a_2$: adding two arrows tip to tail lands on the diagonal. This is one output; other choices of $x$ give other points of the range.
 
-$$ \dim(W_1 + W_2) + \dim(W_1 \cap W_2) \;=\; \dim W_1 + \dim W_2 , $$
+**Details.** Check: the matrix with rows $(2,1)$ and $(1,2)$ applied to $(1,1)$ gives $(2+1,\ 1+2) = (3,3)$. Here $a_1$ and $a_2$ are independent (determinant $4 - 1 = 3 \ne 0$), so the range of this particular matrix is all of $\mathbb{R}^2$; the example shows only one of its points. The figure is drawn to scale.
 
-where $W_1 + W_2 = \{w_1 + w_2 : w_i \in W_i\}$.
+**Sources.** Column picture of $Ax$: Deisenroth, Faisal & Ong, *MML* Section 2.7.3, eq. (2.124). Figure and numbers: our illustration.
+<!-- END S12b -->
 
-*Proof.* Let $z_1, \dots, z_t$ be a basis of $W_1 \cap W_2$. Extend it to a basis $z_1, \dots, z_t, x_1, \dots, x_p$ of $W_1$ and to a basis $z_1, \dots, z_t, y_1, \dots, y_q$ of $W_2$, so $\dim W_1 = t + p$ and $\dim W_2 = t + q$. The combined list of $z$'s, $x$'s and $y$'s spans $W_1 + W_2$; the claim is that it is independent.
+<!-- BEGIN S14 -->
+### 7. Rank Counts Independent Directions [S14]
 
-Suppose $\sum \gamma_i z_i + \sum \alpha_j x_j + \sum \beta_\ell y_\ell = 0$. Then
+**Message.** The rank of $A$ is the dimension of its range: the number of independent output directions.
 
-$$ v := \sum_\ell \beta_\ell y_\ell = -\sum_i \gamma_i z_i - \sum_j \alpha_j x_j $$
+Definition: $\operatorname{rank}(A) = \dim \operatorname{range}(A)$, the number of vectors in any basis of the range. This determines a factorization of $A$: if $r = \operatorname{rank}(A)$ and $u_1, \dots, u_r$ is a basis of the range, then the $m\times n$ matrix $A$ factors as $U$, an $m\times r$ matrix whose columns are the $u_i$, times $C$, an $r\times n$ matrix. Column $j$ of $C$ holds the coordinates of $a_j$ in that basis. When $r$ is small, $U$ is tall and thin and $C$ is short and wide. Rank is not the number of nonzero entries and not the number of columns: $\left[\begin{smallmatrix}1 & 1\\ 2 & 2\end{smallmatrix}\right]$ has four nonzero entries and two columns, yet both columns point along $(1,2)$, so its rank is 1.
 
-lies in $W_1$ and in $W_2$, hence in $W_1 \cap W_2$, so $v = \sum_i \delta_i z_i$ for some coefficients $\delta$. But $\sum_\ell \beta_\ell y_\ell - \sum_i \delta_i z_i = 0$ with the $z$'s and $y$'s independent forces all $\beta_\ell = 0$, and all $\delta_i = 0$. The relation collapses to $\sum \gamma_i z_i + \sum \alpha_j x_j = 0$, and independence in $W_1$ kills the rest. Hence $\dim(W_1 + W_2) = t + p + q$, and $(t + p + q) + t = (t + p) + (t + q)$. **End of proof.**
+**Details.** **The factorization.** Each column $a_j$ lies in $\operatorname{range}(A)$, so $a_j = Uc_j$ for a unique $c_j \in \mathbb{R}^r$. Stacking the columns gives $A = UC$ with $C = [c_1 \cdots c_n]$. Equivalently $A = \sum_{i=1}^r u_i \tilde c_i^\top$, a sum of $r$ rank-one matrices, where $\tilde c_i^\top$ is row $i$ of $C$.
 
-**Corollary 2.4.** $\dim(W_1 \cap W_2) \geq \dim W_1 + \dim W_2 - n$. In particular, if $\dim W_1 + \dim W_2 > n$ then $W_1 \cap W_2$ contains a nonzero vector.
+Row rank equals column rank ($\operatorname{rank}(A^\top) = \operatorname{rank}(A)$) follows from the same factorization; the proof and the four-subspace picture are in the backup note.
 
-*Proof.* $W_1 + W_2 \subseteq \mathbb{R}^n$ gives $\dim(W_1 + W_2) \leq n$; substitute into Theorem 2.3. **End of proof.**
+**Sources.** Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 2.6.2 (rank as the number of linearly independent columns) and Section 2.7.3, eq. (2.124) ($\operatorname{rk}(A) = \dim \operatorname{Im}(A)$). The factorization $A = UC$ is our derivation from the definition.
+<!-- END S14 -->
 
-This is the "two planes in $\mathbb{R}^3$ share a line" picture, and it is the entire engine of Theorem 8: it is what converts "$B$ has low rank" into "$B$ is blind at a specific place where $A$ is loud."
+<!-- BEGIN S13 -->
+### 8. Two Inputs Collapse to One Direction [S13]
 
-### 2.4 Theorem 1 (rank-nullity), proved
+**Message.** The matrix $C = \left[\begin{smallmatrix}1 & 1\\ 2 & 2\end{smallmatrix}\right]$ sends every input onto the single line through $(1,2)$, so its rank is 1.
 
-**Theorem 1.** For $A \in \mathbb{R}^{m \times n}$, $\operatorname{rank}(A) + \dim \operatorname{null}(A) = n$, the number of *columns*.
+Both columns of $C$ equal $(1,2)$, so $Cx = x_1(1,2) + x_2(1,2) = (x_1 + x_2)(1,2)$: whatever the input, the output is a multiple of $(1,2)$. Follow three inputs through $C$. The range is the line through the origin with slope 2 in the output plane. The inputs $e_1$ and $e_2$ both land on the same point $(1,2)$, and $(1,1)$ lands on $(2,4)$, further out on the same line. Two independent inputs produce only one output direction: $\operatorname{range}(C) = \operatorname{span}\{(1,2)\}$ and $\operatorname{rank}(C) = 1$.
 
-*Proof.* Let $x_1, \dots, x_t$ be a basis of $\operatorname{null}(A)$ and extend it to a basis $x_1, \dots, x_t, y_1, \dots, y_s$ of $\mathbb{R}^n$, so $t + s = n$. It suffices to show that $Ay_1, \dots, Ay_s$ is a basis of $\operatorname{range}(A)$.
+**Details.** Image calculation: $Ce_1 = (1,2)$, $Ce_2 = (1,2)$, $C(1,1) = (2,4) = 2\cdot(1,2)$. Since every output is $(x_1 + x_2)(1,2)$ and $x_1 + x_2$ can be any real number, the range is the whole line $\operatorname{span}\{(1,2)\}$, not just a segment. A basis of the range is $\{(1,2)\}$, so the dimension is 1.
 
-*Spanning.* Any $Ax$ with $x = \sum_i \alpha_i x_i + \sum_j \beta_j y_j$ satisfies $Ax = \sum_j \beta_j A y_j$, because $Ax_i = 0$.
+**Sources.** Our worked example (evidence E09).
+<!-- END S13 -->
 
-*Independence.* If $\sum_j \beta_j A y_j = 0$ then $A(\sum_j \beta_j y_j) = 0$, so $\sum_j \beta_j y_j \in \operatorname{null}(A)$ and thus equals $\sum_i \alpha_i x_i$ for some $\alpha$. Then $\sum_j \beta_j y_j - \sum_i \alpha_i x_i = 0$ is a relation among basis vectors of $\mathbb{R}^n$, so every $\beta_j = 0$. Hence $\operatorname{rank}(A) = s = n - t$. **End of proof.**
+<!-- BEGIN S16 -->
+### 9. Null Space Means Lost Directions [S16]
 
-The intuitive reading -- every input dimension either survives or dies, and the budget is exactly $n$ -- is literally the proof: the $y_j$ directions survive, their images forming a basis of the range, and the $x_i$ directions die. Note the asymmetry: the $n$ on the right is the column count, so nullity is measured in the *input* space.
+**Message.** The null space collects the input directions that $A$ sends to zero; for $C$ it is the line spanned by $(1,-1)$.
 
-The sanity check on the two running matrices: $A$ has rank $2$ and nullity $0$; $C$ has rank $1$ and nullity $1$, the null space being $\operatorname{span}\{(1,-1)\}$ since $Cx = 0$ if and only if $x_1 + x_2 = 0$; the $2 \times 2$ zero matrix has rank $0$ and nullity $2$.
+Definition: $\operatorname{null}(A) = \{x \in \mathbb{R}^n : Ax = 0\}$, a set of inputs. For $C$, $Cx = (x_1 + x_2)(1,2)$ vanishes exactly when $x_1 + x_2 = 0$, so $\operatorname{null}(C) = \operatorname{span}\{(1,-1)\}$. In the input plane the null space is the line of slope $-1$ through the origin. The vector from $e_2$ to $e_1$ is $e_1 - e_2 = (1,-1)$, which lies along that line. In the output plane $C(1,-1) = 0$ is the origin, and $Ce_1 = Ce_2$ is a single point on the range line. So $e_1$ and $e_2$ differ by a null vector, and $C$ cannot tell them apart. The null space lives in the input space $\mathbb{R}^n$; it is not a set of outputs and not part of the range.
 
-### 2.5 Orthogonality, Gram-Schmidt, and Theorem 2
+**Details.** $\operatorname{null}(A)$ is a subspace: if $Ax = 0$ and $Ay = 0$ then $A(x + y) = 0$ and $A(\alpha x) = 0$. Inputs differing by a null vector give the same output: $A(x + z) = Ax$ when $z \in \operatorname{null}(A)$. For $C$, solving $x_1 + x_2 = 0$ gives $x = t(1,-1)$, $t \in \mathbb{R}$; one free parameter, so $\dim \operatorname{null}(C) = 1$.
 
-Write $\langle x, y \rangle = x^\top y$. Orthonormal lists are automatically independent: if $\sum_i \alpha_i q_i = 0$ with $\langle q_i, q_j \rangle = \delta_{ij}$, taking the inner product with $q_j$ gives $\alpha_j = 0$.
+**Sources.** Definition: Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 2.7.3, Definition 2.23 (kernel/null space). Example: our calculation (evidence E09).
+<!-- END S16 -->
 
-**Lemma 2.5 (Gram-Schmidt).** Every subspace $W \subseteq \mathbb{R}^n$ with $\dim W = d \geq 1$ has an orthonormal basis.
+<!-- BEGIN S18 -->
+### 10. Rank and Nullity Add Up [S18]
 
-*Proof.* Take any basis $w_1, \dots, w_d$ and define recursively
+**Message.** For any $A \in \mathbb{R}^{m\times n}$ the kept directions and the lost directions add up to the number of columns $n$, so low rank forces a large null space.
 
-$$ \tilde q_j = w_j - \sum_{i < j} \langle q_i, w_j \rangle q_i , \qquad q_j = \tilde q_j / \|\tilde q_j\| . $$
+Rank-nullity theorem: for every $A \in \mathbb{R}^{m\times n}$, square or rectangular, $\operatorname{rank}(A) + \dim \operatorname{null}(A) = n$. The count is over columns, i.e. input dimensions, not rows. Think of the $n$ input dimensions as split into two parts: the rank counts the dimensions that are kept, the nullity those that are lost. Check on $C$: rank 1 plus nullity 1 equals 2 columns. For a wide matrix $A \in \mathbb{R}^{2\times 3}$ the rank is at most 2 (the range sits inside $\mathbb{R}^2$), so the nullity is at least 1: some nonzero input is always lost. This is the fact used later for an arbitrary competitor $B$: if $\operatorname{rank}(B) \le k$ then $\dim \operatorname{null}(B) \ge n - k$.
 
-Each $\tilde q_j \neq 0$, since otherwise $w_j \in \operatorname{span}\{w_1, \dots, w_{j-1}\}$, contradicting independence; and $\langle q_i, \tilde q_j \rangle = \langle q_i, w_j \rangle - \langle q_i, w_j \rangle = 0$ for $i < j$ by induction. The spans agree at every stage. **End of proof.**
+**Details.** **Proof.** Let $x_1, \dots, x_t$ be a basis of $\operatorname{null}(A)$ and extend it to a basis $x_1, \dots, x_t, y_1, \dots, y_s$ of $\mathbb{R}^n$, so $t + s = n$. It suffices to show that $Ay_1, \dots, Ay_s$ is a basis of $\operatorname{range}(A)$. Spanning: any $x = \sum_i \alpha_i x_i + \sum_j \beta_j y_j$ has $Ax = \sum_j \beta_j Ay_j$, because $Ax_i = 0$. Independence: if $\sum_j \beta_j Ay_j = 0$ then $\sum_j \beta_j y_j \in \operatorname{null}(A)$, so it equals some $\sum_i \alpha_i x_i$; this is a linear relation among basis vectors of $\mathbb{R}^n$, so every $\beta_j = 0$. Hence $\operatorname{rank}(A) = s = n - t$. $\blacksquare$
 
-**Theorem 2 (orthogonal decomposition).** Let $W \subseteq \mathbb{R}^n$ be a subspace and $W^\perp = \{v : v^\top w = 0 \text{ for all } w \in W\}$. Then every $x \in \mathbb{R}^n$ has a *unique* decomposition $x = x_1 + x_2$ with $x_1 \in W$ and $x_2 \in W^\perp$; moreover $\dim W + \dim W^\perp = n$ and $(W^\perp)^\perp = W$.
+**Corollary used later.** $\operatorname{rank}(B) \le k$ gives $\dim \operatorname{null}(B) = n - \operatorname{rank}(B) \ge n - k$.
 
-*Proof.* $W^\perp$ is a subspace, being an intersection of kernels of the linear functionals $v \mapsto v^\top w$.
+**Sources.** Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 2.7.3, Theorem 2.24 (rank-nullity, stated for a linear map $V \to W$: $\dim \ker + \dim \operatorname{Im} = \dim V$; here $V = \mathbb{R}^n$ and the map is $x \mapsto Ax$). Proof: standard basis-extension argument, retained from the previous version of this note.
+<!-- END S18 -->
+<!-- REGION P1a END -->
 
-*Existence.* Take an orthonormal basis $q_1, \dots, q_d$ of $W$ by Lemma 2.5, taking $x_1 = 0$ if $d = 0$, and set $x_1 = \sum_{i=1}^d \langle q_i, x \rangle q_i$ and $x_2 = x - x_1$. Then $x_1 \in W$ and $\langle q_j, x_2 \rangle = \langle q_j, x \rangle - \langle q_j, x \rangle = 0$ for each $j$, so $x_2$ is orthogonal to $\operatorname{span}\{q_j\} = W$.
+<!-- REGION P1b BEGIN -->
 
-*Uniqueness.* If $x_1 + x_2 = x_1' + x_2'$ then $x_1 - x_1' = x_2' - x_2 \in W \cap W^\perp$, and any $v \in W \cap W^\perp$ satisfies $v^\top v = 0$, hence $v = 0$.
+## Part 2: Measuring Error
 
-*Dimensions.* Extend $q_1, \dots, q_d$ to an orthonormal basis of $\mathbb{R}^n$ -- apply Lemma 2.5 to any extension to a basis of $\mathbb{R}^n$, noting the first $d$ vectors are unchanged. This exhibits $q_{d+1}, \dots, q_n$ as a basis of $W^\perp$: they lie in $W^\perp$, and any $v \in W^\perp$ expands as $\sum_i \langle q_i, v \rangle q_i$ with the first $d$ coefficients zero. Finally $W \subseteq (W^\perp)^\perp$ is immediate, and both have dimension $d$ by applying the count twice, so they are equal. **End of proof.**
+<!-- BEGIN S25 -->
+### 11. Part 2: Measuring Error [S25]
 
-The map $x \mapsto x_1$ is the **orthogonal projection** onto $W$; in matrix form, with $Q = [q_1 \cdots q_d]$, it is $x \mapsto QQ^\top x$. Section 5.3 and the normal equations of lecture 11 both come back to exactly this matrix.
+**Message.** Part 2 chooses how to measure the size of the error matrix: worst-case stretch or total energy.
+<!-- END S25 -->
 
-### 2.6 Theorem 3: the four fundamental subspaces
+<!-- BEGIN S27 -->
+### 12. What Makes a Norm? [S27]
 
-**Theorem 3.** For $A \in \mathbb{R}^{m \times n}$: $(\operatorname{row}(A))^\perp = \operatorname{null}(A)$ and $(\operatorname{range}(A))^\perp = \operatorname{null}(A^\top)$.
+**Message.** A norm is a size function that is zero only at zero, scales with $|\alpha|$, and obeys the triangle inequality.
 
-*Proof.* Write $\alpha_1^\top, \dots, \alpha_m^\top$ for the rows of $A$. Then $Ax = (\alpha_1^\top x, \dots, \alpha_m^\top x)$, so $Ax = 0$ if and only if $x$ is orthogonal to every $\alpha_i$, if and only if $x$ is orthogonal to $\operatorname{span}\{\alpha_i\} = \operatorname{row}(A)$, since orthogonality to a spanning set gives orthogonality to the span by linearity. That is the first identity. The second is the first applied to $A^\top$, since $\operatorname{row}(A^\top) = \operatorname{range}(A)$. **End of proof.**
+Definition: a norm on $\mathbb{R}^n$ is a function $\|\cdot\| : \mathbb{R}^n \to [0,\infty)$ such that for all $x, y \in \mathbb{R}^n$ and $\alpha \in \mathbb{R}$: $\|x\| = 0$ if and only if $x = 0$; $\|\alpha x\| = |\alpha|\,\|x\|$ (the absolute value means flipping the sign does not change the size); and $\|x + y\| \le \|x\| + \|y\|$. Geometrically, the triangle inequality compares two routes: following $x$ and then $y$ is a detour, while $x + y$ goes directly from the start of $x$ to the end of $y$. The direct route is never longer than the detour. These three rules are all we need in this lecture; we use norms to measure residuals, not to study them for their own sake.
 
-Combining with Theorem 2 and Proposition 2.2 gives the full picture: $\mathbb{R}^n = \operatorname{row}(A) \oplus \operatorname{null}(A)$ with dimensions $r$ and $n - r$, and $\mathbb{R}^m = \operatorname{range}(A) \oplus \operatorname{null}(A^\top)$ with dimensions $r$ and $m - r$. Moreover $A$ restricted to $\operatorname{row}(A)$ is a bijection onto $\operatorname{range}(A)$: it is injective, since $\operatorname{row}(A) \cap \operatorname{null}(A) = \{0\}$, and both spaces have dimension $r$. That bijection is precisely what the pseudo-inverse of Section 5 inverts. Strang's article [7] is the classic exposition of this diagram.
+**Details.** **Norm versus squared norm.** The squared Euclidean norm $\|x\|_2^2$ is not a norm. It fails homogeneity, since $\|2x\|_2^2 = 4\|x\|_2^2$ rather than $2\|x\|_2^2$, and it fails the triangle inequality: for $x = y = e_1$, $\|x + y\|_2^2 = 4 \gt 2 = \|x\|_2^2 + \|y\|_2^2$. Squared Euclidean and Frobenius norms are still useful as objectives: they are smooth, and squaring a nonnegative quantity does not move its minimizers, which is why the Frobenius "energy" is often written squared later.
 
-## 3 Norms and orthogonal matrices
+**Nonnegativity follows from the other rules:** $0 = \|x + (-x)\| \le \|x\| + \|-x\| = 2\|x\|$. A consequence used for continuity arguments is the reverse triangle inequality $\big|\|x\| - \|y\|\big| \le \|x - y\|$.
 
-### 3.1 The axioms, and what follows from them
+**Sources.** Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 3.1, Definition 3.1 (absolutely homogeneous, triangle inequality, positive definite). Squared-norm counterexample: our calculation.
+<!-- END S27 -->
 
-**Definition.** A function $\|\cdot\| : \mathbb{R}^n \to \mathbb{R}$ is a *norm* if for all $x, y$ and all $\alpha \in \mathbb{R}$:
+<!-- BEGIN S28 -->
+### 13. Three Familiar Vector Norms [S28]
 
-- (N1) $\|x + y\| \leq \|x\| + \|y\|$;
-- (N2) $\|\alpha x\| = |\alpha| \, \|x\|$;
-- (N3) $\|x\| = 0$ if and only if $x = 0$.
+**Message.** The $\ell_1$, $\ell_2$ and $\ell_\infty$ norms measure different aspects of the same coordinate vector.
 
-Nonnegativity is not an extra axiom -- it follows: $0 = \|x + (-x)\| \leq \|x\| + \|-x\| = 2\|x\|$ by (N1) and (N2). Two consequences are used later. The *reverse triangle inequality* $\big|\, \|x\| - \|y\| \,\big| \leq \|x - y\|$, obtained by applying (N1) to $x = (x - y) + y$ and symmetrically. And the fact that every norm on $\mathbb{R}^n$ is a continuous function, immediate from the reverse triangle inequality together with $\|x\| \leq \sum_i |x_i| \, \|e_i\|$. Continuity is what makes the maximum in the induced-norm definition of Section 6.1 attained rather than merely a supremum.
+For $x = (x_1, \dots, x_n) \in \mathbb{R}^n$ there are three common norms. $\ell_1$, the absolute sum $\|x\|_1 = \sum_i |x_i|$: the distance walked along the coordinate axes. $\ell_2$, the Euclidean norm $\|x\|_2 = (\sum_i x_i^2)^{1/2}$: the straight-line length. $\ell_\infty$, the maximum $\|x\|_\infty = \max_i |x_i|$: the largest single coordinate. $\ell_2$ is Euclidean (straight-line) length; all three are norms. Do not confuse it with the sum of absolute coordinates: $x = (1,1)$ has $\|x\|_1 = 2$ but $\|x\|_2 = \sqrt{2}$.
 
-### 3.2 The $\ell_p$ family is a family of norms, for $p \geq 1$
+**Details.** These are three members of the $\ell_p$ family $\|x\|_p = (\sum_i |x_i|^p)^{1/p}$ for $p \ge 1$, with $\ell_\infty$ the limit as $p \to \infty$. For $p \lt 1$ the formula is not a norm: with $p = \tfrac12$, $x = (1,0)$, $y = (0,1)$ we get $\|x\|_{1/2} = \|y\|_{1/2} = 1$ but $\|x+y\|_{1/2} = (1+1)^2 = 4 \gt 2$. The proof that $\ell_p$ is a norm for $p \ge 1$ (Young, Holder, Minkowski) is in the backup note.
 
-For $\|x\|_p = (\sum_i |x_i|^p)^{1/p}$, axioms (N2) and (N3) are obvious. Axiom (N1), Minkowski's inequality, is not, and its standard proof runs through Holder's inequality, which is worth having explicitly because the Cauchy-Schwarz argument of lecture 11 is the case $p = 2$.
+**Sources.** $\ell_1$ (Manhattan) and $\ell_2$ (Euclidean): Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 3.1, Examples 3.1 and 3.2. $\ell_p$: Wilkinson, MATH3030 notes, Section 2.3.1, Definition 2.9. $\ell_\infty = \max_i |x_i|$: Boyd and Vandenberghe, *Convex Optimization* (CUP 2004), Appendix A.1.3, p. 635, https://web.stanford.edu/~boyd/cvxbook/bv_cvxbook.pdf. The $(1,1)$ and $p = \tfrac12$ numbers: our calculation.
+<!-- END S28 -->
 
-**Lemma 3.1 (Young).** For $a, b \geq 0$ and conjugate exponents $p, q > 1$ with $\tfrac1p + \tfrac1q = 1$,
+<!-- BEGIN S29 -->
+### 14. One Vector, Three Answers: 7, 5, 4 [S29]
 
-$$ ab \leq \frac{a^p}{p} + \frac{b^q}{q} . $$
+**Message.** For $x = (3,4)$ the three norms report three different sizes, 7, 5 and 4, so the choice of norm is part of the question.
 
-*Proof.* For $a, b > 0$ apply concavity of the logarithm -- Jensen's inequality from the lecture-1 note [20], at two points with weights $\tfrac1p$ and $\tfrac1q$ summing to $1$:
+Arithmetic: $\|x\|_1 = |3| + |4| = 7$; $\|x\|_2 = \sqrt{9 + 16} = 5$; $\|x\|_\infty = \max(3, 4) = 4$. Geometrically, on a grid from the origin to the point $x = (3,4)$: the path that walks 3 to the right and then 4 up has total length $3 + 4 = 7$, which is $\ell_1$. The straight diagonal from the origin to $x$ has length 5, which is $\ell_2$. The longer of the two legs, 4, is $\ell_\infty$. For every vector, $\|x\|_\infty \le \|x\|_2 \le \|x\|_1$, here $4 \le 5 \le 7$.
 
-$$ \log\Big(\tfrac1p a^p + \tfrac1q b^q\Big) \geq \tfrac1p \log a^p + \tfrac1q \log b^q = \log(ab) ; $$
+**Details.** **Why the ordering always holds.** $\|x\|_\infty^2 = \max_i x_i^2 \le \sum_i x_i^2 = \|x\|_2^2$. And $\|x\|_1^2 = \sum_i x_i^2 + \sum_{i \ne j} |x_i||x_j| \ge \|x\|_2^2$. Taking square roots of nonnegative quantities gives $\|x\|_\infty \le \|x\|_2 \le \|x\|_1$.
 
-now exponentiate. If $a$ or $b$ is $0$ the inequality is trivial. **End of proof.**
+Interpretation: $\ell_1$ adds up every coordinate, $\ell_\infty$ looks only at the worst one, and $\ell_2$ sits between them. The same contrast between "worst case" and "total" reappears for matrices as spectral norm versus Frobenius norm.
 
-**Lemma 3.2 (Holder).** $\sum_i |x_i y_i| \leq \|x\|_p \|y\|_q$ for conjugate $p, q$. For $p = q = 2$ this is Cauchy-Schwarz.
+**Sources.** Our worked example (evidence E09: 7, 5, 4). Ordering proof: our derivation.
+<!-- END S29 -->
 
-*Proof.* If either factor is $0$ both sides vanish. Otherwise put $a_i = |x_i| / \|x\|_p$ and $b_i = |y_i| / \|y\|_q$, and sum Young's inequality over $i$:
+<!-- BEGIN S30 -->
+### 15. Unit Balls Reveal the Metric [S30]
 
-$$ \sum_i a_i b_i \leq \tfrac1p \sum_i a_i^p + \tfrac1q \sum_i b_i^q = \tfrac1p + \tfrac1q = 1 . $$
+**Message.** The unit ball $\{x : \|x\| \le 1\}$ is the set of vectors a norm calls at most 1, and its shape shows how the norm measures.
 
-Multiply through by $\|x\|_p \|y\|_q$. **End of proof.**
+In the plane the three unit balls have three shapes. The $\ell_1$ ball is a diamond with corners on the axes at $(\pm1, 0)$ and $(0, \pm1)$. The $\ell_2$ ball is a round disc of radius 1. The $\ell_\infty$ ball is a square with corners at $(\pm1, \pm1)$. One boundary point of each: $(1,0)$ on the diamond ($|1| + |0| = 1$), $(\tfrac{1}{\sqrt2}, \tfrac{1}{\sqrt2})$ on the circle ($\tfrac12 + \tfrac12 = 1$ under the square root), and the corner $(1,1)$ on the square ($\max(1,1) = 1$). Each of these points has norm exactly 1 in its own norm. The shapes are nested: diamond inside circle inside square.
 
-**Lemma 3.3 (Minkowski).** $\|x + y\|_p \leq \|x\|_p + \|y\|_p$ for $p \geq 1$.
+**Details.** **Nesting.** From $\|x\|_\infty \le \|x\|_2 \le \|x\|_1$: if $\|x\|_1 \le 1$ then $\|x\|_2 \le 1$, and if $\|x\|_2 \le 1$ then $\|x\|_\infty \le 1$. So the $\ell_1$ ball lies inside the $\ell_2$ ball, which lies inside the $\ell_\infty$ ball. The point $(1,1)$ is in the square but not in the circle ($\|(1,1)\|_2 = \sqrt2 \gt 1$).
 
-*Proof.* The case $p = 1$ is the scalar triangle inequality summed. For $p > 1$, with $q = p/(p-1)$,
+**Sources.** Our illustration, drawn to scale (evidence E09 for the norms used). The unit-ball shapes follow directly from the definitions in sections 12 and 13.
+<!-- END S30 -->
 
-$$ \|x+y\|_p^p \;\leq\; \sum_i |x_i| \, |x_i + y_i|^{p-1} + \sum_i |y_i| \, |x_i + y_i|^{p-1} , $$
+<!-- BEGIN S31 -->
+### 16. Orthogonal Maps Preserve $\ell_2$ Geometry [S31]
 
-and applying Holder to each of the two sums bounds this by
+**Message.** A square matrix $Q$ with $Q^\top Q = I$ turns vectors without changing their Euclidean ($\ell_2$) lengths, distances or angles.
 
-$$ \big(\|x\|_p + \|y\|_p\big) \Big( \sum_i |x_i + y_i|^{(p-1)q} \Big)^{1/q} . $$
+Definition: $Q \in \mathbb{R}^{n\times n}$ is orthogonal if $Q^\top Q = I = QQ^\top$; equivalently its columns are orthonormal, and $Q^{-1} = Q^\top$. The preserved quantity is stated explicitly: $\|Qx\|_2 = \|x\|_2$, and distances and angles are kept too. Example: the $45^\circ$ rotation $Q = \tfrac{1}{\sqrt2}\left[\begin{smallmatrix}1 & -1\\ 1 & 1\end{smallmatrix}\right]$ sends $e_1$ to $Qe_1 = (\tfrac{1}{\sqrt2}, \tfrac{1}{\sqrt2})$, at a $45^\circ$ angle from $e_1$. Both vectors lie on the unit $\ell_2$ circle: for this unit vector the direction changed and the Euclidean length stayed 1. Squareness matters. The tall matrix $W = [e_1\; e_2] \in \mathbb{R}^{3\times 2}$ has orthonormal columns, so $W^\top W = I_2$, but $WW^\top = \operatorname{diag}(1,1,0) \ne I_3$; it is not an orthogonal matrix. And the protection is for $\ell_2$ only, not every norm (section 17).
 
-Since $(p-1)q = p$, the last factor is $\|x+y\|_p^{p/q}$. If $\|x+y\|_p = 0$ we are done; otherwise divide by it and use $p - p/q = 1$. **End of proof.**
+**Details.** For square $Q$, $Q^\top Q = I$ already implies $QQ^\top = I$ (a square matrix with a left inverse is invertible, and the inverse is that left inverse). Further equivalent characterizations, orthonormal rows, $\det Q = \pm1$, and Gram-Schmidt are in the backup note. **Distances and angles.** $(Qx)^\top(Qy) = x^\top Q^\top Q y = x^\top y$, so inner products are kept; hence $\|Q(x-y)\|_2 = \|x-y\|_2$ (distances) and $\cos\theta = x^\top y/(\|x\|_2\|y\|_2)$ is unchanged (angles). Check of the example: the columns $\tfrac{1}{\sqrt2}(1,1)$ and $\tfrac{1}{\sqrt2}(-1,1)$ each have length 1 and dot product $\tfrac12(-1+1) = 0$.
 
-### 3.3 Why $p \geq 1$: an explicit failure at $p < 1$
+**Sources.** Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 3.4, Definition 3.8 (orthogonal matrix: square, $AA^\top = I = A^\top A$). Rotation and $W$ examples: our illustration.
+<!-- END S31 -->
 
-The lecture states the restriction; here is the witness. Take $p = \tfrac12$ and the vectors $x = (1,0)$ and $y = (0,1)$ in $\mathbb{R}^2$. Then $\|x\|_{1/2} = \|y\|_{1/2} = 1$, but $\|x + y\|_{1/2} = (1 + 1)^2 = 4 > 2$. So (N1) fails, decisively.
+<!-- BEGIN S33 -->
+### 17. Why Length Is Preserved [S33]
 
-The quantity $\|x\|_0 := \#\{i : x_i \neq 0\}$, used in Sections 6 and 8 in the identity "rank $= \|\sigma\|_0$", is not a norm either: it violates (N2), since $\|2x\|_0 = \|x\|_0 \neq 2\|x\|_0$ in general. Calling these "the $\ell_{1/2}$ norm" and "the $\ell_0$ norm" is standard abuse of language. The passage from $\|\sigma\|_0$ to $\|\sigma\|_1$ in Section 8 is precisely the move from a non-norm to the nearest convex norm.
+**Message.** One line of algebra using $Q^\top Q = I$ shows that a square orthogonal $Q$ preserves the Euclidean norm of every vector.
 
-### 3.4 $\ell_\infty$ as a limit, and the ordering
+Claim: for square $Q \in \mathbb{R}^{n\times n}$ with $Q^\top Q = I$ and every $x \in \mathbb{R}^n$, $\|Qx\|_2 = \|x\|_2$. Proof: $\|Qx\|_2^2 = (Qx)^\top(Qx) = x^\top Q^\top Q x = x^\top x = \|x\|_2^2$, where the middle step uses $Q^\top Q = I$; both norms are nonnegative, so taking square roots gives the claim. The same step with two vectors gives $(Qx)^\top(Qy) = x^\top y$, so inner products, and hence angles, are preserved too. The protection is specific to the Euclidean norm: for the $45^\circ$ rotation, $\|Qe_1\|_1 = \tfrac{1}{\sqrt2} + \tfrac{1}{\sqrt2} = \sqrt2$, while $\|e_1\|_1 = 1$.
 
-**Proposition 3.4.** $\|x\|_p \to \max_i |x_i| =: \|x\|_\infty$ as $p \to \infty$, and for every $x \in \mathbb{R}^n$,
+**Details.** The proof uses only $Q^\top Q = I$, not squareness, so it also shows that a tall matrix with orthonormal columns (like $W$ in section 16) preserves Euclidean length. Squareness is needed for the converse direction and for $QQ^\top = I$. Conversely, a square $Q$ with $\|Qx\|_2 = \|x\|_2$ for all $x$ is orthogonal, by the polarization identity $x^\top y = \tfrac12(\|x+y\|_2^2 - \|x\|_2^2 - \|y\|_2^2)$; details in the backup note.
 
-$$ \|x\|_\infty \;\leq\; \|x\|_2 \;\leq\; \|x\|_1 \;\leq\; \sqrt{n}\, \|x\|_2 \;\leq\; n \, \|x\|_\infty . $$
+**Sources.** Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 3.4, Definition 3.8 and eqs. (3.31) (length preserved) and (3.32) (angles preserved). $\ell_1$ counterexample: our calculation.
+<!-- END S33 -->
 
-*Proof.* Let $M = \|x\|_\infty$. Then $M^p \leq \sum_i |x_i|^p \leq n M^p$, so $M \leq \|x\|_p \leq n^{1/p} M$, and $n^{1/p} \to 1$. For the chain: $\|x\|_\infty^2 = \max_i x_i^2 \leq \sum_i x_i^2$ gives the first inequality; squaring $\|x\|_1$ gives $\sum_i x_i^2 + \sum_{i \neq j} |x_i||x_j| \geq \|x\|_2^2$, the second; Cauchy-Schwarz against the all-ones vector, $\sum_i |x_i| \cdot 1 \leq \sqrt n \|x\|_2$, the third; and $\|x\|_2^2 \leq n \|x\|_\infty^2$ the fourth. **End of proof.**
+<!-- BEGIN S66 -->
+### 18. Spectral Norm: Worst Stretch [S66]
 
-The worked example is $x = (3,4)$: $\|x\|_1 = 7$, $\|x\|_2 = 5$, $\|x\|_\infty = 4$, consistent with $4 \leq 5 \leq 7$. The same ordering reappears in Section 6.5 applied to the vector of singular values, where it becomes $\|A\|_2 \leq \|A\|_F \leq \|A\|_*$.
+**Message.** The spectral norm of a matrix is the largest factor by which it stretches any unit-length input.
 
-### 3.5 Orthogonal matrices: the equivalent characterizations
+Definition: for $A \in \mathbb{R}^{m\times n}$, $\|A\|_2 = \max_{x \in \mathbb{R}^n,\ \|x\|_2 = 1} \|Ax\|_2$. It is one number for the whole matrix. Take the illustration matrix $A = \left[\begin{smallmatrix}3 & 0\\ 4 & 5\end{smallmatrix}\right]$. It maps the input unit circle to a tall, tilted ellipse. One input $x^\star$ on the circle is mapped to the farthest point of the ellipse; that longest image $Ax^\star$ has length $\|A\|_2$. This picture is only intuition for "worst direction"; how to compute that length comes later in the lecture. Keep three things apart: $\|A\|_2$ is a matrix norm; $\|x\|_2$ is the length of a vector; and the $\ell_2$ norm of all entries of $A$ is a different matrix norm, the Frobenius norm (section 19).
 
-**Proposition 3.5.** For *square* $U \in \mathbb{R}^{n \times n}$ the following are equivalent:
+**Details.** **Figure geometry.** The ellipse is the exact image $\{A(\cos t, \sin t)\} = \{(3\cos t,\ 4\cos t + 5\sin t)\}$. The marked input is $x^\star = (1,1)/\sqrt2$, and $Ax^\star = (3, 9)/\sqrt2$; a numerical scan of $t$ confirms this is where $\|A(\cos t, \sin t)\|_2$ is largest. The numerical value is deliberately not stated here; it is derived with the singular values later.
 
-1. $U^\top U = I$;
-2. $UU^\top = I$;
-3. the columns of $U$ are orthonormal;
-4. the rows of $U$ are orthonormal;
-5. $\|Ux\|_2 = \|x\|_2$ for all $x$;
-6. $(Ux)^\top(Uy) = x^\top y$ for all $x, y$.
+The maximum is attained because $x \mapsto \|Ax\|_2$ is continuous and the unit sphere is compact. Equivalently $\|A\|_2 = \max_{x \ne 0} \|Ax\|_2 / \|x\|_2$, by homogeneity. Other induced norms ($p = 1, \infty$) and submultiplicativity $\|AB\|_2 \le \|A\|_2\|B\|_2$ are in the backup note.
 
-*Proof.* Statement 1 is equivalent to statement 3 by the entry-wise reading of $U^\top U$, whose $(i,j)$ entry is $u_i^\top u_j$; likewise 2 is equivalent to 4.
+**Sources.** Deisenroth, Faisal & Ong, *MML* (CUP 2020), Section 4.6, Definition 4.23 (spectral norm, eq. (4.93)); Wilkinson, MATH3030 notes, Section 3.5.1, Definition 3.2 (matrix $p$-norms, here $p = 2$). Figure: our illustration matrix (evidence E08), computed exactly.
+<!-- END S66 -->
 
-For 1 implies 2: $U^\top U = I$ means $U^\top$ is a left inverse of the square matrix $U$; a square matrix with a left inverse is invertible, being injective and hence surjective by Theorem 1, and then $U^\top = U^\top(UU^{-1}) = (U^\top U)U^{-1} = U^{-1}$, so $UU^\top = I$. Symmetrically, 2 implies 1.
+<!-- BEGIN S72 -->
+### 19. Frobenius Norm: Total Energy [S72]
 
-For 1 implies 6: $(Ux)^\top(Uy) = x^\top U^\top U y = x^\top y$. For 6 implies 5: take $y = x$. For 5 implies 6: use polarization, $x^\top y = \tfrac12(\|x+y\|^2 - \|x\|^2 - \|y\|^2)$. For 6 implies 1: $x^\top(U^\top U - I)y = 0$ for all $x, y$ forces the matrix $U^\top U - I$ to be $0$, taking $x = e_i$ and $y = e_j$. **End of proof.**
+**Message.** The squared Frobenius norm adds up every squared entry, so $\|A - B\|_F^2$ is the total squared error over all entries.
 
-Squareness is essential, and the lecture flags why: the thin factor $U_c \in \mathbb{R}^{m \times r}$ of Section 4.4 satisfies $U_c^\top U_c = I_r$ but not $U_c U_c^\top = I_m$ when $r < m$ -- the proof that 1 implies 2 used a left inverse of a *square* matrix.
+Definition: $\|A\|_F = (\sum_{i=1}^m \sum_{j=1}^n a_{ij}^2)^{1/2}$, and for a residual $\|A - B\|_F^2 = \sum_{i,j} (a_{ij} - b_{ij})^2$. Square each entry of the residual $A - B$ from the opening example: the first row gives $1.5^2 = 2.25$ and $(-1.5)^2 = 2.25$, the second row gives $(-0.5)^2 = 0.25$ and $0.5^2 = 0.25$. The first row contributes far more. The sum is $5$, so $\|A - B\|_F = \sqrt5$. Qualifiers: every entry is observed and counts equally (no weights), and the Frobenius norm is not the spectral norm in general. For the identity $I_2$, $\|I_2\|_2 = 1$ (it stretches nothing) but $\|I_2\|_F = \sqrt2$.
 
-Two further standard facts. Orthogonal matrices form a group under multiplication: if $U^\top U = V^\top V = I$ then $(UV)^\top(UV) = V^\top U^\top U V = I$. And $\det U = \pm 1$, from $1 = \det I = \det(U^\top U) = (\det U)^2$; the value $+1$ is a rotation, and $-1$ a rotation composed with a reflection. The matrix $V$ appearing in the running example is $\tfrac{1}{\sqrt2}$ times the matrix with first row $(1, -1)$ and second row $(1, 1)$; its determinant is $\tfrac12(1 + 1) = 1$, so it is a genuine rotation, by $45$ degrees.
+**Details.** **Square root versus square.** The norm is the square root, which makes it a norm (it is the Euclidean norm of the matrix read as a vector of $mn$ numbers). The squared version is the "energy": it is additive over entries, which is why least-squares objectives use it.
 
-**Theorem 4.** If $U$ is orthogonal then $\|Ux\|_2 = \|x\|_2$ for all $x$. Conversely, a square $U$ preserving the $\ell_2$ norm is orthogonal.
+**Trace form (optional).** $\|A\|_F^2 = \operatorname{tr}(A^\top A)$, since the diagonal entries of $A^\top A$ are the squared column lengths.
 
-*Proof.* Both directions are the equivalence of statements 1 and 5 in Proposition 3.5. **End of proof.**
+**Arithmetic.** $2.25 + 2.25 + 0.25 + 0.25 = 5$; $\sqrt5 \approx 2.236$.
 
-The converse is worth stating because it explains why orthogonal invariance is the master trick of this lecture: the orthogonal matrices are *exactly* the linear maps under which the $\ell_2$ geometry is invisible, which is why $U$ and $V$ can be peeled off in Theorems 6, 7 and 8. Note that this is special to $p = 2$. Rotations do change $\|x\|_1$: rotating $(1,0)$ by $45$ degrees sends its $\ell_1$ norm from $1$ to $\sqrt2$.
+**Sources.** Wilkinson, MATH3030 notes, Section 3.5.1, Definition 3.1 ($\|A\|_F = (\sum_{i,j} |a_{ij}|^2)^{1/2} = (\operatorname{tr} A^\top A)^{1/2}$). Residual numbers: our calculation on the illustration matrix (evidence E08).
+<!-- END S72 -->
+<!-- REGION P1b END -->
 
-## 4 The singular value decomposition
+<!-- REGION P2 BEGIN -->
 
-### 4.1 The one imported black box
+## Part 3: Reading an SVD
 
-**Spectral theorem (imported).** Every symmetric $S \in \mathbb{R}^{n \times n}$ can be written $S = Q \Lambda Q^\top$ with $Q$ orthogonal and $\Lambda = \operatorname{diag}(\lambda_1, \dots, \lambda_n)$ real. If moreover $S$ is positive semidefinite, meaning $x^\top S x \geq 0$ for all $x$, then every $\lambda_i \geq 0$.
+<!-- BEGIN S35 -->
+### 20. Part 3: Reading an SVD [S35]
 
-This is the single result these notes do not prove. It was used in the lecture-8 note for covariance matrices and is proved in any of [5, 6, 8]. A sketch, for orientation: the maximum of the continuous function $x \mapsto x^\top S x$ on the compact unit sphere is attained at some $q_1$, which is an eigenvector by a Lagrange-multiplier or first-order argument; $S$ maps the orthogonal complement of $q_1$ into itself by symmetry, so one inducts on dimension. The positive-semidefinite claim is one line: $\lambda_i = q_i^\top S q_i \geq 0$. Everything else below is proved.
+**Message.** Part 3 builds the singular value decomposition and reads each factor as a geometric step: rotate, stretch, rotate.
+<!-- END S35 -->
 
-### 4.2 Theorem 5: existence of the SVD, proved
+<!-- BEGIN S36 -->
+### 21. Recall: Symmetric Eigendecomposition [S36]
 
-**Theorem 5.** Every $A \in \mathbb{R}^{m \times n}$ with $\operatorname{rank}(A) = r$ admits a factorization $A = U \Sigma V^\top$ with $U \in \mathbb{R}^{m \times m}$ and $V \in \mathbb{R}^{n \times n}$ orthogonal, and $\Sigma \in \mathbb{R}^{m \times n}$ diagonal in the sense that $\Sigma_{ij} = 0$ for $i \neq j$, with diagonal entries $\sigma_1 \geq \cdots \geq \sigma_r > 0 = \sigma_{r+1} = \cdots$.
+**Message.** The SVD is built from one imported fact: a symmetric matrix has an orthonormal eigenbasis, and for $A^\top A$ every eigenvalue is nonnegative.
 
-*Proof.* The matrix $S = A^\top A \in \mathbb{R}^{n \times n}$ is symmetric, since $S^\top = A^\top A$, and positive semidefinite, since $x^\top S x = \|Ax\|_2^2 \geq 0$. By the spectral theorem write $S = V \Lambda V^\top$ with $V = [v_1 \cdots v_n]$ orthogonal and $\lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_n \geq 0$, reordering the columns of $V$ to sort $\Lambda$, which preserves orthogonality.
+Recall: every symmetric $S \in \mathbb R^{n\times n}$ factors as $S = Q\Lambda Q^\top$ with $Q$ orthogonal and $\Lambda$ real diagonal. Apply this to $A^\top A$, which is symmetric and $n \times n$, so it acts on input vectors $x \in \mathbb R^n$. This gives $A^\top A = Q\Lambda Q^\top$ and $\lambda_i = q_i^\top A^\top A q_i = \|Aq_i\|_2^2 \ge 0$. The payoff: $A^\top A$ supplies orthonormal input directions $q_1, \dots, q_n$ in $\mathbb R^n$.
 
-*Step 1: the number of positive eigenvalues is $r$.* We have $\|Av_i\|_2^2 = v_i^\top S v_i = \lambda_i$, so $Av_i = 0$ exactly when $\lambda_i = 0$. Hence $\operatorname{null}(A) \supseteq \operatorname{span}\{v_i : \lambda_i = 0\}$. Conversely $Ax = 0$ implies $Sx = 0$, and $Sx = 0$ with $x = \sum_i c_i v_i$ gives $\sum_i c_i \lambda_i v_i = 0$, so $c_i = 0$ whenever $\lambda_i \neq 0$. Thus $\operatorname{null}(A) = \operatorname{span}\{v_i : \lambda_i = 0\}$, and by Theorem 1 the count of positive $\lambda_i$ is $n - \dim\operatorname{null}(A) = r$. So $\lambda_1 \geq \cdots \geq \lambda_r > 0 = \lambda_{r+1} = \cdots = \lambda_n$.
+**Details.**
 
-*Step 2: define $\sigma_i$ and $u_i$.* For $i \leq r$ set $\sigma_i = \sqrt{\lambda_i} > 0$ and $u_i = Av_i / \sigma_i \in \mathbb{R}^m$. These are orthonormal:
+**Why the eigenvalues are nonnegative.** For a unit eigenvector $q_i$, $\lambda_i = q_i^\top (\lambda_i q_i) = q_i^\top A^\top A q_i = (Aq_i)^\top (Aq_i) = \|Aq_i\|_2^2 \ge 0$. More generally $x^\top A^\top A x = \|Ax\|_2^2 \ge 0$ for every $x$, so $A^\top A$ is positive semidefinite.
 
-$$ u_i^\top u_j = \frac{v_i^\top A^\top A v_j}{\sigma_i \sigma_j} = \frac{v_i^\top(\lambda_j v_j)}{\sigma_i \sigma_j} = \frac{\lambda_j \, \delta_{ij}}{\sigma_i \sigma_j} = \delta_{ij} . $$
+**What is imported.** The spectral theorem itself is not proved in this lecture; it is the one black box. Everything else in Part 3 is derived from it.
 
-Since $r \leq m$, extend $u_1, \dots, u_r$ to an orthonormal basis $u_1, \dots, u_m$ of $\mathbb{R}^m$, by Lemma 2.5 applied to a completion to a basis, and set $U = [u_1 \cdots u_m]$, which is orthogonal by Proposition 3.5.
+**Why input space.** $A^\top A$ is $n \times n$, the same size as the input dimension of $A$. Its eigenvectors will become the right singular vectors $v_i$ in sections 22-24.
 
-*Step 3: verify $AV = U\Sigma$.* Let $\Sigma \in \mathbb{R}^{m \times n}$ have $\Sigma_{ii} = \sigma_i$ for $i \leq r$ and zeros elsewhere. Column $i$ of $AV$ is $Av_i$, which equals $\sigma_i u_i$ for $i \leq r$ by the definition of $u_i$, and $0$ for $i > r$ by Step 1. Column $i$ of $U\Sigma$ is $\sum_j u_j \Sigma_{ji} = \sigma_i u_i$ for $i \leq r$ and $0$ otherwise. The columns agree, so $AV = U\Sigma$, and right-multiplying by $V^\top$ gives $A = U\Sigma V^\top$. **End of proof.**
+**Sources.**
 
-Two remarks on this "$A^\top A$ route." First, the proof is *constructive*, and is exactly the by-hand recipe of the lecture: form $A^\top A$, eigendecompose, take square roots, push through $A$. Second, it is a terrible *numerical* recipe: forming $A^\top A$ squares the condition number, so library implementations, which use Golub-Kahan bidiagonalization [8, ch. 8], never do this. The hand computation is for understanding, not for code -- in practice one calls the library routine `numpy.linalg.svd`.
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.2, Theorem 4.14 ($A^\top A$ symmetric positive semidefinite) and Theorem 4.15 (spectral theorem).
+<!-- END S36 -->
 
-### 4.3 What is unique and what is not
+<!-- BEGIN S38 -->
+### 22. Every Matrix Has an SVD [S38]
 
-**Proposition 4.1.** The singular values are unique: they are the square roots of the eigenvalues of $A^\top A$, sorted. The singular *vectors* are not unique.
+**Message.** Every real matrix, of any shape and rank, factors as an orthogonal matrix times a nonnegative diagonal stretch times an orthogonal matrix.
 
-*Proof of the first claim.* If $A = U\Sigma V^\top$ then $A^\top A = V \Sigma^\top \Sigma V^\top$, an eigendecomposition with eigenvalues $\sigma_i^2$; the eigenvalues of a fixed matrix are the roots of its characteristic polynomial, hence determined by $A$ alone. **End of proof.**
+SVD theorem. Every $A \in \mathbb R^{m\times n}$ of rank $r$, with no assumption of squareness, symmetry or invertibility, factors as $A = U\Sigma V^\top$ with $U \in \mathbb R^{m\times m}$ and $V \in \mathbb R^{n\times n}$ orthogonal. Here $\Sigma \in \mathbb R^{m\times n}$ has $\Sigma_{ii} = \sigma_i$, zeros off the diagonal, $\sigma_1 \ge \dots \ge \sigma_r \gt 0$, and the remaining diagonal slots equal to $0$. The construction: eigenvectors of $A^\top A$ give $V$, then $u_i = Av_i/\sigma_i$ for $\sigma_i \gt 0$.
 
-Non-uniqueness of the vectors has two sources. *Signs:* replacing the pair $(u_i, v_i)$ by $(-u_i, -v_i)$ changes nothing, since $\sigma_i(-u_i)(-v_i)^\top = \sigma_i u_i v_i^\top$. *Repeated singular values:* if $\sigma_i = \sigma_j$ for $i \neq j$, any rotation within the corresponding two-dimensional eigenspace of $A^\top A$ yields another valid SVD -- for $A = I_2$ every orthogonal $V$ works, with $U = V$. Additionally, the columns $u_{r+1}, \dots, u_m$ are constrained only to complete an orthonormal basis.
+**Details.**
 
-This is why the lecture drops the source's uniqueness claim for the *minimizer* in Theorem 8: non-uniqueness enters here, at the level of the decomposition itself, and Section 7.6 shows it survives into the approximation problem.
+**Construction sketch.** Take the eigendecomposition $A^\top A = V\Lambda V^\top$ with eigenvalues in decreasing order and set $\sigma_i = \sqrt{\lambda_i}$. Exactly $r$ of them are positive because $\operatorname{rank}(A^\top A) = \operatorname{rank}(A) = r$. For $i \le r$ put $u_i = Av_i/\sigma_i$; these are orthonormal because $u_i^\top u_j = v_i^\top A^\top A v_j/(\sigma_i\sigma_j) = \lambda_j v_i^\top v_j/(\sigma_i\sigma_j) = \delta_{ij}$. Extend $u_1, \dots, u_r$ to an orthonormal basis of $\mathbb R^m$. Then $AV = U\Sigma$ column by column (for $i \gt r$, $\|Av_i\|_2^2 = \lambda_i = 0$), so $A = U\Sigma V^\top$.
 
-### 4.4 Thin SVD, the rank-one expansion, and the four subspaces again
+**Uniqueness.** The singular values are unique. The vectors are unique up to sign when the $\sigma_i$ are distinct and positive; repeated values allow any orthonormal basis of the shared subspace. The full existence and uniqueness proof is kept in the archived full note.
 
-Discarding the columns of $U$ and $V$ that meet only zeros in $\Sigma$ gives the **thin (compact) SVD** $A = U_c \Sigma_c V_c^\top$, with $U_c \in \mathbb{R}^{m \times r}$, $\Sigma_c = \operatorname{diag}(\sigma_1, \dots, \sigma_r)$ invertible, and $V_c \in \mathbb{R}^{n \times r}$. Equivalently,
+**Naming.** The lecture cites its results by name, not number: the SVD theorem here, then the spectral-norm and Frobenius-norm identities read off $\Sigma$.
 
-$$ A \;=\; \sum_{i=1}^{r} \sigma_i \, u_i v_i^\top , $$
+**Sources.**
 
-since the $(j,k)$ entry of both sides is $\sum_i \sigma_i u_{ji} v_{ki}$. Each $u_i v_i^\top$ has rank one and acts as $x \mapsto u_i (v_i^\top x)$: measure the component of $x$ along $v_i$, emit it along $u_i$.
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5, Theorem 4.22 (SVD theorem); Section 4.5.2, eq. (4.78), $u_i = Av_i/\sigma_i$.
+<!-- END S38 -->
 
-The SVD also hands back the subspaces of Theorem 3 explicitly. For each of the four, its basis drawn from the SVD factors and its dimension:
+<!-- BEGIN S39 -->
+### 23. Read the Factor Shapes [S39]
 
-- $\operatorname{range}(A)$: basis $u_1, \dots, u_r$; dimension $r$.
-- $\operatorname{null}(A^\top) = \operatorname{range}(A)^\perp$: basis $u_{r+1}, \dots, u_m$; dimension $m - r$.
-- $\operatorname{row}(A)$: basis $v_1, \dots, v_r$; dimension $r$.
-- $\operatorname{null}(A) = \operatorname{row}(A)^\perp$: basis $v_{r+1}, \dots, v_n$; dimension $n - r$.
+**Message.** The factor shapes $(m\times m)(m\times n)(n\times n)$ multiply to $m \times n$, and only the first $r$ diagonal slots of $\Sigma$ are nonzero.
 
-For the first of these: $Ax = \sum_{i \leq r} \sigma_i (v_i^\top x) u_i$ ranges over $\operatorname{span}\{u_1, \dots, u_r\}$ as $x$ varies. The fourth was Step 1 of the proof of Theorem 5, and the other two follow by Theorem 3.
+Take a tall matrix, $m \gt n$. Then $A$ ($m \times n$) equals a square orthogonal $U$ ($m \times m$), times $\Sigma$ ($m \times n$, tall like $A$), times a smaller square orthogonal $V^\top$ ($n \times n$). The shapes multiply as $(m\times m)(m\times n)(n\times n) = m \times n$. The diagonal of $\Sigma$ starts with the positive values $\sigma_1, \dots, \sigma_r \gt 0$ and continues with zeros in the remaining diagonal slots; the last $m - n$ rows of $\Sigma$ are entirely zero.
 
-Note also that $\operatorname{rank}(A) = r$ is *defined* by the SVD as the number of nonzero singular values, which in floating-point arithmetic becomes the useful notion of *numerical rank*: the number of $\sigma_i$ above a tolerance. Section 5.6 explains why that is the only workable definition in practice.
+**Details.**
 
-### 4.5 Relations worth having
+**Names.** The columns $u_i$ of $U$ are the left singular vectors (in output space $\mathbb R^m$); the columns $v_i$ of $V$ are the right singular vectors (in input space $\mathbb R^n$).
 
-All of the following are immediate from $A = U\Sigma V^\top$.
+**Other shapes.** For $m \lt n$ the zero block of $\Sigma$ is a set of columns on the right instead of rows at the bottom. For square $A$ there is no zero block, only zero diagonal entries when $r \lt n$.
 
-- The singular values of $A^\top$ are those of $A$: transpose the decomposition, swapping the roles of $U$ and $V$.
-- $A^\top A$ and $AA^\top$ have the same nonzero eigenvalues $\sigma_1^2, \dots, \sigma_r^2$.
-- If $A$ is square and invertible then $\sigma_i(A^{-1}) = 1/\sigma_{n+1-i}(A)$, so the *condition number* $\kappa(A) = \sigma_1/\sigma_n = \|A\|_2 \|A^{-1}\|_2$ measures how badly $A$ distorts the unit sphere.
-- If $A$ is symmetric positive semidefinite then its eigendecomposition *is* an SVD, with $\sigma_i = \lambda_i$.
-- If $A$ is symmetric but indefinite, $\sigma_i = |\lambda_i|$ after sorting, absorbing the signs into $U$.
+**Sources.**
 
-### 4.6 The running example, recomputed
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5, eq. (4.64) and the shape discussion after Theorem 4.22.
+<!-- END S39 -->
 
-Every step of the hand computation for $A$, the matrix with first row $(3, 0)$ and second row $(4, 5)$, verified independently.
+<!-- BEGIN S40 -->
+### 24. Rotate, Stretch, Rotate [S40]
 
-*Step 1.* $A^\top$ has first row $(3, 4)$ and second row $(0, 5)$. The product $A^\top A$ has first row $(9 + 16, 20) = (25, 20)$ and second row $(20, 25)$. Checked.
+**Message.** Multiplying by $A = U\Sigma V^\top$ is three steps: an orthogonal change of input coordinates, a stretch by the singular values, and an orthogonal change of output coordinates.
 
-*Step 2.* $\det(A^\top A - \lambda I) = (25 - \lambda)^2 - 400$, so $25 - \lambda = \pm 20$, giving $\lambda_1 = 45$ and $\lambda_2 = 5$. Checked. Two consistency tests: the trace, $45 + 5 = 50 = 25 + 25$; and the determinant, $45 \cdot 5 = 225 = 625 - 400$.
+The input passes through four stages: $x$ in $\mathbb R^n$, then $V^\top x$ in $\mathbb R^n$ (apply $V^\top$, orthogonal), then $\Sigma V^\top x$ in $\mathbb R^m$ (apply $\Sigma$, a stretch), then $Ax$ in $\mathbb R^m$ (apply $U$, orthogonal). In one formula, $Ax = U(\Sigma(V^\top x))$: the rightmost factor acts first. The roles: $V^\top$ and $U$ are rotations or reflections that keep lengths; $\Sigma$, of size $m \times n$, multiplies coordinate $i$ by $\sigma_i$ and is not a rotation.
 
-For eigenvectors: $A^\top A - 45I$ has first row $(-20, 20)$ and second row $(20, -20)$, and solving $(A^\top A - 45I)v = 0$ gives $v_1$ proportional to $(1,1)$. Likewise $A^\top A - 5I$ has both rows equal to $(20, 20)$, and solving gives $v_2$ proportional to $(-1, 1)$. Normalized and orthogonal. Checked.
+**Details.**
 
-*Step 3.* $\sigma_1 = \sqrt{45} = 3\sqrt5 \approx 6.7082$ and $\sigma_2 = \sqrt5 \approx 2.2361$. Checked. Then $Av_1 = \tfrac{1}{\sqrt2}(3, 9)$ with $\|Av_1\| = \tfrac{1}{\sqrt2}\sqrt{90} = \sqrt{45} = \sigma_1$ (checked), so
+**Why lengths are kept.** For orthogonal $Q$, $\|Qx\|_2^2 = x^\top Q^\top Q x = \|x\|_2^2$. This orthogonal invariance was proved earlier in the lecture and is used again in the norm proofs below.
 
-$$ u_1 = \frac{Av_1}{\sigma_1} = \frac{(3,9)}{\sqrt2 \cdot 3\sqrt5} = \frac{(1,3)}{\sqrt{10}} . $$
+**Change of space.** $\Sigma$ is the only step that can change dimension: it maps $\mathbb R^n$ to $\mathbb R^m$, dropping coordinates when $m \lt n$ and padding with zeros when $m \gt n$.
 
-Checked. Similarly $Av_2 = \tfrac{1}{\sqrt2}(-3, 1)$ with $\|Av_2\| = \tfrac{\sqrt{10}}{\sqrt2} = \sqrt5 = \sigma_2$ (checked), so $u_2 = (-3, 1)/\sqrt{10}$. Checked.
+**Rotation or reflection.** An orthogonal matrix has determinant $\pm 1$; with determinant $-1$ it includes a reflection. Whether a reflection occurs depends on the matrix and on the sign choices for the singular vectors; both outer factors are called rotations or reflections.
 
-*Step 4: the two rank-one layers.* The first layer is
+**Sources.**
 
-$$ \sigma_1 u_1 v_1^\top = 3\sqrt5 \cdot \frac{1}{\sqrt{10}} \cdot \frac{1}{\sqrt2} \, (1,3)^\top (1,1) = \frac{3\sqrt5}{\sqrt{20}} \cdot M_1 = \tfrac32 M_1 , $$
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5.1 and Figure 4.8 (basis change, scaling, basis change).
+<!-- END S40 -->
 
-where $M_1$ is the matrix with first row $(1,1)$ and second row $(3,3)$, using $3\sqrt5/\sqrt{20} = 3\sqrt5/(2\sqrt5) = 3/2$. So the first layer has first row $(1.5, 1.5)$ and second row $(4.5, 4.5)$. Checked.
+<!-- BEGIN S52 -->
+### 25. First Change the Input Coordinates [S52]
 
-Similarly the second layer is $\sigma_2 u_2 v_2^\top = \sqrt5 \cdot \tfrac{1}{\sqrt{20}} \cdot M_2 = \tfrac12 M_2$, where $M_2$ is the matrix with first row $(3, -3)$ and second row $(-1, 1)$; so the second layer has first row $(1.5, -1.5)$ and second row $(-0.5, 0.5)$. Checked. The two layers sum entry by entry to $(1.5 + 1.5, 1.5 - 1.5) = (3, 0)$ and $(4.5 - 0.5, 4.5 + 0.5) = (4, 5)$, which is $A$. Checked.
+**Message.** The first step $V^\top$ only changes coordinates: the unit circle stays a circle and the right singular vectors become the coordinate axes.
 
-The coincidence that $V$ is the same $45$-degree rotation met earlier in the lecture is not an accident of exposition but of the example: $A^\top A$ has equal diagonal entries, and any symmetric matrix with first row $(a, b)$ and second row $(b, a)$ has eigenvectors $(1,1)$ and $(-1,1)$ regardless of $a$ and $b$.
+Follow the unit circle of inputs through $V^\top$, drawn for $A$ with rows $(3,0)$ and $(4,5)$, whose right singular vectors are $v_1 = (1,1)/\sqrt2$ and $v_2 = (-1,1)/\sqrt2$. Before the step, $v_1$ points up and to the right at $45$ degrees and $v_2$ points up and to the left. After $V^\top$ the circle is the same circle, with $v_1$ now along the horizontal axis as $e_1$ and $v_2$ along the vertical axis as $e_2$. $V^\top$ is orthogonal, so lengths are kept and nothing is stretched.
 
-### 4.7 Eigenvalues versus singular values
+**Details.**
 
-For the running matrix, which is lower triangular, the eigenvalues are the diagonal entries $3$ and $5$; the singular values are $6.708$ and $2.236$. Not equal, not even close. But the products agree: $3 \cdot 5 = 15 = |\det A| = \sigma_1 \sigma_2 = 3\sqrt5 \cdot \sqrt5$, and that is general.
+**Where $v_1, v_2$ come from.** For this $A$, $A^\top A$ has rows $(25, 20)$ and $(20, 25)$, and $A^\top A(1,1) = (45,45)$, $A^\top A(-1,1) = (-5,5)$: eigenvalues $45$ and $5$ with these eigenvectors (the construction is explained in section 29).
 
-**Proposition 4.2.** For square $A$: (a) $\prod_i \sigma_i = |\det A| = \prod_i |\lambda_i|$; (b) $\max_i |\lambda_i| \leq \sigma_1$, with equality for all $i$ simultaneously if and only if $A$ is normal, meaning $A^\top A = AA^\top$, which in the real case includes in particular every symmetric $A$.
+**Check.** $V^\top v_1 = e_1$ and $V^\top v_2 = e_2$ because the rows of $V^\top$ are $v_1^\top, v_2^\top$ and these are orthonormal. Here $V = \frac{1}{\sqrt2}\begin{bmatrix}1 & -1\\ 1 & 1\end{bmatrix}$ has determinant $1$, so $V^\top$ is a rotation by $-45$ degrees.
 
-*Proof of (a) and of the inequality in (b).* (a) $\det A = \det U \det \Sigma \det V^\top = \pm \prod_i \sigma_i$. (b) If $Ax = \lambda x$ with $\|x\| = 1$ then $|\lambda| = \|Ax\|_2 \leq \max_{\|y\| = 1} \|Ay\|_2 = \sigma_1$ by Theorem 6. The equality characterization is standard and imported, from [6, ch. 3]. **End of proof.**
+**Sources.**
 
-The conceptual difference is this: eigenvectors are directions $A$ preserves, while right singular vectors are directions $A$ stretches most. That is why singular values are the right notion here -- eigenvalues need not exist over $\mathbb{R}$, as a $90$-degree rotation has none, and eigenvectors need not be orthogonal or even span the space, whereas the singular values and both singular bases always exist.
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5.1, Figure 4.8. Vectors: our calculation, shown above.
+<!-- END S52 -->
 
-### 4.8 The geometry: sphere to ellipsoid
+<!-- BEGIN S53 -->
+### 26. Then Stretch and Reorient [S53]
 
-**Proposition 4.3.** $A$ maps the unit sphere $\{x : \|x\|_2 = 1\}$ onto the ellipsoid $\{\sum_{i \leq r} c_i u_i : \sum_{i \leq r} c_i^2/\sigma_i^2 \leq 1\}$, degenerating to a filled ellipsoid inside $\operatorname{range}(A)$ when $r < n$, with semi-axes $\sigma_i u_i$.
+**Message.** $\Sigma$ stretches the axes by $\sigma_1$ and $\sigma_2$, and $U$ turns them into the output directions: the image of the unit circle is an ellipse with semi-axes $\sigma_1 u_1$ and $\sigma_2 u_2$.
 
-*Proof.* With $y = V^\top x$, so that $\|y\| = 1$ by Theorem 4, we have $Ax = U\Sigma y = \sum_{i \leq r} \sigma_i y_i u_i$, that is, $c_i = \sigma_i y_i$ where $\sum_{i \leq n} y_i^2 = 1$. If $r = n$ this says exactly $\sum_i c_i^2/\sigma_i^2 = 1$. If $r < n$ the coordinates $y_{r+1}, \dots, y_n$ are free, so $\sum_{i \leq r} y_i^2$ takes every value in $[0,1]$ and the image is the solid ellipsoid. **End of proof.**
+Continue the sequence. After $\Sigma$, the circle becomes an axis-aligned ellipse three times as wide as it is tall, with semi-axes $\sigma_1 e_1$ along the horizontal axis and $\sigma_2 e_2$ along the vertical axis. After $U$, the same ellipse is tilted steeply up and to the right, with the long semi-axis $\sigma_1 u_1$ pointing along $(1,3)$ and the short one $\sigma_2 u_2$ pointing along $(-3,1)$; this ellipse is the set of all $Ax$ for unit $x$. The semi-axis lengths are the singular values $\sigma_1 = 3\sqrt5 \approx 6.71$ and $\sigma_2 = \sqrt5 \approx 2.24$. These are not the eigenvalues $3$ and $5$ of $A$. The axis ratio is exactly $3:1$.
 
-This is the standard four-stage rotate-stretch-rotate picture read algebraically: $V^\top$ rotates the sphere to itself, $\Sigma$ stretches axis $i$ by $\sigma_i$, and $U$ rotates the resulting ellipsoid into the output space. It also makes Theorem 6 geometrically obvious in advance -- the longest semi-axis has length $\sigma_1$.
+**Details.**
 
-## 5 The Moore-Penrose pseudo-inverse
+**Why an ellipse.** After $V^\top$ the input is a unit vector $y$; $\Sigma y = (\sigma_1 y_1, \sigma_2 y_2)$ satisfies $(z_1/\sigma_1)^2 + (z_2/\sigma_2)^2 = 1$, an axis-aligned ellipse. $U$ is orthogonal, so it moves the ellipse rigidly.
 
-### 5.1 The problem it solves
+**Drawing scale.** In the lecture's figure the semi-axes are $120$ and $40$ units, ratio $3 = \sigma_1/\sigma_2$; the tilt is $\arctan 3 \approx 71.57$ degrees, the direction of $u_1 = (1,3)/\sqrt{10}$.
 
-The inverse $A^{-1}$ exists only for square invertible $A$. For every other $A$ -- tall, wide, or rank-deficient -- the equation $Ax = b$ is either over- or under-determined, and the question is what should play the role of "solve". The SVD answers it by inverting what is invertible and leaving the rest alone: $A$ restricted to $\operatorname{row}(A)$ is a bijection onto $\operatorname{range}(A)$ by Section 2.6, so invert *that* map and extend by zero on $\operatorname{range}(A)^\perp$.
+**Sources.**
 
-### 5.2 Definition and well-definedness
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5.1, Figure 4.8. Numbers: our calculation (from the eigenvalues $45$ and $5$ of $A^\top A$).
+<!-- END S53 -->
 
-**Definition.** With the thin SVD $A = U_c \Sigma_c V_c^\top$, set
+<!-- BEGIN S41 -->
+### 27. A Sum of Rank-One Layers [S41]
 
-$$ A^\dagger := V_c \Sigma_c^{-1} U_c^\top = \sum_{i=1}^{r} \frac{1}{\sigma_i} v_i u_i^\top \;\in\; \mathbb{R}^{n \times m} . $$
+**Message.** Expanding $U\Sigma V^\top$ writes $A$ as a sum of $r$ rank-one layers $\sigma_i u_i v_i^\top$, ordered by weight.
 
-Equivalently, $A^\dagger = V \Sigma^\dagger U^\top$ where $\Sigma^\dagger \in \mathbb{R}^{n \times m}$ transposes $\Sigma$ and inverts its nonzero entries -- the "flip and reciprocate" rule. The definition passes through a chosen SVD, which by Section 4.3 is not unique, so well-definedness needs an argument. The clean one is Penrose's.
+Expand: $A = U\Sigma V^\top = \sum_{i=1}^r \sigma_i u_i v_i^\top$, where $u_i$ is $m \times 1$ and $v_i^\top$ is $1 \times n$. Three facts follow: each $u_i v_i^\top$ is $m \times n$ with every column a multiple of $u_i$; when $\sigma_i \gt 0$ the term has rank one; and all $r$ terms together give $A$ exactly. Think of $A$ as layer $1 + \dots +$ layer $r$, stacked like sheets: the first layer $\sigma_1 u_1 v_1^\top$ has the largest weight, and later layers carry smaller $\sigma_i$.
 
-**Theorem 5.1 (Penrose, 1955 [4]).** For each $A$ there is exactly one $X \in \mathbb{R}^{n \times m}$ satisfying the four equations
+**Details.**
 
-$$ \text{(P1)}\ AXA = A, \qquad \text{(P2)}\ XAX = X, \qquad \text{(P3)}\ (AX)^\top = AX, \qquad \text{(P4)}\ (XA)^\top = XA, $$
+**Derivation.** The columns of $U\Sigma$ are $\sigma_i u_i$ for $i \le r$ and zero otherwise. Multiplying by $V^\top$, whose rows are $v_i^\top$, gives $U\Sigma V^\top = \sum_{i=1}^r (\sigma_i u_i) v_i^\top$ by the column-times-row form of matrix multiplication.
 
-and it equals $V_c \Sigma_c^{-1} U_c^\top$ for every SVD of $A$. Consequently $A^\dagger$ does not depend on the SVD chosen.
+**Rank one.** Column $j$ of $u_i v_i^\top$ is $(v_i)_j u_i$, a multiple of $u_i$, and $v_i \ne 0$, so the column space is exactly the span of $u_i$.
 
-*Existence.* Put $X = V_c \Sigma_c^{-1} U_c^\top$ and use $U_c^\top U_c = V_c^\top V_c = I_r$. Then $AX = U_c \Sigma_c V_c^\top V_c \Sigma_c^{-1} U_c^\top = U_c U_c^\top$, which is symmetric, giving (P3); symmetrically $XA = V_c V_c^\top$, giving (P4). Then $AXA = U_c U_c^\top U_c \Sigma_c V_c^\top = U_c \Sigma_c V_c^\top = A$, which is (P1), and $XAX = V_c V_c^\top V_c \Sigma_c^{-1} U_c^\top = X$, which is (P2).
+**Forward pointer.** The partial sum of the first $k$ layers is written $A_k = \sum_{i \le k}\sigma_i u_i v_i^\top$. Whether $A_k$ is the best rank-$k$ approximation is a separate theorem, proved later in the lecture.
 
-*Uniqueness.* Let $X$ and $Y$ both satisfy (P1) through (P4). Then
+**Sources.**
 
-$$ X = XAX = X(AX)^\top = XX^\top A^\top = XX^\top (AYA)^\top = XX^\top A^\top (AY)^\top = X(AX)^\top AY = XAXAY = XAY , $$
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6 (matrix approximation as a sum of rank-one matrices).
+<!-- END S41 -->
 
-and symmetrically $Y = XAY$, running the same chain from $Y = YAY$ using (P4) and $A = AXA$. Hence $X = Y$. **End of proof.**
+<!-- BEGIN S42 -->
+### 28. Compact SVD Keeps Active Directions [S42]
 
-### 5.3 $AA^\dagger$ and $A^\dagger A$ are projections
+**Message.** Dropping the zero singular values leaves the compact SVD $A = U_r\Sigma_r V_r^\top$, which is still exact; its factors $U_r$ and $V_r$ have orthonormal columns but need not be square orthogonal matrices.
 
-The proof just computed the two products: $AA^\dagger = U_c U_c^\top$ and $A^\dagger A = V_c V_c^\top$. By the projection formula in Theorem 2 these are the orthogonal projections onto $\operatorname{range}(A)$ and $\operatorname{row}(A)$ respectively -- symmetric, idempotent, since $(U_c U_c^\top)^2 = U_c (U_c^\top U_c) U_c^\top = U_c U_c^\top$, and with the stated ranges by Section 4.4.
+The $m \times n$ matrix $A$ equals a thin tall $U_r$ ($m \times r$), times a small square $\Sigma_r$ ($r \times r$) with a full diagonal, times a short wide $V_r^\top$ ($r \times n$); only the $r$ nonzero $\sigma_i$ are kept. In formulas, $A = U_r\Sigma_r V_r^\top$, $\Sigma_r = \operatorname{diag}(\sigma_1, \dots, \sigma_r)$, $U_r^\top U_r = V_r^\top V_r = I_r$. When $r \lt m$, $U_r U_r^\top \ne I_m$: the thin factors have orthonormal columns but are not square orthogonal matrices.
 
-So the slogan "$A^\dagger$ is an inverse only where inversion is possible" is literally true: $A^\dagger A = I_n$ if and only if $r = n$ (full column rank); $AA^\dagger = I_m$ if and only if $r = m$ (full row rank); and both hold if and only if $A$ is invertible, in which case $A^\dagger = A^{-1}$, by uniqueness in Theorem 5.1, since $X = A^{-1}$ satisfies (P1) through (P4).
+**Details.**
 
-Two closed forms follow, used constantly in lecture 11. If $A$ has full column rank then $A^\top A$ is invertible and $A^\dagger = (A^\top A)^{-1}A^\top$. If $A$ has full row rank then $A^\dagger = A^\top(AA^\top)^{-1}$.
+**Why it is exact.** The rank-one expansion uses only $i \le r$, and $U_r\Sigma_r V_r^\top$ is exactly that sum. The discarded columns of $U$ and $V$ only ever multiply zeros of $\Sigma$.
 
-*Proof of the first.* $A^\top A = V_c \Sigma_c^2 V_c^\top$ with $V_c$ square orthogonal when $r = n$, so $(A^\top A)^{-1}A^\top = V_c \Sigma_c^{-2} V_c^\top V_c \Sigma_c U_c^\top = V_c \Sigma_c^{-1} U_c^\top = A^\dagger$. The second is the transpose statement, using $(A^\dagger)^\top = (A^\top)^\dagger$, which follows by transposing the definition.
+**What $U_r U_r^\top$ is.** It is the orthogonal projector onto the column space of $A$; it equals $I_m$ only when $r = m$. Likewise $V_r V_r^\top$ projects onto the row space.
 
-### 5.4 The two worked examples, verified
+**Notation.** This revision writes the compact factors with subscript $r$ ($U_r, \Sigma_r, V_r$), matching the rank.
 
-**Invertible case: $A$, with rows $(3,0)$ and $(4,5)$.** Here $\det A = 15 \neq 0$, so $A^\dagger = A^{-1} = \tfrac{1}{15} N$, where $N$ has first row $(5, 0)$ and second row $(-4, 3)$. Check: the product $AN$ has first row $(15, 0)$ and second row $(20 - 20, 15) = (0, 15)$, so $\tfrac{1}{15}AN = I$. Checked. Its singular values are $1/\sigma_2 = 1/\sqrt5$ and $1/\sigma_1 = 1/(3\sqrt5)$, consistent with Section 4.5.
+**Sources.**
 
-**Singular case: $C$, with both rows proportional, namely $(1,1)$ and $(2,2)$.** Here $\operatorname{rank} C = 1$ and $C = \sigma_1 u_1 v_1^\top$ with $v_1 = \tfrac{1}{\sqrt2}(1,1)$, $u_1 = \tfrac{1}{\sqrt5}(1,2)$ and $\sigma_1 = \sqrt{10}$, since $C^\top C$ has both rows equal to $(5,5)$ and therefore eigenvalues $10$ and $0$. Hence
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5 (reduced SVD discussion).
+<!-- END S42 -->
 
-$$ C^\dagger = \frac{1}{\sigma_1} v_1 u_1^\top = \frac{1}{\sqrt{10}} \cdot \frac{1}{\sqrt{10}} \, (1,1)^\top (1,2) = \frac{1}{10} P , $$
+<!-- BEGIN S44 -->
+### 29. Constructing the SVD [S44]
 
-where $P$ has first row $(1, 2)$ and second row $(1, 2)$; this matches the lecture.
+**Message.** The SVD can be built from $A^\top A$: its eigenpairs give the right singular vectors and the squared singular values, and dividing $Av_i$ by $\sigma_i \gt 0$ gives the output directions.
 
-The two products. First, $CC^\dagger = \tfrac{1}{10}$ times the product of $C$ and $P$, which has first row $(2, 4)$ and second row $(4, 8)$; so $CC^\dagger = \tfrac15$ times the matrix with rows $(1,2)$ and $(2,4)$, which is $u_1 u_1^\top$. Checked -- symmetric, idempotent, rank one, projecting onto $\operatorname{span}\{(1,2)\} = \operatorname{range}(C)$. Second, $C^\dagger C = \tfrac{1}{10}$ times the product of $P$ and $C$, which has both rows equal to $(5,5)$; so $C^\dagger C = \tfrac12$ times the all-ones $2 \times 2$ matrix, which is $v_1 v_1^\top$. Checked. Neither product is the identity: $C$ is not invertible, and the pseudo-inverse recovers only the row-space component.
+Substitute the SVD into $A^\top A$: $A^\top A = V\Sigma^\top U^\top U\Sigma V^\top = V\Sigma^\top\Sigma V^\top$ because $U^\top U = I$, so the eigenvalues of $A^\top A$ are $\lambda_i = \sigma_i^2 \ge 0$. The route has four steps:
 
-### 5.5 What $A^\dagger b$ actually optimizes
+1. Form $A^\top A$.
+2. Find its eigenpairs $\lambda_i, v_i$.
+3. Take the stretches $\sigma_i = \sqrt{\lambda_i}$.
+4. Compute the outputs $u_i = Av_i/\sigma_i$, only if $\sigma_i > 0$.
 
-The lecture defers the variational meaning to lecture 11; it is stated here because it is what makes the pseudo-inverse more than a formal gadget.
+The other columns of $U$ are any orthonormal completion. This is a conceptual route, not a numerical algorithm.
 
-**Theorem 5.2.** For any $A \in \mathbb{R}^{m \times n}$ and $b \in \mathbb{R}^m$, the vector $x^\star = A^\dagger b$ is a minimizer of $\|Ax - b\|_2$, and among all minimizers it is the unique one of smallest $\|x\|_2$.
+**Details.**
 
-*Proof.* Write $b = AA^\dagger b + (I - AA^\dagger)b =: b_\parallel + b_\perp$, an orthogonal split by Section 5.3 with $b_\parallel \in \operatorname{range}(A)$. For any $x$, $Ax - b = (Ax - b_\parallel) - b_\perp$ with the two terms orthogonal, so
+**Why the route works.** $V\Sigma^\top\Sigma V^\top$ is an eigendecomposition: $\Sigma^\top\Sigma$ is $n \times n$ diagonal with entries $\sigma_i^2$ (and zeros), and $V$ is orthogonal. So the right singular vectors are eigenvectors of $A^\top A$, and the eigenvalues are the squared stretches, hence nonnegative.
 
-$$ \|Ax - b\|_2^2 = \|Ax - b_\parallel\|_2^2 + \|b_\perp\|_2^2 \;\geq\; \|b_\perp\|_2^2 , $$
+**Step 4.** Dividing by $\sigma_i$ is allowed only when $\sigma_i \gt 0$. For those $i$ the $u_i$ are orthonormal: $u_i^\top u_j = v_i^\top A^\top A v_j/(\sigma_i\sigma_j) = \sigma_j^2 v_i^\top v_j/(\sigma_i\sigma_j)$, which is $1$ if $i = j$ and $0$ otherwise. Zero singular values give no $u_i$ this way, and when $m \gt n$ there are more columns of $U$ than singular values; all remaining columns of $U$ are filled in by any orthonormal completion of $\mathbb{R}^m$.
 
-with equality if and only if $Ax = b_\parallel$. And $Ax^\star = AA^\dagger b = b_\parallel$, so $x^\star$ attains it.
+**Not a numerical method.** Forming $A^\top A$ squares the singular values and can lose accuracy for the small ones in floating point; practical SVD algorithms work on $A$ directly (Golub and Van Loan [8], ch. 8). The route here is for understanding, not computation.
 
-The full minimizer set is $x^\star + \operatorname{null}(A)$. Since $x^\star = V_c \Sigma_c^{-1} U_c^\top b \in \operatorname{row}(A) = \operatorname{null}(A)^\perp$, Pythagoras gives $\|x^\star + z\|_2^2 = \|x^\star\|_2^2 + \|z\|_2^2$ for $z \in \operatorname{null}(A)$, minimized uniquely at $z = 0$. **End of proof.**
+**Optional: signs.** Each pair $(u_i, v_i)$ can be replaced by $(-u_i, -v_i)$ without changing $A$, so the SVD is never unique in its signs; the archived extended note discusses the sign convention.
 
-So $A^\dagger$ is simultaneously the least-squares solver -- the normal equations of lecture 11, in the full-column-rank case $A^\dagger = (A^\top A)^{-1}A^\top$ -- and the minimum-norm solver, the implicit regularizer that reappears in lecture 13 as the bias of gradient descent started from zero initialization.
+**Optional: a full worked example.** The pre-2026-11 edition carries this construction out step by step for one $2\times 2$ matrix (slide IDs S45-S49 in `../opt03-backup/opt01-svd-lowrank-full.html` and its notes).
 
-### 5.6 A caution: the map $A \mapsto A^\dagger$ is discontinuous
+**Sources.**
 
-Let $A_\varepsilon = \operatorname{diag}(1, \varepsilon)$. Then $A_\varepsilon^\dagger = \operatorname{diag}(1, 1/\varepsilon)$, which blows up as $\varepsilon \to 0^+$, while $A_0 = \operatorname{diag}(1,0)$ has $A_0^\dagger = \operatorname{diag}(1,0)$. So $A_\varepsilon \to A_0$ but $A_\varepsilon^\dagger$ does not converge to $A_0^\dagger$.
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.5.2 (construction of the SVD), eqs. (4.71)-(4.78). Numerical computation: Golub and Van Loan [8], ch. 8.
+<!-- END S44 -->
 
-This is why numerical software never tests $\sigma_i = 0$ exactly but truncates at a tolerance, typically $\max(m,n) \cdot \varepsilon_{\text{mach}} \cdot \sigma_1$, and why the rank-$k$ truncation of Section 7 is the numerically stable object while "the rank" is not.
+<!-- BEGIN S50 -->
+### 30. The First Layer Carries Most Energy [S50]
 
-## 6 Matrix norms
+**Message.** In an illustration, the first rank-one layer $A_1$ of a $2\times 2$ matrix carries $45$ of the total energy $50$, that is $90\%$; this is a reconstruction fact, not an optimality claim.
 
-### 6.1 Induced norms: definition, attainment, submultiplicativity
+Illustration: one $2 \times 2$ matrix split into its two SVD layers. The matrix $A = \begin{bmatrix}3 & 0\\ 4 & 5\end{bmatrix}$ equals $A_1 = \sigma_1 u_1 v_1^\top = \begin{bmatrix}1.5 & 1.5\\ 4.5 & 4.5\end{bmatrix}$ plus $\sigma_2 u_2 v_2^\top = \begin{bmatrix}1.5 & -1.5\\ -0.5 & 0.5\end{bmatrix}$. The energies, squared Frobenius norms, satisfy $50 = 45 + 5$, so the first layer keeps $45/50 = 90\%$. This is reconstruction, not optimality, and it leaves a question open: is $A_1$ the best rank-one matrix?
 
-**Definition.** For a vector norm $\|\cdot\|_p$, the induced (operator) norm is
+**Details.**
 
-$$ \|A\|_p := \max_{\|x\|_p = 1} \|Ax\|_p = \max_{x \neq 0} \frac{\|Ax\|_p}{\|x\|_p} . $$
+**The SVD of the illustration.** $A^\top A = \begin{bmatrix}25 & 20\\ 20 & 25\end{bmatrix}$ has eigenpairs $45, (1,1)/\sqrt2$ and $5, (-1,1)/\sqrt2$, so $\sigma_1 = 3\sqrt5$, $\sigma_2 = \sqrt5$, $v_1 = (1,1)/\sqrt2$, $v_2 = (-1,1)/\sqrt2$. Then $u_1 = Av_1/\sigma_1 = (3,9)/(\sqrt2\cdot3\sqrt5) = (1,3)/\sqrt{10}$ and $u_2 = Av_2/\sigma_2 = (-3,1)/(\sqrt2\cdot\sqrt5) = (-3,1)/\sqrt{10}$.
 
-The maximum is attained, not merely approached: $x \mapsto \|Ax\|_p$ is continuous by Section 3.1 and the unit sphere is compact. The two expressions agree by homogeneity, $\|A(x/\|x\|)\| = \|Ax\|/\|x\|$.
+**Arithmetic.** $\sigma_1 u_1 v_1^\top = 3\sqrt5 \cdot \frac{1}{\sqrt{10}}(1,3) \cdot \frac{1}{\sqrt2}(1,1)^\top = \frac{3}{2}\begin{bmatrix}1 & 1\\ 3 & 3\end{bmatrix}$, entries summing in squares to $\frac94(1+1+9+9) = 45$. $\sigma_2 u_2 v_2^\top = \sqrt5 \cdot \frac{1}{\sqrt{10}}(-3,1) \cdot \frac{1}{\sqrt2}(-1,1)^\top = \frac12\begin{bmatrix}3 & -3\\ -1 & 1\end{bmatrix}$, squared entries $\frac14(9+9+1+1) = 5$. The two layers add to $A$ entry by entry. $\|A\|_F^2 = 9 + 0 + 16 + 25 = 50$.
 
-Induced norms satisfy the norm axioms -- (N1) from $\|(A+B)x\| \leq \|Ax\| + \|Bx\|$ pointwise, then maximizing; (N3) because $\|A\| = 0$ forces $Ae_i = 0$ for all $i$ -- and additionally the two properties that make them useful for error analysis:
+**Why the energies add.** The layers are orthogonal in the Frobenius inner product because $u_1 \perp u_2$; the general identity is $\|A\|_F^2 = \sum_i \sigma_i^2$. Whether $A_1$ is the best rank-one approximation is a separate question, answered by the Eckart-Young-Mirsky theorem.
 
-$$ \|Ax\|_p \leq \|A\|_p \|x\|_p \quad \text{(consistency)}, \qquad \|AB\|_p \leq \|A\|_p \|B\|_p \quad \text{(submultiplicativity)}. $$
+**Optional.** The full step-by-step computation of this SVD is archived under slide IDs S45-S49 of `../opt03-backup/opt01-svd-lowrank-full.html` and its notes.
 
-Consistency is the definition rescaled; submultiplicativity follows by applying it twice, $\|ABx\| \leq \|A\| \|Bx\| \leq \|A\| \|B\| \|x\|$, then maximizing over $\|x\| = 1$. Also $\|I\|_p = 1$ for every induced norm -- a property the Frobenius norm lacks, since $\|I_n\|_F = \sqrt n$, which is the first sign that $\|\cdot\|_F$ is not induced by any vector norm for $n > 1$.
+**Sources.**
 
-### 6.2 The $p = 1$ and $p = \infty$ formulas
+Illustration: our exact calculation, shown above.
+<!-- END S50 -->
 
-Not covered in the lecture but standard, and useful as a contrast to how much harder $p = 2$ is:
+<!-- BEGIN S51 -->
+### 31. Eigenvalues and Singular Values Differ [S51]
 
-$$ \|A\|_1 = \max_j \sum_i |a_{ij}| \quad \text{(largest absolute column sum)}, \qquad \|A\|_\infty = \max_i \sum_j |a_{ij}| \quad \text{(largest absolute row sum)}. $$
+**Message.** Eigenvalues and singular values answer different questions, and in general they are different lists; the squared singular values are the eigenvalues of $A^\top A$.
 
-*Proof of the first.* $\|Ax\|_1 = \sum_i |\sum_j a_{ij}x_j| \leq \sum_j |x_j| \sum_i |a_{ij}| \leq (\max_j \sum_i |a_{ij}|)\|x\|_1$, with equality at $x = e_{j^\star}$ for the maximizing column. The second is the same argument transposed.
+Eigenvalues are defined for a square $A$: $Av = \lambda v$, a direction that is kept and only scaled. Singular values are defined for any $A$, square or rectangular: $Av_i = \sigma_i u_i$ with $\sigma_i \ge 0$, so the input direction $v_i$ may turn into a different output direction $u_i$, and the $\sigma_i^2$ are the eigenvalues of $A^\top A$. In general the two lists differ; they are equal when $A$ is symmetric positive semidefinite.
 
-Both are read off the entries in $O(mn)$ time, whereas $\|A\|_2$ requires the SVD, which is $O(mn\min(m,n))$ -- the practical reason the Frobenius norm is often used as a cheap proxy.
+**Details.**
 
-### 6.3 Theorem 6: the spectral norm is $\sigma_1$
+**Rectangular matrices.** For $A \in \mathbb{R}^{m\times n}$ with $m \ne n$, $Av$ and $v$ live in different spaces, so $Av = \lambda v$ makes no sense; singular values still exist.
 
-**Theorem 6.** $\|A\|_2 = \sigma_1(A)$, attained at $x = v_1$.
+**Symmetric case.** For symmetric $A = Q\Lambda Q^\top$ the singular values are $|\lambda_i|$; they equal the eigenvalues only when all $\lambda_i \ge 0$. A symmetric matrix with a negative eigenvalue has eigendecomposition and SVD that differ by signs.
 
-*Proof.* Let $A = U\Sigma V^\top$ and let $\|x\|_2 = 1$. Put $y = V^\top x$, so $\|y\|_2 = 1$ by Theorem 4. Then, again by Theorem 4 applied to $U$,
+**Optional: a counterexample.** For $A = \begin{bmatrix}3 & 0\\ 4 & 5\end{bmatrix}$, $\det(A - \lambda I) = (3-\lambda)(5-\lambda)$, so the eigenvalues are $3$ and $5$, with eigenvectors $(1,-2)$ and $(0,1)$: $A(1,-2) = (3,-6)$ and $A(0,1) = (0,5)$. These eigenvectors are not orthogonal, $(1,-2)\cdot(0,1) = -2$. The singular values are $3\sqrt5 \approx 6.71$ and $\sqrt5 \approx 2.24$ (from the eigenvalues $45$ and $5$ of $A^\top A$). Both products equal $|\det A| = 15$.
 
-$$ \|Ax\|_2^2 = \|U\Sigma y\|_2^2 = \|\Sigma y\|_2^2 = \sum_{i \leq r} \sigma_i^2 y_i^2 \;\leq\; \sigma_1^2 \sum_i y_i^2 = \sigma_1^2 . $$
+**Sources.**
 
-So $\|A\|_2 \leq \sigma_1$. For the reverse, $x = v_1$ gives $y = e_1$ and $\|Av_1\|_2 = \sigma_1$. **End of proof.**
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Sections 4.5.2-4.5.3 (eigenvalue decomposition vs SVD). Counterexample: our calculation.
+<!-- END S51 -->
 
-The two-line structure -- peel off $U$ and $V$ by orthogonal invariance, reduce to a diagonal problem, read off the answer -- is the master trick of this lecture, and Theorems 7 and 8 are the same trick twice more.
+<!-- BEGIN S68 -->
+### 32. Largest Singular Value, Largest Stretch [S68]
 
-### 6.4 The Frobenius norm and Theorem 7
+**Message.** The spectral norm, the largest stretch of any unit vector, equals the largest singular value $\sigma_1$; the proof needs an upper bound and a witness.
 
-Define $\|A\|_F := (\sum_{i,j} a_{ij}^2)^{1/2}$: the Euclidean norm of the matrix read as a vector in $\mathbb{R}^{mn}$. Hence it is a norm for free, being $\ell_2$ under that identification, and it comes with an inner product $\langle A, B \rangle = \operatorname{tr}(A^\top B) = \sum_{i,j} a_{ij}b_{ij}$, so that $\|A\|_F^2 = \operatorname{tr}(A^\top A)$.
+Spectral-norm identity. For every $A \in \mathbb R^{m\times n}$ with largest singular value $\sigma_1$, $\|A\|_2 = \max_{\|x\|_2 = 1}\|Ax\|_2 = \sigma_1$. The proof has two tasks:
 
-**Theorem 7.** $\|A\|_F = (\sum_{i=1}^{r}\sigma_i^2)^{1/2}$, and more generally $\|UAV\|_F = \|A\|_F$ for orthogonal $U$ and $V$.
+1. An upper bound: $\|Ax\|_2 \le \sigma_1$ for every unit $x$.
+2. A witness: one unit $x$ with $\|Ax\|_2 = \sigma_1$.
 
-*Proof.* Using $\operatorname{tr}(XY) = \operatorname{tr}(YX)$:
+**Details.**
 
-$$ \|UAV\|_F^2 = \operatorname{tr}(V^\top A^\top U^\top U A V) = \operatorname{tr}(V^\top A^\top A V) = \operatorname{tr}(A^\top A V V^\top) = \operatorname{tr}(A^\top A) = \|A\|_F^2 . $$
+**Why two tasks.** A maximum equals $\sigma_1$ exactly when nothing exceeds $\sigma_1$ and something reaches it. Sections 33 and 34 do the two tasks.
 
-Applying this with the SVD, $\|A\|_F = \|U^\top A V\|_F = \|\Sigma\|_F = (\sum_i \sigma_i^2)^{1/2}$. **End of proof.**
+**Geometry.** In the ellipse picture of section 26, $\sigma_1$ is the longest semi-axis of the image of the unit circle.
 
-Check on the running example: $\|A\|_F = \sqrt{9 + 0 + 16 + 25} = \sqrt{50} = 5\sqrt2 \approx 7.07$, and $\sqrt{\sigma_1^2 + \sigma_2^2} = \sqrt{45 + 5} = \sqrt{50}$. Checked. The identity $\sum_i \sigma_i^2 = \sum_{i,j} a_{ij}^2$ is the "energy" bookkeeping used in Section 7.5: it lets a truncation error be quoted as a fraction of total energy.
+**Definition.** $\|\cdot\|_2$ as the worst stretch was defined earlier in the lecture.
 
-### 6.5 The nuclear norm is a norm
+**Sources.**
 
-Define $\|A\|_* := \sum_{i=1}^{r}\sigma_i$. Axioms (N2) and (N3) are easy -- $\sigma_i(\alpha A) = |\alpha|\sigma_i(A)$ from the SVD, and $\|A\|_* = 0$ forces $r = 0$ -- but (N1) is not obvious, because singular values of a sum are not sums of singular values. The efficient route is a variational formula, which also gives the duality used in Section 8.
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6, Definition 4.23 and Theorem 4.24 (proof left as an exercise there). R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html, Proposition 3.11.
+<!-- END S68 -->
 
-**Proposition 6.1.** $\displaystyle \|A\|_* = \max_{\|Z\|_2 \leq 1} \operatorname{tr}(Z^\top A)$.
+<!-- BEGIN S69 -->
+### 33. No Direction Beats the Largest Stretch [S69]
 
-*Proof, direction "at least".* Take $Z = U_c V_c^\top$, which has all its nonzero singular values equal to $1$, so $\|Z\|_2 = 1$; then
+**Message.** After the orthogonal change of coordinates $y = V^\top x$, every unit input is stretched by at most $\sigma_1$.
 
-$$ \operatorname{tr}(Z^\top A) = \operatorname{tr}(V_c U_c^\top U_c \Sigma_c V_c^\top) = \operatorname{tr}(\Sigma_c V_c^\top V_c) = \operatorname{tr}(\Sigma_c) = \sum_i \sigma_i . $$
+Take any unit $x \in \mathbb R^n$ and set $y = V^\top x$, which is also a unit vector by orthogonal invariance. Then $\|Ax\|_2^2 = \|U\Sigma y\|_2^2 = \|\Sigma y\|_2^2$ (since $U$ is orthogonal) $= \sum_{i=1}^r \sigma_i^2 y_i^2 \le \sigma_1^2\sum_{i=1}^n y_i^2 = \sigma_1^2\|y\|_2^2 = \sigma_1^2$ (since every $\sigma_i \le \sigma_1$). As $x$ runs over all unit vectors so does $y$, so no direction is skipped.
 
-*Direction "at most".* For any $Z$ with $\|Z\|_2 \leq 1$, write $A = \sum_i \sigma_i u_i v_i^\top$ and use linearity of the trace:
+**Details.**
 
-$$ \operatorname{tr}(Z^\top A) = \sum_i \sigma_i \operatorname{tr}(Z^\top u_i v_i^\top) = \sum_i \sigma_i \, v_i^\top Z^\top u_i \;\leq\; \sum_i \sigma_i \|Zv_i\|_2 \|u_i\|_2 \;\leq\; \sum_i \sigma_i , $$
+**The inequality step.** Each term $\sigma_i^2 y_i^2 \le \sigma_1^2 y_i^2$, and extending the sum from $r$ to $n$ only adds nonnegative terms $\sigma_1^2 y_i^2$.
 
-by Cauchy-Schwarz and consistency. **End of proof.**
+**Coverage.** $V^\top$ is invertible with inverse $V$, so $x \mapsto V^\top x$ is a bijection of the unit sphere onto itself; bounding over all unit $y$ is the same as bounding over all unit $x$.
 
-**Corollary 6.2.** The nuclear norm satisfies the triangle inequality, hence is a norm.
+**Shape.** $\Sigma y$ lies in $\mathbb R^m$ and its only nonzero coordinates are $\sigma_i y_i$ for $i \le r$.
 
-*Proof.* For any admissible $Z$, $\operatorname{tr}(Z^\top(A+B)) = \operatorname{tr}(Z^\top A) + \operatorname{tr}(Z^\top B) \leq \|A\|_* + \|B\|_*$; now maximize the left side over $Z$. **End of proof.**
+**Sources.**
 
-The same argument shows $\|\cdot\|_*$ is convex, being a pointwise maximum of linear functions of $A$ -- exactly the property Section 8 needs, and the reason the proof was routed through the variational formula rather than through Weyl-type inequalities.
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6, Theorem 4.24 (exercise). R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html, Proposition 3.11.
+<!-- END S69 -->
 
-Proposition 6.1 says $\|\cdot\|_*$ and $\|\cdot\|_2$ are *dual norms* with respect to the trace inner product; the Frobenius norm is self-dual. In the language of Section 3, applying the vector chain $\|\sigma\|_\infty \leq \|\sigma\|_2 \leq \|\sigma\|_1$ to the singular-value vector gives
+<!-- BEGIN S70 -->
+### 34. The First Singular Vector Attains It [S70]
 
-$$ \|A\|_2 \;\leq\; \|A\|_F \;\leq\; \|A\|_* \;\leq\; \sqrt{r}\, \|A\|_F \;\leq\; r \, \|A\|_2 . $$
+**Message.** The input $x = v_1$ is stretched by exactly $\sigma_1$, so together with the upper bound $\|A\|_2 = \sigma_1$.
 
-Running example: $\|A\|_2 = 6.71 \leq \|A\|_F = 7.07 \leq \|A\|_* = 3\sqrt5 + \sqrt5 = 4\sqrt5 \approx 8.94$. Checked.
+Take the unit witness $x = v_1$. Compute $Av_1 = U\Sigma V^\top v_1 = U\Sigma e_1 = \sigma_1 u_1$, so $\|Av_1\|_2 = \sigma_1$ because $u_1$ is a unit vector. This closes the argument: $\sigma_1 = \|Av_1\|_2 \le \|A\|_2 \le \sigma_1$ by the upper bound, hence $\|A\|_2 = \sigma_1$, end of proof. Geometrically, $\sigma_1 u_1$ is the longest semi-axis of the image ellipse.
 
-### 6.6 The three norms as $\ell_p$ norms of the singular-value vector
+**Details.**
 
-The punchline -- spectral $= \|\sigma\|_\infty$, Frobenius $= \|\sigma\|_2$, nuclear $= \|\sigma\|_1$, rank $= \|\sigma\|_0$ -- is the organizing fact of the rest of the lecture. All three norms are *unitarily invariant*, meaning $\|UAV\| = \|A\|$ for orthogonal $U, V$, because they depend on $A$ only through $\sigma$. Von Neumann's theorem states the converse: every unitarily invariant matrix norm is a symmetric gauge function of $\sigma$. That is the setting of Mirsky's version of Eckart-Young in Section 7.5, which is why one proof covers all three.
+**Step $V^\top v_1 = e_1$.** The rows of $V^\top$ are $v_1^\top, \dots, v_n^\top$, and $v_j^\top v_1 = \delta_{j1}$.
 
-The rank/nuclear pairing is the matrix analogue of the sparsity/$\ell_1$ pairing in compressed sensing: $\|\sigma\|_0$ counts, while $\|\sigma\|_1$ is the tightest convex function that under-approximates it on a bounded set. Fazel [12] made this precise.
+**Edge case $A = 0$.** Then $r = 0$, every $\sigma_i = 0$ and $\|A\|_2 = 0$; the identity still holds with any unit $v_1$, since $Av_1 = 0 = \sigma_1 u_1$.
 
-**Theorem 6.3 (Fazel, 2002).** On the set $\{X : \|X\|_2 \leq 1\}$, the convex envelope of $X \mapsto \operatorname{rank}(X)$ is $X \mapsto \|X\|_*$.
+**Example.** For $A$ with rows $(3,0)$ and $(4,5)$, $\|A\|_2 = 3\sqrt5 \approx 6.71$, attained at $v_1 = (1,1)/\sqrt2$ with $Av_1 = (3,9)/\sqrt2$, whose length is $\sqrt{90/2} = \sqrt{45}$.
 
-The convex envelope is the largest convex function lying below the target; the proof computes the biconjugate using Proposition 6.1. It is stated without proof here; see [12] and the exposition in [13]. On the set $\{\|X\|_2 \leq \tau\}$ the envelope is $\|X\|_*/\tau$, so the scale matters -- a point elided when the relaxation is written down casually.
+**Sources.**
 
-The one-line intuition: rank is blind to the size of the singular values and only counts them, so it is flat and non-convex; the nuclear norm pays proportionally, which is convex, and driving a singular value to zero is rewarded continuously rather than only in the limit.
+Deisenroth, Faisal and Ong, *Mathematics for Machine Learning* (Cambridge University Press, 2020), https://mml-book.github.io/, Section 4.6, Theorem 4.24 (exercise). R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html, Proposition 3.11.
+<!-- END S70 -->
 
-## 7 Low-rank approximation: Eckart-Young-Mirsky
+<!-- BEGIN S73 -->
+### 35. Frobenius Energy Sums Squared Stretches [S73]
 
-### 7.1 The problem and the candidate
+**Message.** The total energy $\|A\|_F^2$, the sum of all squared entries, equals the sum of all squared singular values.
 
-Fix $A \in \mathbb{R}^{m \times n}$ of rank $r$ and an integer $k < r$. The problem is
+Frobenius-norm identity. For every $A \in \mathbb R^{m\times n}$ of rank $r$: $\|A\|_F^2 = \sum_{i,j} a_{ij}^2 = \sum_{i=1}^r \sigma_i^2$. Contrast: $\|A\|_2 = \sigma_1$ measures the worst single direction while $\|A\|_F^2$ measures total energy (the norm itself is its square root $\|A\|_F$). Check on the illustration matrix $A$ with rows $(3,0)$ and $(4,5)$: $\|A\|_F^2 = 9 + 0 + 16 + 25 = 50 = 45 + 5$.
 
-$$ \min_{B \,:\, \operatorname{rank}(B) \,\leq\, k} \ \|A - B\| $$
+**Details.**
 
-for a unitarily invariant norm. The feasible set is *not* convex: $\operatorname{diag}(1,0)$ and $\operatorname{diag}(0,1)$ both have rank $1$, but their midpoint $\tfrac12 I_2$ has rank $2$. So nothing from convex optimization applies, and yet the problem has a clean closed-form solution. That is the surprise.
+**Consequence.** $\|A\|_2 = \sigma_1 \le \|A\|_F \le \sqrt r\,\sigma_1$, since the sum has $r$ terms each at most $\sigma_1^2$. In the example, $\sqrt{45} \approx 6.71 \le \sqrt{50} \approx 7.07$.
 
-The candidate is the **truncated SVD**
+**Definition.** $\|\cdot\|_F$ was defined earlier in the lecture; its square $\|\cdot\|_F^2$ is the total energy.
 
-$$ A_k \;:=\; \sum_{i=1}^{k}\sigma_i u_i v_i^\top \;=\; U\Sigma_k V^\top, \qquad \Sigma_k = \operatorname{diag}(\sigma_1, \dots, \sigma_k, 0, \dots, 0), $$
+**Sources.**
 
-which has rank exactly $k$, its nonzero singular values being $\sigma_1, \dots, \sigma_k$. Its errors are read off immediately from Theorems 6 and 7 applied to $A - A_k = \sum_{i > k}\sigma_i u_i v_i^\top$:
+R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html, Proposition 3.10.
+<!-- END S73 -->
 
-$$ \|A - A_k\|_2 = \sigma_{k+1}, \qquad \|A - A_k\|_F = \Big(\sum_{i > k}\sigma_i^2\Big)^{1/2}, \qquad \|A - A_k\|_* = \sum_{i > k}\sigma_i . $$
+<!-- BEGIN S74 -->
+### 36. Orthogonal Coordinates Preserve Total Energy [S74]
 
-The theorem is that no other matrix of rank at most $k$ does better, in any of the three norms.
+**Message.** Orthogonal matrices on either side do not change the Frobenius norm, so $\|A\|_F = \|U^\top A V\|_F = \|\Sigma\|_F$.
 
-### 7.2 Courant-Fischer for singular values
+Fix orthogonal $Q$ and $W$ and a matrix $B$ with columns $b_j$. Prove invariance on each side. Columns: $\|QB\|_F^2 = \sum_j\|Qb_j\|_2^2 = \sum_j\|b_j\|_2^2 = \|B\|_F^2$, using vector invariance column by column. Rows, via the transpose: $\|BW\|_F = \|W^\top B^\top\|_F = \|B^\top\|_F = \|B\|_F$. Apply both with $Q = U^\top$ and $W = V$: $\|A\|_F^2 = \|U^\top A V\|_F^2 = \|\Sigma\|_F^2 = \sum_{i=1}^r\sigma_i^2$, end of proof.
 
-Both proofs below rest on a variational characterization; it is proved here rather than cited because everything downstream is a two-line consequence of it.
+**Details.**
 
-**Lemma 7.1 (min-max and max-min).** For $1 \leq i \leq \min(m,n)$,
+**Transposition.** $\|B^\top\|_F = \|B\|_F$ because both sum the same squared entries.
 
-$$ \sigma_i(A) \;=\; \max_{\substack{S \subseteq \mathbb{R}^n \\ \dim S = i}} \ \min_{\substack{x \in S \\ \|x\|_2 = 1}} \|Ax\|_2 \;=\; \min_{\substack{T \subseteq \mathbb{R}^n \\ \dim T = n-i+1}} \ \max_{\substack{x \in T \\ \|x\|_2 = 1}} \|Ax\|_2 . $$
+**Alternative trace proof.** $\|A\|_F^2 = \operatorname{tr}(A^\top A) = \operatorname{tr}(V\Sigma^\top\Sigma V^\top) = \operatorname{tr}(\Sigma^\top\Sigma V^\top V) = \operatorname{tr}(\Sigma^\top\Sigma) = \sum_i\sigma_i^2$, using the cyclic property of the trace.
 
-*Proof of the first equality; the second is analogous.*
+**Why $U^\top A V = \Sigma$.** Multiply $A = U\Sigma V^\top$ on the left by $U^\top$ and on the right by $V$.
 
-For the lower bound on the outer maximum, take $S_0 = \operatorname{span}\{v_1, \dots, v_i\}$. For unit $x \in S_0$ we have $x = \sum_{j \leq i} c_j v_j$ with $\sum_j c_j^2 = 1$, and $\|Ax\|_2^2 = \sum_{j \leq i}\sigma_j^2 c_j^2 \geq \sigma_i^2$, since $\sigma_j \geq \sigma_i$ for $j \leq i$. So the inner minimum over $S_0$ is at least $\sigma_i$, and in fact equals it, at $x = v_i$.
+**Sources.**
 
-For the upper bound over every $S$, let $\dim S = i$ and put $W = \operatorname{span}\{v_i, v_{i+1}, \dots, v_n\}$, of dimension $n - i + 1$. By the dimension count in Corollary 2.4, $\dim(S \cap W) \geq \dim S + \dim W - n = 1$, so there is a unit vector $x \in S \cap W$. Writing $x = \sum_{j \geq i} c_j v_j$ gives $\|Ax\|_2^2 = \sum_{j \geq i}\sigma_j^2 c_j^2 \leq \sigma_i^2$. Hence the inner minimum over $S$ is at most $\sigma_i$. **End of proof.**
+R. D. Wilkinson, MATH3030 *Multivariate Statistics* lecture notes, Section 3.5.1, https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html, Proposition 3.10 (proof via $\|U^\top A V\|_F = \|\Sigma\|_F$).
+<!-- END S74 -->
 
-Note the mechanism: a dimension count forces two subspaces to intersect. That single idea drives Theorem 8, Lemma 7.3 and Theorem 9 alike.
+<!-- REGION P2 END -->
 
-### 7.3 Theorem 8: the spectral-norm case, proved
+<!-- REGION P3a BEGIN -->
 
-**Theorem 8 (Eckart-Young, spectral norm).** For every $B$ with $\operatorname{rank}(B) \leq k$, $\|A - B\|_2 \geq \sigma_{k+1} = \|A - A_k\|_2$.
+## Part 4: Best Low-Rank Approximation
 
-*Proof.* By Theorem 1, $\dim\operatorname{null}(B) \geq n - k$. Let $W = \operatorname{span}\{v_1, \dots, v_{k+1}\}$, of dimension $k+1$. Then
+<!-- BEGIN S79 -->
+### 37. Part 4: Best Low-Rank Approximation [S79]
 
-$$ \dim\big(\operatorname{null}(B) \cap W\big) \;\geq\; (n-k) + (k+1) - n \;=\; 1 , $$
+**Message.** Part 4 states and proves that truncating the SVD gives the best rank-$k$ approximation.
+<!-- END S79 -->
 
-so choose a unit vector $x \in \operatorname{null}(B) \cap W$. Since $Bx = 0$,
+<!-- BEGIN S81 -->
+### 38. Candidate: Keep the $k$ Largest Layers [S81]
 
-$$ \|A - B\|_2^2 \;\geq\; \|(A-B)x\|_2^2 \;=\; \|Ax\|_2^2 \;=\; \Big\|\sum_{i \leq k+1}\sigma_i (v_i^\top x)\, u_i\Big\|_2^2 \;=\; \sum_{i \leq k+1}\sigma_i^2 (v_i^\top x)^2 \;\geq\; \sigma_{k+1}^2 , $$
+**Message.** Sort the singular values and keep the $k$ largest rank-one layers; this truncation $A_k$ is the natural candidate, not yet a proven optimum.
 
-using $x \in W$, so that $v_i^\top x = 0$ for $i > k+1$; orthonormality of the $u_i$; and $\sum_{i \leq k+1}(v_i^\top x)^2 = \|x\|_2^2 = 1$ with $\sigma_i \geq \sigma_{k+1}$ throughout. Since $A_k$ attains $\sigma_{k+1}$, it is optimal. **End of proof.**
+The SVD writes $A = \sum_{i=1}^r \sigma_i u_i v_i^\top$ as a sum of $r$ rank-one layers, each scaled by a singular value. Under a rank budget $k$ the obvious move is to keep the $k$ layers with the largest singular values and drop the rest. That gives $A_k = \sum_{i=1}^k \sigma_i u_i v_i^\top$.
 
-The result is usually attributed to Eckart and Young [1], who proved the Frobenius case in 1936; Mirsky [2] gave the general unitarily-invariant statement in 1960, and Erhard Schmidt [3] had proved the analogous theorem for integral operators already in 1907. See [9] for the tangled history of who proved what.
+Write $A$ as one long sum and split it in two: the first $k$ terms form $A_k$, the kept part, and the remaining terms $\sigma_{k+1} u_{k+1} v_{k+1}^\top + \cdots + \sigma_r u_r v_r^\top$ are discarded.
 
-### 7.4 The Frobenius case, proved
+For $i \leq k$, $A_k v_i = \sigma_i u_i$, so the range of $A_k$ contains the $k$ independent vectors $\sigma_1 u_1, \dots, \sigma_k u_k$; it also lies in their span, because every column of $A_k$ is a combination of $u_1, \dots, u_k$. So $A_k$ has rank exactly $k$ and is inside the budget $\operatorname{rank} \leq k$. Whether some other rank-$k$ matrix does better is the question the rest of the part answers.
 
-The lecture states this case and does not prove it; the source likewise defers to an external note [16]. It is proved here in full, because the Frobenius case -- not the spectral one -- is what principal component analysis, latent-factor recommenders and low-rank compression actually minimize. The route is Weyl's inequality for singular values.
+**Details.**
 
-**Lemma 7.2 (Weyl, additive).** For $X, Y \in \mathbb{R}^{m \times n}$ and indices $i, j \geq 1$ with $i + j - 1 \leq \min(m,n)$: $\sigma_{i+j-1}(X+Y) \leq \sigma_i(X) + \sigma_j(Y)$.
+The singular values are sorted, $\sigma_1 \geq \cdots \geq \sigma_r \gt 0$. When there are ties, $A_k$ depends on which singular vectors are chosen, but its error does not.
 
-*Proof.* By the min-max form of Lemma 7.1 there are subspaces $T_X$ of dimension $n - i + 1$ and $T_Y$ of dimension $n - j + 1$ with $\max_{x \in T_X, \|x\|=1}\|Xx\|_2 = \sigma_i(X)$ and likewise for $Y$. Put $T = T_X \cap T_Y$, so that
+Edge cases. For $k = 0$ the empty sum gives $A_0 = 0$, with error $\|A\|$ in either norm. For $k \geq r$ we have $A_k = A$ and the error is zero, so the interesting range is $0 \leq k \lt r$, the range the theorems use.
 
-$$ \dim T \;\geq\; (n - i + 1) + (n - j + 1) - n \;=\; n - (i + j - 1) + 1 . $$
+In matrix form $A_k = U \Sigma_k V^\top$, where $\Sigma_k$ keeps the first $k$ diagonal entries of $\Sigma$ and zeroes the rest.
 
-Applying the min-max characterization at index $i + j - 1$, whose minimum runs over subspaces of exactly that dimension -- and any larger subspace contains one -- gives
+**Sources.**
 
-$$ \sigma_{i+j-1}(X+Y) \leq \max_{x \in T, \|x\|=1}\|(X+Y)x\|_2 \leq \max_{x \in T, \|x\|=1}\big(\|Xx\|_2 + \|Yx\|_2\big) \leq \sigma_i(X) + \sigma_j(Y) . $$
+Truncation $A_k$ as in Wilkinson [16], Section 3.5.2, Theorem 3.1.
+<!-- END S81 -->
 
-**End of proof.**
+<!-- BEGIN S90 -->
+### 39. Eckart--Young--Mirsky: Spectral Error [S90]
 
-**Lemma 7.3.** If $\operatorname{rank}(B) \leq k$ then $\sigma_{i+k}(A) \leq \sigma_i(A - B)$ for all $i \geq 1$, with the convention $\sigma_j := 0$ beyond $\min(m,n)$.
+**Message.** In the spectral norm, no matrix of rank at most $k$ gets closer to $A$ than $\sigma_{k+1}$, and $A_k$ achieves exactly $\sigma_{k+1}$.
 
-*Proof.* Apply Lemma 7.2 with $X = A - B$, $Y = B$, and indices $i$ and $k+1$:
+Eckart-Young-Mirsky theorem, spectral norm. Setting: a real $m \times n$ matrix of rank $r$, sorted positive singular values, and a budget $0 \leq k \lt r$. The minimum of $\|A - B\|_2$ over every $m \times n$ matrix $B$ of rank at most $k$ equals $\sigma_{k+1}$, and $B = A_k$ attains it.
 
-$$ \sigma_{i+k}(A) = \sigma_{i + (k+1) - 1}\big((A-B) + B\big) \leq \sigma_i(A-B) + \sigma_{k+1}(B) . $$
+The quantifier is the point. The minimum runs over all rank-$\leq k$ matrices, not only over truncations of the SVD. The Frobenius version is a separate theorem with a separate proof, stated later.
 
-But $\operatorname{rank}(B) \leq k$ means $\sigma_{k+1}(B) = 0$. **End of proof.**
+**Details.**
 
-**Theorem 8F (Eckart-Young, Frobenius norm).** For every $B$ with $\operatorname{rank}(B) \leq k$,
+Scope. The theorem concerns a fully observed matrix and the unweighted spectral error. It says nothing about uniqueness; in the spectral norm the minimizer is in general not unique (see section 40, Optimality Needs Two Claims).
 
-$$ \|A - B\|_F^2 \;\geq\; \sum_{i > k}\sigma_i(A)^2 \;=\; \|A - A_k\|_F^2 . $$
+*7.3 The spectral-norm case, proved (compact form).*
 
-*Proof.* By Theorem 7 and Lemma 7.3,
+**Theorem (Eckart--Young--Mirsky, spectral norm).** For every $B$ with $\operatorname{rank}(B) \leq k$, $\|A - B\|_2 \geq \sigma_{k+1} = \|A - A_k\|_2$.
 
-$$ \|A-B\|_F^2 = \sum_{i \geq 1}\sigma_i(A-B)^2 \;\geq\; \sum_{i \geq 1}\sigma_{i+k}(A)^2 = \sum_{j > k}\sigma_j(A)^2 , $$
+*Proof.* By rank--nullity, $\dim\operatorname{null}(B) \geq n - k$. Let $W = \operatorname{span}\{v_1,\dots,v_{k+1}\}$, of dimension $k+1$. Then $\dim(\operatorname{null}(B) \cap W) \geq (n-k) + (k+1) - n = 1$, so choose a unit vector $x \in \operatorname{null}(B) \cap W$. Since $Bx = 0$,
 
-which is exactly $\|A - A_k\|_F^2$ by the display in Section 7.1. **End of proof.**
+$$\begin{aligned} \|A - B\|_2^2 &\geq \|(A-B)x\|_2^2 = \|Ax\|_2^2 \\ &= \Big\|\sum_{i \leq k+1} \sigma_i (v_i^\top x)\, u_i\Big\|_2^2 \\ &= \sum_{i \leq k+1} \sigma_i^2 (v_i^\top x)^2 \geq \sigma_{k+1}^2,\end{aligned}$$
 
-The same two lines prove the nuclear case, since $\|A-B\|_* = \sum_i \sigma_i(A-B) \geq \sum_{i > k}\sigma_i(A) = \|A - A_k\|_*$. And, since Lemma 7.3 controls the whole singular-value vector entry by entry, they prove Mirsky's general statement.
+using $x \in W$ (so $v_i^\top x = 0$ for $i \gt k+1$), orthonormality of the $u_i$, and $\sum_{i \leq k+1} (v_i^\top x)^2 = \|x\|_2^2 = 1$ with $\sigma_i \geq \sigma_{k+1}$ throughout. Since $A_k$ attains $\sigma_{k+1}$, it is optimal. $\blacksquare$
 
-**Theorem 8M (Mirsky, 1960).** For *every* unitarily invariant norm, $A_k$ minimizes $\|A - B\|$ over all $B$ with $\operatorname{rank}(B) \leq k$. *Reason:* such a norm is a symmetric gauge function of the singular-value vector, by von Neumann's theorem, hence monotone in it, and Lemma 7.3 gives that $\sigma(A - B)$ dominates $\sigma(A - A_k)$ entry by entry after sorting.
+Sections 41 to 53 unpack this proof step by step.
 
-This is why one can say that a single matrix, $A_k$, is simultaneously optimal for all three norms -- a genuinely unusual state of affairs; the $\ell_1$ and $\ell_2$ minimizers of an ordinary regression problem certainly do not coincide.
+History. The result is usually attributed to Eckart and Young [1], who proved the Frobenius case in 1936; Mirsky [2] gave the general unitarily invariant statement in 1960, and Erhard Schmidt [3] had proved the analogous theorem for integral operators already in 1907. See [9] for the history of who proved what.
 
-### 7.5 Energy accounting and the running example
+**Sources.**
 
-Theorem 7 licenses reporting truncation quality as a fraction of "energy": $\|A_k\|_F^2 / \|A\|_F^2 = \sum_{i \leq k}\sigma_i^2 / \sum_{i \leq r}\sigma_i^2$. For the running $A$, the rank-one truncation captures $\sigma_1^2/(\sigma_1^2 + \sigma_2^2) = 45/50 = 90\%$, with $A_1$ having first row $(1.5, 1.5)$ and second row $(4.5, 4.5)$, and the residual $A - A_1$ having first row $(1.5, -1.5)$ and second row $(-0.5, 0.5)$, so that
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [16]: Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) states the result for the 2-norm and the Frobenius norm and proves the 2-norm case on the page; Section 3.5.1 gives $\|A\|_F^2 = \sum_i \sigma_i^2$ (Proposition 3.10) and $\|A\|_2 = \sigma_1$ (Proposition 3.11).
 
-$$ \|A - A_1\|_2 = \|A - A_1\|_F = \sigma_2 = \sqrt5 . $$
+M. P. Deisenroth, A. A. Faisal and C. S. Ong, *Mathematics for Machine Learning*, Cambridge University Press, 2020, Section 4.6, Theorem 4.25 (Eckart--Young).
 
-The coincidence that the two norms agree here is not general; it holds because $A - A_1$ has rank one, so its singular-value vector has a single nonzero entry and all $\ell_p$ norms of it agree. Check independently: $\|A - A_1\|_F^2 = 2.25 + 2.25 + 0.25 + 0.25 = 5$. Checked.
+Historical attributions: [1], [2], [3], [9].
+<!-- END S90 -->
 
-Two standard consequences.
+<!-- BEGIN S91 -->
+### 40. Optimality Needs Two Claims [S91]
 
-*Storage.* Keeping $A_k$ costs $k(m+n)$ numbers, or $k(m+n+1)$ with the $\sigma_i$ stored separately, versus $mn$ for the full matrix -- a win as soon as $k < mn/(m+n)$.
+**Message.** To call $A_k$ best in the spectral norm one must prove two things: a floor that every rank-$\leq k$ competitor obeys, and that $A_k$ meets the floor.
 
-*Principal component analysis.* If the rows of $A$ are mean-centred data points, then $A^\top A$ is proportional to the sample covariance, the $v_i$ are the principal directions, the quantities $\sigma_i^2/(m-1)$ are the explained variances, and Theorem 8F says that projecting onto the top $k$ principal directions is the rank-$k$ projection of least squared reconstruction error. The "90 percent of variance explained" convention is the energy ratio above.
+Two claims, both required:
 
-### 7.6 Uniqueness: the claim the lecture drops
+- (i) A floor for every competitor: $\|A - B\|_2 \geq \sigma_{k+1}$ for every $B$ with rank at most $k$.
+- (ii) The candidate meets it: $\|A - A_k\|_2 = \sigma_{k+1}$, so the floor cannot be raised.
 
-The source asserts that $A_k$ is *the* minimizer. As stated for the spectral norm that is false, and the lecture is right to omit it.
+One candidate's error alone cannot establish optimality. Claim (ii) alone says $A_k$ has error $\sigma_{k+1}$, but some other matrix might do better; only (i) rules that out. Claim (i) alone says no matrix beats $\sigma_{k+1}$, but perhaps none reaches it either; (ii) shows the bound is attained. Together they give $\min_{\operatorname{rank}(B) \le k} \|A - B\|_2 = \sigma_{k+1}$. The proof that follows spends Steps 1-4 on claim (i); claim (ii) is the short computation in section 52, Step 5: Truncation Meets the Bound.
 
-Counterexample: $A = \operatorname{diag}(2,1)$ and $k = 1$, so $\sigma_2 = 1$ and the optimal value is $1$. Take $B_a = \operatorname{diag}(a, 0)$ for any $a \in [1,3]$. Then $A - B_a = \operatorname{diag}(2-a, 1)$, whose singular values are $|2-a| \leq 1$ and $1$, so $\|A - B_a\|_2 = 1$, which is optimal -- while $A_1 = \operatorname{diag}(2,0)$ is only the case $a = 2$. A whole interval of minimizers.
+**Details.**
 
-**Proposition 7.4.** In the Frobenius norm the minimizer is unique if and only if $\sigma_k > \sigma_{k+1}$.
+What the statement does not claim. It does not say $A_k$ is the only minimizer, and it does not address missing entries, prediction, or noise.
 
-*Sketch.* The proof of Theorem 8F is tight only when $\sigma_i(A-B) = \sigma_{i+k}(A)$ for all $i$, which forces $B$ to be a truncation at a spectral gap. If $\sigma_k = \sigma_{k+1}$ the corresponding singular subspace has dimension greater than $1$, and any $k$-dimensional subspace of it gives another minimizer -- as for $A = I_2$ with $k = 1$, where every $vv^\top$ with $\|v\| = 1$ is optimal. In the spectral norm uniqueness fails even with a strict gap, by the counterexample above.
+*7.6 Uniqueness.*
 
-## 8 Matrix completion and the nuclear-norm relaxation
+A common phrasing calls $A_k$ *the* minimizer. For the spectral norm that is false. Counterexample: $A = \operatorname{diag}(2,1)$, $k = 1$, so $\sigma_2 = 1$ and the optimal value is $1$. Take $B_a = \operatorname{diag}(a, 0)$ for any $a \in [1,3]$; then $A - B_a = \operatorname{diag}(2-a, 1)$, whose singular values are $|2-a| \leq 1$ and $1$, so $\|A - B_a\|_2 = 1$, which is optimal, while $A_1 = \operatorname{diag}(2,0)$ is only the case $a = 2$. A whole interval of minimizers.
 
-### 8.1 The recommender toy example, unpacked
+**Sources.**
 
-The lecture's $5 \times 4$ user-by-movie rating matrix has five users -- Alice, Bob, Carol, Dave, Eve -- rating four films, the first two of which are action films and the last two dramas. Alice and Bob rate the action films $5$ and the dramas $1$; Carol and Dave do the reverse; Eve's row is $(4, 4, 2, 2)$.
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) and its proof for the 2-norm [16]. Counterexample checked above.
+<!-- END S91 -->
 
-The exhibited factorization is $R = TG$, where the taste matrix $T \in \mathbb{R}^{5 \times 2}$ has rows $(1, 0)$, $(1, 0)$, $(0, 1)$, $(0, 1)$ and $(0.75, 0.25)$, and the genre matrix $G \in \mathbb{R}^{2 \times 4}$ has first row $(5, 5, 1, 1)$ and second row $(1, 1, 5, 5)$.
+<!-- BEGIN S85 -->
+### 41. Recall: Low Rank Forces a Big Null Space [S85]
 
-Eve's row is then $0.75 \cdot (5,5,1,1) + 0.25 \cdot (1,1,5,5) = (4,4,2,2)$. Checked. So $\operatorname{rank}(R) = 2$, and the storage claim is $5 \cdot 2 + 2 \cdot 4 = 18$ numbers against $20$ -- a deliberately unimpressive ratio at this size, which becomes $500{,}000 \cdot 50 + 50 \cdot 20{,}000 = 26$ million against $10$ billion at the scale of a real streaming service.
+**Message.** Rank--nullity turns a rank budget into a large null space: if $\operatorname{rank}(B) \leq k$ then $B$ sends at least an $(n-k)$-dimensional subspace of inputs to zero.
 
-The two latent columns are not labelled "action" and "drama" by the algorithm. The factorization is determined only up to $T \mapsto TM$ and $G \mapsto M^{-1}G$ for invertible $M$, so any interpretation of individual factors is imposed by the reader, not recovered. This non-identifiability is the honest version of the "taste vectors" story.
+Recall rank--nullity for $B \in \mathbb{R}^{m \times n}$: $\dim\operatorname{null}(B) = n - \operatorname{rank}(B)$. With the budget $\operatorname{rank}(B) \leq k$ this gives $\dim\operatorname{null}(B) \geq n - k$.
 
-### 8.2 The completion problem, and why Section 7 does not apply
+Here $n$ is the number of columns, the input dimension, and the null space lives in $\mathbb{R}^n$. Every low-rank competitor is blind on a large set of inputs. That blind spot is where the proof will catch it.
 
-In practice one observes $R_{ij}$ only for $(i,j) \in \Omega$ -- for the Netflix data, about $1\%$ of entries -- and wants
+**Details.**
 
-$$ \min_{X} \ \operatorname{rank}(X) \quad \text{subject to} \quad X_{ij} = R_{ij} \ \text{ for all } (i,j) \in \Omega , $$
+Rank--nullity is the statement $\dim\operatorname{null}(B) + \dim\operatorname{range}(B) = n$ for a linear map $\mathbb{R}^n \to \mathbb{R}^m$, with $\dim\operatorname{range}(B) = \operatorname{rank}(B)$. It was established in Part 1 of this lecture.
 
-or its noisy variant, minimizing $\operatorname{rank}(X)$ subject to $\sum_{(i,j) \in \Omega}(X_{ij} - R_{ij})^2 \leq \delta$.
+**Sources.**
 
-Eckart-Young does not solve this. Theorem 8 answers the question "what is the best rank-$k$ approximation to a *fully known* $A$"; here most of $A$ is missing, and the truncated SVD of a matrix with holes is not defined. Worse, the problem is genuinely hard.
+Rank--nullity as established in Part 1 of this lecture.
+<!-- END S85 -->
 
-**Theorem 9 (hardness, imported).** Deciding whether there is a completion of rank at most $k$ is NP-hard in general; the case $k = 3$ already encodes graph colourability. Even the weaker task of approximating the minimum rank within a constant factor is hard under standard assumptions [15].
+<!-- BEGIN S86 -->
+### 42. Large Subspaces Must Intersect [S86]
 
-So the exact problem is out of reach, and a relaxation is not a convenience but a necessity.
+**Message.** Two subspaces of $\mathbb{R}^n$ whose dimensions add up to more than $n$ must share a nonzero vector.
 
-### 8.3 The relaxation
+Intersection bound: $\dim(S_1 \cap S_2) \geq \dim S_1 + \dim S_2 - n$ for subspaces of $\mathbb{R}^n$. The reason in one line: the sum $S_1 + S_2$ sits inside $\mathbb{R}^n$, so its dimension is at most $n$, and the dimension formula below converts that into the bound.
 
-Replace the objective by its convex envelope, using Theorem 6.3:
+Apply it with the two dimensions the proof will need, $n - k$ and $k + 1$. They add to $n + 1$, so the intersection has dimension at least one and contains a nonzero vector.
 
-$$ \min_{X} \ \|X\|_* \quad \text{subject to} \quad X_{ij} = R_{ij} \ \text{ for all } (i,j) \in \Omega , $$
+**Details.**
 
-or, in penalized form, minimize $\tfrac12\sum_{(i,j) \in \Omega}(X_{ij} - R_{ij})^2 + \lambda\|X\|_*$.
+*2.3 The dimension formula, proved.*
 
-This is a convex program -- a semidefinite program, in fact, via the identity $\|X\|_* = \min\{\tfrac12(\operatorname{tr}W_1 + \operatorname{tr}W_2)\}$ over all $W_1, W_2$ for which the block matrix with first block row $(W_1, X)$ and second block row $(X^\top, W_2)$ is positive semidefinite [13] -- and hence solvable to global optimality. The nontrivial question is whether its solution is the matrix one actually wanted.
+**Theorem 2.3.** For subspaces $W_1, W_2 \subseteq \mathbb{R}^n$, $\dim(W_1 + W_2) + \dim(W_1 \cap W_2) = \dim W_1 + \dim W_2$, where $W_1 + W_2 = \{w_1 + w_2 : w_i \in W_i\}$.
 
-**Theorem 10 (Candes-Recht 2009; Candes-Tao 2010; Recht 2011).** Let $R$ be $n_1 \times n_2$ of rank $r$ satisfying a standard *incoherence* condition, meaning its singular vectors are not concentrated on few coordinates, and let $\Omega$ be a uniformly random set of $|\Omega|$ entries. If $|\Omega|$ is at least of order $\mu\, r\, n \log^2 n$ with $n = \max(n_1, n_2)$, then with high probability $R$ is the *unique* solution of the nuclear-norm program.
+*Proof.* Let $z_1, \dots, z_t$ be a basis of $W_1 \cap W_2$. Extend it to a basis $z_1, \dots, z_t, x_1, \dots, x_p$ of $W_1$ and to a basis $z_1, \dots, z_t, y_1, \dots, y_q$ of $W_2$, so $\dim W_1 = t + p$, $\dim W_2 = t + q$. The combined list spans $W_1 + W_2$; we claim it is independent. Suppose $\sum \gamma_i z_i + \sum \alpha_j x_j + \sum \beta_\ell y_\ell = 0$. Then $v := \sum_\ell \beta_\ell y_\ell = -\sum \gamma_i z_i - \sum \alpha_j x_j$ lies in $W_1$ and in $W_2$, hence in $W_1 \cap W_2$, so $v = \sum_i \delta_i z_i$ for some $\delta$. But $\sum_\ell \beta_\ell y_\ell - \sum_i \delta_i z_i = 0$ with the $z$'s and $y$'s independent forces all $\beta_\ell = 0$ (and all $\delta_i = 0$). The relation collapses to $\sum \gamma_i z_i + \sum \alpha_j x_j = 0$, and independence in $W_1$ kills the rest. Hence $\dim(W_1 + W_2) = t + p + q$, and $(t+p+q) + t = (t+p) + (t+q)$. $\blacksquare$
 
-Stated without proof; see [10, 11, 14]. Two caveats the headline hides. First, incoherence genuinely excludes matrices like $e_1 e_1^\top$, which no sampling scheme can recover, since almost every observed entry is $0$ and carries no information about the one nonzero entry. Second, "uniformly random $\Omega$" is false for ratings data, where missingness correlates with the rating itself -- people watch what they expect to like. The theory explains why the method works at all, not why it works on real ratings data.
+**Corollary 2.4.** $\dim(W_1 \cap W_2) \geq \dim W_1 + \dim W_2 - n$. In particular, if $\dim W_1 + \dim W_2 \gt n$ then $W_1 \cap W_2$ contains a nonzero vector. *Proof.* $W_1 + W_2 \subseteq \mathbb{R}^n$ gives $\dim(W_1 + W_2) \leq n$; substitute into Theorem 2.3. $\blacksquare$
 
-### 8.4 How it is solved, in one paragraph
+This count is the engine of the spectral proof: it converts "$B$ has low rank" into "$B$ is blind at a specific place where $A$ is strong".
 
-The workhorse for the penalized form is *singular value thresholding* [14]: the proximal operator of $\lambda\|\cdot\|_*$ is soft-thresholding of the singular values,
+**Sources.**
 
-$$ \operatorname{prox}_{\lambda\|\cdot\|_*}(Y) \;=\; \arg\min_X \ \tfrac12\|X - Y\|_F^2 + \lambda\|X\|_* \;=\; U \operatorname{diag}\big((\sigma_i - \lambda)_{+}\big) V^\top , $$
+Standard linear algebra; proof given in full above. See also Horn and Johnson [6].
+<!-- END S86 -->
 
-which follows from unitary invariance -- Theorem 7 -- reducing the problem to the diagonal case, and then to $n$ independent scalar problems $\min_x \tfrac12(x - \sigma)^2 + \lambda|x|$. Iterating a gradient step on the data-fit term with this proximal operator is proximal gradient descent, exactly the algorithm class of lecture 12, and gives the singular value thresholding algorithm.
+<!-- BEGIN S87 -->
+### 43. Two Planes in $\mathbb{R}^3$ Share a Line [S87]
 
-At industrial scale the SVD per iteration is itself too expensive, so production systems instead parametrize $X = TG^\top$ with $T$ and $G$ tall and run alternating least squares or stochastic gradient descent on the factors [17]. That is non-convex, has no recovery guarantee of the above kind, and works well anyway. The winning Netflix Prize entry was an ensemble built around exactly such latent-factor models [17].
+**Message.** Two planes through the origin in $\mathbb{R}^3$ always share at least a line, because $2 + 2 - 3 = 1$.
 
-### 8.5 Historical footnote
+Picture two planes through the origin in three dimensions. One, $S_1$, is horizontal. The other, $S_2$, is tilted steeply and cuts through it. Their intersection is a line through the origin, and a vector $w$ pointing along that line from the origin lies in both planes.
 
-Netflix announced its one-million-dollar prize in October 2006, for a $10\%$ improvement in root-mean-square error over its in-house Cinematch predictor on a held-out set. The prize was awarded in September 2009 to the team BellKor's Pragmatic Chaos, at a $10.06\%$ improvement. The contest is the reason matrix factorization became standard practice in recommender systems, and it is a fair characterization that its most durable legacy was methodological rather than deployed -- Netflix reported never putting the winning ensemble into production, as its engineering cost outweighed the accuracy gain.
+The count is $\dim(S_1 \cap S_2) \geq 2 + 2 - 3 = 1$. The example is in $\mathbb{R}^3$ only because that can be pictured; the same count works in any dimension, which is how the proof uses it.
 
-### 8.6 Where this goes next
+**Details.**
 
-The same low-rank idea reappears throughout the second half of the course and beyond it.
+The geometry is exact, not sketched. $S_1 = \{z = 0\}$, and $S_2 = \operatorname{span}\{d, e\}$ with $d = (1, 0.3, 0)$ and $e = (0, -0.6, 1)$. Then $S_1 \cap S_2 = \operatorname{span}\{d\}$, since a point $t d + s e$ has $z$-coordinate $s$, which vanishes only for $s = 0$. In the drawing, $w = 0.8\, d / \|d\|$. The lecture's drawing uses a fixed oblique projection; its generator script asserts that the intersection line and $w$ lie in both planes.
 
-*Compression:* replacing a weight matrix $W$ by $W_k$ costs $k(m+n)$ parameters.
+**Sources.**
 
-*Low-rank adaptation (LoRA) [18]:* freeze $W$ and train an additive low-rank update $W + BA$ with $B \in \mathbb{R}^{m \times k}$ and $A \in \mathbb{R}^{k \times n}$, with $k$ in the single or double digits -- the dominant fine-tuning method for large models, and a direct application of the principle that the interesting part of a matrix is often low-rank.
+Figure computed for this deck (generator script `figs/o1c_planes.py`).
+<!-- END S87 -->
 
-*Embeddings:* word and item embeddings are low-rank factorizations of co-occurrence matrices.
+<!-- BEGIN S88 -->
+### 44. One Unit Witness Bounds the Maximum [S88]
 
-In each case Section 7 supplies the guarantee that truncation is optimal, and Section 8 the machinery for when the matrix is only partly observed.
+**Message.** To show a maximum is at least some value, it is enough to exhibit one admissible input that reaches it; for the spectral norm the input must be a unit vector.
 
-## 9 What the lecture leaves out
+Recall $\|M\|_2 = \max_{\|x\|_2 = 1} \|Mx\|_2$. Any particular unit vector $w$ is one of the candidates in that maximum, so $\|M\|_2 \geq \|Mw\|_2$.
 
-- **The spectral theorem** is used, in Theorem 5, and not proved, either here or in the lecture. It is the only imported ingredient; Section 4.1 sketches it and [5, 6, 8] prove it.
-- **Complex matrices.** Everything above is stated over $\mathbb{R}$, with transposes and the word "orthogonal". Over $\mathbb{C}$, replace the transpose by the conjugate transpose $A^*$ and "orthogonal" by "unitary"; every statement and proof carries over verbatim, and this is why the literature says "unitarily invariant norm".
-- **Numerical computation of the SVD.** The $A^\top A$ route proved in Section 4.2 is a proof technique, not an algorithm; production code uses Golub-Kahan bidiagonalization plus an implicit QR sweep [8, ch. 8], and randomized sketching [19] for the large-$k$-truncation case. Section 5.6 explains why the exact-rank test never appears in code.
-- **Convergence rates for singular value thresholding and proximal gradient methods.** Deferred to lecture 12, where convexity and gradient descent are developed.
-- **Proof of Theorem 6.3** (convex envelope) and of Theorem 10 (exact recovery). Both are cited, not proved; they are the subject of [12] and of [10, 11] respectively.
-- **Von Neumann's characterization** of unitarily invariant norms as symmetric gauge functions, used to state Theorem 8M in full generality; see [6, ch. 3].
-- **The source's uniqueness claim** for the low-rank minimizer is dropped by the lecture and refuted in Section 7.6; the correct statement is Proposition 7.4.
+The unit-length condition is not decoration. Doubling $w$ doubles $\|Mw\|_2$, so without normalisation the bound would be meaningless. The plan for the proof is to find one unit vector where $\|(A - B)w\|_2$ is forced to be large.
 
-## 10 References
+**Details.**
+
+For a nonzero $z$ the same idea reads $\|M\|_2 \geq \|Mz\|_2 / \|z\|_2$, which is the normalised version used when $z$ comes out of an intersection argument with arbitrary length.
+
+**Sources.**
+
+Definition of the spectral norm as the operator 2-norm; Wilkinson [16], Section 3.5.1.
+<!-- END S88 -->
+
+<!-- BEGIN S89 -->
+### 45. Top $k{+}1$ Directions Stretch by $\geq \sigma_{k+1}$ [S89]
+
+**Message.** Every unit vector in the span of the top $k+1$ right singular vectors is stretched by $A$ by at least $\sigma_{k+1}$.
+
+Write a unit $w$ in that span as $w = \sum_{i \leq k+1} c_i v_i$. Because the $v_i$ are orthonormal, $\sum c_i^2 = \|w\|_2^2 = 1$. Applying $A$ sends each $v_i$ to $\sigma_i u_i$, and because the $u_i$ are orthonormal the squared length is $\sum \sigma_i^2 c_i^2$.
+
+Each $\sigma_i$ with $i \leq k+1$ is at least $\sigma_{k+1}$ because the values are sorted, so the sum is at least $\sigma_{k+1}^2 \sum c_i^2 = \sigma_{k+1}^2$. As one chain, with the fact used at each step:
+
+$$\begin{aligned} \|Aw\|_2^2 &= \sum_{i \leq k+1} \sigma_i^2 c_i^2 && \text{(orthonormal } u_i\text{)} \\ &\geq \sigma_{k+1}^2 \sum_{i \leq k+1} c_i^2 && \text{(sorted } \sigma_i\text{)} \\ &= \sigma_{k+1}^2 && \text{(orthonormal } v_i\text{)}. \end{aligned}$$
+
+**Details.**
+
+The two orthonormality facts play different roles: orthonormal $v_i$ give the coefficient identity $\sum c_i^2 = 1$; orthonormal $u_i$ give the Pythagorean identity for $\|Aw\|_2^2$. Sortedness gives the final inequality. The bound is tight at $w = v_{k+1}$.
+
+This is one half of the min--max characterization of singular values (Courant--Fischer), which the Frobenius proof uses in full; it is stated and proved in section 54, Eckart-Young-Mirsky: Frobenius Error.
+
+**Sources.**
+
+Standard; Horn and Johnson [6], ch. 3 (variational characterization of singular values).
+<!-- END S89 -->
+
+<!-- BEGIN S92 -->
+### 46. Proof Plan: Find One Witness [S92]
+
+**Message.** The spectral proof fixes any competitor $B$, finds one unit vector where $B$ is blind and $A$ is strong, and then checks that $A_k$ meets the resulting bound.
+
+The target is that every $B$ with $\operatorname{rank}(B) \leq k$ satisfies $\|A - B\|_2 \geq \sigma_{k+1} = \|A - A_k\|_2$. The proof has five steps:
+
+1. The blind spot $\operatorname{null}(B)$ is large.
+2. The subspace $W$ spanned by the top $k+1$ right singular vectors is where $A$ is strong.
+3. The two must intersect in a unit vector $w$.
+4. That witness bounds $\|A - B\|_2$ below by $\sigma_{k+1}$.
+5. $A_k$ attains $\sigma_{k+1}$.
+
+Steps 1 to 4 give the lower bound for every competitor. Step 5 gives the matching competitor.
+
+**Details.**
+
+Each step uses one fact recalled in sections 41 to 45: rank--nullity (Step 1), orthonormality and sorting (Steps 2 and 4), the intersection count (Step 3), the witness bound for a maximum (Step 4), and the spectral-norm identity $\|M\|_2 = \sigma_1(M)$ (Step 5).
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [16]: Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) states the result for the 2-norm and the Frobenius norm and proves the 2-norm case on the page; Section 3.5.1 gives $\|A\|_F^2 = \sum_i \sigma_i^2$ (Proposition 3.10) and $\|A\|_2 = \sigma_1$ (Proposition 3.11).
+<!-- END S92 -->
+
+<!-- BEGIN S93 -->
+### 47. Step 1: Every Competitor Has a Blind Spot [S93]
+
+**Message.** Any rank-$\leq k$ competitor $B$ has a null space of dimension at least $n - k$, and on that null space the residual $A - B$ acts exactly like $A$.
+
+Fix $B$ arbitrary, subject only to the rank budget. Rank--nullity gives $\dim\operatorname{null}(B) = n - \operatorname{rank}(B) \geq n - k$.
+
+For any $x$ with $Bx = 0$, $(A - B)x = Ax$: the competitor contributes nothing there. Note that $B$ is arbitrary, not $A_k$, because the bound has to hold for all competitors at once.
+
+**Details.**
+
+Nothing about the structure of $B$ beyond its rank is used, so the argument covers every competitor, including ones unrelated to the SVD of $A$.
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [16]: Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) states the result for the 2-norm and the Frobenius norm and proves the 2-norm case on the page; Section 3.5.1 gives $\|A\|_F^2 = \sum_i \sigma_i^2$ (Proposition 3.10) and $\|A\|_2 = \sigma_1$ (Proposition 3.11).
+<!-- END S93 -->
+
+<!-- BEGIN S94 -->
+### 48. Step 2: $A$ Stays Strong on $W$ [S94]
+
+**Message.** The span $W$ of the top $k+1$ right singular vectors is a $(k+1)$-dimensional subspace of inputs on which $A$ stretches every unit vector by at least $\sigma_{k+1}$.
+
+$W = \operatorname{span}\{v_1, \dots, v_{k+1}\}$ lives in the input space $\mathbb{R}^n$, the same space as $\operatorname{null}(B)$. Its dimension is $k + 1$ because orthonormal vectors are linearly independent.
+
+The assumption $k \lt r$ is used here: it guarantees that $v_{k+1}$ exists with $\sigma_{k+1} \gt 0$. Recall the top-directions bound (section 45): every unit $w \in W$ has $\|Aw\|_2 \geq \sigma_{k+1}$.
+
+**Details.**
+
+If $k \geq r$ the theorem is trivial, since $A_k = A$ has error zero, which is why the statement restricts to $0 \leq k \lt r$.
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [16]: Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) states the result for the 2-norm and the Frobenius norm and proves the 2-norm case on the page; Section 3.5.1 gives $\|A\|_F^2 = \sum_i \sigma_i^2$ (Proposition 3.10) and $\|A\|_2 = \sigma_1$ (Proposition 3.11).
+<!-- END S94 -->
+
+<!-- BEGIN S95 -->
+### 49. Step 3: The Two Subspaces Share a Unit $w$ [S95]
+
+**Message.** The blind spot and the strong subspace have dimensions adding to more than $n$, so they share a nonzero vector, which can be scaled to a unit vector $w$.
+
+Add the dimensions: $(n - k) + (k + 1) = n + 1 \gt n$. The intersection bound then gives $\dim(\operatorname{null}(B) \cap W) \geq 1$.
+
+Take any nonzero $z$ in the intersection and set $w = z / \|z\|_2$. Scaling keeps $w$ in both subspaces, so $w$ is a unit vector that $B$ kills and that lies in $W$.
+
+**Details.**
+
+This is the example of two planes in $\mathbb{R}^3$ (section 43) again, with $\operatorname{null}(B)$ and $W$ in place of the planes.
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [16]: Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) states the result for the 2-norm and the Frobenius norm and proves the 2-norm case on the page; Section 3.5.1 gives $\|A\|_F^2 = \sum_i \sigma_i^2$ (Proposition 3.10) and $\|A\|_2 = \sigma_1$ (Proposition 3.11).
+<!-- END S95 -->
+
+<!-- BEGIN S96 -->
+### 50. Step 4: Along $w$, the Residual Is $A$ [S96]
+
+**Message.** Because $w$ is a unit vector killed by $B$, the residual's spectral norm is at least $\|Aw\|_2$.
+
+The chain has two steps. The first uses that $w$ is a unit vector; it is the witness bound for a maximum: $\|A - B\|_2 \geq \|(A - B)w\|_2$. The second uses $Bw = 0$ and removes the competitor: $\|Aw - Bw\|_2 = \|Aw\|_2$.
+
+No maximum is computed; one input is enough for a lower bound. What remains is to show $\|Aw\|_2$ cannot be small.
+
+**Details.**
+
+Both facts about $w$ come from Step 3: unit length from the normalisation, $Bw = 0$ from membership in the null space.
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [16]: Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) states the result for the 2-norm and the Frobenius norm and proves the 2-norm case on the page; Section 3.5.1 gives $\|A\|_F^2 = \sum_i \sigma_i^2$ (Proposition 3.10) and $\|A\|_2 = \sigma_1$ (Proposition 3.11).
+<!-- END S96 -->
+
+<!-- BEGIN S97 -->
+### 51. Step 4 (continued): The Witness Is Not Small [S97]
+
+**Message.** Since $w$ lies in $W$, $\|Aw\|_2 \geq \sigma_{k+1}$, and therefore $\|A - B\|_2 \geq \sigma_{k+1}$ for every competitor $B$.
+
+Recall what is known about $w$: it lies in $W$ and has unit length, so $w = \sum_{i \leq k+1} c_i v_i$ with $\sum c_i^2 = 1$. The top-directions computation gives $\|Aw\|_2^2 = \sum \sigma_i^2 c_i^2 \geq \sigma_{k+1}^2$.
+
+Both sides are nonnegative, so taking square roots preserves the inequality. Combined with Step 4 (section 50) this gives the lower bound $\|A - B\|_2 \geq \sigma_{k+1}$, valid for every $B$ with rank at most $k$, because $B$ was arbitrary.
+
+**Details.**
+
+This completes the lower-bound half of the theorem. Optimality also needs a competitor that achieves the bound.
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [16]: Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) states the result for the 2-norm and the Frobenius norm and proves the 2-norm case on the page; Section 3.5.1 gives $\|A\|_F^2 = \sum_i \sigma_i^2$ (Proposition 3.10) and $\|A\|_2 = \sigma_1$ (Proposition 3.11).
+<!-- END S97 -->
+
+<!-- BEGIN S98 -->
+### 52. Step 5: Truncation Meets the Bound [S98]
+
+**Message.** The residual $A - A_k$ is itself an SVD with largest singular value $\sigma_{k+1}$, so $A_k$ achieves the lower bound and the minimum is exactly $\sigma_{k+1}$.
+
+Subtracting the first $k$ layers leaves $A - A_k = \sum_{i = k+1}^r \sigma_i u_i v_i^\top$. This sum is already a valid SVD: the $u_i$ are orthonormal, the $v_i$ are orthonormal, and the $\sigma_i$ are positive and sorted. Its largest singular value is $\sigma_{k+1}$.
+
+The spectral-norm identity $\|M\|_2 = \sigma_1(M)$ then gives $\|A - A_k\|_2 = \sigma_{k+1}$. A lower bound for every competitor plus one competitor on the bound means the minimum equals $\sigma_{k+1}$, which completes the proof.
+
+**Details.**
+
+The step uses a subset of an orthonormal family, which is still orthonormal, so no new decomposition has to be computed.
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [16]: Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) states the result for the 2-norm and the Frobenius norm and proves the 2-norm case on the page; Section 3.5.1 gives $\|A\|_F^2 = \sum_i \sigma_i^2$ (Proposition 3.10) and $\|A\|_2 = \sigma_1$ (Proposition 3.11).
+<!-- END S98 -->
+
+<!-- BEGIN S99 -->
+### 53. One Chain Proves the Spectral Theorem [S99]
+
+**Message.** The whole spectral proof fits in one chain: its left end is an arbitrary competitor and its right end is the truncation $A_k$.
+
+First the existence step: the dimensions of $\operatorname{null}(B)$ and $W$ add to more than $n$ (steps 1 and 2), so step 3 supplies a unit $w$ in both. Then the inequality chain from $\|A - B\|_2$ to $\|A - A_k\|_2$, with the step or fact that justifies each relation:
+
+$$\begin{aligned} \|A - B\|_2 &\geq \|(A - B)w\|_2 && \text{(} w \text{ unit)} \\ &= \|Aw\|_2 && (Bw = 0) \\ &\geq \sigma_{k+1} && \text{(} w \in W \text{, step 4)} \\ &= \|A - A_k\|_2 && \text{(step 5)}. \end{aligned}$$
+
+Reading the chain end to end: every rank-$\leq k$ matrix has spectral error at least $\sigma_{k+1}$, and $A_k$ has exactly that error, so $\min_{\operatorname{rank}(B) \leq k} \|A - B\|_2 = \sigma_{k+1}$.
+
+**Details.**
+
+The compact written proof is in section 39, Eckart-Young-Mirsky: Spectral Error.
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [16]: Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) states the result for the 2-norm and the Frobenius norm and proves the 2-norm case on the page; Section 3.5.1 gives $\|A\|_F^2 = \sum_i \sigma_i^2$ (Proposition 3.10) and $\|A\|_2 = \sigma_1$ (Proposition 3.11).
+<!-- END S99 -->
+
+<!-- BEGIN S101 -->
+### 54. Eckart--Young--Mirsky: Frobenius Error [S101]
+
+**Message.** In the Frobenius norm the best rank-$\leq k$ squared error is $\sum_{i > k} \sigma_i^2$, again attained by $A_k$; this is a separate theorem, and its proof is beyond this lecture's scope.
+
+Eckart-Young-Mirsky theorem, Frobenius norm. In the same setup, $\min_{\operatorname{rank}(B) \leq k} \|A - B\|_F^2 = \sum_{i = k+1}^r \sigma_i^2$, attained by $B = A_k$.
+
+The spectral proof does not give this. It bounds only the largest singular value of $A - B$, whereas the Frobenius norm sums all of them. A proof needs Weyl's inequality for singular values, which rests on the min--max characterization. The Frobenius optimality proof is beyond this lecture's scope; the lecture uses the statement only. An optional proof follows in the Details for readers who want it.
+
+**Details.**
+
+**Optional, beyond lecture scope: a proof via min--max and Weyl.**
+
+*7.2 Courant--Fischer for singular values.*
+
+**Lemma 7.1 (min--max / max--min).** For $1 \leq i \leq \min(m,n)$,
+
+$$\begin{aligned} \sigma_i(A) &= \max_{\substack{S \subseteq \mathbb{R}^n \\ \dim S = i}} \ \min_{\substack{x \in S \\ \|x\|_2 = 1}} \|Ax\|_2 \\ &= \min_{\substack{T \subseteq \mathbb{R}^n \\ \dim T = n-i+1}} \ \max_{\substack{x \in T \\ \|x\|_2 = 1}} \|Ax\|_2 .\end{aligned}$$
+
+*Proof (first equality; the second is analogous).* (At least $\sigma_i$ for the max.) Take $S_0 = \operatorname{span}\{v_1, \dots, v_i\}$. For unit $x \in S_0$, $x = \sum_{j \leq i} c_j v_j$ with $\sum c_j^2 = 1$, and $\|Ax\|_2^2 = \sum_{j \leq i} \sigma_j^2 c_j^2 \geq \sigma_i^2$. So the inner min over $S_0$ is at least $\sigma_i$ (indeed equal, at $x = v_i$). (At most $\sigma_i$ for every $S$.) Let $\dim S = i$ and $W' = \operatorname{span}\{v_i, v_{i+1}, \dots, v_n\}$, completing the $v$'s to an orthonormal basis of $\mathbb{R}^n$ with $\sigma_j := 0$ beyond the rank; $\dim W' = n - i + 1$. By the intersection count, $\dim(S \cap W') \geq 1$, so there is a unit $x \in S \cap W'$. Writing $x = \sum_{j \geq i} c_j v_j$, $\|Ax\|_2^2 = \sum_{j \geq i} \sigma_j^2 c_j^2 \leq \sigma_i^2$. Hence the inner min over $S$ is at most $\sigma_i$. $\blacksquare$
+
+*7.4 The Frobenius case, proved.*
+
+**Lemma 7.2 (Weyl, additive).** For $X, Y \in \mathbb{R}^{m \times n}$ and $i, j \geq 1$ with $i + j - 1 \leq \min(m,n)$: $\sigma_{i+j-1}(X + Y) \leq \sigma_i(X) + \sigma_j(Y)$.
+
+*Proof.* By the min--max form of Lemma 7.1 there are subspaces $T_X$ of dimension $n - i + 1$ and $T_Y$ of dimension $n - j + 1$ with $\max_{x \in T_X, \|x\| = 1} \|Xx\|_2 = \sigma_i(X)$ and likewise for $Y$. Put $T = T_X \cap T_Y$, so $\dim T \geq (n-i+1) + (n-j+1) - n = n - (i+j-1) + 1$. Applying the min--max characterization at index $i + j - 1$ (whose minimum runs over subspaces of exactly that dimension, and any larger subspace contains one) gives $\sigma_{i+j-1}(X+Y) \leq \max_{x \in T, \|x\| = 1} \|(X+Y)x\|_2 \leq \max_{x \in T, \|x\| = 1} (\|Xx\|_2 + \|Yx\|_2) \leq \sigma_i(X) + \sigma_j(Y)$. $\blacksquare$
+
+**Lemma 7.3.** If $\operatorname{rank}(B) \leq k$ then $\sigma_{i+k}(A) \leq \sigma_i(A - B)$ for all $i \geq 1$ (with $\sigma_j := 0$ beyond $\min(m,n)$). *Proof.* Apply Lemma 7.2 with $X = A - B$, $Y = B$, indices $i$ and $k+1$: $\sigma_{i+k}(A) \leq \sigma_i(A - B) + \sigma_{k+1}(B)$, and $\operatorname{rank}(B) \leq k$ means $\sigma_{k+1}(B) = 0$. $\blacksquare$
+
+**Theorem (Eckart--Young--Mirsky, Frobenius norm).** For every $B$ with $\operatorname{rank}(B) \leq k$, $\|A - B\|_F^2 \geq \sum_{i > k} \sigma_i(A)^2 = \|A - A_k\|_F^2$. *Proof.* By the Frobenius identity $\|M\|_F^2 = \sum_i \sigma_i(M)^2$ and Lemma 7.3, $\|A - B\|_F^2 = \sum_{i \geq 1} \sigma_i(A - B)^2 \geq \sum_{i \geq 1} \sigma_{i+k}(A)^2 = \sum_{j > k} \sigma_j(A)^2$, which is $\|A - A_k\|_F^2$ by section 55, $A_k$'s Error Is the Discarded Energy. $\blacksquare$
+
+The same argument extends to the nuclear norm and, by Mirsky [2], to every unitarily invariant norm; those extensions are kept in the extended-edition note (`../opt03-backup/opt01-svd-lowrank-full-note.md`).
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [16]: Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) states the result for the 2-norm and the Frobenius norm and proves the 2-norm case on the page; Section 3.5.1 gives $\|A\|_F^2 = \sum_i \sigma_i^2$ (Proposition 3.10) and $\|A\|_2 = \sigma_1$ (Proposition 3.11). The Frobenius case is stated there but not proved on the page.
+
+M. P. Deisenroth, A. A. Faisal and C. S. Ong, *Mathematics for Machine Learning*, Cambridge University Press, 2020, Section 4.6, Theorem 4.25 (Eckart--Young).
+
+Weyl's inequality and the min--max characterization: Horn and Johnson [6], ch. 3. Mirsky's theorem: [2].
+<!-- END S101 -->
+
+<!-- BEGIN S121 -->
+### 55. $A_k$'s Error Is the Discarded Energy [S121]
+
+**Message.** The Frobenius error of the truncation is the energy in the discarded layers, $\|A - A_k\|_F^2 = \sum_{i > k} \sigma_i^2$; this is achievability for one candidate, not the Frobenius optimality theorem.
+
+Subtract the kept layers: $A - A_k = \sum_{i = k+1}^r \sigma_i u_i v_i^\top$, which is an SVD with singular values $\sigma_{k+1}, \dots, \sigma_r$. The Frobenius identity $\|M\|_F^2 = \sum_i \sigma_i(M)^2$ then gives the squared error.
+
+Keep the two claims apart: achievability only, not the Frobenius lower-bound proof. This calculation computes the error of one candidate. The statement that no other rank-$\leq k$ matrix does better is the Frobenius theorem, which this calculation does not prove.
+
+**Details.**
+
+The same structure appeared in the spectral case: Step 5 computed $\|A - A_k\|_2 = \sigma_{k+1}$, and Steps 1 to 4 supplied the bound for every competitor. In the Frobenius case the bound for every competitor is the theorem of section 54; its optional proof there rests on Lemma 7.3.
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [16]: Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) states the result for the 2-norm and the Frobenius norm and proves the 2-norm case on the page; Section 3.5.1 gives $\|A\|_F^2 = \sum_i \sigma_i^2$ (Proposition 3.10) and $\|A\|_2 = \sigma_1$ (Proposition 3.11).
+<!-- END S121 -->
+
+<!-- REGION P3a END -->
+
+<!-- REGION P3b BEGIN -->
+
+## Part 5: Read the Answer
+
+<!-- BEGIN S116 -->
+### 56. Part 5: Read the Answer [S116]
+
+**Message.** Part 5 reads the theorem's answer in terms of rank, error and energy: how to choose $k$, one published use, and what the guarantee does and does not cover.
+<!-- END S116 -->
+
+<!-- BEGIN S103 -->
+### 57. Energy Retention Guides Rank [S103]
+
+**Message.** The share of squared Frobenius norm kept by $A_k$, $R_k = \sum_{i\le k}\sigma_i^2 / \sum_i \sigma_i^2$, is read straight off the singular values and gives a simple rule for choosing $k$.
+
+For a nonzero matrix $A$, define the retained energy of $A_k$ as $R_k = \|A_k\|_F^2 / \|A\|_F^2 = \sum_{i \le k} \sigma_i^2 / \sum_i \sigma_i^2$. Its complement is $1 - R_k = \|A - A_k\|_F^2 / \|A\|_F^2$, the relative squared error: the discarded energy. The rule: pick the smallest $k$ with $R_k \ge \eta$, for a target $0 < \eta \le 1$. This is an energy share, not prediction accuracy.
+
+**Details.**
+
+**Derivation.** $A_k = \sum_{i\le k}\sigma_i u_i v_i^\top$ is itself an SVD, so $\|A_k\|_F^2 = \sum_{i \le k} \sigma_i^2$ by the Frobenius identity; dividing by $\|A\|_F^2 = \sum_i \sigma_i^2$ gives $R_k$. Since $\|A - A_k\|_F^2 = \sum_{i > k} \sigma_i^2$ (the discarded energy, section 55), $R_k + \|A - A_k\|_F^2/\|A\|_F^2 = 1$.
+
+**Why $A \ne 0$.** For $A = 0$ the denominator is $0$ and $R_k$ is undefined.
+
+**The rule is well defined.** $R_k$ never decreases as $k$ grows, and $R_r = 1 \ge \eta$ at the rank $r$, so a smallest $k$ with $R_k \ge \eta$ always exists, and it is at most $r$. By the Frobenius theorem, this $A_k$ is also the best rank-$k$ matrix for that relative error.
+
+**Interpretation.** Energy share is not prediction accuracy. It is called explained variance only when the rows or columns of the data matrix have been centered. How fast singular values decay in real data depends on the data and is not claimed here; the target $\eta$ is a modelling choice.
+
+**Sources.**
+
+Frobenius identity and Theorem 3.1: Wilkinson [16], Sections 3.5.1-3.5.2. The ratio $R_k$, its complement and the selection rule: our derivation from these, shown above.
+<!-- END S103 -->
+
+<!-- BEGIN S124 -->
+### 58. Low Rank Compresses LLM Weights [S124]
+
+**Message.** A rank-$k$ factorization stores $k(m+n)$ numbers instead of $mn$, which is why SVD truncation is used to compress weight matrices of large language models; small matrix error, however, does not guarantee model accuracy.
+
+A large language model (LLM) stores many big weight matrices $W \in \mathbb{R}^{m\times n}$. The figure shows the factorization $W \approx L R$ as three boxes: a large box $W$ of size $m \times n$, approximately equal to a tall thin box $L$ of size $m \times k$ times a short wide box $R$ of size $k \times n$. Stored numbers go from $mn$ to $k(m+n)$, a saving only if $k(m+n) < mn$. Small matrix error does not guarantee model accuracy.
+
+**Details.**
+
+**The factors.** From the truncated SVD, take $L = U_k\Sigma_k$ ($m \times k$) and $R = V_k^\top$ ($k \times n$); then $LR = U_k\Sigma_kV_k^\top = W_k$, the best rank-$k$ approximation of $W$ in spectral and Frobenius error.
+
+**The count.** $L$ has $mk$ entries and $R$ has $kn$, so $k(m+n)$ in total, against $mn$ for $W$. This is a saving exactly when $k(m+n) < mn$, that is $k < mn/(m+n)$. For example, $m = n = 1000$ and $k = 100$ give $100 \cdot 2000 = 200{,}000$ numbers against $1{,}000{,}000$ (our arithmetic, illustrative sizes). The count assumes every number is stored at the same precision and ignores any bookkeeping overhead; it says nothing about speed.
+
+**Published use.** SVD-LLM (Wang, Zheng, Wan and Zhang, ICLR 2025) is one published method for compressing LLM weights after training with an SVD. It does not simply truncate $W$: it targets the activation-dependent error $\|(W - W')X\|_F$, where $X$ holds inputs to the layer, and it adds further steps. Plain truncation of $W$, which the theorem of this lecture certifies, is therefore not the method of that paper, and the theorem says nothing about the accuracy of the compressed model.
+
+**Sources.**
+
+X. Wang, Y. Zheng, Z. Wan and M. Zhang, "SVD-LLM: Truncation-aware Singular Value Decomposition for Large Language Model Compression," ICLR 2025 [21], https://proceedings.iclr.cc/paper_files/paper/2025/hash/3104e1ab39875cf54fe1eb4473e7c5a1-Abstract-Conference.html ; full text arXiv:2403.07378v5, https://arxiv.org/html/2403.07378v5 , Sections 2 and 3.1, eq. (1). Storage count: our calculation.
+<!-- END S124 -->
+
+<!-- BEGIN S123 -->
+### 59. What the Guarantee Covers [S123]
+
+**Message.** The theorems answer one precise question: given every entry of $A$ and a rank budget $k$, which rank-$\leq k$ matrix is closest in unweighted spectral or Frobenius error.
+
+The setting has three steps: given every entry of $A$, choose a rank budget $k$, and get $A_k$ with optimal error. The optimal error is $\sigma_{k+1}$ in the spectral norm and $\sum_{i > k} \sigma_i^2$ in squared Frobenius norm, and every entry counts equally.
+
+The theorem does not cover:
+
+- matrices with missing entries;
+- the downstream accuracy of a model built on $A_k$;
+- statistically optimal denoising of a noisy matrix.
+
+Each of these changes the problem, so the closed-form answer no longer applies as stated.
+
+**Details.**
+
+Other limits of this lecture, for the record: the existence of the SVD rests on the spectral theorem, which was not proved here; everything was over the real numbers (the complex case is parallel, with conjugate transposes); and how the SVD is computed numerically is a separate subject (Golub and Van Loan [8], ch. 8).
+
+**Optional: spectral and Frobenius errors can differ.** For $A = \operatorname{diag}(5,3,1)$ and $k = 1$, $A_1 = \operatorname{diag}(5,0,0)$ and the residual is $\operatorname{diag}(0,3,1)$. Its spectral error is $\sigma_2 = 3$ and its Frobenius error is $\sqrt{3^2 + 1^2} = \sqrt{10} \approx 3.16$: the two norms agree exactly when the residual has at most one nonzero singular value. In general $\|M\|_2 \leq \|M\|_F \leq \sqrt{\operatorname{rank}(M)}\, \|M\|_2$.
+
+Weighted errors, where some entries count more than others, and observing only some entries, are not covered: the unweighted Eckart-Young-Mirsky guarantee does not apply to general weighted or missing-entry objectives, and truncating the given matrix's SVD is not generally guaranteed to solve them.
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [16]: Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) states the result for the 2-norm and the Frobenius norm and proves the 2-norm case on the page; Section 3.5.1 gives $\|A\|_F^2 = \sum_i \sigma_i^2$ (Proposition 3.10) and $\|A\|_2 = \sigma_1$ (Proposition 3.11).
+
+Numerical computation: Golub and Van Loan [8].
+<!-- END S123 -->
+
+<!-- BEGIN S117 -->
+### 60. From Directions to the Optimal Error [S117]
+
+**Message.** The lecture's chain: measure error through singular values, decompose $A$ into layers, truncate, and read the optimal error off the discarded singular values.
+
+The chain has four links:
+
+1. Measure: $\|A\|_2 = \sigma_1$ and $\|A\|_F^2 = \sum \sigma_i^2$.
+2. Decompose: $A = \sum \sigma_i u_i v_i^\top$.
+3. Truncate: keep $k$ layers to get $A_k$.
+4. Read off: the optimal errors $\sigma_{k+1}$ and $\sum_{i > k} \sigma_i^2$.
+
+The payoff: the SVD gives the best rank-$k$ approximation in closed form, for both error measures. The retained energy $R_k$ guides the choice of $k$.
+
+**Details.**
+
+The chain uses each part of the lecture once: the two norms from Part 2, the decomposition from Part 3, the truncation and the optimality theorems from Part 4, and the retained-energy rule and the weight-compression application from Part 5.
+
+**Sources.**
+
+R. D. Wilkinson, MATH3030 lecture notes, Section 3.5 "Low-rank approximation" [16]: Section 3.5.2, Theorem 3.1 (Eckart--Young--Mirsky) states the result for the 2-norm and the Frobenius norm and proves the 2-norm case on the page; Section 3.5.1 gives $\|A\|_F^2 = \sum_i \sigma_i^2$ (Proposition 3.10) and $\|A\|_2 = \sigma_1$ (Proposition 3.11).
+
+M. P. Deisenroth, A. A. Faisal and C. S. Ong, *Mathematics for Machine Learning*, Cambridge University Press, 2020, Section 4.6, Theorem 4.25 (Eckart--Young).
+<!-- END S117 -->
+
+<!-- REGION P3b END -->
+
+<!-- REGION Closing BEGIN -->
+
+## Closing
+
+<!-- BEGIN S119 -->
+### 61. Closing: $A = \sum_i \sigma_i u_i v_i^{\top}$ [S119]
+
+**Message.** Every matrix is a sum of rank-one layers $\sigma_i u_i v_i^{\top}$; keeping the largest $k$ is the best rank-$k$ approximation.
+
+The lecture closes on the SVD written as a sum of rank-one layers, $A = \sum_i \sigma_i u_i v_i^{\top}$, and opens the floor to questions.
+<!-- END S119 -->
+
+<!-- REGION Closing END -->
+
+## References
+
+Theorem and section numbers in the annotations below (Theorem 5.1, Theorem 6.3) refer to the extended edition's note, `../opt03-backup/opt01-svd-lowrank-full-note.md`.
 
 1. C. Eckart and G. Young. "The approximation of one matrix by another of lower rank." *Psychometrika* 1(3):211-218, 1936. doi:10.1007/BF02288367 -- https://doi.org/10.1007/BF02288367
 2. L. Mirsky. "Symmetric gauge functions and unitarily invariant norms." *Quarterly Journal of Mathematics* 11(1):50-59, 1960. doi:10.1093/qmath/11.1.50 -- https://doi.org/10.1093/qmath/11.1.50
@@ -722,11 +1148,12 @@ In each case Section 7 supplies the guarantee that truncation is optimal, and Se
 10. E. J. Candes and B. Recht. "Exact matrix completion via convex optimization." *Foundations of Computational Mathematics* 9:717-772, 2009. arXiv:0805.4471 -- https://arxiv.org/abs/0805.4471
 11. E. J. Candes and T. Tao. "The power of convex relaxation: near-optimal matrix completion." *IEEE Transactions on Information Theory* 56(5):2053-2080, 2010. arXiv:0903.1476 -- https://arxiv.org/abs/0903.1476
 12. M. Fazel. *Matrix Rank Minimization with Applications.* PhD thesis, Stanford University, 2002. The convex-envelope result, Theorem 6.3.
-13. B. Recht, M. Fazel, and P. A. Parrilo. "Guaranteed minimum-rank solutions of linear matrix equations via nuclear norm minimization." *SIAM Review* 52(3):471-501, 2010. arXiv:0706.4138 -- https://arxiv.org/abs/0706.4138. Includes the semidefinite-program formulation quoted in Section 8.3.
+13. B. Recht, M. Fazel, and P. A. Parrilo. "Guaranteed minimum-rank solutions of linear matrix equations via nuclear norm minimization." *SIAM Review* 52(3):471-501, 2010. arXiv:0706.4138 -- https://arxiv.org/abs/0706.4138. Includes the semidefinite-program formulation quoted in Section 8.3 of the extended-edition note (`../opt03-backup/opt01-svd-lowrank-full-note.md`).
 14. J.-F. Cai, E. J. Candes, and Z. Shen. "A singular value thresholding algorithm for matrix completion." *SIAM Journal on Optimization* 20(4):1956-1982, 2010. arXiv:0810.3286 -- https://arxiv.org/abs/0810.3286
 15. M. Hardt, R. Meka, P. Raghavendra, and B. Weitz. "Computational limits for matrix completion." *COLT* 2014. arXiv:1402.2331 -- https://arxiv.org/abs/1402.2331. The hardness statement of Theorem 9.
-16. R. D. Wilkinson. MATH3030 lecture notes, section 3.5, "Low-rank approximation." https://rich-d-wilkinson.github.io/MATH3030/3.5-lowrank.html. The proof reference cited in the source; the Frobenius case is proved independently in Section 7.4 above.
-17. Y. Koren, R. Bell, and C. Volinsky. "Matrix factorization techniques for recommender systems." *IEEE Computer* 42(8):30-37, 2009. doi:10.1109/MC.2009.263 -- https://doi.org/10.1109/MC.2009.263. By the Netflix Prize winners; the practical counterpart to Section 8.4.
+16. R. D. Wilkinson. MATH3030 lecture notes, section 3.5, "Low-rank approximation." https://rich-d-wilkinson.github.io/MATH3030/3-5-lowrank.html. The proof reference cited in the source; the Frobenius case is proved, as optional material beyond the lecture's scope, in section 54 above (Eckart-Young-Mirsky: Frobenius Error).
+17. Y. Koren, R. Bell, and C. Volinsky. "Matrix factorization techniques for recommender systems." *IEEE Computer* 42(8):30-37, 2009. doi:10.1109/MC.2009.263 -- https://doi.org/10.1109/MC.2009.263. By the Netflix Prize winners; the practical counterpart to the matrix-completion slides of the extended edition (`../opt03-backup/opt01-svd-lowrank-full.html`).
 18. E. J. Hu et al. "LoRA: Low-Rank Adaptation of Large Language Models." *ICLR* 2022. arXiv:2106.09685 -- https://arxiv.org/abs/2106.09685
 19. N. Halko, P. G. Martinsson, and J. A. Tropp. "Finding structure with randomness: probabilistic algorithms for constructing approximate matrix decompositions." *SIAM Review* 53(2):217-288, 2011. arXiv:0909.4061 -- https://arxiv.org/abs/0909.4061
-20. Companion notes in this series: prob01 through prob09 cover the probability half (lectures 1 through 9). Jensen's inequality, used in Lemma 3.1, is in prob01; the covariance eigendecomposition, the symmetric positive-semidefinite special case of Section 4.5, is in prob08. The notes opt02, opt03 and opt04 (lectures 11 through 13) cover regression, convexity, and stochastic gradient methods. Each lives at `../<name>/<name>-note.md` in this accessible edition, or `-note.html` in the original.
+20. Companion notes in this series: prob01 through prob09 cover the probability half (lectures 1 through 9); the covariance eigendecomposition, the symmetric positive-semidefinite special case of the SVD, is in prob08. The opt02 note covers gradient descent. Each of these notes lives at `../<name>/<name>-note.md` in this accessible edition, or `-note.html` in the original. The regression and SGD notes are extended material in `../opt03-backup/`, listed in `../opt03-backup/OUTLINE.md`.
+21. X. Wang, Y. Zheng, Z. Wan, and M. Zhang. "SVD-LLM: Truncation-aware Singular Value Decomposition for Large Language Model Compression." *ICLR* 2025. https://proceedings.iclr.cc/paper_files/paper/2025/hash/3104e1ab39875cf54fe1eb4473e7c5a1-Abstract-Conference.html ; arXiv:2403.07378v5 -- https://arxiv.org/abs/2403.07378v5 -- one published SVD-based method for compressing LLM weights.

@@ -1,12 +1,12 @@
 # Deep Learning Math 11: Gradient Descent -- Three Guarantees -- Notes
 
-**About this file.** This is the text-only, screen-reader-friendly edition of the Lecture 11 companion note. It has 51 numbered sections, each headed by its number, title and an ID in brackets; the lecture's slide deck `opt02-convexity-gd.html` and the HTML note `opt02-convexity-gd-note.html` use the same section numbers and IDs. Every figure and table is described in words or linearized into lists, and all mathematics is written in LaTeX. Nothing else is needed to read it.
+**About this file.** This is the text-only, screen-reader-friendly edition of the Lecture 11 companion note. It has 48 numbered sections, each headed by its number, title and an ID in brackets; the lecture's slide deck `opt02-convexity-gd.html` and the HTML note `opt02-convexity-gd-note.html` use the same section numbers and IDs. Every figure and table is described in words or linearized into lists, and all mathematics is written in LaTeX. Nothing else is needed to read it.
 
-Companion to the slide deck `opt02-convexity-gd.html` (51 slides, 90 minutes). Audience: junior undergraduate AI majors who know gradients, Taylor's first-order approximation and the Euclidean inner product. The lecture is self-contained; it assumes nothing from the regression lecture. Each section opens with a one-sentence message, then explains it, then gives details (derivations, worked numbers, figure provenance) and sources. Cross-references name a section by its number, for example section 9, Running Example: $L = 4$.
+Companion to the slide deck `opt02-convexity-gd.html` (48 slides, 90 minutes). Audience: junior undergraduate AI majors who know gradients, Taylor's first-order approximation and the Euclidean inner product. The lecture is self-contained; it assumes nothing from the regression lecture. Each section opens with a one-sentence message, then explains it, then gives details (derivations, worked numbers, figure provenance) and sources. Cross-references name a section by its number, for example section 10, Smoothness Gives a Quadratic Upper Bound.
 
-**What the lecture does.** One algorithm, gradient descent with the fixed step $1/L$, and three guarantees earned by three assumptions. The update and $L$-smoothness (sections 3-9); one descent inequality, $f(x_{t+1}) \leq f(x_t) - \frac{1}{2L}\|\nabla f(x_t)\|^2$ (sections 10-18); nonconvex $f$ bounded below: a small squared gradient at rate $O(1/T)$, which means approximate stationarity, not a local minimum (sections 19-25); convex $f$ with an attained minimum: function gap $O(1/T)$ (sections 26-37); $\mu$-strongly convex $f$: geometric (linear) decay of the distance and the function gap (sections 38-47); and the three results side by side (sections 48-50).
+**What the lecture does.** One algorithm, gradient descent with the fixed step $1/L$, and three guarantees earned by three assumptions. The update and $L$-smoothness (sections 3-8); one descent inequality, $f(x_{t+1}) \leq f(x_t) - \frac{1}{2L}\|\nabla f(x_t)\|^2$, read as minimizing a quadratic upper model (sections 9-16); nonconvex $f$ bounded below: every gradient norm tends to zero and the smallest squared gradient is $O(1/T)$, which means approximate stationarity, not a local minimum (sections 17-23); convex $f$ with an attained minimum: function gap $O(1/T)$ (sections 24-35); $\mu$-strongly convex $f$: geometric (linear) decay of the distance and the function gap (sections 36-44); and the three results side by side (sections 45-47).
 
-**Conventions.** $f:\mathbb{R}^n \to \mathbb{R}$ is differentiable and $L$-smooth; $x_{t+1} = x_t - \frac{1}{L}\nabla f(x_t)$. $f_{\text{low}}$ is a lower bound on $f$; when a minimizer $x^*$ exists, $f^* = f(x^*)$. $\mu > 0$ is the strong-convexity constant. $\|\cdot\|$ is the Euclidean norm. The running example is $f(x) = 2x_1^2 + \frac12 x_2^2$ on $\mathbb{R}^2$, with $L = 4$. Results are cited by name, not number.
+**Conventions.** $f:\mathbb{R}^n \to \mathbb{R}$ is differentiable and $L$-smooth; $x_{t+1} = x_t - \frac{1}{L}\nabla f(x_t)$. $f_{\text{low}}$ is a lower bound on $f$; when a minimizer $x^*$ exists, $f^* = f(x^*)$. $\mu > 0$ is the strong-convexity constant. $\|\cdot\|$ is the Euclidean norm. Results are cited by name, not number.
 
 **Extended edition.** The pre-2026-11 lecture (134 slides, with the Hessian tests, co-coercivity, the Polyak-Lojasiewicz condition, step sizes other than $1/L$ and the full legacy proofs) is archived with the same slide IDs as `../opt03-backup/opt03-convexity-gd-full.html`, with notes `../opt03-backup/opt03-convexity-gd-full-note.html` and `../opt03-backup/opt03-convexity-gd-full-note.md`.
 
@@ -28,8 +28,8 @@ Lecture 11 of Deep Learning Math (90 minutes). It studies one algorithm, gradien
 **Message.** Six parts: the update, the one inequality every proof uses, then one guarantee per assumption, then the comparison.
 
 1. One Update: Step against the gradient.
-2. One Descent Inequality: Smoothness bounds every step.
-3. Nonconvex: Stationarity: Small gradients, not minima.
+2. One Descent Inequality: An upper model and one square.
+3. Nonconvex: Stationarity: Gradients vanish, minima not promised.
 4. Convex: Optimality: Function gap at rate 1/T.
 5. Strongly Convex: Geometric Decay: Distance shrinks every step.
 6. Three Guarantees: Same step, different assumptions.
@@ -114,11 +114,11 @@ Definition: a differentiable $f:\mathbb{R}^n\to\mathbb{R}$ is $L$-smooth, for a 
 
 The condition is on the gradient. The function itself may grow without bound: $f(x)=\tfrac12x^2$ has gradient $x$, which is $1$-Lipschitz, so $f$ is $1$-smooth; but $f$ itself is not Lipschitz, because its slope $x$ is unbounded.
 
-Smoothness says nothing about convexity. The nonconvex curve of section 4, and the function $1-\cos x$ used later, are smooth and not convex. The nonconvex guarantee uses smoothness and boundedness below, but not convexity.
+Smoothness says nothing about convexity. The nonconvex curve of section 4 is smooth and not convex. The nonconvex guarantee uses smoothness and boundedness below, but not convexity.
 
 **Details.**
 
-If $f$ is $L$-smooth it is also $L'$-smooth for every $L'\ge L$, so any valid $L$ can be used; the running example in section 9, Running Example: $L = 4$, checks $L=4$ directly from the definition.
+If $f$ is $L$-smooth it is also $L'$-smooth for every $L'\ge L$, so any valid $L$ can be used.
 
 **Sources.**
 
@@ -145,26 +145,6 @@ The source states its results for any constant step $\alpha$ with $\alpha L\le1$
 Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Convergence of GD", https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html (evidence E06), specialized to $\alpha=1/L$.
 <!-- END S81 -->
 
-<!-- BEGIN S30 -->
-### 9. Running Example: $L = 4$ [S30]
-
-**Message.** For $f(x)=2x_1^2+\tfrac12x_2^2$ the smoothness constant is exactly $L=4$, so the step is $1/4$.
-
-The running example is $f(x)=2x_1^2+\tfrac12x_2^2$ on $\mathbb{R}^2$, with gradient $\nabla f(x)=(4x_1,x_2)$.
-
-Write $z=x-y$. Then $\nabla f(x)-\nabla f(y)=(4z_1,z_2)$, whose norm is $\sqrt{16z_1^2+z_2^2}$. Since $16z_1^2+z_2^2\le16(z_1^2+z_2^2)$, the norm is at most $4\|z\|$, so $f$ is $4$-smooth.
-
-At $z=(1,0)$ both sides equal $4$, so no smaller constant works: $L=4$ exactly, and gradient descent uses step $1/L=1/4$.
-
-**Details.**
-
-The two coordinates have curvatures $4$ and $1$ (the diagonal of the Hessian $\mathrm{diag}(4,1)$). $L$ is the larger curvature. The smaller one, $\mu=1$, returns in the strongly convex part of the lecture.
-
-**Sources.**
-
-Our calculation (illustrative example; evidence E08, E09).
-<!-- END S30 -->
-
 <!-- REGION P4a END -->
 
 <!-- REGION P4b BEGIN -->
@@ -172,111 +152,164 @@ Our calculation (illustrative example; evidence E08, E09).
 ## Part 2: One Descent Inequality
 
 <!-- BEGIN S25 -->
-### 10. Part 2: One Descent Inequality [S25]
+### 9. Part 2: One Descent Inequality [S25]
 
 **Message.** Part 2 proves the one inequality that every later guarantee uses: each step lowers $f$ by at least $\frac{1}{2L}\|\nabla f\|^2$.
 <!-- END S25 -->
 
 <!-- BEGIN S33 -->
-### 11. Smoothness Gives a Quadratic Upper Bound [S33]
+### 10. Smoothness Gives a Quadratic Upper Bound [S33]
 
-**Message.** An $L$-smooth function lies below its linear model plus $\tfrac L2\|y-x\|^2$, for every pair of points.
+**Message.** An $L$-smooth function lies below its linear model plus $\tfrac L2\|y-x\|^2$, for every pair of points; this standard lemma is the tool every later step uses.
 
 Lemma (descent lemma). If $f:\mathbb{R}^n\to\mathbb{R}$ is differentiable and $L$-smooth, then for all $x,y\in\mathbb{R}^n$: $f(y)\le f(x)+\langle\nabla f(x),y-x\rangle+\tfrac L2\|y-x\|^2$.
 
-The right side is the linear model of $f$ at $x$ plus a quadratic penalty. Unlike the $o(\|h\|)$ statement of section 5, this is valid for every finite step, which is exactly what is needed to analyze one step of an algorithm.
+**Meaning.** The right side is the linear model of $f$ at $x$ plus a quadratic penalty. As a function of $y$ it is a round bowl that touches $f$ at $x$ with the same slope, and $f$ never rises above it. The bowl's curvature is $L$, the largest rate at which smoothness lets the gradient change.
+
+**Role.** Unlike the $o(\|h\|)$ statement of section 5, the bound holds for every finite step, which is what is needed to analyze one step of an algorithm. Every later guarantee uses it only through the one-step decrease of section 16.
 
 No convexity is used. The bound is one-sided: it limits how far $f$ can rise above its linear model, not how far it can fall below it.
 
+This is a standard lemma, used here as a tool. The three pictures that follow illustrate it on one function; they do not prove it. A proof is given below as optional reading; nothing later depends on it.
+
 **Details.**
 
-The proof follows in sections 13 to 15, in three steps: restrict $f$ to the segment from $x$ to $y$, bound the change of the slope along it by smoothness, and integrate.
+**Optional formal derivation.** Not needed for the rest of the lecture. Fix $x,y$, set $h=y-x$ and $\rho(s)=f(x+sh)$ for $s\in[0,1]$, so $\rho(0)=f(x)$ and $\rho(1)=f(y)$. Here $s$ marks a point on the segment; it is not the iteration index $t$.
+
+Step 1. By the chain rule $\rho'(s)=\langle\nabla f(x+sh),h\rangle$. This is continuous in $s$, because $\nabla f$ is Lipschitz and hence continuous. The fundamental theorem of calculus gives $f(y)-f(x)=\int_0^1\rho'(s)\,ds$.
+
+Step 2. The slope drifts by at most $Ls\|h\|^2$: $\rho'(s)-\rho'(0)=\langle\nabla f(x+sh)-\nabla f(x),h\rangle\le\|\nabla f(x+sh)-\nabla f(x)\|\,\|h\|\le Ls\|h\|^2$, by Cauchy-Schwarz and then smoothness, since the two points are $\|sh\|=s\|h\|$ apart.
+
+Step 3. Integrate: $f(y)=f(x)+\int_0^1\rho'(s)\,ds\le f(x)+\int_0^1(\rho'(0)+Ls\|h\|^2)\,ds=f(x)+\langle\nabla f(x),h\rangle+\tfrac L2\|h\|^2$, because $\rho'(0)=\langle\nabla f(x),h\rangle$ does not depend on $s$ and $\int_0^1Ls\,ds=\tfrac L2$. The $\tfrac12$ is the average of $s$ over the segment.
+
+The derivation uses only differentiability and the Lipschitz gradient: no Hessian and no convexity. The earlier three-slide version of this proof (IDs S36, S37, S38) is archived in the extended edition, `../opt03-backup/opt03-convexity-gd-full.html` and its notes.
 
 **Sources.**
 
-Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Descent lemma: Lipschitz conitnuous gradient implies a global quadratic upper bound" (section title spelled as in the source), https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html (evidence E06, E07 step 1).
+Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Descent lemma: Lipschitz conitnuous gradient implies a global quadratic upper bound" (section title spelled as in the source), https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html. The optional derivation follows the same section.
 <!-- END S33 -->
 
-<!-- BEGIN S34 -->
-### 12. The Upper Bound Touches $f$ at $x$ [S34]
+<!-- BEGIN S34a -->
+### 11. Start at the Current Point [S34a]
 
-**Message.** The quadratic upper bound touches $f$ at $x$ and lies above it everywhere else.
+**Message.** At the current point $x$, the tangent gives the local slope of $f$; it is not a safe upper bound and says nothing about how far to step.
 
-In one variable, compare three graphs: $f$ itself, the upper bound from the lemma built at a point $x$, and the tangent line at $x$. All three meet at $x$. The upper bound stays on or above $f$ everywhere, and $f$ bends upward away from the tangent.
+This is the first of three frames built on one fixed picture of a function of one variable. The solid black curve is $f$, a bowl-shaped curve. A blue dot marks the current point $x$ on its left, descending side. A thin grey line through that dot is the tangent at $x$, the linear model $f(x)+\langle g,y-x\rangle$ with $g=\nabla f(x)$; it slopes downward to the right.
 
-Equality holds at $y=x$: there the penalty $\tfrac L2\|y-x\|^2$ is zero and the linear model equals $f(x)$. Away from $x$ the penalty grows quadratically and keeps the bound above $f$.
+The tangent matches the value and the slope of $f$ at $x$, so it tells which way is downhill. It does not tell how far to go: a linear model keeps decreasing forever and has no minimizer, so following it alone would suggest an unlimited step.
+
+The caption reads: the tangent gives the local slope, not a safe upper bound.
 
 **Details.**
 
-The illustration uses $f(u)=u^2$, the point $x=-0.6$ and $L=3$ (our choice). Since $f'(u)=2u$ is $2$-Lipschitz, $f$ is $2$-smooth and hence also $3$-smooth, so $L=3$ is valid. The upper bound minus $f$ equals $\tfrac32(u+0.6)^2-(u+0.6)^2=\tfrac12(u+0.6)^2\ge0$ (our calculation), which is zero only at $u=x$. With $L=2$ the bound would coincide with $f$; $L=3$ was chosen so the two curves differ away from $x$.
+**Frame parameters** (the source line under the figure gives $f$ and $x$). $f(u)=u^2$, current point $x=-0.6$, so $f(x)=0.36$ and $g=f'(x)=-1.2$; tangent $T(u)=0.36-1.2(u+0.6)$. All three frames use the same axes and curves, generated by `figs/gd_model_build.py` in this deck folder, which asserts the geometry (our drawing and calculation).
 
 **Sources.**
 
-Illustration: our drawing and calculation (parameters above).
-<!-- END S34 -->
+Illustration: our drawing (`figs/gd_model_build.py`).
+<!-- END S34a -->
+
+<!-- BEGIN S34b -->
+### 12. Smoothness Adds an Upper Model [S34b]
+
+**Message.** Smoothness adds the upper model $Q_x$, a bowl that touches $f$ at $x$ and stays above it everywhere.
+
+Same frame as section 11, with one curve added: a dashed blue curve labelled upper model $Q_x$, where $Q_x(y)=f(x)+\langle g,y-x\rangle+\tfrac L2\|y-x\|^2$ is the right side of the descent lemma, the tangent plus a quadratic penalty.
+
+All three curves meet at $x$ with the same slope. The dashed blue model lies on or above the solid black $f$ everywhere and touches it only at $x$; it is narrower than $f$ here, so it rises faster on both sides.
+
+The labels: black is the objective $f$; grey is the tangent, the first-order model; dashed blue is the safe upper model $Q_x$. Unlike the tangent, $Q_x$ has a lowest point, because of its quadratic term.
+
+The caption reads: $Q_x$ touches $f$ at $x$ and stays above it everywhere.
+
+**Details.**
+
+**Frame parameters.** With $f(u)=u^2$, $f'(u)=2u$ is $2$-Lipschitz, so $f$ is $2$-smooth and hence also $3$-smooth; the drawing uses $L=3$. Then $Q_x(u)=0.36-1.2(u+0.6)+1.5(u+0.6)^2$ and $Q_x(u)-f(u)=\tfrac32(u+0.6)^2-(u+0.6)^2=\tfrac12(u+0.6)^2\ge0$, zero only at $u=x$ (our calculation). With $L=2$ the model would coincide with $f$; $L=3$ keeps the two curves visibly apart. Curves are clipped at the top of the plot.
+
+**Sources.**
+
+- Inequality: the descent lemma, Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Descent lemma: Lipschitz conitnuous gradient implies a global quadratic upper bound" (section title spelled as in the source), https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html.
+- Illustration: our drawing and calculation (`figs/gd_model_build.py`).
+<!-- END S34b -->
+
+<!-- BEGIN S34c -->
+### 13. Minimize the Model, Then Step [S34c]
+
+**Message.** Gradient descent steps to the minimizer of the model, $x-g/L$; there $f$ lies below the model, and the new point need not be the minimizer of $f$.
+
+Same frame as section 12, with the step added. Below the axis a horizontal arrow runs from $x$ to the point labelled $x-g/L$, to the right because the slope $g$ is negative here. Above that point, a hollow blue dot marks the lowest point of the dashed model $Q_x$, and a solid black dot directly below it marks $f$ at the same input. A short red vertical segment joins the two dots, labelled gap: $f\le Q_x$. Further right, a grey dot at the bottom of the black curve is labelled min of $f$.
+
+Read it in two moves. Horizontally: the step goes to the minimizer of the model, not to the minimizer of $f$. Vertically: at the new point the value of $f$ is at most the model's lowest value, which is $f(x)-\tfrac{\|g\|^2}{2L}$ (section 15). So the step lowers $f$ by at least $\tfrac{\|g\|^2}{2L}$.
+
+The next step builds a new model at the new point and repeats.
+
+The caption reads: step to the model's minimizer, not to $f$'s minimizer.
+
+**Details.**
+
+**Frame numbers**. $x-g/L=-0.6+1.2/3=-0.2$. Model minimum $Q_x(-0.2)=0.36-1.2(0.4)+1.5(0.4)^2=0.12$, equal to $f(x)-g^2/(2L)=0.36-1.44/6=0.12$. Objective $f(-0.2)=0.04$, so the red gap is $0.08=\tfrac12(0.4)^2$. The minimizer of $f$ is $0$, not $-0.2$ (our calculation).
+
+**Plot frame.** viewBox $760\times360$, $X=360+340u$, $Y=295-420v$, curves clipped at $v\le0.65$; `figs/gd_model_build.py` asserts the touching point, $Q_x\ge f$, the tangent below $f$, and the values above.
+
+**Sources.**
+
+- Descent inequality: Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Convergence of GD", https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html.
+- Illustration: our drawing and calculation (`figs/gd_model_build.py`).
+<!-- END S34c -->
 
 <!-- BEGIN S36 -->
-### 13. Proof Step 1: Follow the Segment [S36]
+### 14. Minimize a Safe Upper Model [S36]
 
-**Message.** Restricting $f$ to the segment from $x$ to $y$ turns the lemma into a one-variable calculus statement.
+**Message.** Fix the base point $x$; the descent lemma says $f(y)\le Q_x(y)$ for every candidate $y$, so we choose the next point by minimizing $Q_x$, not $f$.
 
-Set $h=y-x$ and $\rho(s)=f(x+sh)$ for $s\in[0,1]$, so $\rho(0)=f(x)$ and $\rho(1)=f(y)$. By the chain rule, $\rho'(s)=\langle\nabla f(x+sh),h\rangle$.
+Write $g=\nabla f(x)$. The upper model at $x$ and the descent lemma read
 
-The fundamental theorem of calculus then gives $f(y)-f(x)=\rho(1)-\rho(0)=\int_0^1\rho'(s)\,ds$.
+$$f(y)\;\le\;Q_x(y)=f(x)+\langle g,y-x\rangle+\frac L2\|y-x\|^2\qquad\text{for every }y.$$
 
-Here $s$ marks a point on the segment; it is not the iteration index $t$.
+Two roles must be kept apart. The base point $x$ is fixed: it is the current iterate, and $f(x)$ and $g$ are known numbers. The candidate $y$ is the variable. As a function of $y$, $Q_x$ is a simple quadratic, a round bowl with curvature $L$ in every direction, while $f$ may be any smooth function and hard to minimize directly.
+
+So instead of solving the whole problem, minimize the model. Because the model sits above $f$, wherever we move, $f$ is at most what the model predicts there. This explains the step; it is not a proof of the descent lemma, which was stated on section 10.
 
 **Details.**
 
-The fundamental theorem applies because $\rho'$ is continuous: $\nabla f$ is Lipschitz, hence continuous, and $s\mapsto x+sh$ is continuous, so $s\mapsto\langle\nabla f(x+sh),h\rangle$ is continuous on $[0,1]$.
+**Model versus objective.** $Q_x$ depends on the base point: after a step there is a new model at the new point. At the base point the model is exact, $Q_x(x)=f(x)$. The phrase upper model and this minimize-the-model reading are our exposition; the inequality itself is the descent lemma.
 
 **Sources.**
 
-Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Descent lemma", https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html (evidence E06).
+- Inequality: Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Descent lemma: Lipschitz conitnuous gradient implies a global quadratic upper bound" (section title spelled as in the source), https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html.
+- Model view: our exposition.
 <!-- END S36 -->
 
 <!-- BEGIN S37 -->
-### 14. Proof Step 2: Smoothness Bounds the Drift [S37]
+### 15. Completing the Square Gives GD [S37]
 
-**Message.** Smoothness bounds how far the slope $\rho'(s)$ can drift from $\rho'(0)$: by at most $Ls\|h\|^2$.
+**Message.** Completing the square writes $Q_x(y)=f(x)-\tfrac{\|g\|^2}{2L}+\tfrac L2\|y-(x-g/L)\|^2$, so the minimizer of the model is the gradient step $x-g/L$.
 
-Compare the slope at $s$ with the slope at $0$: $\rho'(s)-\rho'(0)=\langle\nabla f(x+sh)-\nabla f(x),h\rangle$.
+The derivation takes two lines:
 
-Cauchy-Schwarz bounds this by $\|\nabla f(x+sh)-\nabla f(x)\|\,\|h\|$. Smoothness bounds the gradient difference by $L$ times the distance between the points, which is $\|sh\|=s\|h\|$. Together: $\rho'(s)-\rho'(0)\le Ls\|h\|^2$.
+$$\begin{aligned}Q_x(y)&=f(x)+\frac L2\Big(\|y-x\|^2+\frac2L\langle g,y-x\rangle\Big)\\&=f(x)-\frac{\|g\|^2}{2L}+\frac L2\Big\|y-\Big(x-\frac gL\Big)\Big\|^2.\end{aligned}$$
+
+The first line factors $\tfrac L2$ out of the two terms that depend on $y$. For the second, expand $\|a+b\|^2=\|a\|^2+2\langle a,b\rangle+\|b\|^2$ with $a=y-x$ and $b=g/L$: $\|y-x+g/L\|^2=\|y-x\|^2+\tfrac2L\langle g,y-x\rangle+\tfrac{\|g\|^2}{L^2}$. Hence $\|y-x\|^2+\tfrac2L\langle g,y-x\rangle=\|y-(x-g/L)\|^2-\tfrac{\|g\|^2}{L^2}$. Multiply by $\tfrac L2$ and add $f(x)$.
+
+The square is nonnegative and vanishes only at $y=x-g/L$. So the model is smallest exactly at the gradient step, and its smallest value is $f(x)-\tfrac{\|g\|^2}{2L}$.
+
+Only the expansion of $\|a+b\|^2$ is used: no integral, no Hessian, no convexity.
 
 **Details.**
 
-Only an upper bound is needed, so only one side of Cauchy-Schwarz is used. The same argument with the sign flipped gives $\rho'(s)-\rho'(0)\ge-Ls\|h\|^2$, which would yield a matching lower bound on $f$; the lecture does not need it.
+**One variable.** $Q_x(u)=f(x)+g(u-x)+\tfrac L2(u-x)^2$ is a parabola with vertex at $u=x-g/L$, the familiar vertex formula. **Check on the pictures.** With $x=-0.6$, $g=-1.2$, $L=3$: vertex $-0.2$ and minimum value $0.36-1.44/6=0.12$, matching section 13.
 
 **Sources.**
 
-Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Descent lemma", https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html (evidence E06).
+Our calculation (completing the square). Descent lemma: Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Descent lemma: Lipschitz conitnuous gradient implies a global quadratic upper bound" (section title spelled as in the source), https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html.
 <!-- END S37 -->
-
-<!-- BEGIN S38 -->
-### 15. Proof Step 3: Integrating $s$ Gives $\tfrac{1}{2}$ [S38]
-
-**Message.** Integrating the drift bound over $s\in[0,1]$ produces the factor $\tfrac L2$ and finishes the lemma.
-
-Start from Step 1: $f(y)=f(x)+\int_0^1\rho'(s)\,ds$. Replace $\rho'(s)$ by its Step 2 bound $\rho'(0)+Ls\|h\|^2$. Since $\rho'(0)=\langle\nabla f(x),y-x\rangle$ does not depend on $s$ and $\int_0^1Ls\,ds=\tfrac L2$, the result is $f(y)\le f(x)+\langle\nabla f(x),y-x\rangle+\tfrac L2\|y-x\|^2$.
-
-So the $\tfrac12$ in the lemma is just the average of $s$ over the segment.
-
-**Details.**
-
-Full chain: $f(y)=f(x)+\int_0^1\rho'(s)\,ds\le f(x)+\int_0^1(\rho'(0)+Ls\|h\|^2)\,ds=f(x)+\rho'(0)+\tfrac L2\|h\|^2$, with $h=y-x$.
-
-**Sources.**
-
-Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Descent lemma", https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html (evidence E06).
-<!-- END S38 -->
 
 <!-- BEGIN S90 -->
 ### 16. The Step $1/L$ Decreases $f$ [S90]
 
 **Message.** Plugging the step $1/L$ into the lemma gives the descent inequality $f(x_{t+1})\le f(x_t)-\tfrac1{2L}\|\nabla f(x_t)\|^2$.
 
-Write $g_t=\nabla f(x_t)$ and apply the lemma with $x=x_t$ and $y=x_{t+1}=x_t-\tfrac1Lg_t$. The linear term is $\langle g_t,-\tfrac1Lg_t\rangle=-\tfrac1L\|g_t\|^2$ and the penalty is $\tfrac L2\|\tfrac1Lg_t\|^2=\tfrac1{2L}\|g_t\|^2$. Adding them gives $f(x_{t+1})\le f(x_t)-\tfrac1{2L}\|g_t\|^2$.
+Write $g_t=\nabla f(x_t)$ and apply the lemma with $x=x_t$ and $y=x_{t+1}=x_t-\tfrac1Lg_t$. The linear term is $\langle g_t,-\tfrac1Lg_t\rangle=-\tfrac1L\|g_t\|^2$ and the penalty is $\tfrac L2\|\tfrac1Lg_t\|^2=\tfrac1{2L}\|g_t\|^2$. Adding them gives $f(x_{t+1})\le f(x_t)-\tfrac1{2L}\|g_t\|^2$. The step $x_{t+1}$ is the minimizer of the upper model $Q_{x_t}$ (section 15), and the right side is the minimum value of $Q_{x_t}$.
 
 No convexity is used. Every step either keeps $f$ the same (only when $g_t=0$) or strictly lowers it. This single inequality drives all three guarantees in the lecture.
 
@@ -289,48 +322,6 @@ Among steps of the form $x_t-\alpha g_t$, the lemma gives $f(x_{t+1})\le f(x_t)-
 Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Convergence of GD", https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html (evidence E06, E07 step 1), with $\alpha=1/L$.
 <!-- END S90 -->
 
-<!-- BEGIN S83 -->
-### 17. One Step Zeroes the Stiff Coordinate [S83]
-
-**Message.** On the running example, one step $1/4$ sets the stiff coordinate to zero and shrinks the flat one by $\tfrac34$.
-
-With $\nabla f(x)=(4x_1,x_2)$ and step $1/4$: $x^+=x-\tfrac14(4x_1,x_2)=((1-\tfrac44)x_1,(1-\tfrac14)x_2)=(0,\tfrac34x_2)$.
-
-Each coordinate is multiplied by $1-(\text{curvature})/L$. The stiff coordinate has curvature $4=L$, so its factor is $0$ and it is exactly zero after one step. The flat coordinate has curvature $1$, so its factor is $\tfrac34$ at every step.
-
-**Details.**
-
-This is special to a diagonal quadratic: the coordinates decouple, so the step acts on each separately. In general the step $1/L$ is tuned to the stiffest direction, and flatter directions move more slowly.
-
-**Sources.**
-
-Our calculation (illustrative example; evidence E08).
-<!-- END S83 -->
-
-<!-- BEGIN S84 -->
-### 18. Two Steps: $f$ Falls From $10$ to $81/128$ [S84]
-
-**Message.** Two steps from $x_0=(2,2)$ take $f$ from $10$ to $9/8$ to $81/128$, each value below the descent bound.
-
-The iterates, one bullet per step $t$. Each bullet gives the iterate $x_t$, the value $f(x_t)$, and the descent bound $f(x_{t-1})-\tfrac18\|\nabla f(x_{t-1})\|^2$ on that value (here $\tfrac1{2L}=\tfrac18$).
-
-- Step $t=0$: $x_0=(2,2)$, $f=10$, no bound.
-- Step $t=1$: $x_1=(0,\tfrac32)$, $f=\tfrac98$, bound $10-\tfrac{68}8=\tfrac32$.
-- Step $t=2$: $x_2=(0,\tfrac98)$, $f=\tfrac{81}{128}$, bound $\tfrac98-\tfrac{9/4}8=\tfrac{27}{32}$.
-
-Each actual value sits below its bound, as the descent inequality promises. The bound is not tight here: the example decreases faster than the generic guarantee.
-
-**Details.**
-
-Gradients: $g_0=(8,2)$ with $\|g_0\|^2=68$; $g_1=(0,\tfrac32)$ with $\|g_1\|^2=\tfrac94$. Values: $f(x_0)=2\cdot4+\tfrac12\cdot4=10$; $f(x_1)=\tfrac12\cdot\tfrac94=\tfrac98$; $f(x_2)=\tfrac12\cdot\tfrac{81}{64}=\tfrac{81}{128}$. Checks: $\tfrac98\le\tfrac32$ and $\tfrac{81}{128}\le\tfrac{27}{32}=\tfrac{108}{128}$.
-
-Squared distances to the minimizer $x^\star=0$ are $8$, $\tfrac94$, $\tfrac{81}{64}$. The first step behaves differently from later ones because it zeroes the stiff coordinate; from $t=1$ on only the second coordinate remains, so both the squared distance and $f$ shrink by exactly $(\tfrac34)^2=\tfrac9{16}$ per step, e.g. $\tfrac{81/128}{9/8}=\tfrac9{16}$. These exact ratios belong to this example, not to a general bound. The baseline table with more iterations is in the backup note.
-
-**Sources.**
-
-Our calculation (illustrative example; evidence E09).
-<!-- END S84 -->
-
 <!-- REGION P4b END -->
 
 <!-- REGION P4c BEGIN -->
@@ -338,25 +329,25 @@ Our calculation (illustrative example; evidence E09).
 ## Part 3: Nonconvex: Stationarity
 
 <!-- BEGIN S135 -->
-### 19. Part 3: Nonconvex: Stationarity [S135]
+### 17. Part 3: Nonconvex: Stationarity [S135]
 
 **Message.** Part 3 uses smoothness and boundedness below: the smallest gradient seen shrinks, which certifies approximate stationarity, not a minimum.
 <!-- END S135 -->
 
 <!-- BEGIN S89 -->
-### 20. Nonconvex Guarantee: Small Squared Gradient [S89]
+### 18. Nonconvex Guarantee: Small Squared Gradient [S89]
 
 **Message.** For any $L$-smooth $f$ bounded below, $T$ steps of size $1/L$ make the smallest squared gradient at most $2L(f(x_0)-f_{\text{low}})/T$.
 
 Theorem (nonconvex, step $1/L$). Let $f:\mathbb{R}^n\to\mathbb{R}$ be differentiable and $L$-smooth with $f(x)\ge f_{\text{low}}$ for all $x$. For any $x_0$ and every $T\ge1$, the iterates satisfy $\min_{0\le t\le T-1}\|\nabla f(x_t)\|^2\le 2L(f(x_0)-f_{\text{low}})/T$.
 
-The bound concerns the best of the $T$ squared gradients at $x_0,\dots,x_{T-1}$. It is not a bound on a gap $f(x_t)-f^\star$, and it does not say which iterate is best.
+The bound concerns the best of the $T$ squared gradients at $x_0,\dots,x_{T-1}$. It is not a bound on a gap $f(x_t)-f^\star$, and it does not say which iterate is best. The $\min$ is over the iterates, not a minimum of $f$.
 
 Only a lower bound is assumed: $f_{\text{low}}$ need not be attained, and no minimizer is assumed. Convexity is not assumed either.
 
 **Details.**
 
-Indexing: the source states the bound with $f^*$, step $\alpha$ with $\alpha L\le1$, and a minimum over $t\in\{0,\dots,T\}$, i.e. $\min\|\nabla f(w_t)\|^2\le2(f(w_0)-f^*)/(\alpha T)$. Here we use exactly $T$ gradients indexed $0$ to $T-1$, which is what summing $T$ descent inequalities gives (sections 21 and 22), and replace $f^*$ by any lower bound, which the telescoping proof allows. With $\alpha=1/L$ the constants agree.
+Indexing: the source states the bound with $f^*$, step $\alpha$ with $\alpha L\le1$, and a minimum over $t\in\{0,\dots,T\}$, i.e. $\min\|\nabla f(w_t)\|^2\le2(f(w_0)-f^*)/(\alpha T)$. Here we use exactly $T$ gradients indexed $0$ to $T-1$, which is what summing $T$ descent inequalities gives (sections 19 and 20), and replace $f^*$ by any lower bound, which the telescoping proof allows. With $\alpha=1/L$ the constants agree.
 
 **Sources.**
 
@@ -364,7 +355,7 @@ Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Convergence of GD", https:/
 <!-- END S89 -->
 
 <!-- BEGIN S91 -->
-### 21. Proof Step 1: Sum the Decreases [S91]
+### 19. Proof Step 1: Sum the Decreases [S91]
 
 **Message.** Adding the descent inequality over $T$ steps telescopes, so the total squared gradient is capped by the finite budget $f(x_0)-f_{\text{low}}$.
 
@@ -382,7 +373,7 @@ Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Convergence of GD", https:/
 <!-- END S91 -->
 
 <!-- BEGIN S92 -->
-### 22. Proof Step 2: Minimum at Most Average [S92]
+### 20. Proof Step 2: Minimum at Most Average [S92]
 
 **Message.** The smallest of $T$ numbers is at most their average, which turns the summed bound into the theorem.
 
@@ -399,52 +390,62 @@ The same argument bounds the average squared gradient, which is a slightly stron
 Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Convergence of GD", https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html (evidence E06).
 <!-- END S92 -->
 
-<!-- BEGIN S93 -->
-### 23. Stationary Does Not Mean Minimum [S93]
+<!-- BEGIN S141 -->
+### 21. Every Gradient Norm Vanishes [S141]
 
-**Message.** Nonconvex gradient descent gets a $1/T$ rate only for the smallest squared gradient, not for reaching a local optimum.
+**Message.** Under the nonconvex assumptions the whole sequence of gradient norms tends to zero, $\|\nabla f(x_t)\|\to0$, but with no rate for the last iterate and no claim about the iterates themselves.
 
-Q: Does nonconvex GD reach a local optimum at rate $1/T$ (asked as "linear convergence to local optimum")? A: No. The $1/T$ rate is for $\min_t\|\nabla f(x_t)\|^2$ only. Under these assumptions there is no guarantee of a local minimum, and the rate $1/T$ is sublinear, not linear.
+Q: Does $\|\nabla f(x_t)\|\to0$ for nonconvex gradient descent? A: Yes, for the whole sequence, under the same assumptions: $f$ is $L$-smooth, $f\ge f_{\text{low}}$, and the step is $1/L$.
 
-Four sets are nested, from largest to smallest. The largest is the set of $\varepsilon$-stationary points, $\|\nabla f(x)\|\le\varepsilon$: this is what the theorem delivers. Inside it is the set of stationary points, $\nabla f(x)=0$, which also contains local maxima and saddle points. Inside that are local minima, which are not guaranteed. Innermost are global minima, also not guaranteed.
+Step 1 of the proof (section 19) gives $\sum_{t=0}^{T-1}\|\nabla f(x_t)\|^2\le2L(f(x_0)-f_{\text{low}})$ for every $T$. The right side does not depend on $T$, and the partial sums only grow, so the infinite sum is finite:
 
-Scope: $L$-smooth, bounded below, step $1/L$, and no further assumptions. Section 24 gives a concrete function where gradient descent stays at a maximum.
+$$\sum_{t\ge0}\|\nabla f(x_t)\|^2\;\le\;2L\big(f(x_0)-f_{\text{low}}\big)\;\lt\;\infty\quad\Longrightarrow\quad\|\nabla f(x_t)\|\to0.$$
+
+The reason in one line: nonnegative terms with a finite sum must tend to zero.
+
+What it does not say. It is an asymptotic statement about the whole sequence, not a rate: there is no $O(1/T)$ bound on the last gradient; the $O(1/T)$ rate of section 18 is for the best squared gradient. It also says nothing about whether $x_t$ converges, or to what (section 22).
 
 **Details.**
 
-From Step 1 of the proof, $\sum_{t\ge0}\|\nabla f(x_t)\|^2\le2L(f(x_0)-f_{\text{low}})$ for every $T$, so the series converges and $\|\nabla f(x_t)\|\to0$. This alone does not imply that the iterates converge. If a subsequence of iterates converges to some $\bar x$, continuity of $\nabla f$ gives $\nabla f(\bar x)=0$: the limit is stationary, but it may be a maximum or a saddle.
+**The $\varepsilon$ argument.** Suppose the gradient norms do not tend to zero. Then there is $\varepsilon\gt0$ with $\|\nabla f(x_t)\|\ge\varepsilon$ for infinitely many $t$. Each such $t$ adds at least $\varepsilon^2$ to the sum, so after $N$ of them the partial sum is at least $N\varepsilon^2$, which exceeds $2L(f(x_0)-f_{\text{low}})$ once $N\gt2L(f(x_0)-f_{\text{low}})/\varepsilon^2$: a contradiction. So for every $\varepsilon\gt0$ only finitely many $t$ have $\|\nabla f(x_t)\|\ge\varepsilon$, which is the definition of $\|\nabla f(x_t)\|\to0$.
+
+**Why no rate.** The argument uses only that the series is summable, which by itself gives no bound on an individual term at a given $t$; nothing in it makes the gradient norms decrease monotonically.
+
+**Assumptions.** Only a finite lower bound $f_{\text{low}}$ is needed; it need not be attained, and no minimizer is assumed. The iterates may fail to converge; the statement is about gradients only.
+
+**Sources.**
+
+- Summed bound for every $T$: Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Convergence of GD", https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html.
+- The limit and the $\varepsilon$ argument: our deduction from that bound.
+<!-- END S141 -->
+
+<!-- BEGIN S93 -->
+### 22. Stationary Does Not Mean Minimum [S93]
+
+**Message.** Nonconvex gradient descent gets a $1/T$ rate only for the smallest squared gradient; vanishing gradients do not mean reaching a local optimum.
+
+Q: Does nonconvex GD reach a local optimum at rate $1/T$ (asked as "linear convergence to local optimum")? A: No. The $1/T$ rate is for $\min_t\|\nabla f(x_t)\|^2$ only. Under these assumptions there is no guarantee of a local minimum, and the rate $1/T$ is sublinear, not linear.
+
+The figure is four nested boxes. The outer box is the set of $\varepsilon$-stationary points, $\|\nabla f(x)\|\le\varepsilon$: this is what the theorem delivers. Inside it is the set of stationary points, $\nabla f(x)=0$, which also contains local maxima and saddle points. Inside that, in a dashed box, are local minima, which are not guaranteed. Innermost, also dashed, are global minima.
+
+Scope: $L$-smooth, bounded below, step $1/L$, and no further assumptions. The gradients do vanish (section 21); what fails is the step from a vanishing gradient to a minimum.
+
+**Details.**
+
+section 21 showed $\|\nabla f(x_t)\|\to0$ for the whole sequence. That is a statement about gradients, not iterates: it does not imply that $x_t$ converges. If a subsequence of iterates converges to some $\bar x$, continuity of $\nabla f$ gives $\nabla f(\bar x)=0$: the limit is stationary, but it may be a maximum or a saddle.
+
+**Optional example: gradient descent can stay at a maximum.** Take $f(x)=1-\cos x$ on $\mathbb{R}$. It satisfies the assumptions: $f\ge0$, so $f_{\text{low}}=0$; and $f$ is $1$-smooth, because $f'(x)=\sin x$ and $|\sin x-\sin y|\le|x-y|$ by the mean value theorem, since $|\cos|\le1$, while $f''(0)=1$ shows no smaller constant works. With step $1/L=1$ the update is $x_{t+1}=x_t-\sin x_t$. Start at $x_0=\pi$: since $\sin\pi=0$, $f'(\pi)=0$ and $x_t=\pi$ for all $t$. But $f''(\pi)=\cos\pi=-1\lt0$, so $\pi$ is a strict local maximum, and $f(\pi)=2$ is in fact the global maximum. The theorem still holds: $\min_t|f'(x_t)|^2=0\le2\cdot1\cdot(2-0)/T=4/T$ for every $T$. This uses an exact start at the maximum; it says nothing about a typical start.
 
 Stronger conclusions, such as avoiding saddle points from almost every start, need further assumptions and are outside this lecture.
 
 **Sources.**
 
-Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Convergence of GD" and the following discussion, which says the limit "can even be a local maximum or saddle point", https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html (evidence E06).
+- Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Convergence of GD" and the following discussion, which says the limit "can even be a local maximum or saddle point", https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html.
+- Optional example: our calculation (formerly slide ID S136, removed from the lecture).
 <!-- END S93 -->
 
-<!-- BEGIN S136 -->
-### 24. GD Can Stay at a Maximum [S136]
-
-**Message.** For $f(x)=1-\cos x$, gradient descent started at $x_0=\pi$ never moves, so the theorem's assumptions do not force a local minimum.
-
-Over a little more than one period, $f(x)=1-\cos x$ is a smooth wave: it has minima at $x=0$ and $x=2\pi$, where $f=0$, and a maximum at $x=\pi$, where $f=2$, $f'(\pi)=0$ and $f''(\pi)=-1$.
-
-The assumptions hold: $f\ge0$, so $f_{\text{low}}=0$, and $f$ is $1$-smooth. With step $1/L=1$ the update is $x_{t+1}=x_t-\sin x_t$. Since $\sin\pi=0$, starting at $x_0=\pi$ gives $x_t=\pi$ for all $t$: every iterate is a strict local maximum, and the gradient is exactly zero, so the theorem is satisfied.
-
-This is an existence counterexample. It uses an exact start at the maximum; it does not describe what happens from a typical start.
-
-**Details.**
-
-$L=1$: $f'(x)=\sin x$ and $|\sin x-\sin y|\le|x-y|$ by the mean value theorem, because $|\cos|\le1$; and $f''(0)=1$, so no smaller constant works. $f''(\pi)=\cos\pi=-1\lt0$, so $\pi$ is a strict local maximum; $f(\pi)=2$ is in fact the global maximum.
-
-The theorem's bound here reads $\min_t|f'(x_t)|^2=0\le2\cdot1\cdot(2-0)/T$, true for every $T$.
-
-**Sources.**
-
-Our calculation (illustrative example; evidence E08). Plot: inline SVG drawn from the formula.
-<!-- END S136 -->
-
 <!-- BEGIN S137 -->
-### 25. The Square Changes the Rate [S137]
+### 23. The Square Changes the Rate [S137]
 
 **Message.** Taking square roots, the gradient norm itself falls only like $O(1/\sqrt T)$, so tolerance $\varepsilon$ costs on the order of $1/\varepsilon^2$ iterations.
 
@@ -456,7 +457,7 @@ Again, this is a best-iterate statement: there is no $O(1/T)$ rate for the gradi
 
 **Details.**
 
-Full constant: $T\ge\lceil2L(f(x_0)-f_{\text{low}})/\varepsilon^2\rceil$ suffices. Arithmetic illustration with the running example's constants $L=4$, $f(x_0)=10$, $f_{\text{low}}=0$: the bound is $80/\varepsilon^2$, e.g. $8000$ for $\varepsilon=0.1$ (our calculation). This is the worst-case guarantee; the running example itself converges much faster.
+Full constant: $T\ge\lceil2L(f(x_0)-f_{\text{low}})/\varepsilon^2\rceil$ suffices. This is a worst-case guarantee for the best iterate. It is different from the limit of section 21: every gradient norm tends to zero, but with no rate for the last iterate.
 
 The source gives the squared-gradient bound; the square root and the iteration count are our derivation from it.
 
@@ -472,13 +473,13 @@ Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Convergence of GD", https:/
 ## Part 4: Convex: Optimality
 
 <!-- BEGIN S09 -->
-### 26. Part 4: Convex: Optimality [S09]
+### 24. Part 4: Convex: Optimality [S09]
 
 **Message.** Part 4 adds convexity: the function gap to the optimum shrinks at rate $O(1/T)$.
 <!-- END S09 -->
 
 <!-- BEGIN S10 -->
-### 27. Convexity Puts Chords Above [S10]
+### 25. Convexity Puts Chords Above [S10]
 
 **Message.** A function is convex when its graph lies on or below every chord, and for such a function every local minimum is global.
 
@@ -509,7 +510,7 @@ The domain matters in general: convexity is a statement on a convex set. Here th
 <!-- END S10 -->
 
 <!-- BEGIN S15 -->
-### 28. The Tangent Lies Below [S15]
+### 26. The Tangent Lies Below [S15]
 
 **Message.** For a differentiable convex function, the tangent plane at any point lies below the whole graph.
 
@@ -538,7 +539,7 @@ As $\theta\to0^+$ the left side tends to the directional derivative $\langle\nab
 <!-- END S15 -->
 
 <!-- BEGIN S95 -->
-### 29. Assume an Optimum Exists [S95]
+### 27. Assume an Optimum Exists [S95]
 
 **Message.** The convex rate is measured from a minimizer, so we assume one exists; it does not have to be unique.
 
@@ -564,7 +565,7 @@ Figure coordinates: `figs/o3b_figs.py` in this deck folder (exact inputs in its 
 <!-- END S95 -->
 
 <!-- BEGIN S96 -->
-### 30. Convex: O(1/T) Function Gap [S96]
+### 28. Convex: O(1/T) Function Gap [S96]
 
 **Message.** For a convex $L$-smooth function with a minimizer, gradient descent with step $1/L$ has function gap at most $L\|x_0-x^\star\|^2/(2T)$ after $T$ steps.
 
@@ -576,17 +577,21 @@ The measured quantity is the function-value gap at the last iterate. The theorem
 
 **Details.**
 
-Sections 31 to 36 prove this theorem. The bound is stated for any minimizer $x^\star$; with several minimizers, use the one nearest $x_0$.
+Sections 29 to 34 prove this theorem. The bound is stated for any minimizer $x^\star$; with several minimizers, use the one nearest $x_0$.
 
-The earlier version of this lecture numbered this result Theorem 8 and proved it with co-coercivity; that proof is in the backup note. The route used now needs only the descent inequality and the tangent bound.
+The earlier version of this lecture proved this result with co-coercivity; that proof is in the backup note. The route used now needs only the descent inequality and the tangent bound.
+
+**Who proved it?** An earlier version of this lecture cited only Garrigos and Gower (2024) for this theorem. Their handbook is a correct reference for the exact statement and constant, but it is a modern exposition, not the original source: its bibliographic notes for this chapter refer to Nesterov's 2004 book for proofs. Nesterov (2004) is an earlier standard treatment; we have not verified who first published the result, so no discoverer is named. Theorem numbers from other editions or drafts of Nesterov's notes are deliberately not quoted.
 
 **Sources.**
 
 - Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
+- Y. Nesterov, *Introductory Lectures on Convex Optimization: A Basic Course*, Springer, 2004. https://link.springer.com/book/10.1007/978-1-4419-8853-9 (an earlier standard treatment; not verified as the first publication).
+- Garrigos and Gower, same handbook, Section 3.4, "Bibliographic notes", which refer to Nesterov (2004) for proofs. https://arxiv.org/abs/2301.11235v3
 <!-- END S96 -->
 
 <!-- BEGIN S97 -->
-### 31. Proof Plan: Spend Distance [S97]
+### 29. Proof Plan: Spend Distance [S97]
 
 **Message.** The proof pays for each step's function gap with a drop in squared distance, and the initial distance $D_0$ is the total budget.
 
@@ -607,7 +612,7 @@ No co-coercivity and no Polyak-Lojasiewicz (PL) condition is needed; both appear
 <!-- END S97 -->
 
 <!-- BEGIN S98 -->
-### 32. Recall: One-Step Decrease [S98]
+### 30. Recall: One-Step Decrease [S98]
 
 **Message.** Smoothness alone gives the one-step decrease $\Delta_{t+1}\le\Delta_t-\tfrac1{2L}\|g_t\|^2$.
 
@@ -621,7 +626,7 @@ Subtracting $f^\star$ from both sides rewrites it in terms of gaps. Nothing here
 
 **Re-derivation.** The smoothness upper bound at $x=x_t$, $y=x_{t+1}=x_t-g_t/L$ gives $f(x_{t+1})\le f(x_t)-\tfrac1L\|g_t\|^2+\tfrac L2\cdot\tfrac1{L^2}\|g_t\|^2=f(x_t)-\tfrac1{2L}\|g_t\|^2$.
 
-Two consequences are used later: the gaps are nonincreasing, $\Delta_{t+1}\le\Delta_t$ (section 36), and each step removes at least $\|g_t\|^2/(2L)$ of gap.
+Two consequences are used later: the gaps are nonincreasing, $\Delta_{t+1}\le\Delta_t$ (section 34), and each step removes at least $\|g_t\|^2/(2L)$ of gap.
 
 **Sources.**
 
@@ -629,13 +634,13 @@ Two consequences are used later: the gaps are nonincreasing, $\Delta_{t+1}\le\De
 <!-- END S98 -->
 
 <!-- BEGIN S99 -->
-### 33. Use the Tangent at x_t [S99]
+### 31. Use the Tangent at x_t [S99]
 
 **Message.** Convexity's tangent bound at $x_t$, evaluated at $x^\star$, bounds the gap by $\langle g_t,x_t-x^\star\rangle$.
 
 Take the tangent bound with $x=x_t$ and $y=x^\star$: $f^\star\ge f(x_t)+\langle g_t,x^\star-x_t\rangle$. Moving terms gives $\Delta_t\le\langle g_t,x_t-x^\star\rangle$.
 
-Put this into the descent step of section 32:
+Put this into the descent step of section 30:
 
 $$\Delta_{t+1}\le\langle g_t,x_t-x^\star\rangle-\frac1{2L}\|g_t\|^2.$$
 
@@ -651,7 +656,7 @@ By Cauchy-Schwarz the same step gives $\Delta_t\le\|g_t\|\sqrt{D_t}$: a convex f
 <!-- END S99 -->
 
 <!-- BEGIN S101 -->
-### 34. Expand the Squared Distance [S101]
+### 32. Expand the Squared Distance [S101]
 
 **Message.** Expanding $\|x_{t+1}-x^\star\|^2$ shows that the right side of the last bound equals $\tfrac L2(D_t-D_{t+1})$, so $\Delta_{t+1}\le\tfrac L2(D_t-D_{t+1})$.
 
@@ -671,8 +676,6 @@ The gap after step $t$ is paid for by the drop in squared distance during step $
 
 **A by-product.** Because $\Delta_{t+1}\ge0$, the inequality forces $D_{t+1}\le D_t$: under convexity, the iterates never move away from any minimizer.
 
-**Example.** For $f=2x_1^2+\tfrac12x_2^2$, $x_0=(2,2)$, $x_1=(0,3/2)$: $\Delta_1=9/8$ and $\tfrac L2(D_0-D_1)=2(8-9/4)=23/2$, consistent with the bound.
-
 **Sources.**
 
 - Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
@@ -680,7 +683,7 @@ The gap after step $t$ is paid for by the drop in squared distance during step $
 <!-- END S101 -->
 
 <!-- BEGIN S104 -->
-### 35. Distances Telescope [S104]
+### 33. Distances Telescope [S104]
 
 **Message.** Summing the per-step bound over $t=0,\dots,T-1$ cancels the middle distances and leaves $\sum_{t=1}^T\Delta_t\le\tfrac L2D_0$.
 
@@ -694,8 +697,6 @@ where the last step drops $D_T\ge0$.
 
 **Off-by-one check.** There are $T$ inequalities, $T$ gaps $\Delta_1,\dots,\Delta_T$ on the left, and the distance terms run from $D_0$ to $D_T$. The gap $\Delta_0$ never appears.
 
-**Example.** In the running quadratic with $T=2$: $\Delta_1+\Delta_2=9/8+81/128=225/128\approx1.76$, against $\tfrac L2D_0=16$.
-
 **Sources.**
 
 - Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
@@ -703,7 +704,7 @@ where the last step drops $D_T\ge0$.
 <!-- END S104 -->
 
 <!-- BEGIN S105 -->
-### 36. The Last Gap Is Smallest [S105]
+### 34. The Last Gap Is Smallest [S105]
 
 **Message.** Gaps never increase, so $T$ times the last gap is at most their sum, which proves the theorem.
 
@@ -727,7 +728,7 @@ Without monotonicity the same sum would bound only the average or the best gap; 
 <!-- END S105 -->
 
 <!-- BEGIN S106 -->
-### 37. The Convex Proof in One Chain [S106]
+### 35. The Convex Proof in One Chain [S106]
 
 **Message.** The whole convex proof is one chain from $T\Delta_T$ to $\tfrac L2D_0$, using only the descent inequality and the tangent bound; the rate is sublinear.
 
@@ -756,13 +757,13 @@ The proof uses no co-coercivity, no PL condition and no two-sided sandwich of $\
 ## Part 5: Strongly Convex: Geometric Decay
 
 <!-- BEGIN S63 -->
-### 38. Part 5: Strongly Convex: Geometric Decay [S63]
+### 36. Part 5: Strongly Convex: Geometric Decay [S63]
 
 **Message.** Part 5 adds strong convexity: the distance to the minimizer shrinks by a fixed factor every step.
 <!-- END S63 -->
 
 <!-- BEGIN S64 -->
-### 39. Add a Quadratic Floor [S64]
+### 37. Add a Quadratic Floor [S64]
 
 **Message.** Strong convexity strengthens the tangent bound by a quadratic bowl $\tfrac\mu2\|y-x\|^2$.
 
@@ -791,7 +792,7 @@ Equivalent forms and further examples are in the backup note.
 <!-- END S64 -->
 
 <!-- BEGIN S65 -->
-### 40. Curvature Is Bounded Below [S65]
+### 38. Curvature Is Bounded Below [S65]
 
 **Message.** Strong convexity and smoothness together trap the remainder above the tangent between $\tfrac\mu2\|y-x\|^2$ and $\tfrac L2\|y-x\|^2$.
 
@@ -801,21 +802,23 @@ $$\frac\mu2\|y-x\|^2\le r(y)\le\frac L2\|y-x\|^2.$$
 
 The curvature of $f$ is at least $\mu$ and at most $L$ in every direction.
 
-Example: restrict the running example $f=2x_1^2+\tfrac12x_2^2$ ($\mu=1$, $L=4$) to the diagonal line $x=s(1,1)/\sqrt2$, where it becomes $1.25s^2$. At the anchor $s=-1$, the lower curve is the tangent plus $\tfrac12(s+1)^2$ (curvature $\mu=1$) and the upper curve is the tangent plus $2(s+1)^2$ (curvature $L=4$). All three touch at the anchor; the lower curve stays below $f$ and the upper curve stays above it.
+The figure is a generic one-variable picture. The solid black curve is $f$, with a marked base point $x$ and a thin grey tangent line through it. A green curve labelled floor, curvature $\mu$, is the tangent plus $\tfrac\mu2(y-x)^2$; a dashed blue curve labelled upper, curvature $L$, is the tangent plus $\tfrac L2(y-x)^2$. All three curves and the tangent touch at $x$ with the same slope; the green floor stays below $f$ and the blue curve stays above it.
+
+The caption reads: floor and upper model touch $f$ at $x$, with the same tangent; curvature trapped between $\mu$ and $L$.
 
 **Details.**
 
-**Example check.** For this quadratic $r=2h_1^2+\tfrac12h_2^2$ with $h=y-x$, and $\tfrac12\|h\|^2\le2h_1^2+\tfrac12h_2^2\le2\|h\|^2$, so $\mu=1$ and $L=4$. Along the diagonal, $f=2\cdot\tfrac{s^2}2+\tfrac12\cdot\tfrac{s^2}2=1.25s^2$, whose curvature $2.5$ lies between $1$ and $4$.
+**Figure parameters** (illustrative; not the lecture's earlier example). $f(s)=s^2$, which has curvature $2$, with illustrative constants $\mu=1$ and $L=3$ and base point $s_0=-1$. The residual above the tangent is $r=(s+1)^2$; the floor adds $\tfrac12(s+1)^2$ and the upper curve $\tfrac32(s+1)^2$, and $\tfrac12h^2\le h^2\le\tfrac32h^2$ for $h=s+1$ because $1\lt2\lt3$ (our calculation).
 
-Figure coordinates: `figs/o3b_figs.py` in this deck folder (exact inputs in its docstring). The script asserts lower curve $\le f\le$ upper curve on a fine grid.
+Figure coordinates: `figs/o3b_figs.py` in this deck folder (exact inputs in its docstring). The script asserts $\tfrac\mu2h^2\le r\le\tfrac L2h^2$ on a fine grid; the upper curve is clipped at the top of the plot.
 
 **Sources.**
 
-- Our calculation.
+Illustration: our drawing and calculation (`figs/o3b_figs.py`).
 <!-- END S65 -->
 
 <!-- BEGIN S116 -->
-### 41. Strongly Convex: Geometric Convergence [S116]
+### 39. Strongly Convex: Geometric Convergence [S116]
 
 **Message.** Under strong convexity and smoothness, gradient descent with step $1/L$ shrinks the squared distance to the minimizer by the factor $q=1-\mu/L$ every step.
 
@@ -831,18 +834,21 @@ The step is the same $1/L$ as in every other part of the lecture. Other step siz
 
 **The case $\mu=L$.** Then the remainder bounds coincide, $r(y)=\tfrac L2\|y-x\|^2$ exactly, so $f$ is a quadratic with Hessian $LI$ and $x_0-\tfrac1L\nabla f(x_0)$ is its minimizer.
 
-**Iteration count.** $q^T\le e^{-\mu T/L}$ (section 44), and $e^{-\mu T/L}D_0\le\varepsilon$ when $T\ge\tfrac L\mu\ln(D_0/\varepsilon)$.
+**Iteration count.** $q^T\le e^{-\mu T/L}$ (section 42), and $e^{-\mu T/L}D_0\le\varepsilon$ when $T\ge\tfrac L\mu\ln(D_0/\varepsilon)$.
 
-The earlier version of this lecture stated this as Theorem 10 with step $2/(\mu+L)$ and a co-coercivity proof; see the backup note.
+The earlier version of this lecture stated this result with step $2/(\mu+L)$ and a co-coercivity proof; see the backup note.
+
+**Attribution.** As for the convex theorem, Garrigos and Gower (2024) is cited for the precise modern statement and Nesterov (2004) as an earlier standard treatment; neither is claimed as the first publication. The proof on the following slides is the elementary shared-distance argument with step $1/L$, not a source proof that needs co-coercivity or another step size.
 
 **Sources.**
 
 - Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.2, Theorem 3.6 and Remark 3.7. https://arxiv.org/abs/2301.11235v3
 - Our calculation.
+- Y. Nesterov, *Introductory Lectures on Convex Optimization: A Basic Course*, Springer, 2004. https://link.springer.com/book/10.1007/978-1-4419-8853-9 (an earlier standard treatment; not verified as the first publication).
 <!-- END S116 -->
 
 <!-- BEGIN S138 -->
-### 42. Keep the Extra Curvature Term [S138]
+### 40. Keep the Extra Curvature Term [S138]
 
 **Message.** With strong convexity the tangent step carries an extra $-\tfrac\mu2D_t$, and it survives into the per-step bound.
 
@@ -869,11 +875,11 @@ No PL condition is used. PL is the inequality $\tfrac12\|\nabla f(x)\|^2\ge\mu(f
 <!-- END S138 -->
 
 <!-- BEGIN S139 -->
-### 43. Nonnegative Gap Forces Contraction [S139]
+### 41. Nonnegative Gap Forces Contraction [S139]
 
 **Message.** Because the next gap is nonnegative, the per-step bound forces $D_{t+1}\le(1-\mu/L)D_t$.
 
-Since $x^\star$ minimizes $f$, $\Delta_{t+1}\ge0$, so the per-step bound of section 42 gives
+Since $x^\star$ minimizes $f$, $\Delta_{t+1}\ge0$, so the per-step bound of section 40 gives
 
 $$0\le\frac L2(D_t-D_{t+1})-\frac\mu2D_t.$$
 
@@ -881,9 +887,7 @@ Multiply by $2/L$: $0\le D_t-D_{t+1}-\tfrac\mu LD_t$, that is $D_{t+1}\le(1-\tfr
 
 **Details.**
 
-The argument throws away the gap $\Delta_{t+1}$ and keeps only distances; that is one reason the bound can be loose (section 47).
-
-**Example.** In the running quadratic, $D_1/D_0=(9/4)/8=9/32\le3/4$.
+The argument throws away the gap $\Delta_{t+1}$ and keeps only distances; that is one reason the bound can be loose.
 
 **Sources.**
 
@@ -892,7 +896,7 @@ The argument throws away the gap $\Delta_{t+1}$ and keeps only distances; that i
 <!-- END S139 -->
 
 <!-- BEGIN S122 -->
-### 44. Repeat the Same Contraction [S122]
+### 42. Repeat the Same Contraction [S122]
 
 **Message.** Applying the one-step contraction $T$ times gives $D_T\le q^TD_0$.
 
@@ -904,7 +908,7 @@ Since $1-u\le e^{-u}$ for every real $u$, $q^T\le e^{-\mu T/L}$: the error falls
 
 **Details.**
 
-**Induction.** Base case $T=1$ is the contraction of section 43 at $t=0$. If $D_T\le q^TD_0$, then $D_{T+1}\le qD_T\le q^{T+1}D_0$; multiplying the inequality by $q$ is allowed because $q\ge0$, which holds since $\mu\le L$.
+**Induction.** Base case $T=1$ is the contraction of section 41 at $t=0$. If $D_T\le q^TD_0$, then $D_{T+1}\le qD_T\le q^{T+1}D_0$; multiplying the inequality by $q$ is allowed because $q\ge0$, which holds since $\mu\le L$.
 
 **The exponential bound.** $u\mapsto e^{-u}$ is convex with tangent $1-u$ at $u=0$, so the tangent bound gives $e^{-u}\ge1-u$. With $u=\mu/L$ and $q\ge0$, raising to the power $T$ gives $q^T\le e^{-\mu T/L}$.
 
@@ -915,11 +919,11 @@ Since $1-u\le e^{-u}$ for every real $u$, $q^T\le e^{-\mu T/L}$: the error falls
 <!-- END S122 -->
 
 <!-- BEGIN S123 -->
-### 45. Function Values Follow Distance [S123]
+### 43. Function Values Follow Distance [S123]
 
 **Message.** Smoothness at the minimizer converts the distance bound into the function-gap bound $\Delta_T\le\tfrac L2q^TD_0$.
 
-Use the smoothness upper bound at $x=x^\star$, where $\nabla f(x^\star)=0$, with $y=x_T$: $f(x_T)\le f^\star+\tfrac L2\|x_T-x^\star\|^2$. With the distance bound of section 44,
+Use the smoothness upper bound at $x=x^\star$, where $\nabla f(x^\star)=0$, with $y=x_T$: $f(x_T)\le f^\star+\tfrac L2\|x_T-x^\star\|^2$. With the distance bound of section 42,
 
 $$\begin{aligned}f(x_T)-f^\star&\le\frac L2\|x_T-x^\star\|^2\\
 &\le\frac L2q^T\|x_0-x^\star\|^2.\end{aligned}$$
@@ -930,69 +934,37 @@ Both the iterates and the function values converge to the optimum, the unique mi
 
 The prefactor is $\tfrac L2D_0$. A bound of the form $\Delta_T\le q^T\Delta_0$ would need a separate function-gap contraction argument, which this lecture does not prove.
 
-**Example.** In the running quadratic, $\Delta_2=81/128\approx0.63$ against $\tfrac L2q^2D_0=2\cdot\tfrac9{16}\cdot8=9$.
-
 **Sources.**
 
 - Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.2, Theorem 3.6 and Remark 3.7. https://arxiv.org/abs/2301.11235v3
 <!-- END S123 -->
 
 <!-- BEGIN S110 -->
-### 46. Linear Means Geometric [S110]
+### 44. Linear Means Geometric [S110]
 
-**Message.** In optimization, linear convergence means the error shrinks geometrically, like $q^T$; the convex $O(1/T)$ rate is sublinear.
+**Message.** In optimization, linear convergence means the error shrinks geometrically, like $q^T$ with $0\lt q\lt1$; the convex $O(1/T)$ rate is sublinear.
 
-A rate is called linear when the error after $T$ steps is at most $Cq^T$ with $q\lt1$. The name comes from the log scale: $\log(Cq^T)=\log C+T\log q$ is a straight line in $T$. Geometric and exponential mean the same thing here.
+A rate is called linear when the error after $T$ steps is at most $Cq^T$ with $0\lt q\lt1$. The name comes from the log scale: $\log(Cq^T)=\log C+T\log q$ is a straight line in $T$. Geometric and exponential mean the same thing here.
 
 A rate like $1/T$ is sublinear: on a log scale its curve flattens out. The convex rate $O(1/T)$ is sublinear, not linear; the strongly convex rate is linear.
 
-Compare the two bound shapes $1/T$ and $(3/4)^T$ for $T=1,\dots,24$ on a logarithmic scale, where $3/4$ is $q$ for the running example. On that scale $(3/4)^T$ is a straight line, falling to about $10^{-3}$ at $T=24$, while $1/T$ flattens near $0.04$. For $T=2$ to $6$, $(3/4)^T$ is slightly larger; from $T=7$ on it is smaller and the gap widens.
+The figure plots two curve shapes on a logarithmic vertical axis for $T=1,\dots,24$: grey $1/T$ and blue $q^T$ for one illustrative value $q=0.8$. The blue curve is a straight line falling to about $5\times10^{-3}$ at $T=24$; the grey curve flattens near $0.04$. For $T=2$ to $10$ the blue curve is higher; from $T=11$ on it is lower and the gap widens.
 
-These are bounds, not measured run times. Each iteration is the same gradient step in both settings.
+The plot shows shapes only, with an illustrative $q$: it is not output of gradient descent and does not say which bound is smaller for every $T$ or every constant. Each iteration is the same gradient step in both settings.
 
 **Details.**
 
 **Error versus iteration count.** These are two readings of one bound. Error after $T$ steps: $q^T$ against $1/T$. Steps needed for error $\varepsilon$: $O(\log(1/\varepsilon))$ against $O(1/\varepsilon)$. Keep them apart: a linear rate is an error statement, and $\log(1/\varepsilon)$ is the matching iteration count.
 
-**Numbers.** $(3/4)^{24}=e^{24\ln0.75}\approx e^{-6.90}\approx1.0\times10^{-3}$; $1/24\approx0.042$. Crossing: $(3/4)^6\approx0.178\gt1/6$, $(3/4)^7\approx0.133\lt1/7\approx0.143$.
+**Plot numbers.** $0.8^{24}=e^{24\ln0.8}\approx e^{-5.36}\approx4.7\times10^{-3}$; $1/24\approx0.042$. Crossing: $0.8^{10}\approx0.107\gt1/10$, $0.8^{11}\approx0.086\lt1/11\approx0.091$ (our calculation).
 
 Figure coordinates: `figs/o3b_figs.py` in this deck folder (exact inputs in its docstring).
 
 **Sources.**
 
 - Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.2, Theorem 3.6 and Remark 3.7. https://arxiv.org/abs/2301.11235v3 (Remark 3.7 on the terminology)
-- Our calculation.
+- Plot: our calculation.
 <!-- END S110 -->
-
-<!-- BEGIN S126 -->
-### 47. The Example Beats Its Bound [S126]
-
-**Message.** On $f=2x_1^2+\tfrac12x_2^2$, the iterates beat the guarantee: after the first step the squared distance falls by $9/16$ per step, below the bound factor $q=3/4$.
-
-Here $\nabla f=(4x_1,x_2)$, $L=4$, $\mu=1$, $q=3/4$, and the step $1/4$ maps $(x_1,x_2)$ to $(0,\tfrac34x_2)$. From $x_0=(2,2)$:
-
-The iterates, one bullet per step $t$. Each bullet gives the iterate $x_t$, the squared distance $D_t$, and the ratio $D_t/D_{t-1}$ to the previous step.
-
-- $t=0$: $x_0=(2,2)$, $D_0=8$.
-- $t=1$: $x_1=(0,3/2)$, $D_1=9/4$, ratio $9/32$.
-- $t=2$: $x_2=(0,9/8)$, $D_2=81/64$, ratio $9/16$.
-
-The bound $q^tD_0$ gives $8$, $6$, $9/2$.
-
-The first step is special: it zeroes the steep first coordinate at once. After that only the second coordinate is left; its distance shrinks by $3/4$ per step, so the squared distance shrinks by $(3/4)^2=9/16$.
-
-The guarantee is a worst case over all such functions; one example can do better.
-
-**Details.**
-
-**Function values.** $f(x_0)=10$, $f(x_1)=9/8$, $f(x_2)=81/128$; later ratios are also $9/16$. The strongly convex bound $\tfrac L2q^tD_0=16(3/4)^t$ gives $12$ and $9$ at $t=1,2$; the convex bound $LD_0/(2T)=16/T$ gives $16$ and $8$.
-
-**Distance versus squared distance.** The theorem bounds the squared distance by $q^t$, which corresponds to $\sqrt q$ per step for the distance. In this example the distance itself shrinks by $3/4=q$, so the squared distance shrinks by $q^2$: the bound is loose by a square here.
-
-**Sources.**
-
-- Our calculation.
-<!-- END S126 -->
 
 <!-- REGION P4e END -->
 
@@ -1001,39 +973,42 @@ The guarantee is a worst case over all such functions; one example can do better
 ## Part 6: Three Guarantees
 
 <!-- BEGIN S130 -->
-### 48. Part 6: Three Guarantees [S130]
+### 45. Part 6: Three Guarantees [S130]
 
 **Message.** Part 6 compares the three guarantees side by side.
 <!-- END S130 -->
 
 <!-- BEGIN S131 -->
-### 49. Three Assumptions, Three Guarantees [S131]
+### 46. Three Assumptions, Three Guarantees [S131]
 
-**Message.** One algorithm, three assumption levels, three guarantees: a small gradient, then an $O(1/T)$ function gap, then geometric convergence to the minimizer.
+**Message.** One algorithm, three assumption levels, three guarantees: vanishing gradients with a best-iterate rate, then an $O(1/T)$ function gap, then geometric convergence to the minimizer.
 
-All three guarantees use gradient descent with step $1/L$ on an $L$-smooth $f:\mathbb{R}^n\to\mathbb{R}$. One bullet per assumption level; each bullet gives the assumption, the guarantee and what it measures.
+All three rows use gradient descent with step $1/L$ on an $L$-smooth $f:\mathbb{R}^n\to\mathbb{R}$.
 
-- Nonconvex, with $f\ge f_{\text{low}}$: $\min_{t\lt T}\|\nabla f(x_t)\|^2\le2L(f(x_0)-f_{\text{low}})/T$. This is stationarity only. It does not promise a local minimum: $f(u)=1-\cos u$ is $1$-smooth, and gradient descent started at $u=\pi$, a strict local maximum, never moves.
-- Convex, with a minimizer: $\Delta_T\le LD_0/(2T)$, a sublinear rate on the last function gap.
-- $\mu$-strongly convex: $D_T\le q^TD_0$ and $\Delta_T\le\tfrac L2q^TD_0$ with $q=1-\mu/L$, a linear, that is geometric, rate.
+Nonconvex, with $f\ge f_{\text{low}}$: $\min_{t\lt T}\|\nabla f(x_t)\|^2\le2L(f(x_0)-f_{\text{low}})/T$, a best-iterate $O(1/T)$ rate for the squared gradient. A line below the table adds that every $\|\nabla f(x_t)\|\to0$ and that there is no local-minimum guarantee; that limit comes with no rate.
 
-This is the lecture's one global recap; each guarantee measures a different quantity, so compare what is guaranteed, not only the speed.
+Convex, with a minimizer: $\Delta_T\le LD_0/(2T)$, a sublinear $O(1/T)$ rate on the last function gap.
+
+$\mu$-strongly convex: $D_T\le q^TD_0$ and $\Delta_T\le\tfrac L2q^TD_0$ with $q=1-\mu/L$, a linear, that is geometric, rate.
+
+This is the lecture's one global recap; each row measures a different quantity, so compare what is guaranteed, not only the speed.
 
 **Details.**
 
-**Example check.** For $1-\cos u$: $f'(u)=\sin u$ is $1$-Lipschitz, $f'(\pi)=0$, $f''(\pi)=-1$.
+Three different statements, kept apart: (i) nonconvex, the whole sequence of gradient norms tends to zero (section 21), with an $O(1/T)$ rate only for the best squared gradient (section 18); (ii) convex, the objective gap at the last iterate is $O(1/T)$ (section 28); (iii) strongly convex, the distance and the gap shrink geometrically (section 39).
 
-Constants and alternative step sizes are deliberately left out of this summary.
+Constants and alternative step sizes are deliberately omitted from the table.
 
 **Sources.**
 
-- Cornell CS4787/5777, Fall 2026, Lecture 5 notes, section "Convergence of GD". https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html (checked 2026-11-23).
+- Nonconvex: Cornell CS4787/5777 (Fall 2026), Lecture 5, section "Convergence of GD", https://www.cs.cornell.edu/courses/cs4787/2026fa/lectures/lecture5.html. The limit: our deduction.
+- Convex and strongly convex: Y. Nesterov, *Introductory Lectures on Convex Optimization: A Basic Course*, Springer, 2004. https://link.springer.com/book/10.1007/978-1-4419-8853-9 (an earlier standard treatment; not verified as the first publication).
 - Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.1, Theorem 3.4, eqs. (14)-(16). https://arxiv.org/abs/2301.11235v3
 - Garrigos and Gower, *Handbook of Convergence Theorems for (Stochastic) Gradient Methods*, arXiv:2301.11235v3 (2024-03-09), Section 3.2, Theorem 3.6 and Remark 3.7. https://arxiv.org/abs/2301.11235v3
 <!-- END S131 -->
 
 <!-- BEGIN S140 -->
-### 50. No Extra Conditions Needed [S140]
+### 47. No Extra Conditions Needed [S140]
 
 **Message.** The convex and strongly convex proofs need only the descent inequality, one distance identity and the tangent bound with its $\mu$ term: no co-coercivity and no PL condition.
 
@@ -1065,7 +1040,7 @@ The earlier version of this lecture proved the convex rate through co-coercivity
 ## Closing
 
 <!-- BEGIN S134 -->
-### 51. Closing: One Update [S134]
+### 48. Closing: One Update [S134]
 
 **Message.** The update never changes; what we may conclude about it depends only on the assumptions on $f$.
 
@@ -1098,3 +1073,4 @@ Section numbers and the theorem, corollary and lemma numbers in the annotations 
 18. J. Nocedal and S. J. Wright, *Numerical Optimization*, 2nd edition, Springer, 2006. doi:10.1007/978-0-387-40065-5, https://doi.org/10.1007/978-0-387-40065-5. Line search (Section 9.2), Newton and quasi-Newton methods (Section 9.5).
 19. S. Ghadimi and G. Lan, "Stochastic First- and Zeroth-order Methods for Nonconvex Stochastic Programming," *SIAM Journal on Optimization* 23(4), 2341-2368, 2013. arXiv:1309.5549, https://arxiv.org/abs/1309.5549. The stochastic analogue of Corollary 6.3, and the reference point for the next lecture.
 20. Companion notes in this series, in the same accessible Markdown edition: `../opt01-svd-lowrank/opt01-svd-lowrank-note.md` (SVD and best low-rank approximation). The regression and SGD notes are extended material in `../opt03-backup/`, listed in `../opt03-backup/OUTLINE.md`. The probability half of the course is covered by prob01 through prob09.
+21. Y. Nesterov, *Introductory Lectures on Convex Optimization: A Basic Course*, Springer, 2004. https://link.springer.com/book/10.1007/978-1-4419-8853-9. Cited on the convex and strongly convex theorems as an earlier standard treatment of the fixed-step rates; it is not claimed as the first publication.

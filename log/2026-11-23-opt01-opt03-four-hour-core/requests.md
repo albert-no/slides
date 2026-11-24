@@ -36,3 +36,14 @@ Received 2026-11-23, #claw-slides-review. Verbatim request items; append-only.
 > go ahead
 
 Received 2026-11-23, 16:22 Asia/Seoul, in direct response to the stage 1–3 proposal and corrected convergence targets. Approves that proposal; not a merge order.
+
+## C12
+> use renumbering folders and files temporarilly.
+
+## C13
+> use opt01 and opt 02 (instead of opt01 and opt 03)
+
+## C14
+> put all the remainders (opt02, opt04 and removed part of opt01 and opt 03) should in opt03-backup
+
+C12–C14 received 2026-11-24, 14:20 Asia/Seoul, from Albert in #claw-slides-review. Authorizes a temporary packaging/numbering change to the existing PR #80, not a course-content rewrite or merge.

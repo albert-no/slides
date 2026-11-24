@@ -104,3 +104,15 @@ Append-only. Checked 2026-11-23. Cutoff: 2026-11-23; textbook results, not a rec
 - opt03 S80's schematic uses f(u)=1.5/(1+exp(2(u-2)))-0.8exp(-(u+1)^2), drawn on [-3,5]. Its lower bound 0 holds globally: for u<=1 the first term is at least 1.5/(1+exp(-2))>0.8; for 1<=u<=2 it is at least 0.75 while the subtracted term is at most 0.8exp(-4); for u>=2 the first term is at least 0.75exp(-2(u-2)), and the ratio of the subtracted term to this lower bound is (0.8/0.75)exp(-u^2-5)<1. Both terms tend to zero as u tends to infinity. The infimum is not attained.
 - Limits: S91 competitor positions and rank-factor block sizes are schematic, not measured. The S110 curves compare bound shapes, not run times. Preservation of full-original backup figures is not a new scientific reapproval of the archived material.
 - Label: our calculation / illustrative example.
+
+## E14 — Temporary numbering and relocation inventory (2026-11-24)
+
+**Label:** our repository inspection; no new mathematical claim.
+
+**Source/version:** exact pushed PR #80 head `3d427a6cc1a2e447179a58e8ce5d9442e947363d`, read with `git ls-tree`, `git show` and scoped `git grep`; GitHub REST confirmed PR open/unmerged with that head on 2026-11-24. Content approval remains pinned to `1f220ef63a13fb45ee38350bc06d498c0e6b4872`.
+
+**Inventory:** active opt01 has 68 slides plus HTML/Markdown notes and `figs/o1c_planes.py`; active opt03 has 51 slides plus HTML/Markdown notes and `figs/o3b_figs.py`. Full-original opt01/opt03 backups have 119/134 slides, each with HTML/Markdown notes in its main folder's `backup/`. Old opt02 regression has 110 slides and both notes; old opt04 SGD has 117 slides and both notes. The course-level `backup/OUTLINE.md` is navigation for these four optimization editions, plus one link to the separately located prob06 full edition.
+
+**Dependencies:** active GD's file/title prefix is opt03 and its visible lecture label is 12; after consecutive opt01/opt02 numbering it becomes lecture 11 (prob01–09 remain fixed). Root and course outlines, both mains' backup pointers, archive companion cross-references, and the two concrete GD exemplar paths in DESIGN_SYSTEM.md must track relocation. prob05's two notes mention old opt04 as a reuse example; only that navigation/provenance wording may adapt. Historical job records and dated historical deck references retain their original identities.
+
+**Limits:** inventory establishes file identity and preservation targets, not new scientific approval of legacy backup claims. No topic, theorem, worked value, proof, ID, slide order or teaching duration needs changing. Moving the full-original editions preserves the removed portions without a fresh extraction/deduplication pass. plan-v2 specifies the new physical paths and supersedes plan-v1's keep-old-paths requirement only.

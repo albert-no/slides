@@ -543,7 +543,7 @@ subspaces, nuclear norm, matrix completion and the least-squares bridge are only
 the full edition (below).
 
 Companion: `opt01-svd-lowrank/opt01-svd-lowrank-note.html` — one article per slide (message → explanation → details → sources); the full Frobenius EYM proof (Courant–Fischer, Weyl) is in the S101 article.
-Accessible edition: `opt01-svd-lowrank/opt01-svd-lowrank-note.md` — screen-reader Markdown edition of that note (1248 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Accessible edition: `opt01-svd-lowrank/opt01-svd-lowrank-note.md` — screen-reader Markdown edition of that note (1285 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|
@@ -582,7 +582,7 @@ tests and other step sizes are only in the full edition (below). Stable slide
 IDs shared with the full edition.
 
 Companion: `opt02-convexity-gd/opt02-convexity-gd-note.html` — one article per slide (message → explanation → details → sources).
-Accessible edition: `opt02-convexity-gd/opt02-convexity-gd-note.md` — screen-reader Markdown edition of that note (1066 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
+Accessible edition: `opt02-convexity-gd/opt02-convexity-gd-note.md` — screen-reader Markdown edition of that note (1100 lines): plain ASCII, LaTeX math, figures replaced by verbal descriptions, self-contained (no references to the slides).
 
 | # | Section | Slides | Location |
 |---|---|---|---|

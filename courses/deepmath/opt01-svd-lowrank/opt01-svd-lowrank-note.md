@@ -486,7 +486,7 @@ Eigenvalues are defined for a square $A$: $Av = \lambda v$, a direction that is 
 
 **Rectangular matrices.** For $A \in \mathbb{R}^{m\times n}$ with $m \ne n$, $Av$ and $v$ live in different spaces, so $Av = \lambda v$ makes no sense; singular values still exist.
 
-**Symmetric case.** For symmetric $A = Q\Lambda Q^\top$ the singular values are $|\lambda_i|$; they equal the eigenvalues only when all $\lambda_i \ge 0$. A symmetric matrix with a negative eigenvalue has eigendecomposition and SVD that differ by signs. Note: MML Section 4.5.3 states the symmetric case without the positive semidefinite condition.
+**Symmetric case.** For symmetric $A = Q\Lambda Q^\top$ the singular values are $|\lambda_i|$; they equal the eigenvalues only when all $\lambda_i \ge 0$. A symmetric matrix with a negative eigenvalue has eigendecomposition and SVD that differ by signs.
 
 **Optional: a counterexample.** For $A = \begin{bmatrix}3 & 0\\ 4 & 5\end{bmatrix}$, $\det(A - \lambda I) = (3-\lambda)(5-\lambda)$, so the eigenvalues are $3$ and $5$, with eigenvectors $(1,-2)$ and $(0,1)$: $A(1,-2) = (3,-6)$ and $A(0,1) = (0,5)$. These eigenvectors are not orthogonal, $(1,-2)\cdot(0,1) = -2$. The singular values are $3\sqrt5 \approx 6.71$ and $\sqrt5 \approx 2.24$ (from the eigenvalues $45$ and $5$ of $A^\top A$). Both products equal $|\det A| = 15$.
 

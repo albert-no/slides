@@ -7,9 +7,9 @@ id commit: inherited 01ba79c7b18bb7538c0c8bcd34f6141dd604d075 from parent job; n
 branch: 2026-11-24-opt01-opt02-polish
 pr: 80 — https://github.com/albert-no/slides/pull/80 (existing PR; no second PR)
 pr head branch: 2026-11-23-opt01-opt03-four-hour-core
-state: in-work
+state: approved
 round: 2 of 2
-review commit: 2244aea04c44369d216d928c9e70b5341cddca2e
+review commit: 4678b936e1f696095f8d60ecf8343f0412ceb8d6
 albert decisions:
   - 2026-11-24 22:10 Asia/Seoul: additional opt01 comments C01–C13 authorize spacing, splitting, figure readability, removal of worked arithmetic, retained illustration/energy argument, explicit Frobenius-proof scope and brief LLM weight-compression application.
   - 2026-11-24 22:20 Asia/Seoul: opt02 C14–C20 authorize removal of running examples and pages 24/47, optional animation, an elementary descent argument, clarification of vanishing gradients and rate, and reference verification. Both batches combined before plan-v1 announcement.
@@ -21,6 +21,8 @@ albert decisions:
 review decisions:
   - 2026-11-24: round1 exact commit 2244aea04c44369d216d928c9e70b5341cddca2e reviewed; verdict revise. Main decks answer the requests; blocking F01 covers narrow-note math reflow and F02 covers nonconvex summary qualifiers. F03/F04 are nonblocking.
   - review-r1.md issued for final round2; notes/necessary metadata only, no main-deck redesign or plan change. E10 resolves the flagged Golub–Van Loan citation. Existing PR80 head remains unchanged until approval.
+  - 2026-11-24: round 2 exact commit 4678b936e1f696095f8d60ecf8343f0412ceb8d6 (content 8e2964c) approved. F01–F04 closed; no blocking findings. F05 is a nonblocking stale Markdown line total (1076→1080), deferred to ordinary future maintenance.
+  - Await final review copy / log-only push, then verify the descendant and update existing PR80. The previously recorded conditional fast-forward rule applies; no merge order.
 
 # Size and relationship to the approved work
 

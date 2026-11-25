@@ -13,58 +13,64 @@ human or that AI only calculates.
 |---|---|---|
 | `261128yonseimath.html` | 24 | `261128yonseimath-note.html` (Korean script, 24 articles, pacing table) |
 
-Built by pipeline job `2026-11-24-261128yonseimath-draft` (plan-v2). Slide IDs are
-`data-slide-id` on each slide div and note article. **Display order ≠ ID order** at the
-end: …S20, S23, S24, S21, S22 (the AM–GM/Jensen pair was inserted before the close).
+Built by pipeline job `2026-11-24-261128yonseimath-draft` (plan-v2); polished by
+`2026-11-25-261128yonseimath-polish` (plan-v1, author comments C01–C19). Slide IDs are
+`data-slide-id` on each slide div and note article. **Display order ≠ ID order**: S02
+(contents) and S16 (limits) are retired; S10 split into S10a/S10b; S25 (image parity) sits
+after S10b; the close runs …S20, S23, S24, S21, S22.
 
 ## Sections
 
 | # | Section | Slides (display) | IDs | Lines | Time |
 |---|---|---|---|---|---|
-| — | Title · contents | 1–2 | S01–S02 | `:100-145` | 1:10 |
-| 01 | AI 이후의 수학 | 3–8 | S03–S08 | `:147-249` | 4:50 |
-| 02 | 글에 숨긴 확률 | 9–17 | S09–S17 | `:251-437` | 11:00 |
-| 03 | 직관과 함께 커지는 가능성 | 18–24 | S18–S20, S23, S24, S21, S22 | `:439-555` | 7:00 |
+| — | Title | 1 | S01 | `:148-158` | 0:30 |
+| 01 | AI 이후의 수학 | 2–7 | S03–S08 | `:160-259` | 5:00 |
+| 02 | AI가 쓴 글에 보이지 않는 표식 남기기 | 8–17 | S09, S10a, S10b, S25, S11–S15, S17 | `:261-452` | 11:00 |
+| 03 | 직관과 함께 커지는 가능성 | 18–24 | S18–S20, S23, S24, S21, S22 | `:454-566` | 7:30 |
 
 Plus 1:00 buffer = 25:00.
 
 ## Slide pointers
 
-- `:157` S04 IMO 2025, Gemini Deep Think 35/42 (gold-medal standard; scope line).
-- `:179` S05 Navier–Stokes: OpenAI announcement 2026-09-08 → Clay response 2026-09-11; "발표와 최종 인정은 별개".
-- `:234` S08 이해 → 정식화 → 검증 (coin); reused verbatim as the frame of S17 (`:421`).
-- `:261` S10 removable tag vs generation-time trace; EU AI Act Art. 50(2), Korea AI 기본법 제31조 as social motivation only.
-- `:284` S11 next-token toy distribution 김밥/라면/국수/샐러드 = 40/30/20/10 (invented, E20).
-- `:304` S12 shared, context-dependent grouping rule (green-list idea, Kirchenbauer et al. ICML 2023).
-- `:335` S13 boost ×1.5 + renormalise → 48/24/16/12; marked mass 50% → 60%.
-- `:360` S14 100 coins, 70 heads; `:380` S15 exact Binomial(100, ½) PMF, tail P(K≥70) ≈ 0.0039% (note has the exact value and its reproduction).
-- `:400` S16 limits (editing/translation/short text; no trace ≠ human); ICLR 2024 reliability paper. SynthID is in the note only.
-- `:449` S19 question loop; note works "10번 중 7번" (176/1024).
-- `:469` S20 Albert's own reflection (C24): 수학을 말로 이해하는 훈련, 직관.
-- `:486` S23 AM–GM as fixed-sum balance, rectangles 2×8 vs 5×5.
-- `:514` S24 log concavity: chord of y = ln x between 2 and 8, ln 5 > ln 4; "Jensen 부등식의 log 경우" (Boyd & Vandenberghe §3.1.8–3.1.9).
-- `:535` S21 three questions + answer to the title; `:552` S22 closer.
+- `:170` S04 IMO 2025 Gold Medal: Gemini Deep Think 35/42, gold-medal standard (official grading).
+- `:184` S05 Navier–Stokes: OpenAI vortex figure (original, `figs/navier-stokes-vortex.png`), "OpenAI의 해법 발표" 2026-09-08; Clay 2026-09-11 is note-only context.
+- `:200` S06 solving vs researching (Tao, "Math 2.0", 2026-10-09, PDF p. 16; three questions are the speaker's).
+- `:225` S07 계산기 → 컴퓨터 → AI; `:243` S08 무엇을 만들까 → 수학 문제로 → 구현; its frame returns in S17 (`:435`).
+- `:271` S10a hypothetical 독서 감상문 (motivation); `:289` S10b visible tag vs invisible trace.
+- `:313` S25 image parity: grayscale NASA Blue Marble vs all-odd copy (odd 18.37% → 100%, max diff 1).
+- `:333` S11 next-token toy distribution 김밥/라면/국수/샐러드 = 40/30/20/10 (invented).
+- `:361` S12 looping left-to-right green-list demo (`figs/watermark-demo.js`; ~40 s loop, P/R keys, static frame for print/reduced motion); dgMARK = visual style only.
+- `:380` S13 50/50 → 60/40 (chosen) vs 100% green (awkward).
+- `:402` S14 100 coins, 70 heads; `:416` S15 exact Binomial(100, ½) PMF, tail P(K≥70) ≈ 0.0039%.
+- `:435` S17 wish → 수학문제화 (bias) → 통계 문제; limits (old S16) moved to its note.
+- `:464` S19 idea ↔ AI implement/experiment ↔ new idea loop; note works "10번 중 7번" (176/1024).
+- `:483` S20 Albert's reflection: 공식·기법 → 말로 설명하기 → 의미와 직관.
+- `:501` S23 AM–GM as growth: ab ≤ m², uneven growth grows less.
+- `:528` S24 log concavity: chord of y = ln x, "Jensen 부등식의 log 경우" (Boyd & Vandenberghe §3.1.8–3.1.9).
+- `:548` S21 answer: 직관으로 이해 + 현실에 적용; `:563` S22 closer.
 
 ## Figures (`figs/`)
 
-`figs/generate-figures.py` writes all four SVGs and asserts their invariants; all text labels
-are HTML overlays in the deck (positions printed by the script).
+`figs/generate-figures.py` writes the SVGs, the parity PNG and the demo data, and asserts
+their invariants; text labels are HTML overlays in the deck.
 
 | File | Slide | Content / invariant |
 |---|---|---|
+| `navier-stokes-vortex.png` | S05 | OpenAI announcement image, stored unmodified (1254×1254) |
+| `image-original-gray.png` | S25 | NASA Blue Marble 2002 (North America print), 8-bit gray, 1024×574 |
+| `image-all-odd.png` | S25 | even values +1; odd 100%, 479,789 pixels changed, max diff 1 |
+| `watermark-demo-data.js` | S12 | 4 steps × 4 candidates, ×1.5 green then ÷1.25; step 2 picks red 친구와 |
+| `watermark-demo.js` | S12 | demo player (phases, hold, controls, static frame) |
 | `coins-100.svg` | S14 | 10×10 coins, exactly 70 heads (rows 1–7) |
 | `binom-pmf.svg` | S15 | exact Fraction PMF, n = 100; k ≥ 70 red; tail = 0.00003925069822796835 |
-| `rectangles.svg` | S23 | 8×2 and 5×5 unit grids; a+b = 10, products 16/25, ab = 25 − (a−5)² |
-| `log-chord.svg` | S24 | y = ln x on [1, 9]; chord 2–8; midpoint ln 4 < ln 5; curve above chord on (2, 8) |
-
-S11/S13 bars are HTML; the generator checks their numbers (E20).
+| `log-chord.svg` | S24 | y = ln x on [1, 9]; chord 2–8; midpoint ln 4 < ln 5 |
 
 ## Local CSS
 
-`:17-92`, prefix `ym-`: Korean weight 400 and `keep-all`; cite moved bottom-left;
-`.ym-flow` (larger flow boxes; `.ym-4` / `.ym-row` variants at 1.5rem), `.ym-fig` overlay
-labels, `.ym-imo`, `.ym-big`, `.ym-text`/`.ym-tag`, `.ym-bars`/`.ym-pair`, `.ym-chip`,
-`.ym-row`, `.ym-coins`, `.ym-out`, `.ym-return`, `.ym-amgm`.
+`:17-141`, prefix `ym-`: Korean weight 400 and `keep-all`; cite bottom-left; `.ym-mid`
+(vertical centring under the title); flows, `.ym-fig` overlays, `.ym-imo`/`.ym-big`,
+`.ym-ns`, `.ym-qs`, `.ym-text`/`.ym-tag`/`.ym-sheet`/`.ym-ask`, `.ym-imgs`, `.ym-bars`,
+`.ym-demo*`/`.ym-w*`, `.ym-split`, `.ym-coins`, `.ym-return`, `.ym-grow`, `.ym-big-flow`.
 
 ## Related decks
 

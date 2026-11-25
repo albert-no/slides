@@ -33,7 +33,7 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 
 ### `talks/` — standalone research presentations
 
-- **`talks/261128yonseimath/`** — 연세대 과학영재교육원 수료식 특별강연 (2026-11-28, 25 min, Korean, concept-first; middle-school students at university-level math): "AI가 수학 문제를 푸는 시대, 무엇이 진짜 실력일까?" — AI at IMO/Navier–Stokes (dated, scoped), abstraction as 이해 → 정식화 → 검증, a text watermark taught as a coin test (exact binomial tail), Albert's own reflection on intuition, and an AM–GM → Jensen (log concavity) example. 24 slides, Korean note, 4 generated figures (`figs/generate-figures.py`).
+- **`talks/261128yonseimath/`** — 연세대 과학영재교육원 수료식 특별강연 (2026-11-28, 25 min, Korean, concept-first; middle-school students at university-level math): "AI가 수학 문제를 푸는 시대, 무엇이 진짜 실력일까?" — AI at IMO/Navier–Stokes (dated, scoped), solving vs researching (Tao), real problem → math problem, an image-parity warm-up and a looping green-list demo leading to a text watermark taught as a coin test (exact binomial tail), Albert's own reflection on intuition, and AM–GM as growth → Jensen (log concavity). 24 slides, Korean note, generated figures and demo data (`figs/generate-figures.py`).
 - **`talks/icml2026/`** — ICML 2026 5-min SlidesLive recording for the position paper "The Term 'Machine Unlearning' Is Overused in LLMs" (Yoon, Jun, No). 10 slides. Poster ID 67198.
 - **`talks/kics260521dllm/`** — Diffusion LLMs (KICS, 2026-05-21): general-audience invited talk on masked-discrete diffusion (Rainbow Padding, A2D, dgMARK, Reversal Curse, DAPD). 1 deck, no notes.
 - **`talks/math260624dllm/`** — Diffusion LLMs (math conference, June 2026): mathematician-facing variant of the KICS talk — more Gaussian SDE theory, deeper SEDD/RADD, formal DAPD problem, lab work compressed; adds Mercury/DiffusionGemma "in practice" slide. 1 deck, no notes.
@@ -125,8 +125,8 @@ Each topic folder has its own `OUTLINE.md`. Leaf subfolders have detailed per-de
 | REFT (first-token diversification for RLVR) | `talks/postech260821/postech260821.html:167-464` (rebuttal: 403-449) |
 | SafePath (8-token safety primer for LRMs) | `talks/postech260821/postech260821.html:466-589` |
 | Benign DPO attack + fine-tuning-as-a-service | `talks/postech260821/postech260821.html:591-774` (rebuttal: 695-745) |
-| Watermark as a coin test for a general audience (Korean, toy lunch example, exact Binomial(100,½) tail) | `talks/261128yonseimath/261128yonseimath.html:284-437` |
-| AM–GM as fixed-sum balance → Jensen via log concavity (concept-first, Korean) | `talks/261128yonseimath/261128yonseimath.html:486-529` |
+| Watermark as a coin test for a general audience (Korean, toy lunch example, exact Binomial(100,½) tail) | `talks/261128yonseimath/261128yonseimath.html:313-452` |
+| AM–GM as growth (uneven growth grows less) → Jensen via log concavity (concept-first, Korean) | `talks/261128yonseimath/261128yonseimath.html:501-547` |
 | Kirchenbauer green-list + z-test + entropy-bound proof | `courses/privacy/lectures/06-watermark/watermark.html:245-592` |
 | Gumbel distribution + Gumbel-max trick + full proof | `courses/privacy/lectures/06-watermark/watermark.html:616-742` |
 | Aaronson rule + distortion-free definition and proof | `courses/privacy/lectures/06-watermark/watermark.html:743-810` |

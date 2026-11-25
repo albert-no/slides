@@ -3,11 +3,14 @@ size: medium
 deck: talks/261128yonseimath/261128yonseimath.html
 audience / mode / duration: Korean concept-first graduation talk; advanced middle-school students; 25 minutes, no detailed formula lesson
 baseline: 0bf4927790540020c4b826e9ae2a78da2d5d65fc
-id commit: inherited 1e7b5b90af65f688aa078aefb784c869ae572a8b; S25 added in prior polish; next free ID S26
+id commit: inherited 1e7b5b90af65f688aa078aefb784c869ae572a8b; S25 from prior polish; new S26 paired main/note added in reviewed6b7002d; no new ID-only commit
 branch: 2026-11-25-261128yonseimath-final-edits
 pr: existing #81 — https://github.com/albert-no/slides/pull/81; delivery branch 2026-11-24-261128yonseimath-draft
-state: in-work
+state: approved
 round: 1 of 2
+review commit: 6b7002d6aeacbc13675a32db08dbbda2efd517ec
+work report: work-r1.md at exact reviewed commit
+latest review: review-r1.md — approved; all C01–C06 covered, no findings; final log-only push pending
 albert decisions:
 - 2026-11-25 22:55 Asia/Seoul, message26 in claw-slides-review: brief introduction without years, explicit problem/idea on baselinep19, deletions on p20/p23, and same-perimeter/maximum-area AM–GM intuition on p21. Requests C01–C06 recorded verbatim.
 current plan: plan-v1.md
@@ -21,6 +24,7 @@ current decisions:
 - C04 is a deletion, not a request to move the same contrast sentence into mandatory notes. Keep the meaning/intuition flow; remove the deleted claim from its short message and spoken script too. C06 removes the two subordinate example captions on the closing main slide; synchronize its visual description, with no growth remnants.
 - Target25 pages and no longer than24 minutes of planned speech plus1-minute buffer. The new40-second intro can be offset by shortening AM–GM from100 to60 seconds. Do not pad other deleted text to retain timing.
 - Existing author exceptions remain: no Contents, the local looping watermark demo, question-only coin page answered next. Do not modify shared reference/design/engine files or the already tested demo for this request.
+- R1 approved 2026-11-25: 6b7002d6aeacbc13675a32db08dbbda2efd517ec. All C01–C06 complete, no findings. 25 paired pages,1440seconds speech plus60-second buffer. New/changed slides and neighbours, narrow/wide notes, inline geometry and shifted demo checked; no plan change. Await exact final log-only pushed SHA before authorizing PR81 delivery; keep its head at0bf4927 meanwhile.
 - No PDF request or merge authorization.
 
 ## Access and ownership

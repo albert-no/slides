@@ -6,11 +6,11 @@ baseline: 37757bb365a74b434a65a0ec0f6d86d40c9b253a
 id commit: inherited 1e7b5b90af65f688aa078aefb784c869ae572a8b; IDs S01–S24 already present in main and note
 branch: 2026-11-25-261128yonseimath-polish
 pr: existing #81 — https://github.com/albert-no/slides/pull/81; delivery head branch 2026-11-24-261128yonseimath-draft
-state: in-work
+state: approved
 round: 2 of 2
-review commit: d336d86387cde991e12f4721b55c897579b2a193
-work report: work-r1.md at exact reviewed commit; content commit9bf53d8
-latest review: review-r1.md — revise; F01–F03 blocking, F04 nonblocking; round2 work ordered
+review commit: e8e03f42ce642a56462356a2b6b79978e87f321c
+work report: work-r2.md at exact reviewed commit; content commitab5d5ba
+latest review: review-r2.md — approved; F01–F04 closed; final log-only push and PR81 delivery pending
 albert decisions:
 - 2026-11-25 21:57 Asia/Seoul, message 16 in claw-slides-review: C01–C19 author revisions, recorded verbatim in requests.md; execute without another outline-approval gate.
 - Prior audience, 25-minute duration, no detailed-formula lesson and authentic personal reflection remain in force. This is new author feedback, not another correction round of the approved draft job.
@@ -24,6 +24,7 @@ current decisions:
 - C11 uses the dgMARK site as a visual reference, not the diffusion method. Build an autoregressive, left-to-right soft-bias illustration, with local/offline playback and static fallback. C12 disallows always-green generation.
 - Reconcile factual shorthand without adding caveat slides: “세상의 모든 글” → “대량의 글에서 배운 문맥별 통계적 패턴”; all-odd pixels are a deliberately planted pattern, not mathematically impossible naturally; gold-medal standard, not a physical medal awarded to a chatbot.
 - 2026-11-25 r1 reviewed d336d86387cde991e12f4721b55c897579b2a193: revise for Jensen label overlap and S12/S24 note precision (F01–F03); F04 static-mode control cleanup is optional. Plan-v1 remains governing; all reported conceptual/layout choices otherwise accepted. Round2 is the final correction review; recheck only changed pages and neighbours.
+- 2026-11-25 r2 approved e8e03f42ce642a56462356a2b6b79978e87f321c (contentab5d5ba). F01–F03 closed, optional F04 taken; all C01–C19 covered. 24-page structure and 24+1-minute budget unchanged. Await exact final log-only pushed SHA before authorizing delivery to existing PR81 head; do not advance that head yet.
 - No PDF requested; no merge authorization.
 
 ## Access and ownership

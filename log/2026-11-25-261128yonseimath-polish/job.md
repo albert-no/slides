@@ -7,7 +7,10 @@ id commit: inherited 1e7b5b90af65f688aa078aefb784c869ae572a8b; IDs S01–S24 alr
 branch: 2026-11-25-261128yonseimath-polish
 pr: existing #81 — https://github.com/albert-no/slides/pull/81; delivery head branch 2026-11-24-261128yonseimath-draft
 state: in-work
-round: 1 of 2
+round: 2 of 2
+review commit: d336d86387cde991e12f4721b55c897579b2a193
+work report: work-r1.md at exact reviewed commit; content commit9bf53d8
+latest review: review-r1.md — revise; F01–F03 blocking, F04 nonblocking; round2 work ordered
 albert decisions:
 - 2026-11-25 21:57 Asia/Seoul, message 16 in claw-slides-review: C01–C19 author revisions, recorded verbatim in requests.md; execute without another outline-approval gate.
 - Prior audience, 25-minute duration, no detailed-formula lesson and authentic personal reflection remain in force. This is new author feedback, not another correction round of the approved draft job.
@@ -20,6 +23,7 @@ current decisions:
 - C03's “회전하는 그림” is interpreted as OpenAI's original swirling-vortex illustration, whose source and exact image asset are verified in E03. Do not invent a rotating simulation or substitute unrelated fluid imagery.
 - C11 uses the dgMARK site as a visual reference, not the diffusion method. Build an autoregressive, left-to-right soft-bias illustration, with local/offline playback and static fallback. C12 disallows always-green generation.
 - Reconcile factual shorthand without adding caveat slides: “세상의 모든 글” → “대량의 글에서 배운 문맥별 통계적 패턴”; all-odd pixels are a deliberately planted pattern, not mathematically impossible naturally; gold-medal standard, not a physical medal awarded to a chatbot.
+- 2026-11-25 r1 reviewed d336d86387cde991e12f4721b55c897579b2a193: revise for Jensen label overlap and S12/S24 note precision (F01–F03); F04 static-mode control cleanup is optional. Plan-v1 remains governing; all reported conceptual/layout choices otherwise accepted. Round2 is the final correction review; recheck only changed pages and neighbours.
 - No PDF requested; no merge authorization.
 
 ## Access and ownership

@@ -11,43 +11,45 @@ human or that AI only calculates.
 
 | Deck | Slides | Companion |
 |---|---|---|
-| `261128yonseimath.html` | 24 | `261128yonseimath-note.html` (Korean script, 24 articles, pacing table) |
+| `261128yonseimath.html` | 25 | `261128yonseimath-note.html` (Korean script, 25 articles, pacing table) |
 
 Built by pipeline job `2026-11-24-261128yonseimath-draft` (plan-v2); polished by
-`2026-11-25-261128yonseimath-polish` (plan-v1, author comments C01–C19). Slide IDs are
+`2026-11-25-261128yonseimath-polish` (plan-v1, author comments C01–C19); final edits by
+`2026-11-25-261128yonseimath-final-edits` (plan-v1, C01–C06). Slide IDs are
 `data-slide-id` on each slide div and note article. **Display order ≠ ID order**: S02
 (contents) and S16 (limits) are retired; S10 split into S10a/S10b; S25 (image parity) sits
-after S10b; the close runs …S20, S23, S24, S21, S22.
+after S10b; S26 (speaker intro) sits after S01; the close runs …S20, S23, S24, S21, S22.
 
 ## Sections
 
 | # | Section | Slides (display) | IDs | Lines | Time |
 |---|---|---|---|---|---|
-| — | Title | 1 | S01 | `:149-159` | 0:30 |
-| 01 | AI 이후의 수학 | 2–7 | S03–S08 | `:161-260` | 5:00 |
-| 02 | AI가 쓴 글에 보이지 않는 표식 남기기 | 8–17 | S09, S10a, S10b, S25, S11–S15, S17 | `:262-453` | 11:00 |
-| 03 | 직관과 함께 커지는 가능성 | 18–24 | S18–S20, S23, S24, S21, S22 | `:455-567` | 7:30 |
+| — | Title + speaker intro | 1–2 | S01, S26 | `:164-189` | 1:10 |
+| 01 | AI 이후의 수학 | 3–8 | S03–S08 | `:194-290` | 5:00 |
+| 02 | AI가 쓴 글에 보이지 않는 표식 남기기 | 9–18 | S09, S10a, S10b, S25, S11–S15, S17 | `:295-483` | 11:00 |
+| 03 | 직관과 함께 커지는 가능성 | 19–25 | S18–S20, S23, S24, S21, S22 | `:488-600` | 6:50 |
 
-Plus 1:00 buffer = 25:00.
+24:00 of speech plus 1:00 buffer = 25:00.
 
 ## Slide pointers
 
-- `:171` S04 IMO 2025 Gold Medal: Gemini Deep Think 35/42, gold-medal standard (official grading).
-- `:185` S05 Navier–Stokes: OpenAI vortex figure (original, `figs/navier-stokes-vortex.png`), "OpenAI의 해법 발표" 2026-09-08; Clay 2026-09-11 is note-only context.
-- `:201` S06 solving vs researching (Tao, "Math 2.0", 2026-10-09, PDF p. 16; three questions are the speaker's).
-- `:226` S07 계산기 → 컴퓨터 → AI; `:244` S08 무엇을 만들까 → 수학 문제로 → 구현; its frame returns in S17 (`:436`).
-- `:272` S10a hypothetical 독서 감상문 (motivation); `:290` S10b visible tag vs invisible trace.
-- `:314` S25 image parity: grayscale NASA Blue Marble vs all-odd copy (odd 18.37% → 100%, max diff 1).
-- `:334` S11 next-token toy distribution 김밥/라면/국수/샐러드 = 40/30/20/10 (invented).
-- `:362` S12 looping left-to-right green-list demo (`figs/watermark-demo.js`; ~40 s loop, P/R keys, static frame for print/reduced motion); dgMARK = visual style only.
-- `:381` S13 50/50 → 60/40 (chosen) vs 100% green (awkward).
-- `:403` S14 100 coins, 70 heads; `:417` S15 exact Binomial(100, ½) PMF, tail P(K≥70) ≈ 0.0039%.
-- `:436` S17 wish → 수학문제화 (bias) → 통계 문제; limits (old S16) moved to its note.
-- `:465` S19 idea ↔ AI implement/experiment ↔ new idea loop; note works "10번 중 7번" (176/1024).
-- `:484` S20 Albert's reflection: 공식·기법 → 말로 설명하기 → 의미와 직관.
-- `:502` S23 AM–GM as growth: ab ≤ m², uneven growth grows less.
-- `:529` S24 log concavity: chord of y = ln x, "Jensen 부등식의 log 경우" (Boyd & Vandenberghe §3.1.8–3.1.9).
-- `:549` S21 answer: 직관으로 이해 + 현실에 적용; `:564` S22 closer.
+- `:176` S26 speaker intro: five year-free milestones (영재원 심화반·사사반 → SNU EE/수리과학 → Stanford EE MS/PhD → 홍익대 조교수 (전) → 연세대 AI 부교수), vertical timeline.
+- `:204` S04 IMO 2025 Gold Medal: Gemini Deep Think 35/42, gold-medal standard (official grading).
+- `:218` S05 Navier–Stokes: OpenAI vortex figure (original, `figs/navier-stokes-vortex.png`), "OpenAI의 해법 발표" 2026-09-08; Clay 2026-09-11 is note-only context.
+- `:234` S06 solving vs researching (Tao, "Math 2.0", 2026-10-09, PDF p. 16; three questions are the speaker's).
+- `:259` S07 계산기 → 컴퓨터 → AI; `:277` S08 무엇을 만들까 → 수학 문제로 → 구현; its frame returns in S17 (`:469`).
+- `:305` S10a hypothetical 독서 감상문 (motivation); `:323` S10b visible tag vs invisible trace.
+- `:347` S25 image parity: grayscale NASA Blue Marble vs all-odd copy (odd 18.37% → 100%, max diff 1).
+- `:367` S11 next-token toy distribution 김밥/라면/국수/샐러드 = 40/30/20/10 (invented).
+- `:395` S12 looping left-to-right green-list demo (`figs/watermark-demo.js`; ~40 s loop, P/R keys, static frame for print/reduced motion); dgMARK = visual style only.
+- `:414` S13 50/50 → 60/40 (chosen) vs 100% green (awkward).
+- `:436` S14 100 coins, 70 heads; `:450` S15 exact Binomial(100, ½) PMF, tail P(K≥70) ≈ 0.0039%.
+- `:469` S17 wish → 수학문제화 (bias) → 통계 문제; limits (old S16) moved to its note.
+- `:498` S19 문제 (LLM 문장에 표식 남기기) / 아이디어 (의도적인 통계 삽입) above the idea ↔ AI implement/experiment ↔ new idea loop; note works "10번 중 7번" (176/1024).
+- `:521` S20 Albert's reflection: 공식·기법 → 말로 설명하기 → 의미와 직관 (flow only).
+- `:538` S23 AM–GM as fixed-perimeter area: among rectangles with perimeter 2(a+b), the square of side (a+b)/2 has the largest area; ab ≤ ((a+b)/2)², equality a = b. HTML boxes at one scale (36 px/unit, a=2, b=8; no numbers shown).
+- `:562` S24 log concavity: chord of y = ln x, "Jensen 부등식의 log 경우" (Boyd & Vandenberghe §3.1.8–3.1.9).
+- `:582` S21 answer: 직관으로 이해 → 현실에 적용 (two boxes, no sub-captions); `:597` S22 closer.
 
 ## Figures (`figs/`)
 
@@ -67,10 +69,10 @@ their invariants; text labels are HTML overlays in the deck.
 
 ## Local CSS
 
-`:17-142`, prefix `ym-`: Korean weight 400 and `keep-all`; cite bottom-left; `.ym-mid`
+`:17-157`, prefix `ym-`: Korean weight 400 and `keep-all`; cite bottom-left; `.ym-mid`
 (vertical centring under the title); flows, `.ym-fig` overlays, `.ym-imo`/`.ym-big`,
 `.ym-ns`, `.ym-qs`, `.ym-text`/`.ym-tag`/`.ym-sheet`/`.ym-ask`, `.ym-imgs`, `.ym-bars`,
-`.ym-demo*`/`.ym-w*`, `.ym-split`, `.ym-coins`, `.ym-return`, `.ym-grow`, `.ym-big-flow`.
+`.ym-demo*`/`.ym-w*`, `.ym-split`, `.ym-coins`, `.ym-path` (S26), `.ym-frame` (S19), `.ym-return`, `.ym-rect` (S23), `.ym-big-flow`.
 
 ## Related decks
 

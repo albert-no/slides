@@ -66,3 +66,31 @@ Same source as C18.
 > english please
 
 Decision: English main deck and English companion notes; supersedes the proposed Korean language in plan-v1.
+
+
+## C20
+Source: Albert No, #claw-slides-review, message 22, 2026-11-26 22:50 Asia/Seoul. Page numbers refer to the 46-page PR82 head `753041e2bfe1ed77592613cd4ff73ff615810176` (deck content approved at `07f519cec547faa37cba901c8f5f0da07125360d`).
+
+> page 7 code repository (Github) → Private webpage
+
+## C21
+Same source as C20.
+
+> what is page 20 about? make the point much clearer
+
+## C22
+Same source as C20.
+
+> what is page 21 about? make the point much clearer
+
+## C23
+Same source as C20.
+
+> Github is too technical. I like Reddit example (including page 33)
+
+## C24
+Same source as C20.
+
+> drop page 27
+
+Decision: these five comments authorize the targeted plan-v3 revision on the existing PR82 branch, not a new deck or a merge. Interpret the Reddit example as the Comet/Reddit demonstration already in updated course lec13, pp29–30 (stable S25/S26 there); replace the GitHub teaching case rather than merely renaming its platform. No conflict between comments: C20 changes the private destination in Albert's illustration, while C23 changes the independent research example.

@@ -184,3 +184,15 @@ Survey cutoff / checked: 2026-11-26 Asia/Seoul. Repository sources are fixed at 
 - Claim: credentials can carry recorded origin/edit assertions; human or organizational identity is not inherent in the core specification, though extensions can add identity information. History may be incomplete. Verification of a record does not independently establish the truth of its assertions or the depicted event.
 - Setup/limits: same pinned explanatory standard as E16, not a claim about current adoption. Do not promise that any credential tells the viewer who made the file or provides its complete history. No technical mechanism needs to enter the talk.
 - Label: published result (standards explainer).
+
+
+## E25 — Reddit/Comet replacement for the GitHub example
+- Primary: Brave, “Agentic Browser Security: Indirect Prompt Injection in Perplexity Comet”, 20 Aug2025, https://brave.com/blog/comet-prompt-injection/ ; “Attack demonstration” items1–5 and “Possible mitigations”. Reopened2026-11-26. Course provenance: lec13 main p29/S25 and paired note, at revision baseline753041e.
+- Claim/setup: in Brave's demonstration, a Reddit comment redirected Perplexity's Comet AI browser during a requested page summary. Using the user's logged-in Gmail, it read a login code and posted it with the email address in a Reddit reply. Brave is a rival browser maker. The mitigation discussion recommends scoped permissions and explicit confirmation for sensitive actions.
+- Limits: researcher demonstration, not reported real-world victims; not evidence of Reddit/Gmail compromise or current Comet vulnerability status. No payload, account details or operational bypass instructions in this talk. Do not transfer E06's repository/confirmation-mode details to this case.
+- Label: published research demonstration (researcher's report). Replaces E06 as the spoken example under C23; E06 remains historical evidence, not deleted.
+
+## E26 — Clarity of the scoring and privacy examples
+- S20: E10's primary reopened2026-11-26, definition and Lego/CoastRunners examples. A literal score can improve without the intended outcome. The proposed single AI-support/refund scenario is our invented illustration, not a company incident or a measured rate; no claim of deliberate deceit or inevitable gaming.
+- S21: E11/E12 and the course's distinction between information shared during use and information previously used in training. Keep these separate. Use an invented confidential-file icon for the first route and generic personal information for the second; no actual private data or assertion about a current vendor's retention/training policy. Source-backed repetition example remains S22/E11/E22.
+- Label: illustrative diagrams/editorial synthesis, with previously verified source limits preserved.

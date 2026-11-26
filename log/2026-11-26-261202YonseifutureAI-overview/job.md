@@ -3,11 +3,12 @@ size: large
 deck: talks/261202YonseifutureAI/261202YonseifutureAI.html; talks/261202YonseifutureAI/261202YonseifutureAI-note.html
 audience / mode / duration: CEO-level senior general audience; exceptionally high-level, visual, concept-first; 45 minutes, target 40–50 pages
 baseline: 467cf0630d25ec9929c9e1e87cea901224637487
-id commit: none (new deck; slides to report paired stable-ID initialization)
+id commit: 46d0148 (reported; full SHA validation in review)
 branch: 2026-11-26-261202YonseifutureAI-overview
 pr: none
-state: in-work
+state: in-review
 round: 1 of 3
+reviewed work pointer: 731bec116bf1e2b9c8e696f89798aa0b1c6b0178 (round1, received 2026-11-26)
 albert decisions:
   - 2026-11-26 14:44 Asia/Seoul: new talk requested in message 12; requirements captured verbatim as C01–C17.
   - 2026-11-26 14:57 Asia/Seoul, message 14, C18: “sounds good go ahead” approves stages 1–3 and authorizes implementation after full specification.

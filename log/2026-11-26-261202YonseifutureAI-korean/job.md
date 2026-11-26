@@ -3,10 +3,10 @@ size: medium
 deck: talks/261202YonseifutureAI/261202YonseifutureAI-ko.html; talks/261202YonseifutureAI/261202YonseifutureAI-ko-note.html
 audience / mode / duration: same CEO-level senior general audience; concise Korean with natural English terms; same approved45-page/45-minute talk
 baseline: e597ebf5e4ab2f0065aa603559ec1550aee645f9
-id commit: pending; preserve English-to-Korean stable-ID correspondence, S27 remains retired
+id commit: 8c6c4f4f6f1734d5a64a290bc7f1dd4d045b5d12 (ID-preserving English byte-copy seed; verified)
 branch: 2026-11-26-261202YonseifutureAI-korean
 pr: none yet; distinct additive localization job, dependent on unmerged English PR82
-state: in-work
+state: approved
 round: 1 of 2
 active plan: plan-v1.md — complete translation/adaptation work order; no English content edits
 albert decisions:
@@ -25,3 +25,11 @@ The baseline contains the pending English PR82. After Korean approval, slides-re
 
 ## Preservation boundary
 The two English HTML files and all existing figures/reference/scripts are immutable in this job. No language toggle or editorial cleanup may alter them. Evidence E01 records their exact hashes. Only new Korean files, target/root outline additions, and this job's tracked record may differ from baseline.
+
+## Review handoff
+- Round1 exact head: `0bc0eb8d92699c895d3b6136e37f98f71385de85`; received work-r1 pointer. Comparing the additive Korean files against the frozen English baseline.
+
+## Round1 outcome
+- `review-r1.md`: approved at `0bc0eb8d92699c895d3b6136e37f98f71385de85`; full Korean language/source-equivalence and45-page screen/print pass complete. C01–C04 done, no blocking findings.
+- ID seed verified as exact English byte copies carrying the stable IDs; no English/assets/reference/scripts changed.
+- Await slides' log-only finalization/push and exact head before opening a distinct Korean PR against main, explicitly dependent on English PR82. No merge/export order.

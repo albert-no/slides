@@ -31,11 +31,11 @@
 
 ## Pages affected by shared-style changes
 
-Pages S02–S08, S12–S14, S16–S21, S23–S27, S30–S37 and S39–S45. These are all the pages that use a resized kit or package class. Pages S01, S09–S11, S15, S22, S28–S29, S38 and S46 use none of them.
+Pages S02–S08, S12–S14, S16–S21, S23–S28, S30–S37 and S39–S45. These are all the pages whose markup uses a class whose rule changed between `731bec1` and this head (checked by diffing the CSS and matching it against each slide's classes). Pages S01, S09–S11, S15, S22, S29, S38 and S46 use none of them.
 
 ## Checks run
 
-- **Render.** All 46 pages, using headless Chromium print-to-PDF and then `pdftoppm -r 60`. Re-read after the fixes: S03, S08, S16, S17, S18, S20, S25, S27, S34, S35, S36, S39, S44, S45. The other affected pages were read at 1.55rem before the layout fixes and showed no overflow, overlap or clipped labels. No overflow, overlap, clipped labels or missing glyphs.
+- **Render.** All 46 pages, using headless Chromium print-to-PDF and then `pdftoppm -r 60`. Re-read after the fixes: S03, S08, S16, S17, S18, S20, S25, S27, S28, S34, S35, S36, S39, S44, S45. The other affected pages were read at 1.55rem before the layout fixes and showed no overflow, overlap or clipped labels. No overflow, overlap, clipped labels or missing glyphs.
 - **`lint-deck.py`:** `ok` on the deck and on the note.
 - **`find-wordy.py` / `find-dense.py`:** no flags.
 - **`outline-lint.py`:** the leaf passes. Pointers were shifted for the changed CSS; section ranges now run from the first slide `<div>` to the last slide's closing `</div>`, and the S25 title is updated. Repo-wide, there are 0 stale pointers.

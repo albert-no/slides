@@ -6,14 +6,14 @@ baseline: 467cf0630d25ec9929c9e1e87cea901224637487
 id commit: 46d0148786037eea7fca1c08b6f5f1e67386214f (attribute-only paired-ID diff independently verified)
 branch: 2026-11-26-261202YonseifutureAI-overview
 pr: 82 — https://github.com/albert-no/slides/pull/82
-state: in-work
+state: approved
 round: 3 of 3
-reviewed work pointer: 07f519cec547faa37cba901c8f5f0da07125360d (round2, received 2026-11-26); preceding reviewed commit 731bec116bf1e2b9c8e696f89798aa0b1c6b0178
-latest review: review-r2.md — approved at 07f519cec547faa37cba901c8f5f0da07125360d; F01–F08 closed, F09–F10 resolved
+reviewed work pointer: 2336d436adcb8ccc4c60c72ab9f64b93d8ebf630 (round3, received2026-11-26); preceding reviewed commit07f519cec547faa37cba901c8f5f0da07125360d
+latest review: review-r3.md — approved at2336d436adcb8ccc4c60c72ab9f64b93d8ebf630; C20–C24 done; F11 nonblocking report correction closed; awaiting log-only finalization before PR82 metadata refresh
 finalization: 753041e2bfe1ed77592613cd4ff73ff615810176; sole postreview commit verified log-only; all seven planner-owned files byte-identical; remote head confirmed before PR creation
-pr status: PR82 remains open/unmerged; Albert message22 requests revisions. Existing content approval is historical, not approval of pending v3. No merge order.
+pr status: PR82 remains open/unmerged; message22 revisions approved at the exact r3 SHA. Await log-only finalization and PR metadata refresh. No merge order.
 revision baseline: 753041e2bfe1ed77592613cd4ff73ff615810176; exact PR82 head confirmed2026-11-26 for C20–C24 page references
-active plan: plan-v3.md — targeted medium-sized amendment within the existing large job; no round reset; expected45slides,43+2minutes; work-r3 pending
+active plan: plan-v3.md — targeted medium-sized amendment within the existing large job; no round reset; expected45slides,43+2minutes; work-r3 reviewed and approved;45slides,45notes,43+2minutes verified
 albert decisions:
   - 2026-11-26 22:50 Asia/Seoul, message22: C20–C24 directly authorize private-webpage wording, clearer S20/S21, Reddit rather than GitHub example, and S27 removal; plan-v3 work order on existing PR82, round3/3.
   - 2026-11-26 14:44 Asia/Seoul: new talk requested in message 12; requirements captured verbatim as C01–C17.

@@ -7,7 +7,7 @@ id commit: existing stable IDs inherited; no new ID-only commit needed
 branch: 2026-11-27-lec14-focused-overview
 pr: none
 state: in-work
-round: 2 of 3
+round: 3 of 3
 albert decisions:
 - 2026-11-27 01:23 KST, message 20: also check redundant slides/topics against lec01–lec13 (C11). plan-v3 addresses continuity without changing the approved three-topic scope or duration.
 - 2026-11-27 01:04 KST, message 16: approved stages 1–3 and authorized proceeding, with two amendments: removed material must become backup slides (not notes-only), and use more slides rather than compression. No merger authorization.
@@ -51,3 +51,11 @@ State stays in-work, round 1 of 3. slides acknowledged receipt/building v2 on me
 - Reviewed `1d4493167f41a5d39237fe4e1703e40f94fdfe40`; verdict revise in `review-r1.md`. Six blocking findings F01–F06: metric populations/outcomes, main-deck result breadth, attack-selection denominator, filtering-chart key/epoch wording, audit-path label, narrow-note overflow. F07/F08 are nonblocking polish.
 - `plan-v4.md` makes the necessary scope clarification: 59 main remains; four optional content slides plus a divider preserve newly removed material, targeting52 backup. Reserve S91–S95. Main 85+5minutes and approved three-story argument unchanged. Evidence appended E23–E25; no new main literature or Albert gate.
 - Work order now in-work, round2/3. slides must return work-r2 with exact pushed SHA and per-finding disposition; no PR yet.
+
+## Round 2 review opened — 2026-11-27
+- Work pointer message38 names exact commit `c16c37a5faaafe8890f11301fea1a0a97a78725b`. Reviewing its diff from r1 `1d4493167f41a5d39237fe4e1703e40f94fdfe40`; frozen baseline unchanged. State in-review, round2/3.
+
+## Round 2 verdict / round 3 work order — 2026-11-27
+- Reviewed exact `c16c37a5faaafe8890f11301fea1a0a97a78725b`; verdict revise in review-r2.md. F01–F08 closed. New F09 blocks accidental 653-line deletion from the leaf course OUTLINE; F10 corrects S75b’s implication that all realignment routes train on teacher-written outputs.
+- Independent targeted renders25main/14backup; main59/backup52,111uniqueIDs,85.0+5minutes; both notes pass430px (layout/scroll415/415).
+- plan-v5 corrects v4’s S69b target to the existing2.25minutes and assigns only F09/F10 repairs. Statein-work, round3/3 (final). No new argument/scope/source gate. NoPRyet; no mergeauthorization.

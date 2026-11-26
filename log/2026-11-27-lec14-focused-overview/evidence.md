@@ -188,3 +188,9 @@ No generated or modified figure is commissioned at the approval stage. Preferred
 - Confirms E10 on https://arxiv.org/abs/2606.00831v2 , Comments field, checked 2026-11-27: authors report some main claims incorrect and a substantial revision being prepared. The still-visible categorical abstract is not a settled refutation. This is unresolved research context, not a new empirical result to teach in the main lecture.
 - E08's primary body https://arxiv.org/html/2609.12586v1 was also inspected during review; retain its bounded preference/model/task scope, not an independent harmful-misalignment replication claim.
 - Label: source verification; no new main-deck literature selected.
+
+## E26 — round-2 check: who generates realignment trajectories
+- Supplements E06/E07/E16. Askin v2 primary text, https://arxiv.org/html/2605.12798v2 , §4, §4.2 and Appendix E.3, checked against the saved versioned primary article during r2 review.
+- Realignment retains training trajectories without extra misalignment filtering. It does not turn OPD into teacher-answer training: SFT/OPTD use teacher-generated trajectories, while OPD generates trajectories from the learner and obtains teacher token scores. Appendix E.3 explicitly retains student rollout generation in OPD.
+- S75b's common description should therefore say “without extra filtering”, not imply that all three routes train on the teacher's written outputs. The same source supports both tested models, three epochs and recovery near base-model alignment levels. No new result, data or method is being added.
+- Label: published result (preprint); role/wording correction.

@@ -19,4 +19,4 @@ Inline SVG schematics drawn for this lecture (not paper figures); labelled "Illu
 
 ## Round 2 — S75b recovery diagram
 
-S75b (round 2) is an own illustrative three-box drawing of the realignment setup in Askin et al. §4.2 and App. E.3 (start: narrowly misaligned learner; training guided by an aligned teacher initialised as the base model, all outputs kept; result: measured misalignment close to base-model levels). No numbers are drawn. Tested models from App. E.3: Llama-3.1-8B-Instruct (Fig. 25) and OLMo-3-7B-Instruct (Fig. 5); 3 epochs.
+S75b (round 2) is an own illustrative three-box drawing of the realignment setup in Askin et al. §4.2 and App. E.3 (start: narrowly misaligned learner; training guided by an aligned teacher initialised as the base model, training trajectories retained without additional filtering; result: measured misalignment close to base-model levels). No numbers are drawn. Tested models from App. E.3: Llama-3.1-8B-Instruct (Fig. 25) and OLMo-3-7B-Instruct (Fig. 5); 3 epochs.

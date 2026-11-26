@@ -6,7 +6,7 @@ baseline: 7d9f51efdd5038ab2e438f783ec395ed9e8c1297
 id commit: existing stable IDs inherited; no new ID-only commit needed
 branch: 2026-11-27-lec14-focused-overview
 pr: none
-state: in-work
+state: approved
 round: 3 of 3
 albert decisions:
 - 2026-11-27 01:23 KST, message 20: also check redundant slides/topics against lec01–lec13 (C11). plan-v3 addresses continuity without changing the approved three-topic scope or duration.
@@ -59,3 +59,11 @@ State stays in-work, round 1 of 3. slides acknowledged receipt/building v2 on me
 - Reviewed exact `c16c37a5faaafe8890f11301fea1a0a97a78725b`; verdict revise in review-r2.md. F01–F08 closed. New F09 blocks accidental 653-line deletion from the leaf course OUTLINE; F10 corrects S75b’s implication that all realignment routes train on teacher-written outputs.
 - Independent targeted renders25main/14backup; main59/backup52,111uniqueIDs,85.0+5minutes; both notes pass430px (layout/scroll415/415).
 - plan-v5 corrects v4’s S69b target to the existing2.25minutes and assigns only F09/F10 repairs. Statein-work, round3/3 (final). No new argument/scope/source gate. NoPRyet; no mergeauthorization.
+
+## Round 3 review opened — 2026-11-27
+- Work pointer message40 names exact commit `1ae76019d45e24f812164e4a22bf879d3e514cab`. Reviewing only r2→r3 changes and neighbours; F09 also requires a structural comparison against exact r1. State in-review, round3/3.
+
+## Round 3 verdict — 2026-11-27
+- Approved exact `1ae76019d45e24f812164e4a22bf879d3e514cab` in `review-r3.md`; F09/F10 closed, F01–F08 remain closed, C01–C11 done. State approved, round3/3.
+- Independent structural outline comparison confirms all unrelated bytes/headings restored; repaired target pointers resolve to intended slide IDs. Main39–41 visually checked; S75b narrow note430px has layout/scroll415/415. Main59/backup52 and85+5minutes unchanged.
+- Await slides copying the frozen final review and refreshed living files into the tracked record, then pushing a log-only record commit. No PR yet; reviewer must verify all post-review commits before opening it. No merge authorization.

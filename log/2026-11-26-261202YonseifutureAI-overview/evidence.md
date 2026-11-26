@@ -159,3 +159,28 @@ Survey cutoff / checked: 2026-11-26 Asia/Seoul. Repository sources are fixed at 
 - Setup: same IBM system and full PPB benchmark, 1,270 faces; historical gender classification with binary labels, not identity recognition. Darker = Fitzpatrick IV–VI, lighter = I–III. Do not mix in Table5's South African subset. Prefer four simple bars without adding an overall-average comparison to the slide; overall12.1% can live in the note.
 - Does not establish: current product performance, the cause of the gap, or population-wide prevalence.
 - Label: published result. No new experiment or calculation. If slides generates a chart asset, provide its source inputs and regeneration-code path in work-r1; slides-review will append that provenance before approval. An inline chart may instead identify its exact reproducible source location.
+
+## E21 — S25 chart provenance, independently checked in round1
+- Claim/source: E20's IBM Table4 error rates, rechecked against the original PMLR PDF on 2026-11-26. All four values and the note-only overall12.1% agree.
+- Reproduction: `talks/261202YonseifutureAI/261202YonseifutureAI.html`, S25 (lines916–927 at 731bec116bf1e2b9c8e696f89798aa0b1c6b0178), contains the source-input comment and inline chart. Inputs in order: 34.7,12.0,7.1,0.3 percent. Shared zero, axis0–40%,15px per percentage point; widths520.5,180,106.5,4.5px. The HTML is the regeneration source; no separate generated chart or script. Citation explicitly says redrawn.
+- Setup/limits: same historical system/test, not a current ranking or new experiment; source grouping/limits remain E20. No new empirical calculation.
+- Label: published result, faithful redrawing.
+
+## E22 — S22 Fig1 provenance and consent limit
+- Claim/source: Carlini et al., USENIX Security2021, https://www.usenix.org/system/files/sec21-carlini-extracting.pdf , Fig1, PDFp2/printedp2633, as in E11.
+- Reproduction: `talks/261202YonseifutureAI/figs/p5-carlini-fig1.png`; capture PDFp2 at200dpi with pdftoppm crop x925,y700,width595,height570. Independent recapture is byte-identical, SHA256 `65acae932356cc37607508707cf9ebedc2247b6121b978d4e9bd0097efcfce4e`. Caption removed, figure/redactions unchanged; full top and Fax line retained. Compared source image and rendered slide.
+- Limits: the study demonstrates extraction of identifying public-web training text. It does not establish the depicted person's individual consent history. Do not turn the general privacy concern into a factual claim that this person never consented.
+- Label: published result; reproduction verified2026-11-26.
+
+## E23 — S30 Fig1 provenance and experiment scope
+- Source: Eykholt et al., CVPR2018, https://arxiv.org/pdf/1707.08945v5 , Fig1/caption and introduction on PDFp2; §4.2 experimental design.
+- Asset: `talks/261202YonseifutureAI/figs/p3-eykholt-fig1.png` is byte-identical to baseline-course `courses/trustworthy-ai/figs/eykholt-fig1-stopsign.png`, SHA256 `8e2de05eb9685e4db526a914b5d344d8dcd5c43060af16a4b846689d8cece8d1`. Compared with source PDFp2: left ordinary real graffiti; right designed physical perturbation. Slide adds panel labels; caption cropped. No data repainting.
+- Experiment: lab and drive-by camera tests of classifiers, including capture from a moving vehicle; not an autonomous-car crash report. Introduction explicitly gives Speed Limit45 as a targeted wrong class, but that label need not be added to the executive slide.
+- Limits: no deployed-car safety conclusion or independently established statement about injuries. Keep the positive description of what was tested, rather than claiming there was no car on a road.
+- Label: published result; figure/scope verified2026-11-26.
+
+## E24 — Content credentials need not identify a human creator
+- Clarifies E16. Primary/version/locator: C2PA Explainer v2.2, https://spec.c2pa.org/specifications/specifications/2.2/explainer/Explainer.html , §2 and §§7.2.1–7.2.5, especially §7.2.4 “Does provenance have to include the identity of the creator of a piece of media?”. Checked2026-11-26.
+- Claim: credentials can carry recorded origin/edit assertions; human or organizational identity is not inherent in the core specification, though extensions can add identity information. History may be incomplete. Verification of a record does not independently establish the truth of its assertions or the depicted event.
+- Setup/limits: same pinned explanatory standard as E16, not a claim about current adoption. Do not promise that any credential tells the viewer who made the file or provides its complete history. No technical mechanism needs to enter the talk.
+- Label: published result (standards explainer).

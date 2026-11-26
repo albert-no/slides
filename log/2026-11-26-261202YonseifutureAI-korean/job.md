@@ -6,7 +6,7 @@ baseline: e597ebf5e4ab2f0065aa603559ec1550aee645f9
 id commit: 8c6c4f4f6f1734d5a64a290bc7f1dd4d045b5d12 (ID-preserving English byte-copy seed; verified)
 branch: 2026-11-26-261202YonseifutureAI-overview (PR82 destination per C05; original implementation branch: 2026-11-26-261202YonseifutureAI-korean)
 pr: 82 — https://github.com/albert-no/slides/pull/82; PR83 pending supersession/closure after consolidation
-state: in-work
+state: approved
 round: 2 of 2 (C05 integration-only verification; source content remains approved at round1)
 active plan: plan-v2.md — consolidate approved English/Korean artifacts into existing PR82; no source edits
 albert decisions:
@@ -44,3 +44,7 @@ The two English HTML files and all existing figures/reference/scripts are immuta
 - plan-v2.md replaces the earlier prohibition on appending Korean work to PR82. Both PRs verified open/unmerged; PR82 head e597ebf is an ancestor of approved combined head4c663b6.
 - slides will advance PR82's branch normally, preserve all approved sources and both job histories, and return exact work-r2 head. slides-review will verify, update PR82 and close redundant PR83.
 - No merge/main push, force push, source edit or branch deletion authorized.
+
+## C05 integration review
+- `review-r2.md`: approved exact commit `7d4b4a2913e257bdf428fecd7aca5b9f57ea0c50`, independently confirmed as PR82's remote head. Four HTML hashes match approvedr1; diff from4c663b6 touches only this Korean job log. Original Korean branch/PR83 remains unchanged.
+- Await log-only finalization on PR82, then slides-review updates PR82's description and closes redundant PR83. No remaining content work and no merge authorization.

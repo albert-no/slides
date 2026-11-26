@@ -170,3 +170,21 @@ No generated or modified figure is commissioned at the approval stage. Preferred
 - Retain setup/method/score/result/limitation slides when they teach different steps of the same new result. Reusing an exhibit to reveal a new causal or evaluation step is not automatically redundancy. Conversely, changing only a diagram's icons does not make an old generic lesson new.
 - Main remains three topics / 90 minutes, target 59 slides after four moves, versus v2's 63 and baseline 51. Backup target rises 43→47. No substantive result is removed, no new paper is added, no font shrink or compression is requested. Reallocated minutes support reading the novel experiments, not additional topics.
 - Label: author-directed curricular/design judgment, not empirical result.
+
+## E23 — round-1 check: Cloud's two outcomes and retained answers
+- Supplements E05/E15. Primary final article re-read: https://pmc.ncbi.nlm.nih.gov/articles/PMC13083239/ , Nature DOI 10.1038/s41586-026-10319-8, Fig. 3a, “Transmission of misalignment”, Methods evaluation/grading paragraphs.
+- Fig. 3a contains two different outcomes: free-form judged misalignment on the left and TruthfulQA false-answer frequency on the right. A single key calling both outcomes “answers judged misaligned” is incorrect. Main S70 will concentrate on the left outcome; preserve the complete panel a in optional backup.
+- Free-form evaluation uses eight question contents with the stated formatting suffix. Alignment below 30 is classified as misaligned; answers with coherence below 50 are discarded. Explain the retained-answer population, not a rate over all possible answers or deployment harms. The paper's text says almost 10%, while the plotted mean is nearer 0.08; do not redraw an exact 10% bar. Five runs and the reported intervals remain source-specific.
+- Label: published result; correction of incomplete on-slide metric descriptions, not a new result.
+
+## E24 — round-1 check: attack-selection denominator
+- Supplements E12. Primary source https://arxiv.org/html/2606.06529v1 , equation 1 and Appendix A.3, re-read at review.
+- Empirical safety is caught / (caught + successful uncaught attacks). Attempts that neither succeed nor are caught are excluded. Stop-policy aborts are treated as indecisive and leave this denominator. Thus “share of attempted attacks caught” is not an adequate plain-language definition, even when the displayed formula is correct.
+- This is a decisively ended-attack catch ratio, not whole-run safety or deployment frequency. The existing post-hoc-stop, small-sample and upper-bound qualifiers remain necessary.
+- Label: published result (preprint); no new calculation.
+
+## E25 — round-1 independent check of optional subliminal-learning sources
+- Confirms E09 from the paper body, rather than relying on this register: https://arxiv.org/html/2609.22215v1 , Limitations, “Experimental scope”, “Traits studied”, “Baselines and side effects”. Number completion and math-reasoning experiments; mainly animal preferences and one French-style experiment; harmful misalignment could not be reliably induced; broader safety side effects not comprehensively measured. Evidence supports selected preference/style mitigation, not prevention of harmful transfer. Use versioned preprint status.
+- Confirms E10 on https://arxiv.org/abs/2606.00831v2 , Comments field, checked 2026-11-27: authors report some main claims incorrect and a substantial revision being prepared. The still-visible categorical abstract is not a settled refutation. This is unresolved research context, not a new empirical result to teach in the main lecture.
+- E08's primary body https://arxiv.org/html/2609.12586v1 was also inspected during review; retain its bounded preference/model/task scope, not an independent harmful-misalignment replication claim.
+- Label: source verification; no new main-deck literature selected.

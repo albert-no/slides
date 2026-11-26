@@ -13,6 +13,10 @@ Retrieved 2026-11-27 by direct HTTP from https://arxiv.org/html/2605.12798v2 (ar
 - Plain-language labels: SFT = "Teacher-written answers / learner copies them"; OPD = "Teacher scores learner tokens / learner writes"; filtered/unfiltered OPD = "Judge filter on" / "No filter".
 - Values checked against evidence.md E16: identical.
 
-## Own illustrative diagrams (no data) — S73a, S73b, S73c, S75a
+## Own illustrative diagrams (no data) — S73a, S73b, S73c, S75a, S75b
 
 Inline SVG schematics drawn for this lecture (not paper figures); labelled "Illustrative" in each cite line. The S73a/b example prompt and tokens and the S73b/c score-bar heights are invented and carry no data. They render the on-policy distillation setup described in Askin et al. §2 and §4 ("the teacher only scores the sampled tokens").
+
+## Round 2 — S75b recovery diagram
+
+S75b (round 2) is an own illustrative three-box drawing of the realignment setup in Askin et al. §4.2 and App. E.3 (start: narrowly misaligned learner; training guided by an aligned teacher initialised as the base model, all outputs kept; result: measured misalignment close to base-model levels). No numbers are drawn. Tested models from App. E.3: Llama-3.1-8B-Instruct (Fig. 25) and OLMo-3-7B-Instruct (Fig. 5); 3 epochs.

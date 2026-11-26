@@ -7,7 +7,7 @@ id commit: existing stable IDs inherited; no new ID-only commit needed
 branch: 2026-11-27-lec14-focused-overview
 pr: none
 state: in-work
-round: 1 of 3
+round: 2 of 3
 albert decisions:
 - 2026-11-27 01:23 KST, message 20: also check redundant slides/topics against lec01–lec13 (C11). plan-v3 addresses continuity without changing the approved three-topic scope or duration.
 - 2026-11-27 01:04 KST, message 16: approved stages 1–3 and authorized proceeding, with two amendments: removed material must become backup slides (not notes-only), and use more slides rather than compression. No merger authorization.
@@ -41,3 +41,13 @@ State in-work / round 1 of 3 when this pointer is sent. slides creates the branc
 C11's course-overlap audit is complete at the same frozen baseline: all thirteen main-deck title/topic inventories, followed by close reading of overlapping slides and relevant notes (E21–E22). plan-v3.md amends v2: move four generic standalone recaps/primers to actual backup slides; adapt remaining overlaps to the specific new study. Target 59 main + 47 backup, paired notes; 85+5 minutes unchanged. More teaching steps for novel material remain required; do not compress to achieve a count.
 
 State stays in-work, round 1 of 3. slides acknowledged receipt/building v2 on message 18 at 01:18 KST; no work-r1 or content SHA yet. v3 is an in-flight work-order amendment, not a review verdict or an additional review round. v2's unaffected per-slide facts, exhibits, preservation requirements and source qualifications remain binding by incorporation. Current request/evidence coverage C01–C11 / E01–E22.
+
+
+## Round 1 review opened — 2026-11-27
+- Work pointer message32 names exact commit `1d4493167f41a5d39237fe4e1703e40f94fdfe40` on branch `2026-11-27-lec14-focused-overview`. Work report read through git at that commit; frozen baseline unchanged.
+- State in-review, round1/3. Implementation reports59main/47backup, pairednotes and85+5minutes; these are pending independent review, not yet approved.
+
+## Round 1 verdict / round 2 work order — 2026-11-27
+- Reviewed `1d4493167f41a5d39237fe4e1703e40f94fdfe40`; verdict revise in `review-r1.md`. Six blocking findings F01–F06: metric populations/outcomes, main-deck result breadth, attack-selection denominator, filtering-chart key/epoch wording, audit-path label, narrow-note overflow. F07/F08 are nonblocking polish.
+- `plan-v4.md` makes the necessary scope clarification: 59 main remains; four optional content slides plus a divider preserve newly removed material, targeting52 backup. Reserve S91–S95. Main 85+5minutes and approved three-story argument unchanged. Evidence appended E23–E25; no new main literature or Albert gate.
+- Work order now in-work, round2/3. slides must return work-r2 with exact pushed SHA and per-finding disposition; no PR yet.

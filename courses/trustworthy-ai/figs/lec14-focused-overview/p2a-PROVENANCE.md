@@ -26,7 +26,8 @@ recoloured, retouched or composited after cropping.
 | p2a-cloud-fig2-learner.png | cloud | Fig. 2, reference model fine-tuned into student | 2 | 1518 | 2496 | 507 | 414 |
 | p2a-cloud-fig2-teacher.png | cloud | Fig. 2, left part (trait given to reference model, giving the teacher) | 2 | 474 | 2496 | 538 | 414 |
 | p2a-cloud-fig1-teacher.png | cloud | Fig. 1, teacher with owl bias and generated numbers | 2 | 145 | 194 | 785 | 196 |
-| p2a-cloud-fig3a.png | cloud | Fig. 3a (misalignment and TruthfulQA bars) | 3 | 465 | 192 | 801 | 474 |
+| p2a-cloud-fig3a.png | cloud | Fig. 3a (misalignment and TruthfulQA bars); round 2: used whole on backup S91 | 3 | 465 | 192 | 801 | 474 |
+| p2a-cloud-fig3a-left.png | cloud | Fig. 3a, left subplot only (free-form misalignment bars, y-axis and panel letter); round 2, main S70 | 3 | 465 | 192 | 438 | 474 |
 | p2a-cloud-fig4a.png | cloud | Fig. 4a (animal preference bars), legend excluded | 4 | 480 | 312 | 765 | 522 |
 | p2a-cloud-fig5a.png | cloud | Fig. 5a (cross-model heat map) | 5 | 480 | 192 | 756 | 642 |
 | p2a-betley-fig1-train.png | betley | Fig. 1, training example (left column only) | 2 | 366 | 195 | 951 | 264 |

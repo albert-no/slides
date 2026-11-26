@@ -45,7 +45,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 11 | `lec11-synthetic-media.html` | Synthetic media: text watermarks, robustness, detection without a watermark, provenance (C2PA) & labelling law | **new 2026-10** (74 sl after Albert r1 2026-11, 16 cited image files + 5 tables/figures redrawn, 90 min, concept-first, no activities; note 74 entries; tech 14 sl). Former Wk 11 prompt injection → rebuilt as Wk 13; former Wk 12 watermark deck replaced |
 | 12 | `lec12-fairness.html` | Fairness: where bias enters, criteria, COMPAS and impossibility, mitigation, audits beyond classifiers | **new 2026-10; visual revision 2026-11** (87 sl, 26 cited figure crops, 90 min, concept-first, no activities; note 87 entries; tech 23 sl; stable slide IDs S01–S84 in `data-slide-id`, splits lettered; plot-interpretation revision 2026-11-13; clarity revision 2026-11-16). Merges the former Wk 13–14 fairness decks → `backup-fairness-defs.html`, `backup-fairness-mitigation.html` |
 | 13 | `lec13-prompt-injection.html` | Prompt injection: direct and indirect, agents, three incidents, why it is hard, measured defenses and CaMeL | **new 2026-10; clarity revision 2026-11-20** (65 sl, 7 real figure crops, 4 bar charts drawn from tables, 90 min, concept-first, no activities; note 65 entries; tech 15 sl; stable slide IDs S01–S56 in `data-slide-id`, splits lettered). Replaces `backup-prompt-injection.html` (deleted) |
-| 14 | `lec14-agentic-threats.html` | Emerging agentic threats: autonomy, deception and multi-agent risks; course finale | **new 2026-10; finale refresh 2026-11-22** (51 sl, 16 real figure files, 90 min, concept-first, no activities; note 51 entries; tech 14 sl; stable slide IDs in `data-slide-id`, six retired, S52–S56 added). Replaces `backup-agentic-autonomy.html` (deleted); former Wk 15 governance deck → `backup-governance.html` |
+| 14 | `lec14-agentic-threats.html` | When AI Learns and Acts: delegation (Project Vend), hidden behaviors passed on in training, checks on untrusted work (AI Control); course finale | **new 2026-10; finale refresh 2026-11-22; focused revision 2026-11-27** (59 sl, 85 + 5 min, concept-first, no activities; note 59 entries; tech 14 sl; stable slide IDs in `data-slide-id`; survey material in `backup-lec14-agentic-threats.html`, 47 sl). Replaces `backup-agentic-autonomy.html` (deleted); former Wk 15 governance deck → `backup-governance.html` |
 
 Every deck has a companion **instructor note** `lecNN-…-note.html` (one `<article>` per slide,
 keyed by the same `data-slide-id`), following the DESIGN_SYSTEM §9 instructor-note contract.
@@ -53,7 +53,7 @@ Since the 2026-11-15 notes revision, all 14 lectures (lec01–lec14) use the sam
 entry opens with a short **Message** (`p.msg`, the slide's point with its qualifiers), then
 **Reading the slide** (what the slide, plot or diagram shows), then the details under
 **Script** (script, figure, sources, minor points). Decks and notes lec01–lec14 carry stable slide IDs in
-`data-slide-id`. lec01–lec11 use sequential `S01…SNN` (as of 2026-11-15). lec14 (finale refresh 2026-11-22) uses `S01–S56`: S26, S30, S32, S44, S47, S48 retired; new S52–S53, S54a/b, S55–S56 placed where they teach, so ID order is not page order. lec12 uses `S01–S84` (S04, S12, S77 retired) with lettered splits such as `S39a/S39b`. lec13 (clarity revision 2026-11-20) uses `S01–S56`: splits S05a/b, S07a/b, S09a/b, S21a/b, S31a/b, S40a/b, S44a/b, S47a/b/c; new S54–S56 placed in the defenses block, so ID order is not page order.
+`data-slide-id`. lec01–lec11 use sequential `S01…SNN` (as of 2026-11-15). lec14 (focused revision 2026-11-27) uses baseline `S01–S56` plus `S57–S90` with letter splits; the main deck holds 59 and `backup-lec14-agentic-threats.html` 47, and ID order is not page order (see its section). lec12 uses `S01–S84` (S04, S12, S77 retired) with lettered splits such as `S39a/S39b`. lec13 (clarity revision 2026-11-20) uses `S01–S56`: splits S05a/b, S07a/b, S09a/b, S21a/b, S31a/b, S40a/b, S44a/b, S47a/b/c; new S54–S56 placed in the defenses block, so ID order is not page order.
 The same revision corrected 84 main slides across lec01–lec14 so slide and note agree (qualifiers, scoped claims, source setups). No slide was added, removed or split. Three titles changed: lec07 S70 "One Shape, Four Faces", lec10 S06 "…Shared and Stay Online for Months", lec11 S34 "Small Full-Text Distribution Distance Limits Detection". A follow-up accuracy pass on the same date (job round 4) corrected 31 further main slides in lec01–lec06, lec08, lec13 and lec14 (DP δ qualifiers, evaluation scopes, source locators, label placement); again no slide was added, removed or split, and one title changed: lec06 S08 "A Fluent Medical Term Was Wrong".
 Every lecture also has an optional **technical supplement** `lecNNtech.html` — see below.
 
@@ -93,6 +93,7 @@ Optional decks for substitution or extra sessions. The fairness and governance b
 | `backup-sycophancy.html` | Sycophancy, manipulation & persuasion | merge into Wk 6, or standalone | **drafted** (38 sl) |
 | `backup-copyright.html` | Copyright, consent & data provenance | pairs with Wk 4 (memorization) | **drafted** (45 sl) |
 | `backup-governance.html` | Governance, the frontier & wrap-up (EU AI Act, NIST RMF, frontier safety frameworks, demo showcase) | former Wk 15 (moved 2026-10; lec14 is now the finale); optional archival backup, wrap-up and Demo Showcase marked historical | **revised 2026-08, figure pass 2026-09** (70 sl; note `backup-governance-note.html`; tech `backup-governancetech.html`, 6 sl). Section `## backup-governance.html` below |
+| `backup-lec14-agentic-threats.html` | Lecture 14 survey material: measuring autonomy, against the overseer, many agents, more control protocols, further frontiers | optional backup for Wk 14 | **added 2026-11-27** (47 sl; note `backup-lec14-agentic-threats-note.html`). Section `## backup-lec14-agentic-threats.html` below |
 | `backup-model-stealing.html` | Model stealing / extraction attacks | swap for Wk 9, or standalone | **drafted** (51 sl) |
 | `backup-interpretability.html` | Interpretability & explainability (LIME/SHAP, probes, circuits, SAEs) | former Wk 7 (moved 2026-10); standalone extra session | **revised 2026-08, figure pass 2026-09** (64 sl, 23 real figs; note `backup-interpretability-note.html`; tech `backup-interpretabilitytech.html`, 20 sl). Section `## backup-interpretability.html` below |
 | `lec07-backup-korean-note-for-study1.html` | Korean explainer for lec07 Study 1 (alignment faking), 3 printable pages | handout for lec07 slides 40–45; not a slide deck | **added 2026-10-14**; rewritten 2026-10-15 for readability (3 pages: terms + analogy + slide 40 · prompted (43a) vs actual RL (43c), observed changes only · possible explanations (unconfirmed) + FAQ + shows/doesn't) |
@@ -679,63 +680,79 @@ Table 4 vs §6.2.1 on slide 55 (S45) and in its entry (`:1236`). The AgentDojo c
 
 ## lec14-agentic-threats.html
 
-**Topic:** Emerging agentic threats: autonomy, deception and multi-agent risks (90 min; mixed-major
-sophomores/juniors; concept-first, no math on the slides; **no activities**; course finale). Finale refresh
-2026-11-22 (job `2026-11-22-lec14-finale-refresh`): opens on a real deployment (Project Vend), adds the
-2025 METR developer trial and its 2026 update, re-anchors sandbagging on van der Weij Fig. 4, puts real figures
-on multi-agent and control slides, and closes with two frontier previews (persuasion, companion use) before the
-course takeaway. Governance only in context; full treatment in `backup-governance.html`. Math in `lec14tech.html`.
+**Topic:** When AI Learns and Acts: delegation, hidden behaviors passed on in training, and checks on untrusted work
+(90 min; mixed-major undergraduates; concept-first, no math on the slides; **no activities**; course finale).
+Focused revision 2026-11-27 (job `2026-11-27-lec14-focused-overview`, plan-v3). It replaces the six-section survey
+of the 2026-11-22 finale refresh with three stories taught slowly: Project Vend, then subliminal and on-policy
+transfer between models, then AI Control. The survey material moved unchanged or nearly unchanged to
+`backup-lec14-agentic-threats.html` (section below). Governance is covered only in context; the full treatment is in
+`backup-governance.html`. The math is in `lec14tech.html`.
 
-### Sections (51 slides, 85 min + 5 min flexible: autonomy 12 · measuring 17 · overseer 14 · many agents 13 · control 20 · synthesis 9)
+### Sections (59 slides, 85 min + 5 min flexible: opening 5 · 01 20 · 02 35 · 03 20 · closing 5)
 
-Slide IDs are stable, not page order: S26, S30, S32, S44, S47, S48 retired (detail moved to the S25, S29, S31,
-S43, S45 and S50 note entries); S52–S53 (Vend) follow S04; S54a/b (developer trial) follow S13; S55–S56 follow S49.
+Slide IDs are stable, so ID order is not page order. The baseline IDs S01–S56 keep their meaning. New IDs are S57–S79
+with letter splits (S05a/b, S36a/b, S37a/b, S38a/b, S39a/b, S43a/b, S52a/b, S53a/b and S57a/b–S75a/b). S03, S35 and
+S60 are the section dividers, and S46 is the closing divider. Earlier-lecture overlap is recorded in the
+"Earlier in the course" note sections (S04 and others) and in `log/2026-11-27-lec14-focused-overview/work-r1.md` (C11 table).
 
 | Section | Slides | Divider line | Notable slides |
 |---|---|---|---|
-| Title / Contents | 1–2 | `:38`, `:50` | |
-| **01 — What Changes With Autonomy** | 3–8 | `:82` | trust must survive longer tasks `:104` · Vend shop photo `:138` · Vend net worth `:158` · autonomy dials `:175` · small errors accumulate (generated curve) `:198` |
-| **02 — Measuring Autonomy** | 9–19 | `:230` | test before delegation (Shevlane, ARC Evals) `:238` · horizon = task difficulty `:267` · tasks → horizon `:292` · METR Fig. 1 `:320` · depends on setup `:338` · not safe runtime `:366` · developer trial `:380`, 2026 update `:401` · RepliBench Fig. 1 `:417` · parts ≠ whole `:438` |
-| **03 — Against the Overseer** | 20–27 | `:469` | setup / behavior / inference `:484` · scheming setup `:516`, oversight disabled `:554` · sandbagging definition `:580` · van der Weij Fig. 4 `:611` · planted threat `:628` · other explanations `:656` |
-| **04 — Many Agents** | 28–35 | `:684` | Hammond taxonomy Fig. 1 `:719` · MAST Fig. 1 `:737` · verification example `:754` · one agent carries an attack `:783` · Prompt Infection Fig. 6 `:814` · steganographic collusion `:827` · evidence strengths `:857` |
-| **05 — Control** | 36–45 | `:872` | alignment vs control `:912` · setup Fig. 1 `:929` · the game `:947` · trusted monitoring `:963` · 15% vs 62% bars `:991` · defer / edit `:1029` · Pareto Fig. 2 zoom `:1054` · attack selection Fig. 1 `:1073` · evaluation boundaries `:1090` |
-| **06 — Synthesis and Frontiers** | 46–51 | `:1105` | three open questions `:1129` · persuasion (Salvi Fig. 1) `:1142` · companion use (Fang Fig. 1) `:1159` · course checklist `:1171` · closer "What would earn your trust?" `:1186` |
+| Opening | 1–3 | — | title `:130` · Contents `:142` · three ways trust can fail (teaching map) `:166` |
+| **01 · Delegating Real Work** | 4–15 | `:215` | shop decision changes the world `:223` · authorized ≠ correct `:262` · Vend shop photo `:288` · Vend architecture Fig. 2 `:304` · price before a cost check `:321` · sold below cost `:353` · Phase two net worth `:383` · purchases still needed a human `:400` · approval needs commercial evidence `:427` · spending cap `:461` · unprofitable-order test `:499` |
+| **02 · Learning Hidden Behaviors** | 16–40 | `:553` | teacher supplies data (Cloud Fig. 2) `:561` · Betley narrow training `:606` · two training channels `:646` · owl-teacher numbers pipeline `:680`–`:709` · control training `:736` · Cloud Fig. 4a `:800` · Cloud Fig. 3a misalignment `:868` · learning, not prompt injection `:887` · Cloud Fig. 5a pair dependence `:921` · on-policy distillation steps `:979`–`:1071` · Askin bars `:1127`, `:1161` · conditional mitigation `:1226` |
+| **03 · Checking Untrusted Work** | 41–56 | `:1262` | workflow, not intentions `:1270` · backdoor example `:1341` · Greenblatt Fig. 1 `:1375`, `:1392` · audit budget `:1440` · trusted monitoring `:1461` · 15% vs 62% bars `:1524` · warning must change the workflow `:1551` · Ge-Wang Fig. 1 A/B `:1580`, `:1596` · two studies, two questions `:1644` |
+| Closing | 57–59 | `:1675` | course map "Trust Requires Evidence" `:1682` · closer "What would earn your trust?" `:1697` |
 
-**Key citations on slides:** Anthropic Project Vend (27 Jun 2025) and Phase two (18 Dec 2025); Shevlane et al. arXiv
-2305.15324 (Table 1, §4); Kwa et al. (METR) arXiv 2503.14499 v4 (Fig. 1, §2–§3, §3.2, §5–6, App. B.2/C.3); METR
-modelling-assumptions note (20 Mar 2026); Becker, Rush, Barnes, Rein (METR) arXiv 2507.09089 (Fig. 1) and METR
-"We are Changing our Developer Productivity Experiment Design" (24 Feb 2026); Black et al. RepliBench arXiv
-2504.18565v2 (Fig. 1, §5.1, §6); Meinke et al. (Apollo) arXiv 2412.04984v2 (Tables 1, 2, 4, 6, §3.6); van der Weij
-et al. ICLR 2025 (§2, Fig. 4); Hammond et al. arXiv 2502.14143 (Fig. 1); Cemri et al. MAST, NeurIPS 2025 D&amp;B
-(Fig. 1, §4); Lee &amp; Tiwari arXiv 2410.07283v1, preprint (Figs. 2, 4, 6, §5); Motwani et al. NeurIPS 2024 (arXiv 2402.07510v5, revised 2025)
-(§3, Fig. 1, Table 3); Greenblatt et al. AI Control, ICML 2024 (Figs. 1–2, Table 2, §1–§3, §2.4, §5.1); Ge-Wang, Crosse
-et al. arXiv 2606.06529v1, preprint (Fig. 1 A–B, Table 2, §4.4, App. A); Terekhov et al. arXiv 2510.09462v2; Salvi et
-al. Nature Human Behaviour (2025, corrected 3 Sep 2026; Fig. 1); Fang et al. arXiv 2503.17473v2, preprint (Fig. 1).
-Notes only: Lynch et al. (agentic misalignment), Cohen et al. Morris-II, Terekhov Defer-to-Resample.
+**Key citations on slides:** Anthropic Project Vend (27 Jun 2025: setup, Fig. 2 architecture, "Selling at a loss")
+and Phase two (18 Dec 2025: "The numbers", "What changed?"); Cloud, Le, Chua et al., Nature 652, 615–621 (2026)
+(Figs. 1, 2, 3a, 4a, 5a, Methods, Extended Data Fig. 6); Betley, Warncke, Sztyber-Betley et al., Nature 649, 584–589
+(2026) (Fig. 1); Askin et al. arXiv 2605.12798v2, preprint (§2, §4, Tables 1 and 10, App. E); Yanagisawa et al.
+arXiv 2609.22215v1, preprint; evidence map also cites arXiv 2609.12586v1 and 2606.00831v2; Greenblatt et al. AI
+Control, ICML 2024 (arXiv 2312.06942v5; Fig. 1, Tables 1–2, §2–§3, App. B); Ge-Wang, Crosse et al. arXiv
+2606.06529v1, preprint (Fig. 1 A–B, eq. 1, Table 2, §4.4, App. A).
 
-**Figures (16 image files):** in `figs/`: `metr-horizon-fig1.png` `:324` · `replibench-fig1-compute.png` `:421` ·
-`replibench-fig1-weights.png` `:422` · `control-setup-fig1.png` `:933` · `control-pareto-fig2-zoom.png` `:1058`.
-In `figs/lec14-finale-refresh/` (provenance in `p1-PROVENANCE.md` … `p5-PROVENANCE.md`): `p1-vend1-shop.png` `:142` · `p1-vend2-networth.png`
-`:162` · `p1-metr-forecast-vs-observed.png` `:385` · `p2-weij-fig4-claude3.png` `:615` · `p3-hammond-fig1.png` `:723` ·
-`p3-mast-fig1.png` `:742` · `p3-prompt-infection-fig6a.png` `:819` · `p3-prompt-infection-fig6b.png` `:820` ·
-`p4-gewang-fig1-ab.png` `:1077` · `p5-salvi-fig1.png` `:1146` · `p5-fang-fig1.png` `:1163`. Generators:
-`p1-gen-curves.py` (S06 compounding curve, S09 schematic), `p4-gen-s40-bars.py` (S40 bars from Greenblatt Table 2).
-Other diagrams are inline SVG or HTML. `mast-taxonomy-fig1.png` and `control-pareto-fig2-legend.png` are no longer
-used by any deck.
+**Figures:** in `figs/`: `control-setup-fig1.png` `:1379`, `:1397`. In `figs/lec14-finale-refresh/`:
+`p1-vend1-shop.png` `:292` · `p1-vend2-networth.png` `:387`. In `figs/lec14-focused-overview/` (provenance in
+`p1-PROVENANCE.md`, `p2a-PROVENANCE.md`, `p2b-PROVENANCE.md`, `p3-PROVENANCE.md`): `p1-vend1-architecture.png` `:308` ·
+`p2a-cloud-fig2-roles.png` `:564` · `p2a-betley-fig1-train.png` `:611` · `p2a-cloud-fig1-teacher.png` `:683` ·
+`p2a-cloud-fig2-filter.png` `:695` · `p2a-cloud-fig2-learner.png` `:713` · `p2a-cloud-fig4a.png` `:804` ·
+`p2a-cloud-fig2-teacher.png` `:824` · `p2a-cloud-fig3a.png` `:872` · `p2a-cloud-fig5a.png` `:925` ·
+`p3-gewang-fig1-a.png` `:1584` · `p3-gewang-fig1-b.png` `:1600`. Generators: `p2b-askin-bars.py` (S74a, S74b bars
+from Askin Tables 1 and 10), `p3-control-bars.py` (S40 bars from Greenblatt Table 2). Other diagrams are inline SVG
+labelled illustrative.
 
-**2026-10 rebuild:** replaced the backup-agentic-autonomy deck (47 sl); the former Wk 15 governance deck, note and tech
-file moved to `backup-governance*` in the same PR.
+**Note:** `lec14-agentic-threats-note.html` has 59 entries keyed by `data-slide-id`, in page order, each with a minute
+budget, elapsed time, Message, Reading the slide and Script. Content slides add their sources and limits.
+"Earlier in the course" sections hold pointers to earlier lectures. The head table gives five blocks totalling
+85 min plus 5 min flexible = 90.
 
-**Note:** `lec14-agentic-threats-note.html` — 51 entries keyed by `data-slide-id`, page order, with minute budget and
-elapsed time, Message, Reading the slide, Script; content slides add source/setup and establishes / does not
-establish. Overview table: six sections totalling 85 min plus 5 min flexible = 90. The S45 entry holds the former
-"established vs not established" slide; S55/S56 entries say why these two frontier topics were chosen.
-
-**Tech:** `lec14tech.html` — 14 slides:
+**Tech:** `lec14tech.html` has 14 slides. Its title is "When AI Learns and Acts: The Formal Pieces" (retitled
+2026-11-27; content unchanged). The control game (8–11) supports section 03; the horizon (3–6) and propagation (13–14)
+slides support the backup deck.
 - horizon fit (3); 50% → 80% horizon, implied $\beta$ as our arithmetic (4); doubling time (5); compounding (6)
 - control game written out (8); upfront auditing closed form $S^*$ (9); per-task hazard $S_N$ (10); empirical safety
   and its denominator (11)
 - toy SIS propagation model, "not empirical" (13–14)
+
+## backup-lec14-agentic-threats.html
+
+**Topic:** Optional backup for Lecture 14. It holds the survey slides that the 2026-11-27 focused revision took
+out of the main deck: measuring autonomy, against the overseer, many agents, more control protocols and further
+frontiers. It also holds four optional recall cards (S13, S62a, S62b, S79). It has 47 slides, `1 / 47`, and its
+note is `backup-lec14-agentic-threats-note.html` (47 entries, keyed by `data-slide-id`). 29 slides are byte-identical
+to the 2026-11-22 baseline; the title, contents, dividers and end slide (S80–S86) are new.
+
+| Section | Slides | Divider line | Notable slides |
+|---|---|---|---|
+| Title / Contents | 1–2 | — | `:156`, `:168` |
+| **B1 · Measuring Autonomy** | 3–16 | `:197` | small errors accumulate `:205` · METR Fig. 1 `:342` · recall: capability and delegation `:402` · developer trial `:428` · RepliBench Fig. 1 `:465` |
+| **B2 · Against the Overseer** | 17–26 | `:517` | recall cards `:525`, `:550` · oversight disabled `:653` · van der Weij Fig. 4 `:710` · other explanations `:755` |
+| **B3 · Many Agents** | 27–34 | `:783` | Hammond Fig. 1 `:791` · MAST Fig. 1 `:809` · Prompt Infection Fig. 6 `:886` · evidence strengths `:929` |
+| **B4 · More Control Protocols** | 35–42 | `:944` | setup Fig. 1 `:952` · 15% vs 62% bars (baseline generator) `:1014` · Pareto Fig. 2 zoom `:1077` · recall: stopping authority `:1096` |
+| **B5 · Further Frontiers** | 43–47 | `:1127` | three open questions `:1135` · Salvi Fig. 1 `:1148` · Fang Fig. 1 `:1165` · end `:1177` |
+
+Figures and citations are as in the 2026-11-22 baseline slides they came from (`figs/metr-horizon-fig1.png`,
+`figs/replibench-fig1-*.png`, `figs/control-*.png`, `figs/lec14-finale-refresh/p1-metr…`, `p2-…`, `p3-…`, `p5-…`).
 
 ## backup-fairness-defs.html
 

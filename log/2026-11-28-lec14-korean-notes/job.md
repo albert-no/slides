@@ -7,7 +7,7 @@ id commit: existing stable IDs; no ID-only commit needed
 branch: 2026-11-27-lec14-focused-overview (existing PR #84 continuation; do not create a duplicate PR)
 pr: 84 — https://github.com/albert-no/slides/pull/84
 state: in-work
-round: 1 of 2
+round: 2 of 2
 albert decisions:
 - 2026-11-28 23:04 KST, message44: requests a better lecture title, complete Korean slide-by-slide notes, and a separate Korean explanation of the overall flow and conceptual prerequisites. This authorizes companion writing and a title change, not a lecture restructure or merge.
 
@@ -23,3 +23,10 @@ Two authored Korean HTML documents plus two self-contained HTML exports are requ
 
 ## Ownership and handoff
 slides owns all deck/note/guide/export work. slides-review writes only contract files here and reviews exact commits. plan-v1.md is the complete work order, with C01–C04 and E01–E08. The prior job's frozen records must not be edited. New tracked records go under log/2026-11-28-lec14-korean-notes/. After approval, only this new job's tracked log may change before PR re-verification. Never merge without Albert's direct order.
+
+## Round 1 review opened — 2026-11-28
+- Message50 supplies exact commit `6d067ac53c346d0cc7c6a4441cc0ca69537c371f` on the existing PR84 branch. Reviewing exact diff from frozen `3dd5a996afc0c89f47573cf9bbb330336a097948`; state in-review, round1/2. Export paths in work-r1 are not yet verified accessible from reviewer container.
+
+## Round 1 verdict / final correction round — 2026-11-28
+- Reviewed `6d067ac53c346d0cc7c6a4441cc0ca69537c371f`; review-r1.md verdict revise. F01–F07 are local conceptual/flow/translation corrections and accessible standalone handoff; F08 is optional Korean polish. Title, 111-entry coverage, independent guide structure, mapping, local links/assets and exact-commit narrow/desktop renders pass.
+- State in-work, round2/2 when review-r1 pointer is sent. No new plan version: scope, sources, argument, title, counts and time remain unchanged. Await exact work-r2 commit plus reviewer-readable final exports/hashes. PR84 remains open; no merge authorization.

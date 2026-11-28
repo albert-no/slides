@@ -41,3 +41,8 @@ Scope: faithful explanation of the already reviewed lecture at `3dd5a996afc0c89f
 - Label: illustrative example / our calculation, not a published result.
 - Any new toy price/word-choice/counting example must say it is made up and show its assumptions; it cannot be used as evidence of efficacy, prevalence or a hidden mechanism.
 - Prefer qualitative examples with no invented empirical percentages. The same term/role must mean the same thing across both Korean documents and the source lecture.
+
+## E09 — round-1 explanatory boundaries (clarifies E02/E03/E05/E06/E07; no new literature)
+- Source locators at frozen baseline: main S58a (commercial evidence at approval), S67a (active training controls), S71 / Cloud Methods + Extended Data Fig.6 (weight updates versus tested ICL), S39a / Greenblatt §3.2 (heuristic is not proof), backup S25 / Hammond Fig.1 (objective-based taxonomy versus the lecture's evidence grouping). Existing Korean backup S62a also explicitly distinguishes carried-forward context from training.
+- Labels: curricular/illustrative distinctions, with the underlying published experiments retaining their original bounds. Informed approval may inspect pricing but is not a tested remedy; reading input does not itself update weights but session end is not a guarantee that system effects disappear; trained comparison models can be controls; evidence need not be conclusive proof; injection propagation is not Hammond's conflict category.
+- Review-r1 requires these meanings in the new Korean prose only. No new efficacy estimate, prevalence trend, source reconciliation or expansion of the English lecture is authorized.

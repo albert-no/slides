@@ -45,7 +45,7 @@ cited) live in `figs/`; `bundle.py` inlines them. Concept diagrams are inline SV
 | 11 | `lec11-synthetic-media.html` | Synthetic media: text watermarks, robustness, detection without a watermark, provenance (C2PA) & labelling law | **new 2026-10** (74 sl after Albert r1 2026-11, 16 cited image files + 5 tables/figures redrawn, 90 min, concept-first, no activities; note 74 entries; tech 14 sl). Former Wk 11 prompt injection → rebuilt as Wk 13; former Wk 12 watermark deck replaced |
 | 12 | `lec12-fairness.html` | Fairness: where bias enters, criteria, COMPAS and impossibility, mitigation, audits beyond classifiers | **new 2026-10; visual revision 2026-11** (87 sl, 26 cited figure crops, 90 min, concept-first, no activities; note 87 entries; tech 23 sl; stable slide IDs S01–S84 in `data-slide-id`, splits lettered; plot-interpretation revision 2026-11-13; clarity revision 2026-11-16). Merges the former Wk 13–14 fairness decks → `backup-fairness-defs.html`, `backup-fairness-mitigation.html` |
 | 13 | `lec13-prompt-injection.html` | Prompt injection: direct and indirect, agents, three incidents, why it is hard, measured defenses and CaMeL | **new 2026-10; clarity revision 2026-11-20** (65 sl, 7 real figure crops, 4 bar charts drawn from tables, 90 min, concept-first, no activities; note 65 entries; tech 15 sl; stable slide IDs S01–S56 in `data-slide-id`, splits lettered). Replaces `backup-prompt-injection.html` (deleted) |
-| 14 | `lec14-agentic-threats.html` | When AI Learns and Acts: delegation (Project Vend), hidden behaviors passed on in training, checks on untrusted work (AI Control); course finale | **new 2026-10; finale refresh 2026-11-22; focused revision 2026-11-27** (59 sl, 85 + 5 min, concept-first, no activities; note 59 entries; tech 14 sl; stable slide IDs in `data-slide-id`; survey and further hidden-transfer material in `backup-lec14-agentic-threats.html`, 52 sl). Replaces `backup-agentic-autonomy.html` (deleted); former Wk 15 governance deck → `backup-governance.html` |
+| 14 | `lec14-agentic-threats.html` | Trust Beyond Capability: delegation (Project Vend), hidden behaviors passed on in training, checks on untrusted work (AI Control); course finale | **new 2026-10; finale refresh 2026-11-22; focused revision 2026-11-27** (59 sl, 85 + 5 min, concept-first, no activities; note 59 entries; tech 14 sl; stable slide IDs in `data-slide-id`; survey and further hidden-transfer material in `backup-lec14-agentic-threats.html`, 52 sl; Korean note `lec14-agentic-threats-note-ko.html` and Korean guide `lec14-agentic-threats-guide-ko.html` added 2026-11-28). Replaces `backup-agentic-autonomy.html` (deleted); former Wk 15 governance deck → `backup-governance.html` |
 
 Every deck has a companion **instructor note** `lecNN-…-note.html` (one `<article>` per slide,
 keyed by the same `data-slide-id`), following the DESIGN_SYSTEM §9 instructor-note contract.
@@ -680,7 +680,7 @@ Table 4 vs §6.2.1 on slide 55 (S45) and in its entry (`:1236`). The AgentDojo c
 
 ## lec14-agentic-threats.html
 
-**Topic:** When AI Learns and Acts: delegation, hidden behaviors passed on in training, and checks on untrusted work
+**Topic:** Trust Beyond Capability: Delegation, Hidden Learning, and Oversight (retitled 2026-11-28 from "When AI Learns and Acts"). Delegation, hidden behaviors passed on in training, and checks on untrusted work
 (90 min; mixed-major undergraduates; concept-first, no math on the slides; **no activities**; course finale).
 Focused revision 2026-11-27 (job `2026-11-27-lec14-focused-overview`, plan-v3 amended by plan-v4). It replaces the six-section survey
 of the 2026-11-22 finale refresh with three stories taught slowly: Project Vend, then subliminal and on-policy
@@ -726,13 +726,24 @@ budget, elapsed time, Message, Reading the slide and Script. Content slides add 
 "Earlier in the course" sections hold pointers to earlier lectures. The head table gives five blocks totalling
 85 min plus 5 min flexible = 90.
 
-**Tech:** `lec14tech.html` has 14 slides. Its title is "When AI Learns and Acts: The Formal Pieces" (retitled
-2026-11-27; content unchanged). The control game (8–11) supports section 03; the horizon (3–6) and propagation (13–14)
+**Tech:** `lec14tech.html` has 14 slides. Its title is "Trust Beyond Capability: The Formal Pieces" (retitled
+2026-11-27, parent title updated 2026-11-28; content unchanged). The control game (8–11) supports section 03; the horizon (3–6) and propagation (13–14)
 slides support the backup deck.
 - horizon fit (3); 50% → 80% horizon, implied $\beta$ as our arithmetic (4); doubling time (5); compounding (6)
 - control game written out (8); upfront auditing closed form $S^*$ (9); per-task hazard $S_N$ (10); empirical safety
   and its denominator (11)
 - toy SIS propagation model, "not empirical" (13–14)
+
+**Korean companions (2026-11-28, job `2026-11-28-lec14-korean-notes`):** Korean title "유능한 AI, 믿고 맡겨도 될까?",
+subtitle "위임·학습·감독으로 살펴보는 신뢰의 조건". Both are reading documents for students, not decks; they link
+`reference/colors_and_type.css` and use the figures in `figs/`.
+- `lec14-agentic-threats-note-ko.html`: a slide-by-slide Korean note. It has 59 main articles (`#m01`–`#m59`,
+  labelled "본강의 N"), then an optional appendix "선택 읽기: 백업 슬라이드 52장" (`#backup`, articles `#b01`–`#b52`,
+  labelled "백업 N"). Each article keeps the slide's `data-slide-id` and links to its guide chapter.
+- `lec14-agentic-threats-guide-ko.html`: a connected Korean reading guide. It has chapters G0–G7 (`#g0`–`#g7`,
+  main pages 1–3, 4–15, 16–21, 22–33, 34–40, 41–52, 53–56, 57–59) and an optional appendix (`#ba`, B1–B6 =
+  `#ba1`–`#ba6`, backup pages 3–16, 17–26, 27–34, 35–42, 43–46, 47–51). It ends with a term index (`#terms`),
+  a reading list (`#reading`) and a map from slide ranges to chapters (`#map`).
 
 ## backup-lec14-agentic-threats.html
 

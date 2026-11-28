@@ -6,7 +6,7 @@ baseline: 3dd5a996afc0c89f47573cf9bbb330336a097948
 id commit: existing stable IDs; no ID-only commit needed
 branch: 2026-11-27-lec14-focused-overview (existing PR #84 continuation; do not create a duplicate PR)
 pr: 84 — https://github.com/albert-no/slides/pull/84
-state: in-work
+state: approved
 round: 2 of 2
 albert decisions:
 - 2026-11-28 23:04 KST, message44: requests a better lecture title, complete Korean slide-by-slide notes, and a separate Korean explanation of the overall flow and conceptual prerequisites. This authorizes companion writing and a title change, not a lecture restructure or merge.
@@ -30,3 +30,10 @@ slides owns all deck/note/guide/export work. slides-review writes only contract 
 ## Round 1 verdict / final correction round — 2026-11-28
 - Reviewed `6d067ac53c346d0cc7c6a4441cc0ca69537c371f`; review-r1.md verdict revise. F01–F07 are local conceptual/flow/translation corrections and accessible standalone handoff; F08 is optional Korean polish. Title, 111-entry coverage, independent guide structure, mapping, local links/assets and exact-commit narrow/desktop renders pass.
 - State in-work, round2/2 when review-r1 pointer is sent. No new plan version: scope, sources, argument, title, counts and time remain unchanged. Await exact work-r2 commit plus reviewer-readable final exports/hashes. PR84 remains open; no merge authorization.
+
+## Round 2 review opened — 2026-11-28
+- Message52 names `19bec6de1d382ed7648887d434a649c2ab439323`; shared standalone files are now accessible. State in-review, round2/2. Review exact diff from r1 plus exported content/assets, offline behavior and links.
+
+## Round 2 approved — 2026-11-28
+- Final reviewed content `19bec6de1d382ed7648887d434a649c2ab439323`, review-r2.md approved, round2/2. C01–C04 done; F01–F08 closed. Both standalone files independently verified offline and source-equivalent. F09 is nonblocking export-only polish for four no-fragment counterpart links incorrectly annotated unavailable; section cross-links work and all content is present.
+- Await final unchanged review copy/refreshed living records and log-only pushed SHA, then verify every subsequent commit and refresh existing PR84. If slides takes optional F09, only untracked export link wrapping changes, with replacement hashes in the final record. No new content round, no new PR, no merge authorization.
